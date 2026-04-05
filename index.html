@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>„œÌ… Œ÷—«¡ 2026 - œ. —«»ÕÌ › ÕÌ</title>
+    
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+
+    <style>
+        :root { --emerald: #1B5E20; --forest: #2E7D32; --glass: rgba(255, 255, 255, 0.95); --gold: #D4AF37; --red: #d21034; --navy: #14213D; }
+        * { box-sizing: border-box; font-family: 'Tajawal', sans-serif; transition: 0.3s; }
+        
+        body { margin: 0; background: url('https://w0.peakpx.com/wallpaper/842/630/HD-wallpaper-garbage-truck-garbage-recycling-environment-trucks.jpg') no-repeat center center fixed; background-size: cover; min-height: 100vh; }
+        body::before { content: ""; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.4); z-index: -1; }
+
+        .top-bar { background: var(--glass); padding: 15px; text-align: center; border-bottom: 3px solid var(--gold); position: sticky; top: 0; z-index: 1000; }
+        .live-panel { display: flex; justify-content: space-between; padding: 5px 15px; font-weight: bold; color: var(--emerald); font-size: 0.85rem; background: rgba(255,255,255,0.5); border-radius: 10px; margin-top: 5px; }
+
+        .screen { display: none; padding: 20px; padding-bottom: 100px; }
+        .active { display: block; animation: fadeIn 0.4s; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+        .glass-card { background: var(--glass); border-radius: 20px; padding: 20px; margin-bottom: 15px; box-shadow: 0 8px 32px rgba(0,0,0,0.3); text-align: center; }
+        .btn-prime { border: none; padding: 14px; border-radius: 50px; width: 100%; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px; margin-bottom: 10px; color: white; border: 1px solid rgba(255,255,255,0.2); }
+        .input-style { width: 100%; padding: 12px; border-radius: 12px; border: 1px solid #ccc; margin-bottom: 10px; font-size: 0.9rem; }
+
+        #map { height: 250px; border-radius: 20px; border: 3px solid white; margin-bottom: 10px; z-index: 1; }
+        .item-box { background: white; padding: 15px; border-radius: 15px; margin-bottom: 15px; text-align: right; border-right: 6px solid var(--gold); position: relative; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+        .report-img-view { width: 100%; border-radius: 12px; margin: 10px 0; border: 1px solid #eee; }
+        .del-icon { color: var(--red); cursor: pointer; float: left; font-size: 1.1rem; }
+        .footer-sig { position: fixed; bottom: 0; width: 100%; background: var(--glass); padding: 12px; text-align: center; font-weight: bold; color: var(--forest); border-top: 2px solid var(--gold); }
+    </style>
+</head>
+<body onload="initApp()">
+
+<div class="top-bar">
+    <div id="lg-gov">«·Ã„ÂÊ—Ì… «·Ã“«∆—Ì… «·œÌ„ﬁ—«ÿÌ… «·‘⁄»Ì…</div>
+    <div id="lg-dept" style="font-size: 1.1rem; font-weight: 700; color: var(--emerald);">»·œÌ… «·„œÌ… - „’·Õ… «·‰Ÿ«›…</div>
+    <div class="live-panel"><div id="clock">00:00:00</div><div id="date-display">--</div></div>
+</div>
+
+<div id="scr-main" class="screen active">
+    <div class="glass-card" onclick="navTo('scr-report')"><i class="fas fa-bullhorn fa-3x" style="color:var(--forest)"></i><h3 id="lg-main-rep"> »·Ì€ „Ê«ÿ‰ ÃœÌœ</h3></div>
+    <div class="glass-card" onclick="auth('admin')"><i class="fas fa-user-shield fa-3x" style="color:var(--emerald)"></i><h3 id="lg-main-adm">„’·Õ… «·‰Ÿ«›… («·≈œ«—…)</h3></div>
+    <div class="glass-card" onclick="auth('driver')"><i class="fas fa-truck-pickup fa-3x" style="color:var(--gold)"></i><h3 id="lg-main-drv">Ê«ÃÂ… «·”«∆ﬁ «·„Ìœ«‰Ì</h3></div>
+    <div style="display: flex; gap: 10px;">
+        <div class="glass-card" onclick="navTo('scr-settings')" style="flex:1;"><i class="fas fa-language fa-2x"></i><h4 id="lg-main-set">«··€…</h4></div>
+        <div class="glass-card" onclick="location.reload()" style="flex:1; color:var(--red)"><i class="fas fa-power-off fa-2x"></i><h4 id="lg-main-ext">Œ—ÊÃ</h4></div>
+    </div>
+</div>
+
+<div id="scr-settings" class="screen">
+    <div class="glass-card">
+        <h3 id="lg-set-title">«Œ — «··€… / Select Language</h3>
+        <button class="btn-prime" style="background:var(--emerald)" onclick="setLang('ar')">«·⁄—»Ì…</button>
+        <button class="btn-prime" style="background:var(--navy)" onclick="setLang('fr')">FranÁais</button>
+        <button class="btn-prime" style="background:var(--forest)" onclick="setLang('en')">English</button>
+    </div>
+    <button class="btn-prime" style="background:#666;" onclick="navTo('scr-main')" id="lg-back-1">—ÃÊ⁄</button>
+</div>
+
+<div id="scr-report" class="screen">
+    <div id="map"></div>
+    <input type="text" id="rep-addr" class="input-style" placeholder="«·⁄‰Ê«‰...">
+    <input type="text" id="rep-geo" class="input-style" placeholder="«·≈Õœ«ÀÌ« " readonly>
+    <label class="btn-prime" style="background:var(--navy);"><i class="fas fa-camera"></i> <span id="lg-rep-cam"> ’ÊÌ— «·‰›«Ì« </span> <input type="file" id="img-input" accept="image/*" capture="environment" style="display:none;" onchange="handleImg(this)"></label>
+    <div id="img-status" style="display:none; color:var(--emerald); font-weight:bold; margin-bottom:10px;">? Photo Ready</div>
+    <button class="btn-prime" style="background:var(--emerald);" onclick="submitReport()" id="lg-rep-send">≈—”«·</button>
+    <button class="btn-prime" style="background:#666;" onclick="navTo('scr-main')" id="lg-back-2">—ÃÊ⁄</button>
+</div>
+
+<div id="scr-admin" class="screen">
+    <div id="admin-summary" class="glass-card" style="display:flex; justify-content:space-around; padding:10px;">
+        <div style="color:var(--red)">?? <span id="st-new">0</span></div>
+        <div style="color:var(--orange)">?? <span id="st-sent">0</span></div>
+        <div style="color:var(--emerald)">? <span id="st-done">0</span></div>
+    </div>
+    
+    <button class="btn-prime" style="background:var(--navy)" onclick="toggleView('admin-list')" id="lg-adm-view">⁄—÷ «· »·Ì€« </button>
+    <div id="admin-list" style="display:none;"></div>
+    
+    <button class="btn-prime" style="background:var(--forest)" onclick="toggleView('driver-mgr')" id="lg-adm-drvs">≈œ«—… «·”«∆ﬁÌ‰</button>
+    <div id="driver-mgr" style="display:none;" class="glass-card">
+        <input type="text" id="d-name" class="input-style" placeholder="«”„ «·”«∆ﬁ">
+        <input type="tel" id="d-phone" class="input-style" placeholder="—ﬁ„ «·Â« ›">
+        <input type="text" id="d-truck" class="input-style" placeholder="—ﬁ„ «·‘«Õ‰…">
+        <select id="d-sector" class="input-style">
+            <option value="«·»·œÌ…">«·»·œÌ… (Public)</option>
+            <option value="«·ﬁÿ«⁄ «·Œ«’">«·ﬁÿ«⁄ «·Œ«’ (Private)</option>
+        </select>
+        <button class="btn-prime" style="background:var(--emerald)" onclick="addDriver()" id="lg-adm-add-d">≈÷«›…</button>
+        <div id="d-list-display" style="margin-top:10px;"></div>
+    </div>
+
+    <div id="super-admin-section" style="display:none;">
+        <button class="btn-prime" style="background:var(--gold)" onclick="toggleView('admin-users-mgr')">«·„”ƒÊ·Ì‰</button>
+        <div id="admin-users-mgr" style="display:none;" class="glass-card">
+            <input type="text" id="new-adm-name" class="input-style" placeholder="«”„ „”ƒÊ· ÃœÌœ">
+            <button class="btn-prime" style="background:var(--navy)" onclick="addNewAdmin()">Õ›Ÿ</button>
+            <div id="adm-list-display"></div>
+        </div>
+    </div>
+    <button class="btn-prime" style="background:#333;" onclick="navTo('scr-main')" id="lg-back-3">Œ—ÊÃ</button>
+</div>
+
+<div id="scr-driver" class="screen">
+    <div id="driver-tasks-container"></div>
+    <button class="btn-prime" style="background:#333;" onclick="navTo('scr-main')" id="lg-back-4">Œ—ÊÃ</button>
+</div>
+
+<div class="footer-sig">œ. —«»ÕÌ › ÕÌ | Medea Green 2026</div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+    const firebaseConfig = { databaseURL: "https://medea-green-2026-default-rtdb.firebaseio.com/" };
+    if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+    const rtdb = firebase.database();
+
+    let db = { reports: [], drivers: [], admins: ["› ÕÌ"] };
+    let map, marker, currentImg = "", tempDriverImg = "", currentLang = "ar";
+
+    const translations = {
+        ar: { gov: "«·Ã„ÂÊ—Ì… «·Ã“«∆—Ì… «·œÌ„ﬁ—«ÿÌ… «·‘⁄»Ì…", dept: "»·œÌ… «·„œÌ… - „’·Õ… «·‰Ÿ«›…", rep: " »·Ì€ „Ê«ÿ‰ ÃœÌœ", adm: "„’·Õ… «·‰Ÿ«›… («·≈œ«—…)", drv: "Ê«ÃÂ… «·”«∆ﬁ «·„Ìœ«‰Ì", set: "«··€…", ext: "Œ—ÊÃ", back: "—ÃÊ⁄", cam: " ’ÊÌ— «·‰›«Ì« ", send: "≈—”«·", viewR: "⁄—÷ «· »·Ì€« ", viewD: "≈œ«—… «·”«∆ﬁÌ‰", addD: "≈÷«›… ”«∆ﬁ" },
+        fr: { gov: "RÈpublique AlgÈrienne", dept: "Commune de MÈdÈa", rep: "Nouveau Signalement", adm: "Administration", drv: "Interface Chauffeur", set: "Langue", ext: "Sortie", back: "Retour", cam: "Prendre Photo", send: "Envoyer", viewR: "Voir Rapports", viewD: "GÈrer Chauffeurs", addD: "Ajouter" },
+        en: { gov: "Republic of Algeria", dept: "Medea Municipality - Hygiene", rep: "New Report", adm: "Administration", drv: "Driver Interface", set: "Language", ext: "Exit", back: "Back", cam: "Take Photo", send: "Submit", viewR: "View Reports", viewD: "Manage Drivers", addD: "Add Driver" }
+    };
+
+    function setLang(l) {
+        currentLang = l;
+        const t = translations[l];
+        document.getElementById('lg-gov').innerText = t.gov;
+        document.getElementById('lg-dept').innerText = t.dept;
+        document.getElementById('lg-main-rep').innerText = t.rep;
+        document.getElementById('lg-main-adm').innerText = t.adm;
+        document.getElementById('lg-main-drv').innerText = t.drv;
+        document.getElementById('lg-main-set').innerText = t.set;
+        document.getElementById('lg-main-ext').innerText = t.ext;
+        document.getElementById('lg-rep-cam').innerText = t.cam;
+        document.getElementById('lg-rep-send').innerText = t.send;
+        document.getElementById('lg-adm-view').innerText = t.viewR;
+        document.getElementById('lg-adm-drvs').innerText = t.viewD;
+        document.getElementById('lg-adm-add-d').innerText = t.addD;
+        document.querySelectorAll("[id^='lg-back-']").forEach(b => b.innerText = t.back);
+        document.dir = (l === 'ar' ? 'rtl' : 'ltr');
+        navTo('scr-main');
+    }
+
+    function save() { rtdb.ref('medea_data').set(db); }
+
+    function initApp() {
+        rtdb.ref('medea_data').on('value', (snap) => {
+            if (snap.exists()) {
+                db = snap.val();
+                if(!db.admins) db.admins = ["› ÕÌ"];
+                updateStats();
+                if(document.getElementById('scr-admin').classList.contains('active')) { renderReports(); renderDrivers(); renderAdminsList(); }
+            }
+        });
+
+        setInterval(() => {
+            const now = new Date();
+            document.getElementById('clock').innerText = now.toLocaleTimeString('fr-FR'); 
+            const months = ["Ã«‰›Ì", "›Ì›—Ì", "„«—”", "√›—Ì·", "„«Ì", "ÃÊ«‰", "ÃÊÌ·Ì…", "√Ê ", "”» „»—", "√ﬂ Ê»—", "‰Ê›„»—", "œÌ”„»—"];
+            document.getElementById('date-display').innerText = `${now.getDate().toString().padStart(2,'0')} ${months[now.getMonth()]} ${now.getFullYear()}`;
+        }, 1000);
+    }
+
+    function navTo(id) {
+        document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+        document.getElementById(id).classList.add('active');
+        if(id === 'scr-report') setTimeout(initMap, 500);
+        if(id === 'scr-admin') { renderReports(); renderDrivers(); renderAdminsList(); }
+    }
+
+    function initMap() {
+        if(map) { map.invalidateSize(); return; }
+        map = L.map('map').setView([36.2642, 2.7539], 17);
+        L.tileLayer('https://{s}.google.com/vt/lyrs=y&x={x}&y={y}&z={z}', { subdomains: ['mt0', 'mt1', 'mt2', 'mt3'], maxZoom: 20 }).addTo(map);
+        marker = L.marker([36.2642, 2.7539], {draggable: true}).addTo(map);
+        
+        const updateLoc = async (lat, lng) => {
+            document.getElementById('rep-geo').value = `${lat.toFixed(6)}, ${lng.toFixed(6)}`;
+            try {
+                const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&accept-language=ar&addressdetails=1`);
+                const data = await res.json();
+                const a = data.address;
+                const detail = [a.house_number||"", a.road||"", a.neighbourhood||a.suburb||"", a.city||""].filter(p => p !== "").join("° ");
+                document.getElementById('rep-addr').value = detail || "«·„œÌ…";
+            } catch { document.getElementById('rep-addr').value = "«·„œÌ…"; }
+        };
+        map.on('click', e => { marker.setLatLng(e.latlng); updateLoc(e.latlng.lat, e.latlng.lng); });
+        marker.on('dragend', () => { const p = marker.getLatLng(); updateLoc(p.lat, p.lng); });
+    }
+
+    function handleImg(input) {
+        const r = new FileReader();
+        r.onload = e => { currentImg = e.target.result; document.getElementById('img-status').style.display='block'; };
+        if(input.files[0]) r.readAsDataURL(input.files[0]);
+    }
+
+    function submitReport() {
+        if(!currentImg || !document.getElementById('rep-addr').value) return alert("Missing Data!");
+        if(!db.reports) db.reports = [];
+        db.reports.push({ 
+            id: Date.now(), 
+            addr: document.getElementById('rep-addr').value, 
+            geo: document.getElementById('rep-geo').value, 
+            img: currentImg, 
+            status: 'new', 
+            time: document.getElementById('date-display').innerText + " " + document.getElementById('clock').innerText 
+        });
+        save();
+        currentImg = ""; document.getElementById('img-status').style.display='none';
+        alert("Success ?"); navTo('scr-main');
+    }
+
+    function auth(role) {
+        const user = prompt("Name:");
+        const pass = prompt("Pin:");
+        if(role === 'admin' && db.admins.includes(user) && pass === '1234') {
+            document.getElementById('super-admin-section').style.display = (user === "› ÕÌ" ? 'block' : 'none');
+            navTo('scr-admin');
+        } else if(role === 'driver' && pass === '5678') {
+            const d = (db.drivers || []).find(x => x.name === user);
+            if(d) { navTo('scr-driver'); renderDriverTasks(user); } else alert("Not Registered!");
+        } else alert("Denied!");
+    }
+
+    function addDriver() {
+        const n = document.getElementById('d-name').value, p = document.getElementById('d-phone').value, t = document.getElementById('d-truck').value, s = document.getElementById('d-sector').value;
+        if(!n || !p) return alert("Fill Name & Phone!");
+        if(!db.drivers) db.drivers = [];
+        db.drivers.push({ id: Date.now(), name: n, phone: p, truck: t, sector: s });
+        save();
+        document.getElementById('d-name').value = ""; 
+        document.getElementById('d-phone').value = "";
+        document.getElementById('d-truck').value = "";
+        document.getElementById('d-sector').selectedIndex = 0;
+    }
+
+    function delDriver(id) { if(confirm("Delete?")) { db.drivers = db.drivers.filter(d => d.id !== id); save(); } }
+
+    function renderDrivers() {
+        document.getElementById('d-list-display').innerHTML = (db.drivers || []).map(d => `
+            <div style="background:#f9f9f9; padding:8px; margin:5px; border-radius:10px; display:flex; justify-content:space-between; font-size:0.8rem;">
+                <span>?? ${d.name} | ?? ${d.truck} | ?? ${d.sector}</span>
+                <i class="fas fa-trash-alt" style="color:red; cursor:pointer" onclick="delDriver(${d.id})"></i>
+            </div>`).join('');
+    }
+
+    function renderReports() {
+        const list = document.getElementById('admin-list');
+        if(!db.reports) return list.innerHTML = "...";
+        list.innerHTML = db.reports.slice().reverse().map(r => `
+            <div class="item-box">
+                <i class="fas fa-trash-alt del-icon" onclick="delR(${r.id})"></i>
+                <img src="${r.img}" class="report-img-view">
+                ${r.doneImg ? `<p style="color:var(--forest); font-weight:bold;">’Ê—… «·≈‰Ã«“:</p><img src="${r.doneImg}" class="report-img-view" style="border:2px solid var(--forest)">` : ''}
+                ?? <b>«·⁄‰Ê«‰:</b> ${r.addr}<br>
+                ?? <b>«· »·Ì€:</b> ${r.time}<br>
+                ${r.doneTime ? `? <b> „ ›Ì:</b> ${r.doneTime}` : ''}
+                <hr>
+                ${r.status === 'new' ? `
+                    <select id="sel-${r.id}" class="input-style">
+                        <option value="">-- «Œ — ”«∆ﬁ« --</option>
+                        ${(db.drivers||[]).map(d=>`<option value="${d.name}">${d.name}</option>`).join('')}
+                    </select>
+                    <button class="btn-prime" style="background:var(--orange)" onclick="assignTask(${r.id})">≈—”«· «·„Â„…</button>
+                ` : `<b style="color:var(--orange)">„Õ«·… ≈·Ï: ${r.assignedTo}</b>` + (r.status==='done'?' ?':'')}
+            </div>`).join('');
+    }
+
+    function handleDriverImg(input, id) {
+        const r = new FileReader();
+        r.onload = e => { 
+            tempDriverImg = e.target.result; 
+            document.getElementById('status-d-'+id).style.display='block';
+            document.getElementById('btn-d-'+id).style.display='flex';
+        };
+        if(input.files[0]) r.readAsDataURL(input.files[0]);
+    }
+
+    function renderDriverTasks(name) {
+        const ts = (db.reports || []).filter(x => x.assignedTo === name && x.status === 'sent');
+        document.getElementById('driver-tasks-container').innerHTML = `<h3 style="color:white; text-align:center">«·„Â«„ «·„”‰œ…: ${name}</h3>` + ts.map(t => `
+            <div class="item-box">
+                <img src="${t.img}" class="report-img-view">
+                ?? <b>«·„Êﬁ⁄:</b> ${t.addr}<br>
+                ?? <b> »·€ ›Ì:</b> ${t.time}<br>
+                <hr>
+                <label class="btn-prime" style="background:var(--navy);"><i class="fas fa-camera"></i>  ’ÊÌ— «·‰ ÌÃ… <input type="file" accept="image/*" capture="environment" style="display:none;" onchange="handleDriverImg(this, ${t.id})"></label>
+                <div id="status-d-${t.id}" style="display:none; color:var(--forest); font-weight:bold; text-align:center; margin-bottom:5px;">? «·’Ê—… Ã«Â“…</div>
+                <button id="btn-d-${t.id}" class="btn-prime" style="background:var(--emerald); display:none;" onclick="doneTask(${t.id},'${name}')">≈ „«„ «·„Â„… Ê≈—”«· «· »·Ì€ ?</button>
+            </div>`).join('') || "<p style='color:white; text-align:center'>·«  ÊÃœ „Â«„ Õ«·Ì«</p>";
+    }
+
+    function assignTask(id) { 
+        const d = document.getElementById(`sel-${id}`).value; 
+        if(d) { 
+            const rep = db.reports.find(x=>x.id===id);
+            rep.status='sent'; 
+            rep.assignedTo=d; 
+            save(); 
+        } 
+    }
+    
+    function doneTask(id, name) { 
+        const rep = db.reports.find(x=>x.id===id);
+        rep.status = 'done';
+        rep.doneImg = tempDriverImg; 
+        rep.doneTime = document.getElementById('date-display').innerText + " " + document.getElementById('clock').innerText;
+        save(); 
+        tempDriverImg = "";
+        renderDriverTasks(name); 
+    }
+
+    function delR(id) { if(confirm("Delete Report?")) { db.reports = db.reports.filter(x => x.id !== id); save(); } }
+    
+    function addNewAdmin() { 
+        const n = document.getElementById('new-adm-name').value; 
+        if(n) { 
+            if(!db.admins) db.admins=[]; 
+            db.admins.push(n); 
+            save(); 
+            document.getElementById('new-adm-name').value = "";
+        } 
+    }
+
+    function delAdmin(name) {
+        if(name === "› ÕÌ") return alert("·« Ì„ﬂ‰ Õ–› «·„”ƒÊ· «·—∆Ì”Ì");
+        if(confirm("Â·  —Ìœ Õ–› Â–« «·„”ƒÊ·ø")) {
+            db.admins = db.admins.filter(a => a !== name);
+            save();
+        }
+    }
+
+    function renderAdminsList() { 
+        document.getElementById('adm-list-display').innerHTML = (db.admins||[]).map(a=>`
+            <div style="background:#eee; padding:5px; margin:2px; border-radius:5px; display:flex; justify-content:space-between; align-items:center;">
+                <span>?? ${a}</span>
+                ${a !== "› ÕÌ" ? `<i class="fas fa-trash-alt" style="color:red; cursor:pointer" onclick="delAdmin('${a}')"></i>` : ''}
+            </div>`).join(''); 
+    }
+
+    function updateStats() {
+        if(!db.reports) return;
+        document.getElementById('st-new').innerText = db.reports.filter(r => r.status === 'new').length;
+        document.getElementById('st-sent').innerText = db.reports.filter(r => r.status === 'sent').length;
+        document.getElementById('st-done').innerText = db.reports.filter(r => r.status === 'done').length;
+    }
+    function toggleView(id) { const e = document.getElementById(id); e.style.display = e.style.display==='none'?'block':'none'; }
+</script>
+</body>
+</html>
