@@ -13,21 +13,20 @@
 
     <style>
         :root { --emerald: #1B5E20; --gold: #D4AF37; --glass: rgba(255, 255, 255, 0.95); --navy: #14213D; }
-        * { box-sizing: border-box; font-family: 'Tajawal', sans-serif; }
-        body { margin: 0; background: url('https://w0.peakpx.com/wallpaper/842/630/HD-wallpaper-garbage-truck-garbage-recycling-environment-trucks.jpg') no-repeat center center fixed; background-size: cover; }
-        body::before { content: ""; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: -1; }
+        * { box-sizing: border-box; font-family: 'Tajawal', sans-serif; transition: 0.3s; }
+        body { margin: 0; background: url('https://w0.peakpx.com/wallpaper/842/630/HD-wallpaper-garbage-truck-garbage-recycling-environment-trucks.jpg') no-repeat center center fixed; background-size: cover; min-height: 100vh; }
+        body::before { content: ""; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.4); z-index: -1; }
         .top-bar { background: var(--glass); padding: 15px; text-align: center; border-bottom: 3px solid var(--gold); position: sticky; top: 0; z-index: 1000; }
         .screen { display: none; padding: 20px; padding-bottom: 100px; }
         .active { display: block; animation: fadeIn 0.4s; }
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
         .glass-card { background: var(--glass); border-radius: 20px; padding: 25px; margin-bottom: 15px; box-shadow: 0 8px 32px rgba(0,0,0,0.3); text-align: center; cursor: pointer; border: 1px solid rgba(255,255,255,0.3); }
-        .btn-prime { border: none; padding: 15px; border-radius: 50px; width: 100%; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px; margin-bottom: 12px; color: white; }
-        .input-style { width: 100%; padding: 14px; border-radius: 12px; border: 1px solid #ccc; margin-bottom: 12px; }
-        #map { height: 280px; border-radius: 20px; border: 4px solid white; margin-bottom: 15px; }
-        .item-box { background: white; padding: 15px; border-radius: 15px; margin-bottom: 15px; text-align: right; border-right: 8px solid var(--gold); box-shadow: 0 4px 10px rgba(0,0,0,0.1); position: relative; }
+        .btn-prime { border: none; padding: 15px; border-radius: 50px; width: 100%; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px; margin-bottom: 12px; color: white; box-shadow: 0 4px 15px rgba(0,0,0,0.2); }
+        .input-style { width: 100%; padding: 14px; border-radius: 12px; border: 1px solid #ccc; margin-bottom: 12px; font-size: 1rem; }
+        #map { height: 280px; border-radius: 20px; border: 4px solid white; margin-bottom: 15px; z-index: 1; }
+        .item-box { background: white; padding: 20px; border-radius: 15px; margin-bottom: 15px; text-align: right; border-right: 8px solid var(--gold); box-shadow: 0 4px 10px rgba(0,0,0,0.1); position: relative; }
         .report-img-view { width: 100%; height: 200px; object-fit: cover; border-radius: 12px; margin: 10px 0; border: 1px solid #eee; }
         .footer-sig { position: fixed; bottom: 0; width: 100%; background: var(--glass); padding: 12px; text-align: center; font-weight: bold; color: var(--emerald); border-top: 2px solid var(--gold); z-index: 1000; }
-        .status-badge { padding: 4px 10px; border-radius: 8px; font-size: 0.8rem; color: white; background: var(--emerald); }
     </style>
 </head>
 <body onload="initApp()">
@@ -35,7 +34,10 @@
 <div class="top-bar">
     <div style="font-size: 0.8rem; color: #666;">الجمهورية الجزائرية الديمقراطية الشعبية</div>
     <div style="font-size: 1.2rem; font-weight: 700; color: var(--emerald);">بلدية المدية - المدية نظيفة 2026</div>
-    <div id="clock" style="font-weight: bold; margin-top: 5px;">00:00:00</div>
+    <div style="display: flex; justify-content: space-around; margin-top: 5px; font-weight: bold;">
+        <span id="clock">00:00:00</span>
+        <span id="date-display">--/--/----</span>
+    </div>
 </div>
 
 <div id="scr-main" class="screen active">
@@ -47,7 +49,7 @@
 <div id="scr-report" class="screen">
     <div id="map"></div>
     <button class="btn-prime" style="background:var(--emerald);" onclick="getMyLocation()"><i class="fas fa-location-arrow"></i> تحديد موقعي الحالي</button>
-    <input type="text" id="rep-addr" class="input-style" placeholder="وصف المكان...">
+    <input type="text" id="rep-addr" class="input-style" placeholder="وصف المكان أو الحي...">
     <input type="text" id="rep-geo" class="input-style" placeholder="الإحداثيات" readonly>
     <label class="btn-prime" style="background:var(--navy);"><i class="fas fa-camera"></i> تصوير النفايات <input type="file" accept="image/*" capture="environment" style="display:none;" onchange="handleImg(this, 'citizen')"></label>
     <div id="img-status" style="display:none; color:green; text-align:center; font-weight:bold; margin-bottom:10px;">✅ الصورة جاهزة</div>
@@ -56,10 +58,6 @@
 </div>
 
 <div id="scr-admin" class="screen">
-    <div class="glass-card" style="display:flex; justify-content:space-around; padding:10px;">
-        <div>جديد: <span id="st-new">0</span></div>
-        <div>منجز: <span id="st-done">0</span></div>
-    </div>
     <div id="admin-list"></div>
     <button class="btn-prime" style="background:#333;" onclick="navTo('scr-main')">خروج</button>
 </div>
@@ -74,7 +72,6 @@
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
-    // إعدادات Firebase
     const firebaseConfig = { databaseURL: "https://medea-green-2026-default-rtdb.firebaseio.com/" };
     if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
     const rtdb = firebase.database();
@@ -86,9 +83,12 @@
 
     function initApp() {
         rtdb.ref('medea_data').on('value', (snap) => {
-            if (snap.exists()) { db = snap.val(); updateStats(); refresh(); }
+            if (snap.exists()) { db = snap.val(); refresh(); }
         });
-        setInterval(() => { document.getElementById('clock').innerText = new Date().toLocaleTimeString('ar-DZ'); }, 1000);
+        setInterval(() => {
+            document.getElementById('clock').innerText = new Date().toLocaleTimeString('fr-FR');
+            document.getElementById('date-display').innerText = new Date().toLocaleDateString('ar-DZ');
+        }, 1000);
     }
 
     function navTo(id) {
@@ -126,12 +126,11 @@
     }
 
     function submitReport() {
-        const addr = document.getElementById('rep-addr'), geo = document.getElementById('rep-geo');
-        if(!currentImg || !addr.value) return alert("أكمل البيانات");
+        if(!currentImg || !document.getElementById('rep-addr').value) return alert("أكمل البيانات");
         if(!db.reports) db.reports = [];
         db.reports.push({
-            id: Date.now(), addr: addr.value, geo: geo.value, img: currentImg, 
-            status: 'new', time: new Date().toLocaleString('ar-DZ')
+            id: Date.now(), addr: document.getElementById('rep-addr').value, 
+            geo: document.getElementById('rep-geo').value, img: currentImg, status: 'new', time: new Date().toLocaleString('ar-DZ')
         });
         save();
         alert("تم الإرسال بنجاح ✅");
@@ -154,8 +153,8 @@
                 📍 ${r.addr}<br>⏰ ${r.time}<hr>
                 ${r.status === 'new' ? `
                     <select id="s-${r.id}" class="input-style"><option value="">-- اختر سائق --</option>${db.drivers.map(d=>`<option value="${d.name}">${d.name}</option>`).join('')}</select>
-                    <button class="btn-prime" style="background:var(--gold); color:black" onclick="assign('${r.id}')">توجيه السائق</button>
-                ` : `<span class="status-badge">الحالة: ${r.status} (${r.assignedTo})</span>`}
+                    <button class="btn-prime" style="background:var(--gold); color:black" onclick="assign('${r.id}')">إرسال للسائق</button>
+                ` : `الحالة: ${r.status} (${r.assignedTo})`}
             </div>
         `).join('');
 
@@ -165,7 +164,7 @@
                 <img src="${r.img}" class="report-img-view">
                 📍 المكان: ${r.addr}<br>
                 <hr>
-                <label class="btn-prime" style="background:var(--gold); color:black">📸 تصوير الإنجاز <input type="file" capture="environment" style="display:none;" onchange="handleImg(this, 'driver')"></label>
+                <label class="btn-prime" style="background:var(--gold); color:black">📸 تصوير النتيجة <input type="file" capture="environment" style="display:none;" onchange="handleImg(this, 'driver')"></label>
                 <button class="btn-prime" style="background:var(--emerald)" onclick="complete('${r.id}')">تأكيد التنظيف</button>
             </div>
         `).join('');
@@ -181,16 +180,12 @@
     function complete(id) {
         if(!driverImg) return alert("صوّر النتيجة");
         const r = db.reports.find(x => x.id == id);
-        r.status = 'done'; r.doneImg = driverImg; driverImg = ""; save();
-        alert("تم بنجاح ✅");
+        r.status = 'done'; r.doneImg = driverImg; save();
+        alert("تم الإنجاز ✅");
     }
 
     function del(id) { if(confirm("حذف؟")) { db.reports = db.reports.filter(x => x.id != id); save(); } }
-    function updateStats() {
-        if(!db.reports) return;
-        document.getElementById('st-new').innerText = db.reports.filter(r=>r.status==='new').length;
-        document.getElementById('st-done').innerText = db.reports.filter(r=>r.status==='done').length;
-    }
 </script>
 </body>
-</html>
+    </html>
+    
