@@ -28,9 +28,9 @@
         .input-style { width: 100%; padding: 12px; border-radius: 12px; border: 1px solid #ccc; margin-bottom: 10px; font-size: 0.9rem; }
         #map { height: 250px; border-radius: 20px; border: 3px solid white; margin-bottom: 10px; z-index: 1; }
         .item-box { background: white; padding: 15px; border-radius: 15px; margin-bottom: 15px; text-align: right; border-right: 6px solid var(--gold); position: relative; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
-        .report-img-view { width: 100%; height: 180px; object-fit: cover; border-radius: 12px; margin: 10px 0; border: 1px solid #eee; background: #f0f0f0; }
+        .report-img-view { width: 100%; height: 180px; object-fit: cover; border-radius: 12px; margin: 10px 0; border: 1px solid #eee; background: #eee; }
         .del-icon { color: var(--red); cursor: pointer; float: left; font-size: 1.2rem; padding: 5px; }
-        .clean-icon { color: var(--navy); cursor: pointer; float: left; font-size: 1.2rem; padding: 5px; margin-left: 10px; }
+        .erase-icon { color: var(--navy); cursor: pointer; float: left; font-size: 1.2rem; padding: 5px; margin-left: 10px; }
         .footer-sig { position: fixed; bottom: 0; width: 100%; background: var(--glass); padding: 12px; text-align: center; font-weight: bold; color: var(--forest); border-top: 2px solid var(--gold); z-index: 1000; }
         .status-badge { padding: 4px 10px; border-radius: 8px; font-size: 0.75rem; color: white; display: inline-block; margin-bottom: 5px; }
     </style>
@@ -66,7 +66,7 @@
 <div id="scr-report" class="screen">
     <div id="map"></div>
     <button class="btn-prime" style="background:var(--forest);" onclick="getMyLocation()"><i class="fas fa-location-arrow"></i> <span id="lg-rep-get-loc">تحديد موقعي الحالي</span></button>
-    <input type="text" id="rep-addr" class="input-style" placeholder="العنوان...">
+    <input type="text" id="rep-addr" class="input-style" placeholder="العنوان (تلقائي أو يدوي)...">
     <input type="text" id="rep-geo" class="input-style" placeholder="الإحداثيات" readonly>
     <label class="btn-prime" style="background:var(--navy);"><i class="fas fa-camera"></i> <span id="lg-rep-cam">تصوير النفايات</span> <input type="file" id="img-input" accept="image/*" capture="environment" style="display:none;" onchange="handleImg(this, 'citizen')"></label>
     <div id="img-status" style="display:none; color:var(--emerald); font-weight:bold; margin-bottom:10px; text-align:center;">✅ الصورة جاهزة</div>
@@ -80,8 +80,17 @@
         <div style="color:var(--orange)">🚚 <span id="st-sent">0</span></div>
         <div style="color:var(--emerald)">✅ <span id="st-done">0</span></div>
     </div>
-    <button class="btn-prime" style="background:var(--navy)" onclick="toggleView('admin-list')">عرض التبليغات</button>
+    <button class="btn-prime" style="background:var(--navy)" onclick="toggleView('admin-list')" id="lg-adm-view">عرض التبليغات</button>
     <div id="admin-list" style="display:none;"></div>
+    
+    <button class="btn-prime" style="background:var(--forest)" onclick="toggleView('driver-mgr')" id="lg-adm-drvs">إدارة السائقين</button>
+    <div id="driver-mgr" style="display:none;" class="glass-card">
+        <input type="text" id="d-name" class="input-style" placeholder="اسم السائق">
+        <input type="tel" id="d-phone" class="input-style" placeholder="رقم الهاتف">
+        <input type="text" id="d-truck" class="input-style" placeholder="رقم الشاحنة">
+        <button class="btn-prime" style="background:var(--emerald)" onclick="addDriver()">إضافة سائق</button>
+        <div id="d-list-display"></div>
+    </div>
     <button class="btn-prime" style="background:#333;" onclick="navTo('scr-main')" id="lg-back-3">خروج</button>
 </div>
 
@@ -100,18 +109,21 @@
     const rtdb = firebase.database();
 
     let db = { reports: [], drivers: [], admins: ["فتحي"] };
-    let map, marker, currentImg = "", driverImg = "", currentLang = "ar", currentUser = "";
+    let map, marker, citizenImg = "", driverWorkImg = "", currentLang = "ar", currentUser = "";
 
     const translations = {
-        ar: { main_rep: "تبليغ مواطن جديد", main_adm: "مصلحة النظافة (الإدارة)", main_drv: "واجهة السائق", back: "رجوع", status_new: "جديد", status_sent: "قيد التنفيذ", status_done: "تم التنظيف", del_msg: "هل أنت متأكد؟" },
-        fr: { main_rep: "Signalement", main_adm: "Administration", main_drv: "Driver", back: "Retour", status_new: "Nouveau", status_sent: "En cours", status_done: "Terminé", del_msg: "Confirmer?" }
+        ar: { main_rep: "تبليغ مواطن جديد", main_adm: "مصلحة النظافة (الإدارة)", main_drv: "واجهة السائق", back: "رجوع", status_new: "جديد", status_sent: "قيد التنفيذ", status_done: "تم التنظيف", del_msg: "هل أنت متأكد من الحذف؟" }
     };
 
     function save() { rtdb.ref('medea_data').set(db); }
 
     function initApp() {
         rtdb.ref('medea_data').on('value', (snap) => {
-            if (snap.exists()) { db = snap.val(); updateStats(); refreshLists(); }
+            if (snap.exists()) {
+                db = snap.val();
+                updateStats();
+                refreshLists();
+            }
         });
         setInterval(updateClock, 1000);
     }
@@ -125,14 +137,15 @@
     function navTo(id) {
         document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
         document.getElementById(id).classList.add('active');
-        if(id === 'scr-report') setTimeout(initMap, 400);
+        if(id === 'scr-report') setTimeout(initMap, 500);
         refreshLists();
     }
 
     function initMap() {
         if(map) { map.invalidateSize(); return; }
         map = L.map('map').setView([36.2642, 2.7539], 15);
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+        // إعادة خريطة القمر الصناعي الاصلية
+        L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', { attribution: 'Esri Satellite' }).addTo(map);
         marker = L.marker([36.2642, 2.7539], {draggable: true}).addTo(map);
         marker.on('dragend', () => { const p = marker.getLatLng(); updateLoc(p.lat, p.lng); });
     }
@@ -153,19 +166,14 @@
             const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`);
             const data = await res.json();
             document.getElementById('rep-addr').value = data.display_name.split(',').slice(0,3).join(',') || "المدية";
-        } catch { document.getElementById('rep-addr').value = "الموقع المحدد"; }
+        } catch { document.getElementById('rep-addr').value = "المدية"; }
     }
 
     function handleImg(input, type) {
         const reader = new FileReader();
-        reader.onload = e => {
-            if(type === 'citizen') {
-                currentImg = e.target.result;
-                document.getElementById('img-status').style.display='block';
-            } else {
-                driverImg = e.target.result;
-                alert("✅ تم التقاط صورة الإنجاز");
-            }
+        reader.onload = e => { 
+            if(type === 'citizen') { citizenImg = e.target.result; document.getElementById('img-status').style.display='block'; }
+            else { driverWorkImg = e.target.result; alert("✅ تم التقاط صورة الإنجاز"); }
         };
         if(input.files[0]) reader.readAsDataURL(input.files[0]);
     }
@@ -173,33 +181,46 @@
     function submitReport() {
         const addr = document.getElementById('rep-addr').value;
         const geo = document.getElementById('rep-geo').value;
-        if(!currentImg || !addr) return alert("يرجى التقاط صورة وكتابة العنوان");
+        if(!citizenImg || !addr) return alert("الرجاء تصوير النفايات وتحديد العنوان");
         if(!db.reports) db.reports = [];
-        db.reports.push({ id: Date.now(), addr, geo, img: currentImg, status: 'new', time: new Date().toLocaleString() });
-        save(); currentImg = ""; document.getElementById('img-status').style.display='none';
-        alert("تم الإرسال بنجاح ✅"); navTo('scr-main');
+        db.reports.push({ id: Date.now(), addr: addr, geo: geo, img: citizenImg, status: 'new', time: new Date().toLocaleString() });
+        save(); citizenImg = ""; document.getElementById('img-status').style.display='none'; alert("تم الإرسال بنجاح ✅"); navTo('scr-main');
     }
 
-    function openInGoogleMaps(geo) {
+    function openGPS(geo) {
         if(!geo) return alert("لا توجد إحداثيات");
-        window.open(`https://www.google.com/maps/search/?api=1&query=${geo}`, '_blank');
+        window.open(`https://www.google.com/maps?q=${geo}`, '_blank');
+    }
+
+    function auth(role) {
+        const user = prompt("الإسم:");
+        const pass = prompt("كلمة المرور:");
+        if(role === 'admin' && pass === '1234') { currentUser = user; navTo('scr-admin'); }
+        else if(role === 'driver' && pass === '5678') {
+            const d = (db.drivers || []).find(x => x.name === user);
+            if(d) { currentUser = user; document.getElementById('driver-welcome').innerText = `مرحباً ${user}`; navTo('scr-driver'); }
+        }
+    }
+
+    function refreshLists() {
+        if(document.getElementById('scr-admin').classList.contains('active')) renderAdminReports();
+        if(document.getElementById('scr-driver').classList.contains('active')) renderDriverTasks();
     }
 
     function renderAdminReports() {
         const list = document.getElementById('admin-list');
-        const t = translations[currentLang];
         list.innerHTML = (db.reports || []).slice().reverse().map(r => `
             <div class="item-box">
                 <i class="fas fa-trash del-icon" onclick="deleteReport(${r.id})"></i>
-                <i class="fas fa-eraser clean-icon" onclick="clearPhotos(${r.id})" title="حذف الصور فقط"></i>
+                <i class="fas fa-eraser erase-icon" onclick="clearReportImgs(${r.id})" title="حذف الصور"></i>
                 <div style="display:flex; gap:5px;">
-                    ${r.img ? `<img src="${r.img}" class="report-img-view" style="width:50%">` : ''}
-                    ${r.doneImg ? `<img src="${r.doneImg}" class="report-img-view" style="width:50%; border:2px solid green">` : ''}
+                   ${r.img ? `<img src="${r.img}" class="report-img-view" style="width:50%">` : ''}
+                   ${r.doneImg ? `<img src="${r.doneImg}" class="report-img-view" style="width:50%; border:2px solid green">` : ''}
                 </div>
-                <span class="status-badge" style="background:${r.status==='new'?'#d21034':r.status==='sent'?'#ff8c00':'#1B5E20'}">${t['status_'+r.status]}</span><br>
+                <span class="status-badge" style="background:${r.status==='new'?'#d21034':r.status==='sent'?'#ff8c00':'#1B5E20'}">${r.status}</span><br>
                 📍 <b>العنوان:</b> ${r.addr}<br>
                 🌐 <b>الإحداثيات:</b> ${r.geo}<br>
-                <button onclick="openInGoogleMaps('${r.geo}')" class="btn-prime" style="background:var(--navy); padding:5px; font-size:0.8rem;"><i class="fas fa-map-marked-alt"></i> الولوج إلى الخريطة</button>
+                <button class="btn-prime" style="background:var(--navy); padding:5px; font-size:0.8rem;" onclick="openGPS('${r.geo}')"><i class="fas fa-map-marker-alt"></i> فتح في الخريطة</button>
                 <hr>
                 ${r.status === 'new' ? `
                     <select id="sel-${r.id}" class="input-style"><option value="">-- اختر سائقاً --</option>${(db.drivers||[]).map(d=>`<option value="${d.name}">${d.name}</option>`).join('')}</select>
@@ -215,7 +236,7 @@
             <div class="item-box">
                 <img src="${r.img}" class="report-img-view">
                 📍 <b>الموقع:</b> ${r.addr}<br>
-                <button onclick="openInGoogleMaps('${r.geo}')" class="btn-prime" style="background:var(--navy);"><i class="fas fa-directions"></i> الولوج إلى الخريطة (GPS)</button>
+                <button class="btn-prime" style="background:var(--navy)" onclick="openGPS('${r.geo}')"><i class="fas fa-directions"></i> الولوج إلى الخريطة (GPS)</button>
                 <hr>
                 <label class="btn-prime" style="background:var(--gold);">
                     <i class="fas fa-camera"></i> تصوير بعد التنظيف
@@ -227,47 +248,46 @@
     }
 
     function completeTask(id) {
-        if(!driverImg) return alert("يجب التقاط صورة للمكان بعد التنظيف أولاً!");
+        if(!driverWorkImg) return alert("يجب تصوير المكان بعد التنظيف أولاً!");
         const rep = db.reports.find(x=>x.id===id);
         rep.status = 'done';
-        rep.doneImg = driverImg;
-        driverImg = "";
-        save();
-        alert("ممتاز! تم توثيق الإنجاز ✅");
+        rep.doneImg = driverWorkImg;
+        driverWorkImg = "";
+        save(); alert("تم إنهاء المهمة بنجاح ✅");
     }
 
-    function clearPhotos(id) {
-        if(confirm("هل تريد حذف الصور لتوفير المساحة مع بقاء نص التقرير؟")) {
+    function clearReportImgs(id) {
+        if(confirm("هل تريد حذف الصور المرفقة فقط لتوفير المساحة؟")) {
             const rep = db.reports.find(x=>x.id===id);
             rep.img = ""; rep.doneImg = "";
             save();
         }
     }
 
-    // وظائف الدعم المتبقية
-    function auth(role) {
-        const user = prompt("الإسم:");
-        const pass = prompt("كلمة المرور:");
-        if(role === 'admin' && db.admins.includes(user) && pass === '1234') { currentUser = user; navTo('scr-admin'); }
-        else if(role === 'driver' && pass === '5678') { 
-            const d = (db.drivers || []).find(x => x.name === user);
-            if(d) { currentUser = user; document.getElementById('driver-welcome').innerText = `مرحباً ${user}`; navTo('scr-driver'); }
-        }
-    }
     function assignTask(id) {
         const drv = document.getElementById(`sel-${id}`).value;
         if(drv) { const rep = db.reports.find(x=>x.id===id); rep.status='sent'; rep.assignedTo=drv; save(); }
     }
+
     function deleteReport(id) { if(confirm("حذف نهائي؟")) { db.reports = db.reports.filter(x=>x.id!==id); save(); } }
-    function toggleView(id) { const e = document.getElementById(id); e.style.display = e.style.display==='none'?'block':'none'; }
+    
+    function addDriver() {
+        const n = document.getElementById('d-name').value;
+        if(!n) return;
+        if(!db.drivers) db.drivers = [];
+        db.drivers.push({ id: Date.now(), name: n, phone: document.getElementById('d-phone').value, truck: document.getElementById('d-truck').value });
+        save();
+    }
+
     function updateStats() {
         if(!db.reports) return;
         document.getElementById('st-new').innerText = db.reports.filter(r => r.status === 'new').length;
         document.getElementById('st-sent').innerText = db.reports.filter(r => r.status === 'sent').length;
         document.getElementById('st-done').innerText = db.reports.filter(r => r.status === 'done').length;
     }
-    function refreshLists() { if(document.getElementById('scr-admin').classList.contains('active')) renderAdminReports(); if(document.getElementById('scr-driver').classList.contains('active')) renderDriverTasks(); }
-    function setLang(l) { currentLang = l; document.dir = l==='ar'?'rtl':'ltr'; navTo('scr-main'); }
+    
+    function setLang(lang) { currentLang = lang; document.dir = (lang === 'ar' ? 'rtl' : 'ltr'); navTo('scr-main'); }
+    function toggleView(id) { const e = document.getElementById(id); e.style.display = e.style.display==='none'?'block':'none'; }
 </script>
 </body>
 </html>
