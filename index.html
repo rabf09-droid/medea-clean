@@ -33,7 +33,7 @@
         .erase-icon { color: var(--navy); cursor: pointer; float: left; font-size: 1.2rem; padding: 5px; margin-left: 10px; }
         .footer-sig { position: fixed; bottom: 0; width: 100%; background: var(--glass); padding: 12px; text-align: center; font-weight: bold; color: var(--forest); border-top: 2px solid var(--gold); z-index: 1000; }
         .status-badge { padding: 4px 10px; border-radius: 8px; font-size: 0.75rem; color: white; display: inline-block; margin-bottom: 5px; }
-        .time-info { font-size: 0.75rem; color: #666; display: block; margin-top: 5px; }
+        .time-label { font-size: 0.8rem; color: #555; display: block; margin-top: 2px; }
     </style>
 </head>
 <body onload="initApp()">
@@ -214,15 +214,22 @@
         const geo = document.getElementById('rep-geo').value;
         if(!currentCitizenImg || !addr) return alert("أكمل البيانات");
         if(!db.reports) db.reports = [];
-        const timestamp = new Date().toLocaleString('ar-DZ');
-        db.reports.push({ id: Date.now(), addr: addr, geo: geo, img: currentCitizenImg, status: 'new', time: timestamp });
+        db.reports.push({ 
+            id: Date.now(), 
+            addr: addr, 
+            geo: geo, 
+            img: currentCitizenImg, 
+            status: 'new', 
+            time_report: new Date().toLocaleString(),
+            time_done: "" 
+        });
         save(); 
         // تصفير الخانات
         currentCitizenImg = ""; 
         document.getElementById('rep-addr').value = "";
         document.getElementById('rep-geo').value = "";
         document.getElementById('img-status').style.display='none'; 
-        alert("تم الإرسال بنجاح ✅"); 
+        alert("تم الإرسال ✅"); 
         navTo('scr-main');
     }
 
@@ -256,9 +263,9 @@
                 </div>
                 <span class="status-badge" style="background:${r.status==='new'?'#d21034':r.status==='sent'?'#ff8c00':'#1B5E20'}">${translations[currentLang]['status_'+r.status]}</span><br>
                 📍 <b>الموقع:</b> ${r.addr}<br>
-                <span class="time-info">🕒 وقت التبليغ: ${r.time}</span>
-                ${r.doneTime ? `<span class="time-info" style="color:var(--emerald)">✅ وقت التنفيذ: ${r.doneTime}</span>` : ''}
-                <button class="btn-prime" style="background:var(--navy); padding:5px; font-size:0.8rem; margin-top:10px;" onclick="window.open('https://www.google.com/maps?q=${r.geo}')">🗺️ فتح في الخريطة</button>
+                🕒 <b>تبليغ:</b> ${r.time_report}<br>
+                ${r.time_done ? `✅ <b>تنفيذ:</b> ${r.time_done}<br>` : ''}
+                <button class="btn-prime" style="background:var(--navy); padding:5px; font-size:0.8rem; margin-top:5px;" onclick="window.open('https://www.google.com/maps/search/?api=1&query=${r.geo}')">🗺️ فتح الخريطة</button>
                 <hr>
                 ${r.status === 'new' ? `
                     <select id="sel-${r.id}" class="input-style"><option value="">-- اختر سائقاً --</option>${(db.drivers||[]).map(d=>`<option value="${d.name}">${d.name}</option>`).join('')}</select>
@@ -274,12 +281,13 @@
             <div class="item-box">
                 <img src="${r.img}" class="report-img-view">
                 📍 <b>المكان:</b> ${r.addr}<br>
-                <button class="btn-prime" style="background:var(--navy)" onclick="window.open('https://www.google.com/maps?q=${r.geo}')">🗺️ الولوج للخريطة (GPS)</button>
+                🕒 <b>وقت التبليغ:</b> ${r.time_report}<br>
+                <button class="btn-prime" style="background:var(--navy)" onclick="window.open('https://www.google.com/maps/search/?api=1&query=${r.geo}')">🗺️ الخريطة (GPS)</button>
                 <hr>
                 <label class="btn-prime" style="background:var(--gold);"><i class="fas fa-camera"></i> تصوير بعد الإنجاز <input type="file" accept="image/*" capture="environment" style="display:none;" onchange="handleImg(this, 'driver')"></label>
                 <button class="btn-prime" style="background:var(--emerald)" onclick="completeTask(${r.id})">✅ تأكيد التنظيف</button>
             </div>
-        `).join('') : "<p style='color:white;text-align:center;'>لا توجد مهام حالياً</p>";
+        `).join('') : "<p style='color:white;text-align:center;'>لا توجد مهام</p>";
     }
 
     function completeTask(id) {
@@ -287,10 +295,8 @@
         const rep = db.reports.find(x=>x.id===id);
         rep.status = 'done'; 
         rep.doneImg = currentDriverImg;
-        rep.doneTime = new Date().toLocaleString('ar-DZ'); // تسجيل وقت التنفيذ
-        currentDriverImg = ""; 
-        save(); 
-        alert("تم الإرسال للإدارة بنجاح ✅");
+        rep.time_done = new Date().toLocaleString(); // وقت التنفيذ
+        currentDriverImg = ""; save(); alert("تم الإرسال للإدارة ✅");
     }
 
     function clearImgs(id) { if(confirm("حذف الصور لتوفير المساحة؟")) { const r = db.reports.find(x=>x.id===id); r.img=""; r.doneImg=""; save(); } }
@@ -299,10 +305,10 @@
 
     function addDriver() {
         const n = document.getElementById('d-name').value;
-        if(!n) return;
+        const p = document.getElementById('d-phone').value;
+        const t = document.getElementById('d-truck').value;
+        if(!n || !p) return alert("يرجى ملأ بيانات السائق");
         if(!db.drivers) db.drivers = [];
-        db.drivers.push({ id: Date.now(), name: n, phone: document.getElementById('d-phone').value, truck: document.getElementById('d-truck').value, sector: document.getElementById('d-sector').value });
+        db.drivers.push({ id: Date.now(), name: n, phone: p, truck: t, sector: document.getElementById('d-sector').value });
         save();
-        // تصفير الخانات
-        document.getElementById('d-name').value = "";
-        document.getElementById('d-phone').value = 
+        /
