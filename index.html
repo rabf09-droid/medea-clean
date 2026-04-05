@@ -28,7 +28,7 @@
         .input-style { width: 100%; padding: 12px; border-radius: 12px; border: 1px solid #ccc; margin-bottom: 10px; font-size: 0.9rem; }
         #map { height: 250px; border-radius: 20px; border: 3px solid white; margin-bottom: 10px; z-index: 1; }
         .item-box { background: white; padding: 15px; border-radius: 15px; margin-bottom: 15px; text-align: right; border-right: 6px solid var(--gold); position: relative; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
-        .report-img-view { width: 100%; height: 180px; object-fit: cover; border-radius: 12px; margin: 10px 0; border: 1px solid #eee; background: #eee; }
+        .report-img-view { width: 100%; height: 180px; object-fit: cover; border-radius: 12px; margin: 10px 0; border: 1px solid #eee; background: #f0f0f0; }
         .del-icon { color: var(--red); cursor: pointer; float: left; font-size: 1.2rem; padding: 5px; }
         .erase-icon { color: var(--navy); cursor: pointer; float: left; font-size: 1.2rem; padding: 5px; margin-left: 10px; }
         .footer-sig { position: fixed; bottom: 0; width: 100%; background: var(--glass); padding: 12px; text-align: center; font-weight: bold; color: var(--forest); border-top: 2px solid var(--gold); z-index: 1000; }
@@ -69,7 +69,7 @@
     <input type="text" id="rep-addr" class="input-style" placeholder="العنوان (تلقائي أو يدوي)...">
     <input type="text" id="rep-geo" class="input-style" placeholder="الإحداثيات" readonly>
     <label class="btn-prime" style="background:var(--navy);"><i class="fas fa-camera"></i> <span id="lg-rep-cam">تصوير النفايات</span> <input type="file" id="img-input" accept="image/*" capture="environment" style="display:none;" onchange="handleImg(this, 'citizen')"></label>
-    <div id="img-status" style="display:none; color:var(--emerald); font-weight:bold; margin-bottom:10px; text-align:center;">✅ الصورة جاهزة</div>
+    <div id="img-status" style="display:none; color:var(--emerald); font-weight:bold; margin-bottom:10px; text-align:center;">✅ Photo Ready</div>
     <button class="btn-prime" style="background:var(--emerald);" onclick="submitReport()" id="lg-rep-send">إرسال التقرير</button>
     <button class="btn-prime" style="background:#666;" onclick="navTo('scr-main')" id="lg-back-2">رجوع</button>
 </div>
@@ -88,8 +88,21 @@
         <input type="text" id="d-name" class="input-style" placeholder="اسم السائق">
         <input type="tel" id="d-phone" class="input-style" placeholder="رقم الهاتف">
         <input type="text" id="d-truck" class="input-style" placeholder="رقم الشاحنة">
-        <button class="btn-prime" style="background:var(--emerald)" onclick="addDriver()">إضافة سائق</button>
-        <div id="d-list-display"></div>
+        <select id="d-sector" class="input-style">
+            <option value="البلدية">البلدية (Public)</option>
+            <option value="القطاع الخاص">القطاع الخاص (Private)</option>
+        </select>
+        <button class="btn-prime" style="background:var(--emerald)" onclick="addDriver()" id="lg-adm-add-d">إضافة سائق</button>
+        <div id="d-list-display" style="margin-top:10px;"></div>
+    </div>
+
+    <div id="super-admin-section" style="display:none;">
+        <button class="btn-prime" style="background:var(--gold); color:black;" onclick="toggleView('admin-users-mgr')">إدارة المسؤولين</button>
+        <div id="admin-users-mgr" style="display:none;" class="glass-card">
+            <input type="text" id="new-adm-name" class="input-style" placeholder="اسم مسؤول جديد">
+            <button class="btn-prime" style="background:var(--navy)" onclick="addNewAdmin()">حفظ المسؤول</button>
+            <div id="adm-list-display"></div>
+        </div>
     </div>
     <button class="btn-prime" style="background:#333;" onclick="navTo('scr-main')" id="lg-back-3">خروج</button>
 </div>
@@ -109,10 +122,12 @@
     const rtdb = firebase.database();
 
     let db = { reports: [], drivers: [], admins: ["فتحي"] };
-    let map, marker, citizenImg = "", driverWorkImg = "", currentLang = "ar", currentUser = "";
+    let map, marker, currentCitizenImg = "", currentDriverImg = "", currentLang = "ar", currentUser = "";
 
     const translations = {
-        ar: { main_rep: "تبليغ مواطن جديد", main_adm: "مصلحة النظافة (الإدارة)", main_drv: "واجهة السائق", back: "رجوع", status_new: "جديد", status_sent: "قيد التنفيذ", status_done: "تم التنظيف", del_msg: "هل أنت متأكد من الحذف؟" }
+        ar: { main_rep: "تبليغ مواطن جديد", main_adm: "مصلحة النظافة (الإدارة)", main_drv: "واجهة السائق", back: "رجوع", status_new: "جديد", status_sent: "قيد التنفيذ", status_done: "تم التنظيف", del_msg: "هل أنت متأكد من الحذف؟" },
+        fr: { main_rep: "Nouveau Signalement", main_adm: "Administration", main_drv: "Interface Chauffeur", back: "Retour", status_new: "Nouveau", status_sent: "En cours", status_done: "Terminé", del_msg: "Confirmer la suppression ?" },
+        en: { main_rep: "New Report", main_adm: "Administration", main_drv: "Driver Interface", back: "Back", status_new: "New", status_sent: "In Progress", status_done: "Cleaned", del_msg: "Are you sure you want to delete?" }
     };
 
     function save() { rtdb.ref('medea_data').set(db); }
@@ -121,6 +136,7 @@
         rtdb.ref('medea_data').on('value', (snap) => {
             if (snap.exists()) {
                 db = snap.val();
+                if(!db.admins) db.admins = ["فتحي"];
                 updateStats();
                 refreshLists();
             }
@@ -131,7 +147,22 @@
     function updateClock() {
         const now = new Date();
         document.getElementById('clock').innerText = now.toLocaleTimeString('fr-FR');
-        document.getElementById('date-display').innerText = now.toLocaleDateString('ar-DZ');
+        const months = ["جانفي", "فيفري", "مارس", "أفريل", "ماي", "جوان", "جويلية", "أوت", "سبتمبر", "أكتوبر", "نوفمبر", "ديسمبر"];
+        document.getElementById('date-display').innerText = `${now.getDate()} ${months[now.getMonth()]} ${now.getFullYear()}`;
+    }
+
+    function setLang(lang) {
+        currentLang = lang;
+        const t = translations[lang];
+        document.getElementById('lg-main-rep').innerText = t.main_rep;
+        document.getElementById('lg-main-adm').innerText = t.main_adm;
+        document.getElementById('lg-main-drv').innerText = t.main_drv;
+        document.getElementById('lg-back-1').innerText = t.back;
+        document.getElementById('lg-back-2').innerText = t.back;
+        document.getElementById('lg-back-3').innerText = t.back;
+        document.getElementById('lg-back-4').innerText = t.back;
+        document.dir = (lang === 'ar' ? 'rtl' : 'ltr');
+        navTo('scr-main');
     }
 
     function navTo(id) {
@@ -144,7 +175,6 @@
     function initMap() {
         if(map) { map.invalidateSize(); return; }
         map = L.map('map').setView([36.2642, 2.7539], 15);
-        // إعادة خريطة القمر الصناعي الاصلية
         L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', { attribution: 'Esri Satellite' }).addTo(map);
         marker = L.marker([36.2642, 2.7539], {draggable: true}).addTo(map);
         marker.on('dragend', () => { const p = marker.getLatLng(); updateLoc(p.lat, p.lng); });
@@ -156,14 +186,14 @@
                 const lat = pos.coords.latitude, lng = pos.coords.longitude;
                 map.setView([lat, lng], 18); marker.setLatLng([lat, lng]);
                 updateLoc(lat, lng);
-            });
+            }, () => alert("تأكد من تفعيل الموقع"));
         }
     }
 
     async function updateLoc(lat, lng) {
         document.getElementById('rep-geo').value = `${lat.toFixed(6)}, ${lng.toFixed(6)}`;
         try {
-            const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`);
+            const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&accept-language=${currentLang}`);
             const data = await res.json();
             document.getElementById('rep-addr').value = data.display_name.split(',').slice(0,3).join(',') || "المدية";
         } catch { document.getElementById('rep-addr').value = "المدية"; }
@@ -172,8 +202,8 @@
     function handleImg(input, type) {
         const reader = new FileReader();
         reader.onload = e => { 
-            if(type === 'citizen') { citizenImg = e.target.result; document.getElementById('img-status').style.display='block'; }
-            else { driverWorkImg = e.target.result; alert("✅ تم التقاط صورة الإنجاز"); }
+            if(type === 'citizen') { currentCitizenImg = e.target.result; document.getElementById('img-status').style.display='block'; }
+            else { currentDriverImg = e.target.result; alert("✅ تم التقاط صورة الإنجاز"); }
         };
         if(input.files[0]) reader.readAsDataURL(input.files[0]);
     }
@@ -181,29 +211,27 @@
     function submitReport() {
         const addr = document.getElementById('rep-addr').value;
         const geo = document.getElementById('rep-geo').value;
-        if(!citizenImg || !addr) return alert("الرجاء تصوير النفايات وتحديد العنوان");
+        if(!currentCitizenImg || !addr) return alert("أكمل البيانات");
         if(!db.reports) db.reports = [];
-        db.reports.push({ id: Date.now(), addr: addr, geo: geo, img: citizenImg, status: 'new', time: new Date().toLocaleString() });
-        save(); citizenImg = ""; document.getElementById('img-status').style.display='none'; alert("تم الإرسال بنجاح ✅"); navTo('scr-main');
-    }
-
-    function openGPS(geo) {
-        if(!geo) return alert("لا توجد إحداثيات");
-        window.open(`https://www.google.com/maps?q=${geo}`, '_blank');
+        db.reports.push({ id: Date.now(), addr: addr, geo: geo, img: currentCitizenImg, status: 'new', time: new Date().toLocaleString() });
+        save(); currentCitizenImg = ""; document.getElementById('img-status').style.display='none'; alert("تم الإرسال ✅"); navTo('scr-main');
     }
 
     function auth(role) {
         const user = prompt("الإسم:");
-        const pass = prompt("كلمة المرور:");
-        if(role === 'admin' && pass === '1234') { currentUser = user; navTo('scr-admin'); }
-        else if(role === 'driver' && pass === '5678') {
+        const pass = prompt("الرقم السري:");
+        if(role === 'admin' && db.admins.includes(user) && pass === '1234') {
+            currentUser = user;
+            document.getElementById('super-admin-section').style.display = (user === "فتحي" ? 'block' : 'none');
+            navTo('scr-admin');
+        } else if(role === 'driver' && pass === '5678') {
             const d = (db.drivers || []).find(x => x.name === user);
             if(d) { currentUser = user; document.getElementById('driver-welcome').innerText = `مرحباً ${user}`; navTo('scr-driver'); }
         }
     }
 
     function refreshLists() {
-        if(document.getElementById('scr-admin').classList.contains('active')) renderAdminReports();
+        if(document.getElementById('scr-admin').classList.contains('active')) { renderAdminReports(); renderDrivers(); renderAdminsList(); }
         if(document.getElementById('scr-driver').classList.contains('active')) renderDriverTasks();
     }
 
@@ -212,15 +240,15 @@
         list.innerHTML = (db.reports || []).slice().reverse().map(r => `
             <div class="item-box">
                 <i class="fas fa-trash del-icon" onclick="deleteReport(${r.id})"></i>
-                <i class="fas fa-eraser erase-icon" onclick="clearReportImgs(${r.id})" title="حذف الصور"></i>
-                <div style="display:flex; gap:5px;">
-                   ${r.img ? `<img src="${r.img}" class="report-img-view" style="width:50%">` : ''}
-                   ${r.doneImg ? `<img src="${r.doneImg}" class="report-img-view" style="width:50%; border:2px solid green">` : ''}
+                <i class="fas fa-eraser erase-icon" onclick="clearImgs(${r.id})" title="حذف الصور"></i>
+                <div style="display:flex; gap:5px; margin:5px 0;">
+                    ${r.img ? `<img src="${r.img}" class="report-img-view" style="width:48%">` : ''}
+                    ${r.doneImg ? `<img src="${r.doneImg}" class="report-img-view" style="width:48%; border:2px solid green">` : ''}
                 </div>
-                <span class="status-badge" style="background:${r.status==='new'?'#d21034':r.status==='sent'?'#ff8c00':'#1B5E20'}">${r.status}</span><br>
-                📍 <b>العنوان:</b> ${r.addr}<br>
+                <span class="status-badge" style="background:${r.status==='new'?'#d21034':r.status==='sent'?'#ff8c00':'#1B5E20'}">${translations[currentLang]['status_'+r.status]}</span><br>
+                📍 <b>الموقع:</b> ${r.addr}<br>
                 🌐 <b>الإحداثيات:</b> ${r.geo}<br>
-                <button class="btn-prime" style="background:var(--navy); padding:5px; font-size:0.8rem;" onclick="openGPS('${r.geo}')"><i class="fas fa-map-marker-alt"></i> فتح في الخريطة</button>
+                <button class="btn-prime" style="background:var(--navy); padding:5px; font-size:0.8rem;" onclick="window.open('https://www.google.com/maps?q=${r.geo}')">🗺️ فتح في الخريطة</button>
                 <hr>
                 ${r.status === 'new' ? `
                     <select id="sel-${r.id}" class="input-style"><option value="">-- اختر سائقاً --</option>${(db.drivers||[]).map(d=>`<option value="${d.name}">${d.name}</option>`).join('')}</select>
@@ -235,59 +263,60 @@
         document.getElementById('driver-tasks-container').innerHTML = tasks.length ? tasks.map(r => `
             <div class="item-box">
                 <img src="${r.img}" class="report-img-view">
-                📍 <b>الموقع:</b> ${r.addr}<br>
-                <button class="btn-prime" style="background:var(--navy)" onclick="openGPS('${r.geo}')"><i class="fas fa-directions"></i> الولوج إلى الخريطة (GPS)</button>
+                📍 <b>المكان:</b> ${r.addr}<br>
+                <button class="btn-prime" style="background:var(--navy)" onclick="window.open('https://www.google.com/maps?q=${r.geo}')">🗺️ الولوج للخريطة (GPS)</button>
                 <hr>
-                <label class="btn-prime" style="background:var(--gold);">
-                    <i class="fas fa-camera"></i> تصوير بعد التنظيف
-                    <input type="file" accept="image/*" capture="environment" style="display:none;" onchange="handleImg(this, 'driver')">
-                </label>
-                <button class="btn-prime" style="background:var(--emerald)" onclick="completeTask(${r.id})">✅ تم الإنجاز</button>
+                <label class="btn-prime" style="background:var(--gold);"><i class="fas fa-camera"></i> تصوير بعد الإنجاز <input type="file" accept="image/*" capture="environment" style="display:none;" onchange="handleImg(this, 'driver')"></label>
+                <button class="btn-prime" style="background:var(--emerald)" onclick="completeTask(${r.id})">✅ تأكيد التنظيف</button>
             </div>
         `).join('') : "<p style='color:white;text-align:center;'>لا توجد مهام</p>";
     }
 
     function completeTask(id) {
-        if(!driverWorkImg) return alert("يجب تصوير المكان بعد التنظيف أولاً!");
+        if(!currentDriverImg) return alert("يجب تصوير النتيجة أولاً!");
         const rep = db.reports.find(x=>x.id===id);
-        rep.status = 'done';
-        rep.doneImg = driverWorkImg;
-        driverWorkImg = "";
-        save(); alert("تم إنهاء المهمة بنجاح ✅");
+        rep.status = 'done'; rep.doneImg = currentDriverImg;
+        currentDriverImg = ""; save(); alert("تم الإرسال للإدارة ✅");
     }
 
-    function clearReportImgs(id) {
-        if(confirm("هل تريد حذف الصور المرفقة فقط لتوفير المساحة؟")) {
-            const rep = db.reports.find(x=>x.id===id);
-            rep.img = ""; rep.doneImg = "";
-            save();
-        }
-    }
+    function clearImgs(id) { if(confirm("حذف الصور لتوفير المساحة؟")) { const r = db.reports.find(x=>x.id===id); r.img=""; r.doneImg=""; save(); } }
+    function assignTask(id) { const drv = document.getElementById(`sel-${id}`).value; if(drv) { const r = db.reports.find(x=>x.id===id); r.status='sent'; r.assignedTo=drv; save(); } }
+    function deleteReport(id) { if(confirm(translations[currentLang].del_msg)) { db.reports = db.reports.filter(x=>x.id!==id); save(); } }
 
-    function assignTask(id) {
-        const drv = document.getElementById(`sel-${id}`).value;
-        if(drv) { const rep = db.reports.find(x=>x.id===id); rep.status='sent'; rep.assignedTo=drv; save(); }
-    }
-
-    function deleteReport(id) { if(confirm("حذف نهائي؟")) { db.reports = db.reports.filter(x=>x.id!==id); save(); } }
-    
     function addDriver() {
         const n = document.getElementById('d-name').value;
         if(!n) return;
         if(!db.drivers) db.drivers = [];
-        db.drivers.push({ id: Date.now(), name: n, phone: document.getElementById('d-phone').value, truck: document.getElementById('d-truck').value });
+        db.drivers.push({ id: Date.now(), name: n, phone: document.getElementById('d-phone').value, truck: document.getElementById('d-truck').value, sector: document.getElementById('d-sector').value });
         save();
     }
 
+    function renderDrivers() {
+        document.getElementById('d-list-display').innerHTML = (db.drivers || []).map(d => `
+            <div style="background:#f9f9f9; padding:10px; margin:5px; border-radius:10px; font-size:0.85rem; text-align:right;">
+                <i class="fas fa-trash del-icon" onclick="deleteDriver(${d.id})"></i>
+                👤 <b>${d.name}</b> | 📞 ${d.phone}<br>🚛 الشاحنة: ${d.truck} | 🏛 ${d.sector}
+            </div>
+        `).join('');
+    }
+    function deleteDriver(id) { if(confirm("حذف السائق؟")) { db.drivers = db.drivers.filter(x=>x.id!==id); save(); } }
+
+    function addNewAdmin() {
+        const n = document.getElementById('new-adm-name').value;
+        if(n) { if(!db.admins) db.admins=[]; db.admins.push(n); save(); document.getElementById('new-adm-name').value = ""; }
+    }
+    function renderAdminsList() {
+        document.getElementById('adm-list-display').innerHTML = (db.admins||[]).map(a=>`<div style="background:#eee; padding:8px; margin:4px; border-radius:8px;">🔑 ${a} ${a !== 'فتحي' ? `<i class="fas fa-trash del-icon" onclick="deleteAdmin('${a}')"></i>` : ""}</div>`).join('');
+    }
+    function deleteAdmin(name) { if(confirm("حذف المسؤول؟")) { db.admins = db.admins.filter(x=>x!==name); save(); } }
+
+    function toggleView(id) { const e = document.getElementById(id); e.style.display = e.style.display==='none'?'block':'none'; }
     function updateStats() {
         if(!db.reports) return;
         document.getElementById('st-new').innerText = db.reports.filter(r => r.status === 'new').length;
         document.getElementById('st-sent').innerText = db.reports.filter(r => r.status === 'sent').length;
         document.getElementById('st-done').innerText = db.reports.filter(r => r.status === 'done').length;
     }
-    
-    function setLang(lang) { currentLang = lang; document.dir = (lang === 'ar' ? 'rtl' : 'ltr'); navTo('scr-main'); }
-    function toggleView(id) { const e = document.getElementById(id); e.style.display = e.style.display==='none'?'block':'none'; }
 </script>
 </body>
 </html>
