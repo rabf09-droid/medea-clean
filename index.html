@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>نظافة المدية 2026 - الإصدار المطور 13</title>
+    <title>نظافة المدية 2026 - التحديث 13 المطور</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700&display=swap" rel="stylesheet">
@@ -102,6 +102,7 @@
 </div>
 
 <script>
+    // تهيئة Firebase كما في التحديث 13
     const firebaseConfig = { databaseURL: "https://medea-smart-clean-2026-default-rtdb.firebaseio.com/" };
     if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
@@ -109,15 +110,15 @@
     let appData = { reports: [], drivers: [], admins: ["فتحي"] };
     let tempImgCit = "", tempImgDrv = "", currentUser = "";
 
-    function syncDB() { db.ref('APP_V13_FIXED').set(appData); }
+    function syncDB() { db.ref('MEDEA_V13_FINAL').set(appData); }
 
     function initApp() {
-        db.ref('APP_V13_FIXED').on('value', (s) => { if(s.exists()) { appData = s.val(); updateUI(); } });
+        db.ref('MEDEA_V13_FINAL').on('value', (s) => { if(s.exists()) { appData = s.val(); updateUI(); } });
         setInterval(() => { document.getElementById('clock').innerText = new Date().toLocaleTimeString('fr-FR'); }, 1000);
         setLanguage('ar');
     }
 
-    // تفعيل اللغات (تم الإصلاح)
+    // إصلاح أزرار اللغات لتعمل بشكل فوري
     function setLanguage(l) {
         const dict = {
             ar: {c:"الجمهورية الجزائرية الديمقراطية الشعبية", t:"نظافة المدية 2026", r:"التبليغ", a:"الإدارة", d:"السائق", e:"خروج نهائي", tk:"التقاط صورة", g:"تحديد الموقع", s:"إرسال التبليغ"},
@@ -147,7 +148,7 @@
                 if(role === 'citizen') {
                     tempImgCit = res; document.getElementById('img-output').src = res;
                     document.getElementById('img-output').style.display='block'; document.getElementById('cam-placeholder').style.display='none';
-                } else { tempImgDrv = res; alert("📸 تم التقاط صورة الإنجاز"); }
+                } else { tempImgDrv = res; alert("📸 تم التقاط صورة الإنجاز بنجاح"); }
             };
             img.src = e.target.result;
         };
@@ -164,9 +165,9 @@
     }
 
     function submitData() {
-        if(!tempImgCit || !document.getElementById('addr-in').value) return alert("أكمل البيانات");
+        if(!tempImgCit || !document.getElementById('addr-in').value) return alert("الرجاء إكمال الصورة والعنوان");
         const r = { id:Date.now(), img:tempImgCit, addr:document.getElementById('addr-in').value, gps:document.getElementById('gps-in').value, status:'new', time:new Date().toLocaleTimeString('fr-FR'), date:"06 أفريل 2026" };
-        if(!appData.reports) appData.reports=[]; appData.reports.push(r); syncDB(); alert("✅ تم الإرسال بنجاح"); location.reload();
+        if(!appData.reports) appData.reports=[]; appData.reports.push(r); syncDB(); alert("✅ تم الإرسال للإدارة بنجاح"); location.reload();
     }
 
     function auth(role) {
@@ -175,6 +176,7 @@
         else if(role==='driver' && p==='5678') {
             const d=(appData.drivers||[]).find(x=>x.name===u);
             if(d) { currentUser=u; document.getElementById('driver-header').innerHTML=`<h3>${u}</h3><p>🚛 شاحنة: ${d.truck}</p>`; navTo('pg-driver'); }
+            else alert("سائق غير مسجل");
         }
     }
 
@@ -184,57 +186,75 @@
         document.getElementById('count-2').innerText = rs.filter(r=>r.status==='sent').length;
         document.getElementById('count-3').innerText = rs.filter(r=>r.status==='done').length;
 
+        // شاشة الإدارة: عرض البلاغات وصور الإنجاز
         document.getElementById('sec-reps').innerHTML = rs.slice().reverse().map(r => `
             <div class="card" style="text-align:right;">
                 <img src="${r.img}" style="width:100%; border-radius:15px;">
                 <p>📍 ${r.addr}</p>
                 ${r.status==='new'? `
                     <select id="sel-${r.id}" class="input">
-                        <option value="">اختر سائق...</option>
+                        <option value="">اختر سائق لتوجيه المهمة...</option>
                         ${(appData.drivers||[]).map(d=>`<option value="${d.name}">${d.name}</option>`).join('')}
                     </select>
-                    <button class="btn" style="background:var(--forest)" onclick="assign(${r.id})">إرسال المهمة</button>
-                ` : `<p style="color:var(--orange)">🚚 عند السائق: ${r.assignedTo}</p>`}
-                ${r.doneImg ? `<div style="margin-top:10px; border-top:1px solid #ccc; padding-top:10px;"><b style="color:green">✅ صورة الإنجاز:</b><img src="${r.doneImg}" style="width:100%; border-radius:10px; border:2px solid green; margin-top:5px;"></div>` : ''}
-                <button style="color:red; background:none; border:none; margin-top:10px;" onclick="del('rep', ${r.id})">🗑 حذف البلاغ</button>
+                    <button class="btn" style="background:var(--forest)" onclick="assign(${r.id})">إرسال للسائق</button>
+                ` : `<p style="color:var(--orange)">🚚 في عهدة السائق: ${r.assignedTo}</p>`}
+                ${r.doneImg ? `<div style="margin-top:10px; border-top:2px solid #ddd; padding-top:10px;"><b style="color:green">✅ صورة إتمام التنفيذ:</b><img src="${r.doneImg}" style="width:100%; border-radius:15px; border:2px solid green; margin-top:5px;"></div>` : ''}
+                <button style="color:red; background:none; border:none; margin-top:10px;" onclick="del('rep', ${r.id})"><i class="fas fa-trash"></i> حذف التبليغ</button>
             </div>
         `).join('');
 
+        // شاشة الإدارة: قائمة السائقين
         document.getElementById('list-drivers-ui').innerHTML = (appData.drivers||[]).map(d => `
             <div style="background:#eee; padding:10px; margin-top:5px; border-radius:10px; text-align:right;">
                 <b>${d.name}</b> | 📞 ${d.phone} | 🚛 ${d.truck} (${d.sector})
-                <i class="fas fa-trash" style="color:red; float:left;" onclick="del('drv', ${d.id})"></i>
+                <i class="fas fa-trash" style="color:red; float:left; cursor:pointer;" onclick="del('drv', ${d.id})"></i>
             </div>
         `).join('');
 
+        // شاشة السائق: عرض المهام
         const tasks = rs.filter(r=>r.assignedTo===currentUser && r.status==='sent');
         document.getElementById('driver-jobs').innerHTML = tasks.map(r => `
             <div class="card" style="border:3px solid var(--orange); text-align:right;">
                 <img src="${r.img}" style="width:100%; border-radius:15px;">
                 <p>📍 الموقع: ${r.addr}</p>
-                <button class="btn" style="background:var(--navy)" onclick="window.open('https://www.google.com/maps?q=${r.gps}')">📍 فتح الخريطة</button>
+                <button class="btn" style="background:var(--navy)" onclick="window.open('https://www.google.com/maps/search/?api=1&query=${r.gps}')">📍 فتح الخريطة</button>
                 <label class="btn" style="background:var(--gold);">📷 تصوير النتيجة <input type="file" capture="environment" style="display:none;" onchange="processImage(this, 'driver')"></label>
-                <button class="btn" style="background:var(--emerald)" onclick="finish(${r.id})">تأكيد الإنجاز</button>
+                <button class="btn" style="background:var(--emerald)" onclick="finish(${r.id})">تأكيد الإنجاز وإرسال الصورة</button>
             </div>
         `).join('');
     }
 
+    // إضافة سائق مع تصفير الحقول (الاسم، الهاتف، الشاحنة، القطاع)
     function addDriver() {
         const n=document.getElementById('d-name').value, p=document.getElementById('d-phone').value, t=document.getElementById('d-truck').value, s=document.getElementById('d-sector').value;
-        if(n && p){
+        if(n && p && t){
             if(!appData.drivers) appData.drivers=[];
             appData.drivers.push({id:Date.now(), name:n, phone:p, truck:t, sector:s});
-            syncDB(); ["d-name","d-phone","d-truck"].forEach(id=>document.getElementById(id).value=""); alert("✅ تم الحفظ وتصفير الحقول");
-        }
+            syncDB(); 
+            // تصفير الحقول تلقائياً
+            ["d-name","d-phone","d-truck"].forEach(id=>document.getElementById(id).value="");
+            alert("✅ تم حفظ السائق وتصفير الحقول");
+        } else { alert("يرجى ملء كافة الخانات"); }
     }
 
-    function assign(id) { const d=document.getElementById('sel-'+id).value; if(d){ const r=appData.reports.find(x=>x.id===id); r.status='sent'; r.assignedTo=d; syncDB(); alert("🚀 تم الإرسال"); } }
-    function finish(id) { if(!tempImgDrv) return alert("صور النتيجة أولاً"); const r=appData.reports.find(x=>x.id===id); r.status='done'; r.doneImg=tempImgDrv; syncDB(); alert("✅ تم إبلاغ الإدارة"); }
-    function del(t, id) { if(confirm("حذف؟")) { if(t==='rep') appData.reports=appData.reports.filter(x=>x.id!==id); if(t==='drv') appData.drivers=appData.drivers.filter(x=>x.id!==id); syncDB(); } }
+    function assign(id) { const d=document.getElementById('sel-'+id).value; if(d){ const r=appData.reports.find(x=>x.id===id); r.status='sent'; r.assignedTo=d; syncDB(); alert("🚀 تم توجيه المهمة للسائق"); } }
+    
+    // إرسال صورة إتمام التنفيذ للإدارة
+    function finish(id) { 
+        if(!tempImgDrv) return alert("يجب تصوير الموقع بعد التنظيف أولاً"); 
+        const r=appData.reports.find(x=>x.id===id); 
+        r.status='done'; 
+        r.doneImg=tempImgDrv; // حفظ صورة الإنجاز
+        syncDB(); 
+        tempImgDrv = ""; // تصفير الصورة المؤقتة
+        alert("✅ تم إرسال تقرير الإنجاز والصورة للإدارة"); 
+    }
+
+    function del(t, id) { if(confirm("هل أنت متأكد من الحذف؟")) { if(t==='rep') appData.reports=appData.reports.filter(x=>x.id!==id); if(t==='drv') appData.drivers=appData.drivers.filter(x=>x.id!==id); syncDB(); } }
     function navTo(id) { document.querySelectorAll('.page').forEach(p=>p.classList.remove('active')); document.getElementById(id).classList.add('active'); updateUI(); }
     function toggleSection(id) { const e=document.getElementById(id); e.style.display=e.style.display==='none'?'block':'none'; }
-    function exitApp() { if(confirm("خروج؟")) window.location.href="about:blank"; }
+    function exitApp() { if(confirm("هل تريد الخروج؟")) window.location.href="about:blank"; }
 </script>
 </body>
-    </html>
-    
+                                                                                                                    </html>
+                
