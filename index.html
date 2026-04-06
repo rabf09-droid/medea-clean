@@ -76,6 +76,7 @@
         </div>
         <button class="btn" style="background:var(--navy)" onclick="toggleSection('sec-reps')">📦 التبليغات الواردة</button>
         <div id="sec-reps" style="display:none;"></div>
+        
         <button class="btn" style="background:var(--forest)" onclick="toggleSection('sec-drvs')">🚛 إضافة سائق</button>
         <div id="sec-drvs" style="display:none;" class="card">
             <input type="text" id="d-name" class="input" placeholder="اسم السائق">
@@ -83,6 +84,7 @@
             <button class="btn" style="background:var(--emerald)" onclick="addDriver()">حفظ السائق (تصفير)</button>
             <div id="list-drivers-ui"></div>
         </div>
+
         <div id="owner-zone" style="display:none;">
             <button class="btn" style="background:var(--gold); color:black;" onclick="toggleSection('sec-mgrs')">🔑 إدارة المسؤولين</button>
             <div id="sec-mgrs" style="display:none;" class="card">
@@ -167,26 +169,16 @@
         const addr = document.getElementById('addr-in').value;
         const gps = document.getElementById('gps-in').value;
         if(!tempImgCit || !addr) return alert("أكمل تصوير النفايات وتحديد الموقع أولاً");
-        
         const newReport = {
             id: Date.now(), img: tempImgCit, addr: addr, gps: gps,
             status: 'new', time: new Date().toLocaleTimeString('fr-FR'), date: "06 أفريل 2026"
         };
-        
         if(!appData.reports) appData.reports = [];
         appData.reports.push(newReport);
-        
         document.getElementById('send-btn').innerText = "جاري الإرسال...";
         db.ref('APP_V13_FINAL').set(appData).then(() => {
-            alert(`✅ تم وصول التبليغ للإدارة بنجاح تام\n📍 الموقع: ${addr}\n🕒 الوقت: ${newReport.time}`);
-            // إعادة تصفير الواجهة دون إعادة تحميل الصفحة كاملة
-            tempImgCit = "";
-            document.getElementById('img-output').style.display = 'none';
-            document.getElementById('cam-placeholder').style.display = 'block';
-            document.getElementById('addr-in').value = "";
-            document.getElementById('gps-in').value = "";
-            document.getElementById('send-btn').innerText = "إرسال التبليغ الآن";
-            navTo('pg-home');
+            alert("✅ تم وصول التبليغ للإدارة بنجاح تام");
+            location.reload();
         });
     }
 
@@ -224,10 +216,8 @@
                 <button style="color:red; background:none; border:none;" onclick="del('rep', ${r.id})"><i class="fas fa-trash"></i> حذف</button>
             </div>
         `).join('');
-        
         document.getElementById('list-drivers-ui').innerHTML = (appData.drivers||[]).map(d => `<div style="background:#eee; padding:10px; margin-top:5px; border-radius:10px; text-align:right;">${d.name} | ${d.truck} <i class="fas fa-trash" style="color:red; float:left;" onclick="del('drv', ${d.id})"></i></div>`).join('');
         document.getElementById('list-admins-ui').innerHTML = (appData.admins||[]).map(a => `<div style="background:#eee; padding:10px; margin-top:5px; border-radius:10px;">${a} ${a!=='فتحي'?`<i class="fas fa-times" style="color:red; float:left;" onclick="del('adm', '${a}')"></i>`:''}</div>`).join('');
-
         const jobs = rs.filter(r => r.assignedTo === currentUser && r.status === 'sent');
         document.getElementById('driver-jobs').innerHTML = jobs.map(r => `
             <div class="card" style="border:3px solid var(--orange); text-align:right;">
@@ -245,20 +235,15 @@
     function addDriver() {
         const n=document.getElementById('d-name').value, t=document.getElementById('d-truck').value;
         if(n){ if(!appData.drivers) appData.drivers=[];
-        appData.drivers.push({id:Date.now(), name:n, truck:t}); syncDB(); 
-        document.getElementById('d-name').value=""; document.getElementById('d-truck').value=""; alert("✅ تم الحفظ وتصفير الخانات"); }
+        appData.drivers.push({id:Date.now(), name:n, truck:t}); syncDB(); document.getElementById('d-name').value=""; document.getElementById('d-truck').value=""; alert("✅ تم الحفظ وتصفير الخانات"); }
     }
 
-    function addAdmin() { 
-        const n=document.getElementById('m-name').value; if(n){ if(!appData.admins) appData.admins=[]; 
-        appData.admins.push(n); syncDB(); document.getElementById('m-name').value=""; alert("✅ تمت الإضافة وتصفير الخانة"); } 
-    }
-    
+    function addAdmin() { const n=document.getElementById('m-name').value; if(n){ if(!appData.admins) appData.admins=[]; appData.admins.push(n); syncDB(); document.getElementById('m-name').value=""; alert("✅ تمت الإضافة وتصفير الخانة"); } }
     function assign(id) { const d=document.getElementById('assign-'+id).value; if(d){ const r=appData.reports.find(x=>x.id===id); r.status='sent'; r.assignedTo=d; syncDB(); alert("🚀 تم الإرسال للسائق"); } }
     function finish(id) { if(!tempImgDrv) return alert("صور النتيجة أولاً"); const r=appData.reports.find(x=>x.id===id); r.status='done'; r.doneImg=tempImgDrv; syncDB(); alert("✅ تم إبلاغ الإدارة"); }
     function del(t, id) { if(confirm("حذف؟")) { if(t==='rep') appData.reports=appData.reports.filter(x=>x.id!==id); if(t==='drv') appData.drivers=appData.drivers.filter(x=>x.id!==id); if(t==='adm') appData.admins=appData.admins.filter(x=>x!==id); syncDB(); } }
     function toggleSection(id) { const e=document.getElementById(id); e.style.display=e.style.display==='none'?'block':'none'; }
 </script>
 </body>
-    </html>
+                </html>
     
