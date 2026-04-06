@@ -42,9 +42,9 @@
         <div class="card" onclick="auth('driver')"><i class="fas fa-truck fa-4x" style="color:var(--gold)"></i><h2 id="lbl-driver">السائق</h2></div>
         <div class="footer">
             <div class="lang-box">
-                <button class="lang-btn" onclick="translateTo('ar')">العربية</button>
-                <button class="lang-btn" onclick="translateTo('fr')">Français</button>
-                <button class="lang-btn" onclick="translateTo('en')">English</button>
+                <button class="lang-btn" onclick="translateUI('ar')">العربية</button>
+                <button class="lang-btn" onclick="translateUI('fr')">Français</button>
+                <button class="lang-btn" onclick="translateUI('en')">English</button>
             </div>
             <button class="btn" style="background:var(--red); margin:0;" onclick="exitApp()"><i class="fas fa-power-off"></i> <span id="lbl-exit">خروج نهائي</span></button>
         </div>
@@ -74,6 +74,7 @@
             <div style="flex:1; background:var(--orange); color:white; padding:12px; border-radius:15px; text-align:center;">مرسل<br><b id="count-2">0</b></div>
             <div style="flex:1; background:var(--forest); color:white; padding:12px; border-radius:15px; text-align:center;">تم<br><b id="count-3">0</b></div>
         </div>
+        
         <button class="btn" style="background:var(--navy)" onclick="toggleSection('sec-reps')">📦 التبليغات الواردة</button>
         <div id="sec-reps" style="display:none;"></div>
         
@@ -90,6 +91,7 @@
             <button class="btn" style="background:var(--emerald)" onclick="addDriver()">حفظ السائق (تصفير)</button>
             <div id="list-drivers-ui"></div>
         </div>
+
         <button class="btn" style="background:#444;" onclick="navTo('pg-home')">رجوع</button>
     </div>
 
@@ -105,35 +107,35 @@
     if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
 
-    let appData = { reports: [], drivers: [], admins: ["فتحي"] };
+    let appData = { reports: [], drivers: [], admins: ["فتحي", "دكتور"] };
     let tempImgCit = "", tempImgDrv = "", currentUser = "";
 
-    function translateTo(lang) {
-        const texts = {
+    function translateUI(lang) {
+        const dict = {
             ar: { title: "المدية نظيفة", country: "الجمهورية الجزائرية الديمقراطية الشعبية", rep: "التبليغ", adm: "الإدارة", drv: "السائق", exit: "خروج نهائي" },
             fr: { title: "Médéa Propre", country: "République Algérienne", rep: "Signalement", adm: "Admin", drv: "Chauffeur", exit: "Sortie" },
             en: { title: "Clean Medea", country: "Algerian Republic", rep: "Report", adm: "Admin", drv: "Driver", exit: "Exit" }
         };
-        const t = texts[lang];
-        document.getElementById('txt-title').innerText = t.title;
-        document.getElementById('txt-country').innerText = t.country;
-        document.getElementById('lbl-report').innerText = t.rep;
-        document.getElementById('lbl-admin').innerText = t.adm;
-        document.getElementById('lbl-driver').innerText = t.drv;
-        document.getElementById('lbl-exit').innerText = t.exit;
+        const l = dict[lang];
+        document.getElementById('txt-title').innerText = l.title;
+        document.getElementById('txt-country').innerText = l.country;
+        document.getElementById('lbl-report').innerText = l.rep;
+        document.getElementById('lbl-admin').innerText = l.adm;
+        document.getElementById('lbl-driver').innerText = l.drv;
+        document.getElementById('lbl-exit').innerText = l.exit;
         document.dir = (lang === 'ar' ? 'rtl' : 'ltr');
     }
 
     function initApp() {
-        db.ref('APP_V13_FINAL').on('value', (s) => { if(s.exists()) { appData = s.val(); updateUI(); } });
+        db.ref('MEDEA_APP_STABLE').on('value', (s) => { if(s.exists()) { appData = s.val(); updateUI(); } });
         setInterval(() => { document.getElementById('clock').innerText = new Date().toLocaleTimeString('fr-FR'); }, 1000);
     }
 
     function processImage(input, role) {
         const reader = new FileReader();
-        reader.onload = function(e) {
+        reader.onload = (e) => {
             const img = new Image();
-            img.onload = function() {
+            img.onload = () => {
                 const canvas = document.createElement('canvas');
                 const scale = 400 / img.width;
                 canvas.width = 400; canvas.height = img.height * scale;
@@ -155,25 +157,33 @@
         navigator.geolocation.getCurrentPosition(p => {
             const lat = p.coords.latitude, lng = p.coords.longitude;
             document.getElementById('gps-in').value = lat.toFixed(6) + "," + lng.toFixed(6);
-            fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`)
-            .then(r => r.json()).then(d => { document.getElementById('addr-in').value = d.display_name.split(',').slice(0,3).join(','); });
+            fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`).then(r => r.json()).then(d => {
+                document.getElementById('addr-in').value = d.display_name.split(',').slice(0,3).join(',');
+            });
         });
     }
 
     function submitData() {
         const addr = document.getElementById('addr-in').value, gps = document.getElementById('gps-in').value;
-        if(!tempImgCit || !addr) return alert("أكمل البيانات");
-        const rep = { id: Date.now(), img: tempImgCit, addr: addr, gps: gps, status: 'new', time: new Date().toLocaleTimeString('fr-FR'), date: "06 أفريل 2026" };
+        if(!tempImgCit || !addr) return alert("يرجى التقاط صورة وتحديد الموقع");
+        
+        const rep = {
+            id: Date.now(), img: tempImgCit, addr: addr, gps: gps,
+            time: new Date().toLocaleTimeString('fr-FR'), date: "06 أفريل 2026", status: 'new'
+        };
         if(!appData.reports) appData.reports = [];
         appData.reports.push(rep);
-        db.ref('APP_V13_FINAL').set(appData).then(() => {
+        
+        db.ref('MEDEA_APP_STABLE').set(appData).then(() => {
             alert("شكرا لتعاونك معنا تم الإرسال");
+            // تصفير الحقول
             tempImgCit = "";
             document.getElementById('img-output').style.display = 'none';
             document.getElementById('cam-placeholder').style.display = 'block';
             document.getElementById('addr-in').value = "";
             document.getElementById('gps-in').value = "";
             document.getElementById('cit-file').value = "";
+            // العودة للرئيسية
             navTo('pg-home');
         });
     }
@@ -183,7 +193,7 @@
         if(role==='admin' && (appData.admins||[]).includes(u) && p==='1234') navTo('pg-admin');
         else if(role==='driver' && p==='5678') {
             const d = (appData.drivers||[]).find(x => x.name === u);
-            if(d) { currentUser=u; navTo('pg-driver'); }
+            if(d) { currentUser=u; document.getElementById('driver-header').innerHTML = `<h3>${u}</h3>`; navTo('pg-driver'); }
         }
     }
 
@@ -196,33 +206,51 @@
         document.getElementById('sec-reps').innerHTML = rs.slice().reverse().map(r => `
             <div class="card" style="text-align:right;">
                 <img src="${r.img}" style="width:100%; border-radius:15px;">
-                <p>📍 ${r.addr}</p><p>🕒 ${r.time} | 📅 ${r.date}</p>
-                ${r.status === 'new' ? `<button class="btn" style="background:var(--forest)" onclick="assign(${r.id})">توجيه</button>` : ''}
-                ${r.doneImg ? `<p style="color:green">✅ تم الإنجاز:</p><img src="${r.doneImg}" style="width:100%; border-radius:15px; border:3px solid green;">` : ''}
-                <button style="color:red; background:none; border:none;" onclick="del('rep', ${r.id})">حذف</button>
+                <p>📍 ${r.addr}</p><small>🕒 ${r.time} | 📅 ${r.date}</small>
+                ${r.status === 'new' ? `
+                    <select id="assign-${r.id}" class="input">
+                        <option value="">اختر السائق...</option>
+                        ${(appData.drivers||[]).map(d => `<option value="${d.name}">${d.name}</option>`).join('')}
+                    </select>
+                    <button class="btn" style="background:var(--forest)" onclick="assign(${r.id})">توجيه المهمة</button>
+                ` : `<p style="color:var(--orange)">🚚 عند: ${r.assignedTo}</p>`}
+                ${r.doneImg ? `<p style="color:green">✅ تم الإنجاز:</p><img src="${r.doneImg}" style="width:100%; border-radius:15px; border:2px solid green;">` : ''}
+                <button style="color:red; background:none; border:none; margin-top:10px;" onclick="del('rep', ${r.id})">حذف</button>
             </div>
         `).join('');
-        
-        document.getElementById('list-drivers-ui').innerHTML = (appData.drivers||[]).map(d => `<div style="background:#eee; padding:10px; margin-top:5px; border-radius:10px;">${d.name} | ${d.truck} | ${d.phone} | ${d.sector}</div>`).join('');
+
+        document.getElementById('list-drivers-ui').innerHTML = (appData.drivers||[]).map(d => `<div style="background:#eee; padding:10px; margin-top:5px; border-radius:10px; text-align:right;">${d.name} | ${d.truck} | ${d.phone} | ${d.sector} <i class="fas fa-trash" style="color:red; float:left;" onclick="del('drv', ${d.id})"></i></div>`).join('');
+
+        const jobs = rs.filter(r => r.assignedTo === currentUser && r.status === 'sent');
+        document.getElementById('driver-jobs').innerHTML = jobs.map(r => `
+            <div class="card">
+                <img src="${r.img}" style="width:100%;">
+                <p>📍 ${r.addr}</p>
+                <button class="btn" style="background:var(--navy)" onclick="window.open('http://googleusercontent.com/maps.google.com/q=${r.gps}')">فتح الخريطة</button>
+                <label class="btn" style="background:var(--gold);">📷 تصوير النتيجة <input type="file" capture="environment" style="display:none;" onchange="processImage(this, 'driver')"></label>
+                <button class="btn" style="background:var(--emerald)" onclick="finish(${r.id})">تأكيد الإنجاز</button>
+            </div>
+        `).join('');
     }
 
     function addDriver() {
-        const n=document.getElementById('d-name').value, p=document.getElementById('d-phone').value, t=document.getElementById('d-truck').value, s=document.getElementById('d-sector').value;
+        const n=document.getElementById('d-name').value, ph=document.getElementById('d-phone').value, tr=document.getElementById('d-truck').value, s=document.getElementById('d-sector').value;
         if(n){ 
             if(!appData.drivers) appData.drivers=[];
-            appData.drivers.push({id:Date.now(), name:n, phone:p, truck:t, sector:s});
-            db.ref('APP_V13_FINAL').set(appData);
+            appData.drivers.push({id:Date.now(), name:n, phone:ph, truck:tr, sector:s});
+            db.ref('MEDEA_APP_STABLE').set(appData);
             document.getElementById('d-name').value=""; document.getElementById('d-phone').value=""; document.getElementById('d-truck').value=""; document.getElementById('d-sector').value="";
             alert("✅ تم الحفظ وتصفير الخانات"); 
         }
     }
 
-    function assign(id) { const d=prompt("اسم السائق:"); if(d){ const r=appData.reports.find(x=>x.id===id); r.status='sent'; r.assignedTo=d; db.ref('APP_V13_FINAL').set(appData); alert("🚀 تم"); } }
-    function finish(id) { if(!tempImgDrv) return alert("صور أولاً"); const r=appData.reports.find(x=>x.id===id); r.status='done'; r.doneImg=tempImgDrv; db.ref('APP_V13_FINAL').set(appData); alert("✅ تم"); }
-    function del(t, id) { if(confirm("حذف؟")) { if(t==='rep') appData.reports=appData.reports.filter(x=>x.id!==id); db.ref('APP_V13_FINAL').set(appData); } }
+    function assign(id) { const d=document.getElementById('assign-'+id).value; if(d){ const r=appData.reports.find(x=>x.id===id); r.status='sent'; r.assignedTo=d; db.ref('MEDEA_APP_STABLE').set(appData); alert("🚀 تم التوجيه"); } }
+    function finish(id) { if(!tempImgDrv) return alert("صور الإنجاز أولاً"); const r=appData.reports.find(x=>x.id===id); r.status='done'; r.doneImg=tempImgDrv; db.ref('MEDEA_APP_STABLE').set(appData); alert("✅ تم الإرسال"); tempImgDrv=""; }
+    function del(t, id) { if(confirm("حذف؟")) { if(t==='rep') appData.reports=appData.reports.filter(x=>x.id!==id); if(t==='drv') appData.drivers=appData.drivers.filter(x=>x.id!==id); db.ref('MEDEA_APP_STABLE').set(appData); } }
     function navTo(id) { document.querySelectorAll('.page').forEach(p => p.classList.remove('active')); document.getElementById(id).classList.add('active'); updateUI(); }
     function toggleSection(id) { const e=document.getElementById(id); e.style.display=e.style.display==='none'?'block':'none'; }
     function exitApp() { window.close(); }
 </script>
 </body>
-</html>
+                </html>
+    
