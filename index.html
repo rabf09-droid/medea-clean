@@ -64,11 +64,11 @@
 
 <div id="scr-report" class="screen">
     <div id="map"></div>
-    <button class="btn-prime" style="background:var(--forest);" onclick="getMyLocation()"><i class="fas fa-location-arrow"></i> <span>تحديد موقعي الحالي</span></button>
-    <input type="text" id="rep-addr" class="input-style" placeholder="العنوان...">
+    <button class="btn-prime" style="background:var(--forest);" onclick="getMyLocation()"><i class="fas fa-location-arrow"></i> <span>تحديد موقعي التلقائي</span></button>
+    <input type="text" id="rep-addr" class="input-style" placeholder="العنوان سيظهر هنا تلقائياً...">
     <input type="text" id="rep-geo" class="input-style" placeholder="الإحداثيات" readonly>
     <label class="btn-prime" style="background:var(--navy);"><i class="fas fa-camera"></i> <span>تصوير النفايات</span> <input type="file" id="img-input" accept="image/*" capture="environment" style="display:none;" onchange="handleImg(this, 'citizen')"></label>
-    <div id="img-status" style="display:none; color:var(--emerald); font-weight:bold; text-align:center;">✅ تم التقاط الصورة</div>
+    <div id="img-status" style="display:none; color:var(--emerald); font-weight:bold; text-align:center;">✅ الصورة جاهزة</div>
     <button class="btn-prime" style="background:var(--emerald);" onclick="submitReport()"><i class="fas fa-paper-plane"></i> إرسال التقرير</button>
     <button class="btn-prime" style="background:#666;" onclick="navTo('scr-main')">رجوع</button>
 </div>
@@ -79,17 +79,26 @@
         <div style="color:var(--orange)">🚚 <span id="st-sent">0</span></div>
         <div style="color:var(--emerald)">✅ <span id="st-done">0</span></div>
     </div>
-    <button class="btn-prime" style="background:var(--navy)" onclick="toggleView('admin-list')"><i class="fas fa-list"></i> عرض التبليغات</button>
+    <button class="btn-prime" style="background:var(--navy)" onclick="toggleView('admin-list')"><i class="fas fa-list"></i> عرض البلاغات</button>
     <div id="admin-list" style="display:none;"></div>
+    
     <button class="btn-prime" style="background:var(--forest)" onclick="toggleView('driver-mgr')"><i class="fas fa-users-cog"></i> إدارة السائقين</button>
     <div id="driver-mgr" style="display:none;" class="glass-card">
         <input type="text" id="d-name" class="input-style" placeholder="اسم السائق">
         <button class="btn-prime" style="background:var(--emerald)" onclick="addDriver()">إضافة سائق</button>
         <div id="d-list-display"></div>
     </div>
+
+    <button class="btn-prime" style="background:var(--gold); color:black;" id="btn-super-admin" onclick="toggleView('admin-users-mgr')"><i class="fas fa-user-shield"></i> إدارة المسؤولين</button>
+    <div id="admin-users-mgr" style="display:none;" class="glass-card">
+        <input type="text" id="new-adm-name" class="input-style" placeholder="اسم مسؤول جديد">
+        <button class="btn-prime" style="background:var(--navy)" onclick="addNewAdmin()">حفظ المسؤول</button>
+        <div id="adm-list-display"></div>
+    </div>
+
     <button class="btn-prime" style="background:#333;" onclick="navTo('scr-main')">خروج</button>
-</div>
-<div id="scr-driver" class="screen">
+        </div>
+    <div id="scr-driver" class="screen">
     <h3 id="driver-welcome" style="color:white; text-align:center;"></h3>
     <div id="driver-tasks-container"></div>
     <button class="btn-prime" style="background:#333;" onclick="navTo('scr-main')">خروج</button>
@@ -110,7 +119,12 @@
 
     function initApp() {
         rtdb.ref('medea_data').on('value', (snap) => {
-            if (snap.exists()) { db = snap.val(); if(!db.admins) db.admins = ["فتحي"]; updateStats(); refreshLists(); }
+            if (snap.exists()) { 
+                db = snap.val(); 
+                if(!db.admins) db.admins = ["فتحي"];
+                updateStats(); 
+                refreshLists(); 
+            }
         });
         setInterval(updateClock, 1000);
     }
@@ -134,14 +148,32 @@
         map = L.map('map').setView([36.2642, 2.7539], 15);
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{y}/{x}.png').addTo(map);
         marker = L.marker([36.2642, 2.7539], {draggable: true}).addTo(map);
+        marker.on('dragend', function() {
+            let pos = marker.getLatLng();
+            updateLoc(pos.lat, pos.lng);
+        });
     }
 
     function getMyLocation() {
-        navigator.geolocation.getCurrentPosition((pos) => {
-            const lat = pos.coords.latitude, lng = pos.coords.longitude;
-            map.setView([lat, lng], 18); marker.setLatLng([lat, lng]);
-            document.getElementById('rep-geo').value = `${lat.toFixed(6)}, ${lng.toFixed(6)}`;
-        }, () => alert("تأكد من تفعيل الموقع"));
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition((pos) => {
+                const lat = pos.coords.latitude, lng = pos.coords.longitude;
+                map.setView([lat, lng], 18);
+                marker.setLatLng([lat, lng]);
+                updateLoc(lat, lng);
+            }, () => alert("يرجى تفعيل الـ GPS في الهاتف"));
+        }
+    }
+
+    async function updateLoc(lat, lng) {
+        document.getElementById('rep-geo').value = `${lat.toFixed(6)}, ${lng.toFixed(6)}`;
+        try {
+            const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`);
+            const data = await res.json();
+            document.getElementById('rep-addr').value = data.display_name.split(',').slice(0, 3).join(',');
+        } catch (e) {
+            document.getElementById('rep-addr').value = "المدية، الجزائر";
+        }
     }
 
     function handleImg(input, type) {
@@ -155,20 +187,41 @@
 
     function submitReport() {
         const addr = document.getElementById('rep-addr').value;
-        if(!currentCitizenImg || !addr) return alert("أكمل البيانات");
+        if(!currentCitizenImg || !addr) return alert("يرجى تصوير النفايات وكتابة العنوان");
         if(!db.reports) db.reports = [];
         db.reports.push({ id: Date.now(), addr: addr, geo: document.getElementById('rep-geo').value, img: currentCitizenImg, status: 'new', time: new Date().toLocaleString() });
-        save(); alert("تم الإرسال ✅"); navTo('scr-main');
+        save();
+        alert("تم إرسال بلاغك بنجاح ✅");
+        navTo('scr-main');
     }
 
     function auth(role) {
         const user = prompt("الإسم:");
         const pass = prompt("الرقم السري:");
-        if(role === 'admin' && pass === '1234') navTo('scr-admin');
-        else if(role === 'driver' && pass === '5678') { currentUser = user; navTo('scr-driver'); }
+        if(role === 'admin' && db.admins.includes(user) && pass === '1234') {
+            currentUser = user;
+            document.getElementById('btn-super-admin').style.display = (user === "فتحي" ? 'block' : 'none');
+            navTo('scr-admin');
+        } else if(role === 'driver' && pass === '5678') {
+            currentUser = user;
+            document.getElementById('driver-welcome').innerText = `مرحباً بالسائق: ${user}`;
+            navTo('scr-driver');
+        } else {
+            alert("بيانات خاطئة");
+        }
     }
 
-    function refreshLists() { renderAdminReports(); renderDrivers(); renderDriverTasks(); }
+    function addNewAdmin() {
+        const n = document.getElementById('new-adm-name').value;
+        if(n) { if(!db.admins) db.admins=[]; db.admins.push(n); save(); alert("تمت إضافة المسؤول"); refreshLists(); }
+    }
+
+    function refreshLists() {
+        renderAdminReports();
+        renderDrivers();
+        renderAdminsList();
+        renderDriverTasks();
+    }
 
     function renderAdminReports() {
         const list = document.getElementById('admin-list');
@@ -179,7 +232,7 @@
                 <img src="${r.img}" class="report-img-view">
                 <span class="status-badge" style="background:${r.status==='new'?'#d21034':'#1B5E20'}">${r.status}</span><br>
                 📍 الموقع: ${r.addr}<br>
-                <button class="btn-prime" style="background:var(--navy); padding:5px; font-size:0.8rem;" onclick="window.open('http://maps.google.com/?q=${r.geo}')">🗺️ فتح الخريطة</button>
+                <button class="btn-prime" style="background:var(--navy); padding:5px; font-size:0.8rem;" onclick="window.open('https://www.google.com/maps?q=${r.geo}')">🗺️ فتح الموقع في خرائط جوجل</button>
                 <hr>
                 ${r.status === 'new' ? `
                     <select id="sel-${r.id}" class="input-style"><option value="">-- اختر سائقاً --</option>${(db.drivers||[]).map(d=>`<option value="${d.name}">${d.name}</option>`).join('')}</select>
@@ -187,6 +240,11 @@
                 ` : `محالة إلى: <b>${r.assignedTo}</b>`}
             </div>
         `).join('');
+    }
+
+    function renderAdminsList() {
+        const display = document.getElementById('adm-list-display');
+        if(display) display.innerHTML = (db.admins||[]).map(a => `<div style="background:#eee; padding:5px; margin:5px; border-radius:5px;">👤 ${a}</div>`).join('');
     }
 
     function renderDriverTasks() {
@@ -197,36 +255,41 @@
             <div class="item-box">
                 <img src="${r.img}" class="report-img-view">
                 📍 الموقع: ${r.addr}<br>
-                <button class="btn-prime" style="background:var(--navy)" onclick="window.open('http://maps.google.com/?q=${r.geo}')">🗺️ GPS</button>
+                <button class="btn-prime" style="background:var(--navy)" onclick="window.open('https://www.google.com/maps?q=${r.geo}')">🗺️ فتح GPS</button>
                 <hr>
-                <label class="btn-prime" style="background:var(--gold);"><i class="fas fa-camera"></i> تصوير بعد الإنجاز <input type="file" accept="image/*" capture="environment" style="display:none;" onchange="handleImg(this, 'driver')"></label>
+                <label class="btn-prime" style="background:var(--gold);"><i class="fas fa-camera"></i> تصوير النتيجة <input type="file" accept="image/*" capture="environment" style="display:none;" onchange="handleImg(this, 'driver')"></label>
                 <button class="btn-prime" style="background:var(--emerald)" onclick="completeTask(${r.id})">✅ تأكيد التنظيف</button>
             </div>
-        `).join('') : "<p style='color:white;text-align:center;'>لا توجد مهام</p>";
+        `).join('') : "<p style='color:white;text-align:center;'>لا توجد مهام حالياً</p>";
     }
 
     function completeTask(id) {
-        if(!currentDriverImg) return alert("صور النتيجة");
+        if(!currentDriverImg) return alert("يجب تصوير الموقع بعد التنظيف");
         const rep = db.reports.find(x=>x.id===id);
-        rep.status = 'done'; rep.doneImg = currentDriverImg;
-        save(); alert("تم التحديث ✅");
+        rep.status = 'done';
+        rep.doneImg = currentDriverImg;
+        save(); alert("تم إنهاء المهمة بنجاح ✅");
     }
 
     function assignTask(id) {
         const drv = document.getElementById(`sel-${id}`).value;
-        if(drv) { const r = db.reports.find(x=>x.id===id); r.status='sent'; r.assignedTo=drv; save(); }
+        if(drv) { const r = db.reports.find(x=>x.id===id); r.status='sent'; r.assignedTo=drv; save(); alert("تمت الإحالة للسائق"); }
     }
 
-    function deleteReport(id) { if(confirm("حذف؟")) { db.reports = db.reports.filter(x=>x.id!==id); save(); } }
+    function deleteReport(id) { if(confirm("هل تريد حذف هذا البلاغ؟")) { db.reports = db.reports.filter(x=>x.id!==id); save(); } }
+    
     function addDriver() {
         const n = document.getElementById('d-name').value;
-        if(n) { if(!db.drivers) db.drivers = []; db.drivers.push({ id: Date.now(), name: n }); save(); }
+        if(n) { if(!db.drivers) db.drivers = []; db.drivers.push({ id: Date.now(), name: n }); save(); document.getElementById('d-name').value=""; }
     }
+
     function renderDrivers() {
         const dList = document.getElementById('d-list-display');
         if(dList) dList.innerHTML = (db.drivers || []).map(d => `<div style="background:#eee; padding:5px; margin:2px; border-radius:5px;">👤 ${d.name}</div>`).join('');
     }
+
     function toggleView(id) { const e = document.getElementById(id); e.style.display = e.style.display==='none'?'block':'none'; }
+    
     function updateStats() {
         if(!db.reports) return;
         document.getElementById('st-new').innerText = db.reports.filter(r => r.status === 'new').length;
