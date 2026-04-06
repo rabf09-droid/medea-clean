@@ -69,10 +69,15 @@
     </div>
 
     <div id="pg-admin" class="page">
+        <div style="display: flex; gap: 8px; margin-bottom: 20px;">
+            <div style="flex:1; background:var(--red); color:white; padding:12px; border-radius:15px; text-align:center;">جديد<br><b id="count-1">0</b></div>
+            <div style="flex:1; background:var(--orange); color:white; padding:12px; border-radius:15px; text-align:center;">مرسل<br><b id="count-2">0</b></div>
+            <div style="flex:1; background:var(--forest); color:white; padding:12px; border-radius:15 tax-align:center;">تم<br><b id="count-3">0</b></div>
+        </div>
         <button class="btn" style="background:var(--navy)" onclick="toggleSection('sec-reps')">📦 التبليغات الواردة</button>
         <div id="sec-reps" style="display:none;"></div>
         
-        <button class="btn" style="background:var(--forest)" onclick="toggleSection('sec-drvs')">🚛 إضافة سائق جديد</button>
+        <button class="btn" style="background:var(--forest)" onclick="toggleSection('sec-drvs')">🚛 إضافة سائق</button>
         <div id="sec-drvs" style="display:none;" class="card">
             <input type="text" id="d-name" class="input" placeholder="اسم السائق">
             <input type="tel" id="d-phone" class="input" placeholder="رقم الهاتف">
@@ -81,7 +86,7 @@
                 <option value="البلدية">البلدية</option>
                 <option value="القطاع الخاص">القطاع الخاص</option>
             </select>
-            <button class="btn" style="background:var(--emerald)" onclick="addDriver()">حفظ وتصفير الخانات</button>
+            <button class="btn" style="background:var(--emerald)" onclick="addDriver()">حفظ السائق (تصفير)</button>
             <div id="list-drivers-ui"></div>
         </div>
         <button class="btn" style="background:#444;" onclick="navTo('pg-home')">رجوع</button>
@@ -92,9 +97,8 @@
         <div id="driver-jobs"></div>
         <button class="btn" style="background:#444;" onclick="navTo('pg-home')">خروج</button>
     </div>
-</div>
-
-<script>
+            </div>
+                    <script>
     const firebaseConfig = { databaseURL: "https://medea-smart-clean-2026-default-rtdb.firebaseio.com/" };
     if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
@@ -105,12 +109,11 @@
     function syncDB() { db.ref('APP_V13_FINAL').set(appData); }
 
     function initApp() {
-        db.ref('APP_V13_FINAL').on('value', (s) => { if(s.exists()){ appData=s.val(); updateUI(); } });
+        db.ref('APP_V13_FINAL').on('value', (snapshot) => { if(snapshot.exists()) { appData = snapshot.val(); updateUI(); } });
         setInterval(() => { document.getElementById('clock').innerText = new Date().toLocaleTimeString('fr-FR'); }, 1000);
         setLanguage('ar');
     }
 
-    // إصلاح أزرار اللغات
     function setLanguage(l) {
         const dict = {
             ar: {c:"الجمهورية الجزائرية الديمقراطية الشعبية", t:"نظافة المدية 2026", r:"التبليغ", a:"الإدارة", d:"السائق", x:"خروج نهائي", tk:"تصوير النفايات", g:"تحديد الموقع", s:"إرسال الآن"},
@@ -126,15 +129,20 @@
 
     function processImage(input, role) {
         const reader = new FileReader();
-        reader.onload = (e) => {
+        reader.onload = function(e) {
             const img = new Image();
-            img.onload = () => {
-                const cvs = document.createElement('canvas');
-                cvs.width = 400; cvs.height = (img.height/img.width)*400;
-                cvs.getContext('2d').drawImage(img, 0, 0, cvs.width, cvs.height);
-                const res = cvs.toDataURL('image/jpeg', 0.5);
-                if(role==='citizen'){ tempImgCit=res; document.getElementById('img-output').src=res; document.getElementById('img-output').style.display='block'; document.getElementById('cam-placeholder').style.display='none'; }
-                else { tempImgDrv=res; alert("📸 تم التقاط صورة الإنجاز"); }
+            img.onload = function() {
+                const canvas = document.createElement('canvas');
+                const MAX_WIDTH = 400; const scale = MAX_WIDTH / img.width;
+                canvas.width = MAX_WIDTH; canvas.height = img.height * scale;
+                const ctx = canvas.getContext('2d'); ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                const compressed = canvas.toDataURL('image/jpeg', 0.5);
+                if(role === 'citizen') {
+                    tempImgCit = compressed;
+                    document.getElementById('img-output').src = compressed;
+                    document.getElementById('img-output').style.display = 'block';
+                    document.getElementById('cam-placeholder').style.display = 'none';
+                } else { tempImgDrv = compressed; alert("📸 تم حفظ صورة النتيجة"); }
             };
             img.src = e.target.result;
         };
@@ -144,34 +152,42 @@
     function getLocation() {
         navigator.geolocation.getCurrentPosition(p => {
             const lat = p.coords.latitude, lng = p.coords.longitude;
-            document.getElementById('gps-in').value = lat.toFixed(5)+","+lng.toFixed(5);
-            fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`).then(r=>r.json()).then(d=> { document.getElementById('addr-in').value = d.display_name.split(',').slice(0,2).join(','); });
+            document.getElementById('gps-in').value = lat.toFixed(6) + "," + lng.toFixed(6);
+            fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`)
+            .then(r => r.json()).then(d => { document.getElementById('addr-in').value = d.display_name.split(',').slice(0,3).join(','); });
         });
     }
 
     function submitData() {
-        if(!tempImgCit || !document.getElementById('addr-in').value) return alert("بيانات ناقصة");
-        const r = { id:Date.now(), img:tempImgCit, addr:document.getElementById('addr-in').value, gps:document.getElementById('gps-in').value, status:'new', time:new Date().toLocaleTimeString('fr-FR'), date:"06 أفريل 2026" };
-        if(!appData.reports) appData.reports=[]; appData.reports.push(r); syncDB(); alert("✅ تم الإرسال"); location.reload();
+        const addr = document.getElementById('addr-in').value;
+        if(!tempImgCit || !addr) return alert("أكمل البيانات");
+        const r = { id: Date.now(), img: tempImgCit, addr: addr, gps: document.getElementById('gps-in').value, status: 'new', time: new Date().toLocaleTimeString('fr-FR'), date: "06 أفريل 2026" };
+        if(!appData.reports) appData.reports = [];
+        appData.reports.push(r);
+        db.ref('APP_V13_FINAL').set(appData).then(() => { alert("✅ تم الإرسال"); location.reload(); });
     }
 
     function auth(role) {
-        const u=prompt("الاسم:"), p=prompt("الرمز:");
-        if(role==='admin' && (appData.admins||[]).includes(u) && p==='1234') { currentUser=u; navTo('pg-admin'); }
+        const u = prompt("الاسم:"), p = prompt("الرمز:");
+        if(role==='admin' && (appData.admins||[]).includes(u) && p==='1234') { navTo('pg-admin'); }
         else if(role==='driver' && p==='5678') {
-            const d=(appData.drivers||[]).find(x=>x.name===u);
-            if(d) { currentUser=u; document.getElementById('driver-header').innerHTML=`<h3>${u}</h3><p>🚛 ${d.truck}</p>`; navTo('pg-driver'); }
+            const d = (appData.drivers||[]).find(x => x.name === u);
+            if(d) { currentUser=u; document.getElementById('driver-header').innerHTML = `<h3>${u}</h3><p>🚛 شاحنة: ${d.truck}</p>`; navTo('pg-driver'); }
         }
     }
 
     function updateUI() {
         const rs = appData.reports || [];
+        document.getElementById('count-1').innerText = rs.filter(r => r.status === 'new').length;
+        document.getElementById('count-2').innerText = rs.filter(r => r.status === 'sent').length;
+        document.getElementById('count-3').innerText = rs.filter(r => r.status === 'done').length;
+
         document.getElementById('sec-reps').innerHTML = rs.slice().reverse().map(r => `
             <div class="card" style="text-align:right;">
                 <img src="${r.img}" style="width:100%; border-radius:15px; height:150px; object-fit:cover;">
                 <p>📍 ${r.addr}</p>
-                ${r.status==='new' ? `<select id="assign-${r.id}" class="input"><option value="">اختر سائق...</option>${(appData.drivers||[]).map(d=>`<option value="${d.name}">${d.name}</option>`).join('')}</select><button class="btn" style="background:var(--forest)" onclick="assign(${r.id})">إرسال</button>` : `<p style="color:var(--orange)">🚚 عند: ${r.assignedTo}</p>`}
-                ${r.doneImg ? `<div style="border-top:2px solid #ddd; padding-top:10px;"><b>✅ صورة الإنجاز:</b><img src="${r.doneImg}" style="width:100%; border-radius:10px; margin-top:5px;"></div>` : ''}
+                ${r.status === 'new' ? `<select id="assign-${r.id}" class="input"><option value="">اختر سائق...</option>${(appData.drivers||[]).map(d => `<option value="${d.name}">${d.name}</option>`).join('')}</select><button class="btn" style="background:var(--forest)" onclick="assign(${r.id})">إرسال المهمة</button>` : `<p style="color:var(--orange)">🚚 عند: ${r.assignedTo}</p>`}
+                ${r.doneImg ? `<div style="border-top:1px solid #ccc; padding-top:10px;"><b>✅ الإنجاز:</b><img src="${r.doneImg}" style="width:100%; border-radius:10px; margin-top:5px;"></div>` : ''}
                 <button style="color:red; background:none; border:none;" onclick="del('rep', ${r.id})">🗑 حذف</button>
             </div>
         `).join('');
@@ -180,10 +196,10 @@
 
         const jobs = rs.filter(r => r.assignedTo === currentUser && r.status === 'sent');
         document.getElementById('driver-jobs').innerHTML = jobs.map(r => `
-            <div class="card" style="text-align:right;">
+            <div class="card" style="border:3px solid var(--orange); text-align:right;">
                 <img src="${r.img}" style="width:100%; border-radius:15px;">
-                <p>📍 ${r.addr}</p>
-                <button class="btn" style="background:var(--navy)" onclick="window.open('https://www.google.com/maps/search/?api=1&query=${r.gps}')">فتح الخريطة</button>
+                <p>📍 الموقع: ${r.addr}</p>
+                <button class="btn" style="background:var(--navy)" onclick="window.open('https://www.google.com/maps/search/?api=1&query=${r.gps}')">📍 الخريطة</button>
                 <label class="btn" style="background:var(--gold);">📷 تصوير النتيجة <input type="file" capture="environment" style="display:none;" onchange="processImage(this, 'driver')"></label>
                 <button class="btn" style="background:var(--emerald)" onclick="finish(${r.id})">تأكيد الإنجاز</button>
             </div>
@@ -192,12 +208,12 @@
 
     function addDriver() {
         const n=document.getElementById('d-name').value, p=document.getElementById('d-phone').value, t=document.getElementById('d-truck').value, s=document.getElementById('d-sector').value;
-        if(n && t){ if(!appData.drivers) appData.drivers=[]; appData.drivers.push({id:Date.now(), name:n, phone:p, truck:t, sector:s}); syncDB(); ["d-name","d-phone","d-truck"].forEach(i=>document.getElementById(i).value=""); alert("✅ تم الحفظ وتصفير الخانات"); }
+        if(n && t){ if(!appData.drivers) appData.drivers=[]; appData.drivers.push({id:Date.now(), name:n, phone:p, truck:t, sector:s}); syncDB(); ["d-name","d-phone","d-truck"].forEach(id=>document.getElementById(id).value=""); alert("✅ تم التصفير"); }
     }
 
-    function assign(id) { const d=document.getElementById('assign-'+id).value; if(d){ const r=appData.reports.find(x=>x.id===id); r.status='sent'; r.assignedTo=d; syncDB(); alert("🚀 تم التوجيه"); } }
-    function finish(id) { if(!tempImgDrv) return alert("صور النتيجة"); const r=appData.reports.find(x=>x.id===id); r.status='done'; r.doneImg=tempImgDrv; syncDB(); alert("✅ تم إبلاغ الإدارة"); }
-    function del(t, id) { if(confirm("حذف؟")) { if(t==='rep') appData.reports=appData.reports.filter(x=>x.id!==id); else appData.drivers=appData.drivers.filter(x=>x.id!==id); syncDB(); } }
+    function assign(id) { const d=document.getElementById('assign-'+id).value; if(d){ const r=appData.reports.find(x=>x.id===id); r.status='sent'; r.assignedTo=d; syncDB(); alert("🚀 تم الإرسال"); } }
+    function finish(id) { if(!tempImgDrv) return alert("صور النتيجة"); const r=appData.reports.find(x=>x.id===id); r.status='done'; r.doneImg=tempImgDrv; syncDB(); alert("✅ تم"); }
+    function del(t, id) { if(confirm("حذف؟")) { if(t==='rep') appData.reports=appData.reports.filter(x=>x.id!==id); if(t==='drv') appData.drivers=appData.drivers.filter(x=>x.id!==id); syncDB(); } }
     function navTo(id) { document.querySelectorAll('.page').forEach(p=>p.classList.remove('active')); document.getElementById(id).classList.add('active'); updateUI(); }
     function toggleSection(id) { const e=document.getElementById(id); e.style.display=e.style.display==='none'?'block':'none'; }
     function exitApp() { if(confirm("خروج؟")) window.location.href="about:blank"; }
