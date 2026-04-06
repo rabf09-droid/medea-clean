@@ -106,7 +106,7 @@
     const db = firebase.database();
 
     let appData = { reports: [], drivers: [], admins: ["فتحي", "دكتور"] };
-    let tempImg = "", currentUser = "";
+    let tempImg = "";
 
     function translateTo(lang) {
         const d = {
@@ -125,7 +125,7 @@
     }
 
     function initApp() {
-        db.ref('MEDEA_APP_DATABASE').on('value', (s) => { if(s.exists()) { appData = s.val(); updateUI(); } });
+        db.ref('MEDEA_DATA_V1').on('value', (s) => { if(s.exists()) { appData = s.val(); updateUI(); } });
         setInterval(() => { document.getElementById('clock').innerText = new Date().toLocaleTimeString('fr-FR'); }, 1000);
     }
 
@@ -161,34 +161,25 @@
     function submitReport() {
         const addr = document.getElementById('addr-in').value, gps = document.getElementById('gps-in').value;
         if(!tempImg || !addr) return alert("أكمل البيانات");
-        
-        const rep = {
-            id: Date.now(), img: tempImg, addr: addr, gps: gps,
-            time: new Date().toLocaleTimeString('fr-FR'), date: "06 أفريل 2026", status: 'new'
-        };
+        const rep = { id: Date.now(), img: tempImg, addr: addr, gps: gps, time: new Date().toLocaleTimeString('fr-FR'), date: "06 أفريل 2026", status: 'new' };
         if(!appData.reports) appData.reports = [];
         appData.reports.push(rep);
-        
-        db.ref('MEDEA_APP_DATABASE').set(appData).then(() => {
+        db.ref('MEDEA_DATA_V1').set(appData).then(() => {
             alert("شكرا لتعاونك معنا تم الإرسال");
-            // التصفير
-            tempImg = ""; 
-            document.getElementById('img-output').style.display = 'none';
+            tempImg = ""; document.getElementById('img-output').style.display = 'none';
             document.getElementById('cam-placeholder').style.display = 'block';
-            document.getElementById('addr-in').value = ""; 
-            document.getElementById('gps-in').value = "";
+            document.getElementById('addr-in').value = ""; document.getElementById('gps-in').value = "";
             document.getElementById('cit-file').value = "";
-            // الانتقال للرئيسية
             navTo('pg-home');
         });
     }
 
     function addDriver() {
-        const n=document.getElementById('d-name').value, ph=document.getElementById('d-phone').value, tr=document.getElementById('d-truck').value, sc=document.getElementById('d-sector').value;
+        const n = document.getElementById('d-name').value, ph = document.getElementById('d-phone').value, tr = document.getElementById('d-truck').value, sc = document.getElementById('d-sector').value;
         if(n) {
             if(!appData.drivers) appData.drivers = [];
             appData.drivers.push({id: Date.now(), name: n, phone: ph, truck: tr, sector: sc});
-            db.ref('MEDEA_APP_DATABASE').set(appData);
+            db.ref('MEDEA_DATA_V1').set(appData);
             document.getElementById('d-name').value = ""; document.getElementById('d-phone').value = ""; document.getElementById('d-truck').value = ""; document.getElementById('d-sector').value = "";
             alert("تم حفظ السائق وتصفير الخانات");
         }
@@ -218,7 +209,7 @@
         document.getElementById('list-drivers-ui').innerHTML = (appData.drivers||[]).map(d => `<div style="background:#eee; padding:10px; margin-top:5px; border-radius:10px; text-align:right;">${d.name} | ${d.truck} | ${d.sector} <i class="fas fa-trash" style="color:red; float:left;" onclick="del('drv', ${d.id})"></i></div>`).join('');
     }
 
-    function del(t, id) { if(confirm("حذف؟")) { if(t==='rep') appData.reports=appData.reports.filter(x=>x.id!==id); if(t==='drv') appData.drivers=appData.drivers.filter(x=>x.id!==id); db.ref('MEDEA_APP_DATABASE').set(appData); } }
+    function del(t, id) { if(confirm("حذف؟")) { if(t==='rep') appData.reports=appData.reports.filter(x=>x.id!==id); if(t==='drv') appData.drivers=appData.drivers.filter(x=>x.id!==id); db.ref('MEDEA_DATA_V1').set(appData); } }
     function navTo(id) { document.querySelectorAll('.page').forEach(p => p.classList.remove('active')); document.getElementById(id).classList.add('active'); updateUI(); }
     function toggleSection(id) { const e = document.getElementById(id); e.style.display = e.style.display==='none'?'block':'none'; }
     function exitApp() { window.close(); }
