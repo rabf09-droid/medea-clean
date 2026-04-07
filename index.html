@@ -3,61 +3,70 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>نظام المدية نظيفة الذكي</title>
+    <title>نظام المدية نظيفة - النسخة الرسمية</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        :root { --emerald: #1B5E20; --forest: #2E7D32; --gold: #D4AF37; --red: #d21034; --navy: #14213D; }
+        :root { --emerald: #1B5E20; --forest: #2E7D32; --gold: #D4AF37; --red: #d21034; --navy: #14213D; --white-glass: rgba(255, 255, 255, 0.92); }
         * { box-sizing: border-box; font-family: 'Tajawal', sans-serif; }
-        body { margin: 0; background: #f0f2f5; color: #333; }
         
-        /* خلفية مقر البلدية للواجهة الرئيسية والمواطن */
-        .main-container { 
-            background: linear-gradient(rgba(255,255,255,0.85), rgba(255,255,255,0.85)), 
-                        url('https://upload.wikimedia.org/wikipedia/commons/thumb/d/d3/Mairie_de_M%C3%A9d%C3%A9a.jpg/1200px-Mairie_de_M%C3%A9d%C3%A9a.jpg'); 
-            background-size: cover; background-position: center; min-height: 100vh; padding-bottom: 100px;
+        body { 
+            margin: 0; 
+            background: #f0f0f0; 
+            background-image: url('https://raw.githubusercontent.com/rabf09-droid/rabf09-droid.github.io/main/1000052240.webp'); /* سيتم استبدال الرابط برابط صورتك المرفوعة */
+            background-size: cover; 
+            background-position: center; 
+            background-attachment: fixed;
+            min-height: 100vh;
         }
 
-        .header { background: white; padding: 15px; text-align: center; border-bottom: 4px solid var(--gold); box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
-        .page { display: none; padding: 20px; animation: fadeIn 0.4s; }
+        /* حاوية زجاجية للمحتوى لضمان وضوح النصوص فوق الخلفية */
+        .glass-layer { background: rgba(0, 0, 0, 0.5); min-height: 100vh; padding-bottom: 120px; }
+
+        .header { background: var(--white-glass); padding: 15px; text-align: center; border-bottom: 5px solid var(--gold); position: sticky; top: 0; z-index: 1000; box-shadow: 0 4px 15px rgba(0,0,0,0.3); }
+        .page { display: none; padding: 20px; animation: fadeIn 0.5s; max-width: 900px; margin: auto; }
         .page.active { display: block; }
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        .card { background: var(--white-glass); border-radius: 25px; padding: 25px; margin-bottom: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.3); }
+        .btn { border: none; padding: 15px; border-radius: 15px; width: 100%; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px; margin-bottom: 12px; color: white; transition: 0.3s; font-size: 1.1rem; }
+        .btn:hover { filter: brightness(1.1); transform: translateY(-2px); }
+        .input { width: 100%; padding: 14px; border-radius: 12px; border: 2px solid #ccc; margin-bottom: 12px; font-size: 1rem; text-align: center; background: white; }
         
-        .card { background: rgba(255,255,255,0.95); border-radius: 20px; padding: 20px; margin-bottom: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); border: 1px solid #eee; }
-        .btn { border: none; padding: 14px; border-radius: 12px; width: 100%; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px; margin-bottom: 10px; color: white; transition: 0.3s; }
-        .btn:active { transform: scale(0.98); }
-        .input { width: 100%; padding: 12px; border-radius: 10px; border: 2px solid #ddd; margin-bottom: 10px; text-align: center; font-size: 1rem; }
+        .footer { position: fixed; bottom: 0; left: 0; right: 0; background: var(--white-glass); padding: 12px; border-top: 3px solid var(--gold); text-align: center; z-index: 1000; }
+        .item-list { background: white; padding: 12px; border-radius: 12px; margin-bottom: 10px; border-right: 6px solid var(--emerald); display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
         
-        .footer { position: fixed; bottom: 0; left: 0; right: 0; background: white; padding: 10px; border-top: 2px solid var(--gold); text-align: center; z-index: 1000; }
-        .badge { padding: 5px 10px; border-radius: 20px; font-size: 0.8rem; color: white; }
-        .item-list { background: #fff; padding: 12px; border-radius: 10px; margin-bottom: 8px; border-right: 5px solid var(--emerald); display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+        #clock { color: var(--navy); font-weight: bold; font-size: 1.1rem; }
+        .status-badge { padding: 6px 12px; border-radius: 20px; font-size: 0.85rem; font-weight: bold; color: white; }
     </style>
 </head>
 <body onload="initApp()">
 
-<div class="main-container">
+<div class="glass-layer">
     <div class="header">
-        <div style="font-size: 0.8rem; font-weight: bold;">الجمهورية الجزائرية الديمقراطية الشعبية</div>
-        <div style="font-size: 0.7rem; color: var(--forest);">ولاية المدية - بلدية المدية - مصلحة النظافة</div>
-        <div id="txt-title" style="font-size: 1.5rem; font-weight: 800; color: var(--emerald); margin-top:5px;">المدية نظيفة</div>
-        <div style="display: flex; justify-content: space-between; padding: 5px 10px; font-size: 0.8rem; font-weight: bold;">
+        <div style="font-weight: bold; font-size: 0.9rem;">الجمهورية الجزائرية الديمقراطية الشعبية</div>
+        <div style="color: var(--forest); font-weight: bold; margin: 4px 0;">ولاية المدية - بلدية المدية</div>
+        <div style="font-size: 1.8rem; font-weight: 900; color: var(--emerald);">نظام المـدية نظيـفة</div>
+        <div style="display: flex; justify-content: space-around; padding-top: 10px; border-top: 1px solid #ddd;">
             <div id="clock">00:00:00</div>
-            <div>07 أفريل 2026</div>
+            <div style="font-weight: bold;">07 أفريل 2026</div>
         </div>
     </div>
 
     <div id="pg-welcome" class="page active">
-        <div class="card">
-            <i class="fas fa-city fa-4x" style="color:var(--emerald); margin-bottom:15px;"></i>
-            <h3>مرحباً بكم في نظام النظافة الذكي</h3>
-            <button class="btn" style="background:var(--forest)" onclick="navTo('pg-report')"><i class="fas fa-bullhorn"></i> تبليغ عن مفرغة عشوائية</button>
-            <div style="margin: 20px 0; border-top: 1px solid #ccc; padding-top: 20px;">
-                <p>الدخول للموظفين</p>
+        <div class="card" style="text-align: center;">
+            <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/d/d3/Mairie_de_M%C3%A9d%C3%A9a.jpg/300px-Mairie_de_M%C3%A9d%C3%A9a.jpg" style="width: 120px; margin-bottom: 15px;">
+            <h2>مرحباً بكم في النظام الموحد</h2>
+            <button class="btn" style="background:var(--forest); height: 70px; font-size: 1.3rem;" onclick="navTo('pg-report')">
+                <i class="fas fa-bullhorn"></i> مواطن: إرسال تبليغ
+            </button>
+            <div style="margin: 25px 0; border-top: 2px solid #ddd; padding-top: 20px;">
+                <p style="font-weight: bold; color: var(--navy);">فضاء الموظفين والعمال</p>
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
-                    <button class="btn" style="background:var(--navy)" onclick="auth('admin')">الإدارة</button>
-                    <button class="btn" style="background:var(--gold)" onclick="auth('driver')">السائقين</button>
+                    <button class="btn" style="background:var(--navy)" onclick="auth('admin')"><i class="fas fa-user-shield"></i> الإدارة</button>
+                    <button class="btn" style="background:var(--gold)" onclick="auth('driver')"><i class="fas fa-truck"></i> السائقين</button>
                 </div>
             </div>
         </div>
@@ -65,30 +74,30 @@
 
     <div id="pg-report" class="page">
         <div class="card">
-            <h3 id="lbl-rep-title">إرسال بلاغ جديد</h3>
-            <div id="cam-box" style="height:180px; border:2px dashed #ccc; border-radius:15px; display:flex; align-items:center; justify-content:center; background:#f9f9f9; margin-bottom:15px; overflow:hidden;">
-                <i id="ico-cam" class="fas fa-camera fa-3x" style="color:#ddd"></i>
+            <h3><i class="fas fa-camera"></i> تصوير المفرغة العشوائية</h3>
+            <div id="cam-box" style="height:250px; border:3px dashed var(--forest); border-radius:20px; display:flex; align-items:center; justify-content:center; background:#f9f9f9; margin-bottom:15px; overflow:hidden;">
+                <i id="ico-cam" class="fas fa-image fa-4x" style="color:#ccc"></i>
                 <img id="out-img" style="width:100%; height:100%; object-fit:cover; display:none;">
             </div>
-            <label class="btn" style="background:var(--navy);"><i class="fas fa-camera"></i> <span id="lbl-take">التقاط صورة المفرغة</span><input type="file" accept="image/*" capture="environment" style="display:none;" onchange="handleImg(this, 'citizen')"></label>
-            <button class="btn" style="background:var(--forest);" onclick="getLoc()"><i class="fas fa-map-marker-alt"></i> تحديد الموقع أوتوماتيكياً</button>
-            <input type="text" id="in-addr" class="input" placeholder="أو اكتب العنوان هنا">
-            <input type="text" id="in-gps" class="input" readonly placeholder="الإحداثيات الجغرافية">
-            <button class="btn" style="background:var(--emerald); height:60px; font-size:1.3rem;" onclick="sendReport()"><i class="fas fa-paper-plane"></i> إرسال التبليغ الآن</button>
-            <button class="btn" style="background:#666;" onclick="navTo('pg-welcome')">رجوع</button>
+            <label class="btn" style="background:var(--navy);"><i class="fas fa-camera"></i> التقاط الصورة<input type="file" accept="image/*" capture="environment" style="display:none;" onchange="handleImg(this, 'citizen')"></label>
+            <button class="btn" style="background:var(--forest);" onclick="getLoc()"><i class="fas fa-map-marker-alt"></i> تحديد الموقع تلقائياً</button>
+            <input type="text" id="in-addr" class="input" placeholder="اسم الحي أو الشارع">
+            <input type="text" id="in-gps" class="input" readonly placeholder="إحداثيات الموقع">
+            <button class="btn" style="background:var(--emerald); height:60px;" onclick="sendReport()"><i class="fas fa-paper-plane"></i> تأكيد وإرسال البلاغ</button>
+            <button class="btn" style="background:#666;" onclick="navTo('pg-welcome')">إلغاء والعودة</button>
         </div>
     </div>
 
     <div id="pg-admin" class="page">
-        <div style="display:flex; gap:5px; margin-bottom:10px;">
-            <div style="flex:1; background:var(--red); color:#white; border-radius:10px; padding:10px; text-align:center; color:white;">جديد<br><b id="c1">0</b></div>
-            <div style="flex:1; background:var(--orange); color:#white; border-radius:10px; padding:10px; text-align:center; color:white;">مرسل<br><b id="c2">0</b></div>
-            <div style="flex:1; background:var(--forest); color:#white; border-radius:10px; padding:10px; text-align:center; color:white;">منجز<br><b id="c3">0</b></div>
+        <div class="card" style="display: flex; justify-content: space-around; padding: 15px;">
+            <div style="text-align: center;">بلاغات جديدة<br><b id="c1" style="font-size: 1.5rem; color: var(--red);">0</b></div>
+            <div style="text-align: center;">قيد التنفيذ<br><b id="c2" style="font-size: 1.5rem; color: var(--orange);">0</b></div>
+            <div style="text-align: center;">تم تنظيفها<br><b id="c3" style="font-size: 1.5rem; color: var(--forest);">0</b></div>
         </div>
-        
-        <div id="admin-tabs" style="display:flex; margin-bottom:15px;">
-            <button class="btn" style="background:var(--navy); margin:0 2px;" onclick="showTab('reports')">البلاغات</button>
-            <button class="btn" style="background:var(--emerald); margin:0 2px;" onclick="showTab('drivers')">السائقين</button>
+
+        <div style="display:flex; gap:10px; margin-bottom:15px;">
+            <button class="btn" style="background:var(--navy)" onclick="showTab('reports')"><i class="fas fa-list"></i> البلاغات</button>
+            <button class="btn" style="background:var(--emerald)" onclick="showTab('drivers')"><i class="fas fa-users-cog"></i> السائقين</button>
         </div>
 
         <div id="tab-reports">
@@ -97,42 +106,41 @@
 
         <div id="tab-drivers" style="display:none;">
             <div class="card">
-                <h4>إضافة سائق جديد</h4>
-                <input type="text" id="dr-n" class="input" placeholder="اسم السائق">
+                <h4>تسجيل سائق / شاحنة جديدة</h4>
+                <input type="text" id="dr-n" class="input" placeholder="اسم السائق الكامل">
                 <input type="text" id="dr-p" class="input" placeholder="رقم الهاتف">
-                <input type="text" id="dr-t" class="input" placeholder="رقم الشاحنة">
-                <select id="dr-s" class="input"><option value="البلدية">البلدية</option><option value="القطاع الخاص">القطاع الخاص</option></select>
+                <input type="text" id="dr-t" class="input" placeholder="ترقيم الشاحنة">
+                <select id="dr-s" class="input">
+                    <option value="البلدية">شاحنة تابعة للبلدية</option>
+                    <option value="القطاع الخاص">شاحنة قطاع خاص (متعاقد)</option>
+                </select>
                 <button class="btn" style="background:var(--forest)" onclick="addDr()">حفظ البيانات</button>
                 <hr>
                 <div id="ui-drivers-list"></div>
-            </div>
-            <div class="card" id="root-only" style="display:none;">
-                <h4>إدارة المسؤولين</h4>
-                <input type="text" id="ad-n" class="input" placeholder="اسم المسؤول">
-                <button class="btn" style="background:var(--navy)" onclick="addAd()">إضافة</button>
-                <div id="ui-admins-list"></div>
             </div>
         </div>
         <button class="btn" style="background:#444;" onclick="location.reload()">تسجيل الخروج</button>
     </div>
 
     <div id="pg-driver" class="page">
-        <div id="dr-info" class="card" style="background:var(--emerald); color:white;"></div>
+        <div id="dr-info" class="card" style="background:var(--emerald); color:white; text-align: center;"></div>
         <div id="dr-tasks"></div>
         <button class="btn" style="background:#444;" onclick="location.reload()">رجوع</button>
     </div>
+</div>
 
-    <div class="footer">
-        <div style="margin-bottom:5px;">
-            <button class="lang-btn" onclick="setLang('ar')">عربية</button>
-            <button class="lang-btn" onclick="setLang('fr')">Français</button>
-        </div>
-        <div style="font-size: 0.7rem; font-weight: bold;">حقوق البرمجية محفوظة لبلدية المدية - إعداد د. رابحي فتحي</div>
+<div class="footer">
+    <div style="margin-bottom: 8px;">
+        <button class="lang-btn" onclick="setLang('ar')">عربية</button>
+        <button class="lang-btn" onclick="setLang('fr')">Français</button>
+    </div>
+    <div style="font-size: 0.75rem; font-weight: bold; color: var(--navy);">
+        نظام إدارة النفايات الحضرية - بلدية المدية &copy; 2026<br>إعداد د. رابحي فتحي
     </div>
 </div>
 
 <script>
-    // إعدادات قاعدة البيانات السحابية (Firebase) لربط الجميع
+    // ربط قاعدة البيانات (تأكد من استخدام نفس الرابط الخاص بك)
     const firebaseConfig = { databaseURL: "https://medea-smart-city-2026-default-rtdb.firebaseio.com/" };
     if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
@@ -145,19 +153,6 @@
         setInterval(() => { document.getElementById('clock').innerText = new Date().toLocaleTimeString('fr-FR'); }, 1000);
     }
 
-    // نظام اللغات الشامل
-    function setLang(l) {
-        const t = {
-            ar: { title: "المدية نظيفة", take: "التقاط صورة المفرغة", loc: "تحديد الموقع", send: "إرسال التبليغ" },
-            fr: { title: "Médéa Propre", take: "Prendre une Photo", loc: "Localiser", send: "Envoyer le Signalement" }
-        }[l];
-        document.getElementById('txt-title').innerText = t.title;
-        document.getElementById('lbl-take').innerText = t.take;
-        document.getElementById('lbl-send').innerText = t.send;
-        document.dir = (l === 'ar' ? 'rtl' : 'ltr');
-    }
-
-    // معالجة الصور
     function handleImg(input, role) {
         const reader = new FileReader();
         reader.onload = e => {
@@ -166,12 +161,11 @@
                 document.getElementById('out-img').src = curImgCit;
                 document.getElementById('out-img').style.display = 'block';
                 document.getElementById('ico-cam').style.display = 'none';
-            } else { curImgDrv = e.target.result; alert("تمت إضافة صورة الإنجاز"); }
+            } else { curImgDrv = e.target.result; alert("تم التقاط صورة الإنجاز بنجاح"); }
         };
         reader.readAsDataURL(input.files[0]);
     }
 
-    // تحديد الموقع بالـ GPS
     function getLoc() {
         navigator.geolocation.getCurrentPosition(p => {
             const lat = p.coords.latitude, lng = p.coords.longitude;
@@ -183,10 +177,9 @@
         });
     }
 
-    // إرسال التبليغ (المواطن)
     function sendReport() {
         const addr = document.getElementById('in-addr').value;
-        if(!curImgCit || !addr) return alert("الرجاء التقاط صورة وتحديد الموقع");
+        if(!curImgCit || !addr) return alert("يرجى التقاط صورة وتحديد العنوان");
 
         const report = {
             id: Date.now(), img: curImgCit, addr: addr, gps: document.getElementById('in-gps').value,
@@ -197,113 +190,100 @@
         appData.reports.push(report);
 
         db.ref('SYSTEM_ROOT').set(appData).then(() => {
-            // تصفير الخانات
+            // تصفير الخانات فوراً (Tassfir)
             curImgCit=""; document.getElementById('out-img').style.display='none'; 
             document.getElementById('ico-cam').style.display='block';
             document.getElementById('in-addr').value=""; document.getElementById('in-gps').value="";
-
-            if(confirm("تم الإرسال بنجاح. هل لديك تبليغ آخر؟")) {
+            
+            if(confirm("تم إرسال التبليغ بنجاح للبلدية. هل تريد إرسال بلاغ آخر؟")) {
                 window.scrollTo(0,0);
             } else {
-                alert("شكراً لتعاونكم معنا في نظافة مدينتنا");
                 navTo('pg-welcome');
             }
         });
     }
 
-    // تحديث الواجهات (تلقائياً عند أي تغيير في البيانات)
     function updateUI() {
         const rs = appData.reports || [];
         document.getElementById('c1').innerText = rs.filter(r=>r.status==='new').length;
         document.getElementById('c2').innerText = rs.filter(r=>r.status==='sent').length;
         document.getElementById('c3').innerText = rs.filter(r=>r.status==='done').length;
 
-        // سجل الإدارة والكمبيوتر
+        // سجل الإدارة
         document.getElementById('admin-list-reports').innerHTML = rs.slice().reverse().map(r => `
-            <div class="card" style="text-align:right; border-right:8px solid ${r.status==='done'?'green':'red'};">
-                <div style="display:flex; justify-content:space-between;">
-                    <span class="badge" style="background:${r.status==='done'?'green':'red'}">${r.status==='done'?'منجزة':'جديدة'}</span>
-                    <button onclick="delRep(${r.id})" style="color:red; border:none; background:none;"><i class="fas fa-trash"></i></button>
+            <div class="card" style="border-right:10px solid ${r.status==='done'?'#2E7D32':(r.status==='sent'?'#fb8c00':'#d21034')};">
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                    <span class="status-badge" style="background:${r.status==='done'?'green':(r.status==='sent'?'orange':'red')}">
+                        ${r.status==='done'?'تم التنظيف':(r.status==='sent'?'في الطريق':'بلاغ جديد')}
+                    </span>
+                    <button onclick="delRep(${r.id})" style="border:none; background:none; color:red; cursor:pointer;"><i class="fas fa-trash-alt"></i></button>
                 </div>
-                <img src="${r.img}" style="width:100%; border-radius:10px; margin:10px 0;">
-                <p><i class="fas fa-map-marker-alt"></i> ${r.addr}</p>
-                <p><i class="fas fa-clock"></i> ${r.time} | ${r.date}</p>
-                ${r.status==='new' ? `<button class="btn" style="background:var(--forest)" onclick="assign(${r.id})">توجيه لسائق</button>` : `<p style="color:var(--navy)">📦 المكلف: ${r.driver}</p>`}
-                ${r.status==='done' ? `
-                    <div style="background:#e8f5e9; padding:10px; border-radius:10px; margin-top:10px;">
-                        <p style="color:green; font-weight:bold;">✅ تقرير الإنجاز:</p>
-                        <img src="${r.doneImg}" style="width:100%; border-radius:10px;">
-                        <p>توقيت الإنجاز: ${r.doneTime}</p>
-                    </div>
-                ` : ''}
+                <img src="${r.img}" style="width:100%; border-radius:15px; margin:12px 0; box-shadow: 0 4px 8px rgba(0,0,0,0.1);">
+                <p><b>📍 الموقع:</b> ${r.addr}</p>
+                <p><b>🕒 الوقت:</b> ${r.time} - ${r.date}</p>
+                ${r.status==='new' ? `<button class="btn" style="background:var(--forest)" onclick="assign(${r.id})">توجيه شاحنة</button>` : `<p><b>🚚 المكلف:</b> ${r.driver}</p>`}
+                ${r.status==='done' ? `<div style="border-top:1px solid #ddd; padding-top:10px;"><p style="color:green; font-weight:bold;">✅ صورة الإنجاز:</p><img src="${r.doneImg}" style="width:100%; border-radius:10px;"></div>` : ''}
             </div>
         `).join('');
 
-        // قوائم الأسماء (سائقين ومسؤولين)
         document.getElementById('ui-drivers-list').innerHTML = (appData.drivers || []).map(d => `
-            <div class="item-list"><span>${d.name} (${d.phone}) - ${d.sector}</span><i class="fas fa-trash" style="color:red" onclick="delDr(${d.id})"></i></div>
-        `).join('');
-        document.getElementById('ui-admins-list').innerHTML = (appData.admins || []).map(a => `
-            <div class="item-list"><span>${a}</span>${a!=='فتحي'?`<i class="fas fa-trash" style="color:red" onclick="delAd('${a}')"></i>`:''}</div>
+            <div class="item-list">
+                <span><b>${d.name}</b> (${d.truck})</span>
+                <i class="fas fa-user-minus" style="color:red; cursor:pointer;" onclick="delDr(${d.id})"></i>
+            </div>
         `).join('');
 
-        // مهام السائق
         if(curUser) {
-            document.getElementById('dr-info').innerHTML = `<h3>مرحباً سائق: ${curUser}</h3><p>تاريخ اليوم: 07 أفريل 2026</p>`;
+            document.getElementById('dr-info').innerHTML = `<h3>العمل الميداني: ${curUser}</h3><p>عرض المهام الموجهة من الإدارة</p>`;
             const jobs = rs.filter(r=>r.driver===curUser && r.status==='sent');
-            document.getElementById('dr-tasks').innerHTML = jobs.length ? jobs.map(j => `
+            document.getElementById('dr-tasks').innerHTML = jobs.map(j => `
                 <div class="card">
-                    <p>الموقع المطلوب تنظيفه:</p>
-                    <img src="${j.img}" style="width:100%; border-radius:10px;">
+                    <p style="font-weight:bold; color:red;">مهمة جديدة:</p>
+                    <img src="${j.img}" style="width:100%; border-radius:15px; margin-bottom:10px;">
                     <p>📍 ${j.addr}</p>
-                    <button class="btn" style="background:var(--navy)" onclick="window.open('https://www.google.com/maps/search/?api=1&query=${j.gps}')"><i class="fas fa-route"></i> فتح الخريطة للتوجه</button>
-                    <label class="btn" style="background:var(--gold)"><i class="fas fa-camera"></i> تصوير بعد التنفيذ<input type="file" capture="environment" style="display:none;" onchange="handleImg(this, 'driver')"></label>
-                    <button class="btn" style="background:var(--forest)" onclick="finishJob(${j.id})">تأكيد الإنجاز وإرسال للإدارة</button>
+                    <button class="btn" style="background:var(--navy)" onclick="window.open('https://www.google.com/maps/search/?api=1&query=${j.gps}')"><i class="fas fa-directions"></i> فتح الخريطة (GPS)</button>
+                    <label class="btn" style="background:var(--gold)"><i class="fas fa-camera"></i> تصوير بعد التنظيف<input type="file" capture="environment" style="display:none;" onchange="handleImg(this, 'driver')"></label>
+                    <button class="btn" style="background:var(--forest)" onclick="finishJob(${j.id})">تأكيد الإنجاز النهائي</button>
                 </div>
-            `).join('') : '<p>لا توجد مهام حالية</p>';
+            `).join('');
         }
     }
 
     // وظائف الإدارة
     function addDr() {
         const n=document.getElementById('dr-n').value;
+        if(!n) return alert("يرجى إدخال اسم السائق");
+        if(!appData.drivers) appData.drivers = [];
+        appData.drivers.push({id:Date.now(), name:n, phone:document.getElementById('dr-p').value, truck:document.getElementById('dr-t').value, sector:document.getElementById('dr-s').value});
+        db.ref('SYSTEM_ROOT').set(appData);
+        document.getElementById('dr-n').value=""; document.getElementById('dr-p').value=""; document.getElementById('dr-t').value="";
+    }
+
+    function assign(id) {
+        const n = prompt("ادخل اسم السائق المسؤول عن هذه المهمة:");
         if(n) {
-            if(!appData.drivers) appData.drivers = [];
-            appData.drivers.push({id:Date.now(), name:n, phone:document.getElementById('dr-p').value, truck:document.getElementById('dr-t').value, sector:document.getElementById('dr-s').value});
+            const r = appData.reports.find(x=>x.id===id);
+            r.status='sent'; r.driver=n;
             db.ref('SYSTEM_ROOT').set(appData);
-            document.getElementById('dr-n').value=""; document.getElementById('dr-p').value="";
         }
     }
-    function addAd() { const n=document.getElementById('ad-n').value; if(n){ appData.admins.push(n); db.ref('SYSTEM_ROOT').set(appData); document.getElementById('ad-n').value=""; }}
-    function delDr(id) { if(confirm("حذف السائق؟")){ appData.drivers=appData.drivers.filter(x=>x.id!==id); db.ref('SYSTEM_ROOT').set(appData); }}
-    function delAd(n) { if(confirm("حذف المسؤول؟")){ appData.admins=appData.admins.filter(x=>x!==n); db.ref('SYSTEM_ROOT').set(appData); }}
-    function delRep(id) { if(confirm("حذف هذا السجل نهائياً؟")){ appData.reports=appData.reports.filter(x=>x.id!==id); db.ref('SYSTEM_ROOT').set(appData); }}
-    
-    function assign(id) { 
-        const n = prompt("ادخل اسم السائق لتوجيه المهمة:"); 
-        if(n) { 
-            const r = appData.reports.find(x=>x.id===id); 
-            r.status='sent'; r.driver=n; 
-            db.ref('SYSTEM_ROOT').set(appData); 
-        } 
-    }
 
-    // وظائف السائق
+    function delRep(id) { if(confirm("هل أنت متأكد من حذف هذا السجل نهائياً؟")){ appData.reports=appData.reports.filter(x=>x.id!==id); db.ref('SYSTEM_ROOT').set(appData); }}
+    function delDr(id) { if(confirm("حذف السائق من النظام؟")){ appData.drivers=appData.drivers.filter(x=>x.id!==id); db.ref('SYSTEM_ROOT').set(appData); }}
+
     function finishJob(id) {
-        if(!curImgDrv) return alert("يجب التقاط صورة للإنجاز أولاً");
+        if(!curImgDrv) return alert("يجب التقاط صورة للإنجاز قبل التأكيد");
         const r = appData.reports.find(x=>x.id===id);
         r.status='done'; r.doneImg=curImgDrv; r.doneTime=new Date().toLocaleTimeString('fr-FR'); r.doneDate="07 أفريل 2026";
-        db.ref('SYSTEM_ROOT').set(appData).then(() => { curImgDrv=""; alert("ممتاز! تم إبلاغ الإدارة بإتمام المهمة"); });
+        db.ref('SYSTEM_ROOT').set(appData).then(() => { curImgDrv=""; alert("تم الإرسال.. شكراً على مجهوداتكم"); });
     }
 
-    // نظام الدخول والصلاحيات
     function auth(role) {
-        const u = prompt("اسم المستخدم:"), p = prompt("كلمة السر:");
-        if(role==='admin' && (appData.admins||[]).includes(u) && p==='1234') {
-            document.getElementById('root-only').style.display = (u==='فتحي')?'block':'none'; navTo('pg-admin');
-        } else if(role==='driver' && p==='5678') {
+        const u = prompt("الاسم:"), p = prompt("الرمز:");
+        if(role==='admin' && (appData.admins||[]).includes(u) && p==='1234') { navTo('pg-admin'); }
+        else if(role==='driver' && p==='5678') {
             const d = (appData.drivers||[]).find(x=>x.name===u);
-            if(d){ curUser=u; navTo('pg-driver'); } else alert("اسم السائق غير موجود");
+            if(d){ curUser=u; navTo('pg-driver'); } else alert("الاسم غير مسجل في قائمة السائقين");
         } else alert("بيانات الدخول خاطئة");
     }
 
@@ -312,11 +292,7 @@
         document.getElementById('tab-drivers').style.display = t==='drivers'?'block':'none';
     }
 
-    function navTo(id) { 
-        document.querySelectorAll('.page').forEach(p=>p.classList.remove('active')); 
-        document.getElementById(id).classList.add('active'); 
-        window.scrollTo(0,0); 
-    }
+    function navTo(id) { document.querySelectorAll('.page').forEach(p=>p.classList.remove('active')); document.getElementById(id).classList.add('active'); window.scrollTo(0,0); }
 </script>
 </body>
 </html>
