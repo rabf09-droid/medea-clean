@@ -10,7 +10,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         :root { --emerald: #1B5E20; --forest: #2E7D32; --glass: rgba(255, 255, 255, 0.98); --gold: #D4AF37; --red: #d21034; --orange: #fb8c00; --navy: #14213D; }
-        * { box-sizing: border-box; font-family: 'Tajawal', sans-serif; transition: 0.3s; }
+        * { box-sizing: border-box; font-family: 'Tajawal', sans-serif; }
         body { margin: 0; background: #000; color: #333; }
         .main-container { background: linear-gradient(rgba(0,0,0,0.7), rgba(0,0,0,0.7)), url('https://www.shutterstock.com/shutterstock/photos/1932338633/display_1500/stock-photo-garbage-truck-on-the-street-1932338633.jpg'); background-size: cover; background-attachment: fixed; min-height: 100vh; padding-bottom: 220px; }
         .header { background: var(--glass); padding: 15px; text-align: center; border-bottom: 4px solid var(--gold); position: sticky; top: 0; z-index: 1000; }
@@ -33,14 +33,14 @@
         <div id="txt-title" style="font-size: 1.7rem; font-weight: 800; color: var(--emerald);">المدية نظيفة</div>
         <div style="display: flex; justify-content: space-between; padding: 5px 20px; font-weight: bold; color: var(--navy);">
             <div id="clock">00:00:00</div>
-            <div id="txt-full-date">07 أفريل 2026</div>
+            <div id="date">07 أفريل 2026</div>
         </div>
     </div>
 
     <div id="pg-home" class="page active">
-        <div class="card" onclick="navTo('pg-report')"><i class="fas fa-bullhorn fa-4x" style="color:var(--forest)"></i><h2 id="lbl-rep">التبليغ</h2></div>
-        <div class="card" onclick="auth('admin')"><i class="fas fa-user-shield fa-4x" style="color:var(--emerald)"></i><h2 id="lbl-adm">الإدارة</h2></div>
-        <div class="card" onclick="auth('driver')"><i class="fas fa-truck fa-4x" style="color:var(--gold)"></i><h2 id="lbl-drv">الشاحنة</h2></div>
+        <div class="card" onclick="navTo('pg-report')"><i class="fas fa-bullhorn fa-4x" style="color:var(--forest)"></i><h2 id="lbl-report">التبليغ</h2></div>
+        <div class="card" onclick="auth('admin')"><i class="fas fa-user-shield fa-4x" style="color:var(--emerald)"></i><h2 id="lbl-admin">الإدارة</h2></div>
+        <div class="card" onclick="auth('driver')"><i class="fas fa-truck fa-4x" style="color:var(--gold)"></i><h2 id="lbl-driver">الشاحنة</h2></div>
     </div>
 
     <div id="pg-report" class="page">
@@ -50,10 +50,10 @@
                 <img id="out-img" style="width:100%; height:100%; object-fit:cover; display:none;">
             </div>
             <label class="btn" style="background:var(--navy);"><i class="fas fa-camera"></i> <span id="lbl-take">التقاط صورة</span><input type="file" accept="image/*" capture="environment" style="display:none;" onchange="handleImg(this, 'citizen')"></label>
-            <button class="btn" style="background:var(--forest);" onclick="getLoc()"><i class="fas fa-map-marker-alt"></i> <span id="lbl-getloc">تحديد العنوان و الأحداثيات</span></button>
+            <button class="btn" style="background:var(--forest);" onclick="getLoc()"><i class="fas fa-map-marker-alt"></i> <span id="lbl-loc">تحديد العنوان و الأحداثيات</span></button>
             <input type="text" id="in-addr" class="input" placeholder="العنوان">
             <input type="text" id="in-gps" class="input" readonly placeholder="الإحداثيات">
-            <button class="btn" style="background:var(--emerald);" onclick="sendReport()"><i class="fas fa-paper-plane"></i> <span id="lbl-send">إرسال التبليغ</span></button>
+            <button id="btn-submit" class="btn" style="background:var(--emerald);" onclick="sendReport()"><i class="fas fa-paper-plane"></i> <span id="lbl-send">إرسال التبليغ</span></button>
             <button class="btn" style="background:#666;" onclick="navTo('pg-home')">رجوع</button>
         </div>
     </div>
@@ -78,10 +78,13 @@
                 <option value="القطاع الخاص">القطاع الخاص</option>
             </select>
             <button class="btn" style="background:var(--emerald)" onclick="addDr()">حفظ السائق</button>
-            <div id="ui-drivers-list"></div> <div id="root-admin-section" style="display:none; border-top:2px solid #ddd; margin-top:20px; padding-top:20px;">
+            <div id="ui-drivers-list" style="margin-top:10px;"></div>
+
+            <div id="root-admin-tools" style="display:none; border-top:2px solid #ddd; margin-top:20px; padding-top:20px;">
                 <input type="text" id="ad-n" class="input" placeholder="اسم المسؤول">
                 <button class="btn" style="background:var(--navy)" onclick="addAd()">إضافة مسؤول</button>
-                <div id="ui-admins-list"></div> </div>
+                <div id="ui-admins-list" style="margin-top:10px;"></div>
+            </div>
         </div>
         <button class="btn" style="background:#444;" onclick="navTo('pg-home')">تسجيل الخروج</button>
     </div>
@@ -112,24 +115,25 @@
     let curImgCit = "", curImgDrv = "", curUser = "";
 
     function initApp() {
-        db.ref('MEDEA_SMART_APP_V9').on('value', s => { if(s.exists()){ appData=s.val(); updateUI(); } });
+        db.ref('FINAL_STEP_DATA').on('value', s => { if(s.exists()){ appData=s.val(); updateUI(); } });
         setInterval(() => { document.getElementById('clock').innerText = new Date().toLocaleTimeString('fr-FR'); }, 1000);
     }
 
+    // تفعيل زر اللغة
     function setLang(l) {
         const t = {
-            ar: { country: "الجمهورية الجزائرية الديمقراطية الشعبية", dept: "مصلحة النظافة و الوقاية الصحية بلدية المدية", title: "المدية نظيفة", rep: "التبليغ", adm: "الإدارة", drv: "الشاحنة", take: "التقاط صورة", getloc: "تحديد الموقع", send: "إرسال التبليغ", exit: "خروج" },
-            fr: { country: "République Algérienne Démocratique et Populaire", dept: "Service d'Hygiène - Commune de Médéa", title: "Médéa Propre", rep: "Signalement", adm: "Administration", drv: "Camion", take: "Prendre Photo", getloc: "Localiser", send: "Envoyer", exit: "Sortie" },
-            en: { country: "People's Democratic Republic of Algeria", dept: "Hygiene Service - Medea Municipality", title: "Clean Medea", rep: "Reporting", adm: "Management", drv: "Truck", take: "Take Photo", getloc: "Get Location", send: "Send Report", exit: "Exit" }
+            ar: { country: "الجمهورية الجزائرية الديمقراطية الشعبية", dept: "مصلحة النظافة و الوقاية الصحية بلدية المدية", title: "المدية نظيفة", report: "التبليغ", admin: "الإدارة", driver: "الشاحنة", take: "التقاط صورة", loc: "تحديد الموقع", send: "إرسال التبليغ", exit: "خروج" },
+            fr: { country: "République Algérienne Démocratique et Populaire", dept: "Service d'Hygiène - Commune de Médéa", title: "Médéa Propre", report: "Signalement", admin: "Administration", driver: "Chauffeur", take: "Prendre Photo", loc: "Localiser", send: "Envoyer", exit: "Sortie" },
+            en: { country: "People's Democratic Republic of Algeria", dept: "Hygiene Service - Medea Municipality", title: "Clean Medea", report: "Reporting", admin: "Management", driver: "Driver", take: "Take Photo", loc: "Get Location", send: "Send Report", exit: "Exit" }
         }[l];
         document.getElementById('txt-country').innerText = t.country;
         document.getElementById('txt-dept').innerText = t.dept;
         document.getElementById('txt-title').innerText = t.title;
-        document.getElementById('lbl-rep').innerText = t.rep;
-        document.getElementById('lbl-adm').innerText = t.adm;
-        document.getElementById('lbl-drv').innerText = t.drv;
+        document.getElementById('lbl-report').innerText = t.report;
+        document.getElementById('lbl-admin').innerText = t.admin;
+        document.getElementById('lbl-driver').innerText = t.driver;
         document.getElementById('lbl-take').innerText = t.take;
-        document.getElementById('lbl-getloc').innerText = t.getloc;
+        document.getElementById('lbl-loc').innerText = t.loc;
         document.getElementById('lbl-send').innerText = t.send;
         document.getElementById('lbl-exit').innerText = t.exit;
         document.dir = (l === 'ar' ? 'rtl' : 'ltr');
@@ -143,7 +147,7 @@
                 document.getElementById('out-img').src = curImgCit;
                 document.getElementById('out-img').style.display = 'block';
                 document.getElementById('ico-cam').style.display = 'none';
-            } else { curImgDrv = e.target.result; alert("✅ تم التقاط صورة الإنجاز"); }
+            } else { curImgDrv = e.target.result; alert("تم التقاط صورة الإنجاز"); }
         };
         reader.readAsDataURL(input.files[0]);
     }
@@ -158,11 +162,11 @@
         });
     }
 
-    // ركز هنا: تسلسل الرسائل المطلوب
+    // منطق الإرسال والرسائل المتسلسلة (إصلاح شامل)
     function sendReport() {
         const addr = document.getElementById('in-addr').value;
         const gps = document.getElementById('in-gps').value;
-        if(!curImgCit || !addr) return alert("الرجاء التقاط صورة وتحديد الموقع");
+        if(!curImgCit || !addr) return alert("يرجى التقاط صورة وتحديد الموقع");
 
         const report = {
             id: Date.now(), img: curImgCit, addr: addr, gps: gps,
@@ -172,22 +176,23 @@
         if(!appData.reports) appData.reports = [];
         appData.reports.push(report);
 
-        db.ref('MEDEA_SMART_APP_V9').set(appData).then(() => {
-            // تصفير الخانات فوراً
+        db.ref('FINAL_STEP_DATA').set(appData).then(() => {
+            // 1. تصفير الخانات فوراً
             curImgCit=""; document.getElementById('out-img').style.display='none'; 
             document.getElementById('ico-cam').style.display='block';
             document.getElementById('in-addr').value=""; document.getElementById('in-gps').value="";
 
-            // الرسالة المتسلسلة
+            // 2. إظهار السؤال
             setTimeout(() => {
                 const check = confirm("هل لديك تبليغ آخر؟");
                 if (check) {
-                    // يبقى في الصفحة للتصوير من جديد
+                    // إذا أجاب "نعم" يبقى في الصفحة
                 } else {
+                    // إذا أجاب "لا" تظهر رسالة الشكر ويرجع للرئيسية
                     alert("شكرا لتعاونك معنا تم الإرسال");
-                    navTo('pg-home'); // العودة للرئيسية فقط عند الإجابة بـ لا
+                    navTo('pg-home');
                 }
-            }, 600);
+            }, 500);
         });
     }
 
@@ -197,7 +202,7 @@
         document.getElementById('c2').innerText = rs.filter(r=>r.status==='sent').length;
         document.getElementById('c3').innerText = rs.filter(r=>r.status==='done').length;
 
-        // قائمة الإدارة: عرض التبليغ + المنجز بالكامل مع زر الحذف
+        // قائمة الإدارة: عرض البيانات كاملة مع زر الحذف
         document.getElementById('admin-list-container').innerHTML = rs.slice().reverse().map(r => `
             <div class="card" style="text-align:right; border-top:5px solid ${r.status==='done'?'green':'red'};">
                 <p style="color:var(--red); font-weight:bold;">📦 [التبليغ المرسل]:</p>
@@ -217,7 +222,7 @@
             </div>
         `).join('');
 
-        // قوائم الأسماء (سائقين ومسؤولين) أسفل الخانات مع حذف
+        // قوائم الأسماء (سائقين ومسؤولين) أسفل الخانات
         document.getElementById('ui-drivers-list').innerHTML = (appData.drivers || []).map(d => `
             <div class="item-list">
                 <span>${d.name} - ${d.phone} (${d.truck})</span>
@@ -238,10 +243,10 @@
             const jobs = rs.filter(r=>r.driver===curUser && r.status==='sent');
             document.getElementById('dr-tasks').innerHTML = jobs.map(j => `
                 <div class="card">
-                    <p style="font-weight:bold;">📥 تبليغ مكلف به:</p>
+                    <p style="font-weight:bold;">📥 تبليغ وارد للإنجاز:</p>
                     <img src="${j.img}" style="width:100%; border-radius:15px;">
                     <p>📍 ${j.addr} | 🌍 ${j.gps}</p>
-                    <p>🕒 التاريخ: ${j.date} - ${j.time}</p>
+                    <p>🕒 ${j.time} | 📅 ${j.date}</p>
                     <button class="btn" style="background:var(--navy)" onclick="window.open('https://www.google.com/maps?q=${j.gps}')">تحديد الموقع على الخريطة</button>
                     <label class="btn" style="background:var(--gold)">📸 أخذ صورة بعد التنفيذ<input type="file" capture="environment" style="display:none;" onchange="handleImg(this, 'driver')"></label>
                     <button class="btn" style="background:var(--forest)" onclick="finishJob(${j.id})">تم الإنجاز</button>
@@ -255,26 +260,26 @@
         if(n && t) {
             if(!appData.drivers) appData.drivers = [];
             appData.drivers.push({id:Date.now(), name:n, phone:p, truck:t, sector:document.getElementById('dr-s').value});
-            db.ref('MEDEA_SMART_APP_V9').set(appData);
+            db.ref('FINAL_STEP_DATA').set(appData);
             document.getElementById('dr-n').value=""; document.getElementById('dr-p').value=""; document.getElementById('dr-t').value="";
-            alert("✅ تم حفظ السائق وتصفير الخانات");
+            alert("تم حفظ السائق وتصفير الخانات");
         }
     }
 
-    function addAd() { const n=document.getElementById('ad-n').value; if(n){ appData.admins.push(n); db.ref('MEDEA_SMART_APP_V9').set(appData); document.getElementById('ad-n').value=""; }}
+    function addAd() { const n=document.getElementById('ad-n').value; if(n){ appData.admins.push(n); db.ref('FINAL_STEP_DATA').set(appData); document.getElementById('ad-n').value=""; alert("تم حفظ المسؤول وتصفير الخانة"); }}
     
     function finishJob(id) {
-        if(!curImgDrv) return alert("الرجاء التقاط صورة المنجز");
+        if(!curImgDrv) return alert("يرجى أخذ صورة الإنجاز");
         const r = appData.reports.find(x=>x.id===id);
         r.status = 'done'; r.doneImg = curImgDrv;
         r.doneTime = new Date().toLocaleTimeString('fr-FR'); r.doneDate = "07 أفريل 2026";
-        db.ref('MEDEA_SMART_APP_V9').set(appData).then(() => { curImgDrv=""; alert("✅ تم إرسال المنجز بنجاح"); });
+        db.ref('FINAL_STEP_DATA').set(appData).then(() => { curImgDrv=""; alert("تم الإنجاز بنجاح"); });
     }
 
     function auth(role) {
         const u = prompt("الاسم:"), p = prompt("الرمز:");
         if(role==='admin' && (appData.admins||[]).includes(u) && p==='1234') {
-            document.getElementById('root-admin-section').style.display = (u==='فتحي')?'block':'none';
+            document.getElementById('root-admin-tools').style.display = (u==='فتحي')?'block':'none';
             navTo('pg-admin');
         } else if(role==='driver' && p==='5678') {
             const d = (appData.drivers||[]).find(x=>x.name===u);
@@ -282,11 +287,12 @@
         }
     }
 
-    function delAd(n) { if(confirm("حذف المسؤول؟")){ appData.admins=appData.admins.filter(x=>x!==n); db.ref('MEDEA_SMART_APP_V9').set(appData); }}
-    function delDr(id) { if(confirm("حذف السائق؟")){ appData.drivers=appData.drivers.filter(x=>x.id!==id); db.ref('MEDEA_SMART_APP_V9').set(appData); }}
-    function delRep(id) { if(confirm("حذف التبليغ نهائياً؟")){ appData.reports=appData.reports.filter(x=>x.id!==id); db.ref('MEDEA_SMART_APP_V9').set(appData); }}
-    function assign(id) { const n = prompt("اسم السائق:"); if(n) { const r = appData.reports.find(x=>x.id===id); r.status = 'sent'; r.driver = n; db.ref('MEDEA_SMART_APP_V9').set(appData); } }
+    function delAd(n) { if(confirm("حذف المسؤول؟")){ appData.admins=appData.admins.filter(x=>x!==n); db.ref('FINAL_STEP_DATA').set(appData); }}
+    function delDr(id) { if(confirm("حذف السائق؟")){ appData.drivers=appData.drivers.filter(x=>x.id!==id); db.ref('FINAL_STEP_DATA').set(appData); }}
+    function delRep(id) { if(confirm("حذف التبليغ؟")){ appData.reports=appData.reports.filter(x=>x.id!==id); db.ref('FINAL_STEP_DATA').set(appData); }}
+    function assign(id) { const n = prompt("اسم السائق:"); if(n) { const r = appData.reports.find(x=>x.id===id); r.status = 'sent'; r.driver = n; db.ref('FINAL_STEP_DATA').set(appData); } }
     function navTo(id) { document.querySelectorAll('.page').forEach(p=>p.classList.remove('active')); document.getElementById(id).classList.add('active'); updateUI(); window.scrollTo(0,0); }
 </script>
 </body>
-</html>
+                </html>
+    
