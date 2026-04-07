@@ -11,7 +11,7 @@
     <style>
         :root { --emerald: #1B5E20; --forest: #2E7D32; --glass: rgba(255, 255, 255, 0.98); --gold: #D4AF37; --red: #d21034; --orange: #fb8c00; --navy: #14213D; }
         * { box-sizing: border-box; font-family: 'Tajawal', sans-serif; }
-        body { margin: 0; background: #000; color: #333; }
+        body { margin: 0; background: #000; color: #333; overflow-x: hidden; }
         .main-container { background: linear-gradient(rgba(0,0,0,0.7), rgba(0,0,0,0.7)), url('https://www.shutterstock.com/shutterstock/photos/1932338633/display_1500/stock-photo-garbage-truck-on-the-street-1932338633.jpg'); background-size: cover; background-attachment: fixed; min-height: 100vh; padding-bottom: 220px; }
         .header { background: var(--glass); padding: 15px; text-align: center; border-bottom: 4px solid var(--gold); position: sticky; top: 0; z-index: 1000; }
         .page { display: none; padding: 20px; animation: fadeIn 0.4s; }
@@ -23,9 +23,22 @@
         .footer { position: fixed; bottom: 0; left: 0; right: 0; background: var(--glass); padding: 10px; border-top: 3px solid var(--gold); z-index: 2000; text-align: center; }
         .lang-btn { padding: 8px 12px; border-radius: 8px; border: 1px solid var(--emerald); background: white; cursor: pointer; font-weight: bold; margin: 0 3px; color: var(--emerald); }
         .item-list { background: #f8f8f8; padding: 10px; border-radius: 12px; margin-bottom: 8px; text-align: right; border-right: 5px solid var(--emerald); display: flex; justify-content: space-between; align-items: center; }
+        
+        /* Modal Style - النافذة المنبثقة الجديدة */
+        #custom-modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 9999; align-items: center; justify-content: center; }
+        .modal-content { background: white; padding: 30px; border-radius: 20px; width: 90%; max-width: 400px; text-align: center; }
     </style>
 </head>
 <body onload="initApp()">
+
+<div id="custom-modal">
+    <div class="modal-content">
+        <h3 id="modal-q">هل لديك تبليغ آخر؟</h3>
+        <button class="btn" style="background:var(--forest)" onclick="handleChoice(true)">نعم</button>
+        <button class="btn" style="background:var(--red)" onclick="handleChoice(false)">لا</button>
+    </div>
+</div>
+
 <div class="main-container">
     <div class="header">
         <div id="txt-country">الجمهورية الجزائرية الديمقراطية الشعبية</div>
@@ -64,9 +77,7 @@
             <div style="flex:1; background:var(--orange); color:#fff; border-radius:15px; padding:10px; text-align:center;"><i class="fas fa-truck"></i><br><b id="c2">0</b></div>
             <div style="flex:1; background:var(--forest); color:#fff; border-radius:15px; padding:10px; text-align:center;"><i class="fas fa-check"></i><br><b id="c3">0</b></div>
         </div>
-        
         <div id="admin-list-reports"></div>
-
         <div class="card">
             <h3>إضافة سائق</h3>
             <input type="text" id="dr-n" class="input" placeholder="اسم السائق">
@@ -74,10 +85,12 @@
             <input type="text" id="dr-t" class="input" placeholder="رقم الشاحنة">
             <select id="dr-s" class="input"><option value="البلدية">البلدية</option><option value="القطاع الخاص">القطاع الخاص</option></select>
             <button class="btn" style="background:var(--emerald)" onclick="addDr()">حفظ السائق</button>
-            <div id="ui-drivers"></div> <div id="root-tools" style="display:none; border-top:2px solid #ddd; margin-top:20px; padding-top:20px;">
-                <input type="text" id="ad-n" class="input" placeholder="اسم المسؤول الجديد">
+            <div id="ui-drivers"></div>
+            <div id="root-tools" style="display:none; border-top:2px solid #ddd; margin-top:20px; padding-top:20px;">
+                <input type="text" id="ad-n" class="input" placeholder="اسم المسؤول">
                 <button class="btn" style="background:var(--navy)" onclick="addAd()">إضافة مسؤول</button>
-                <div id="ui-admins"></div> </div>
+                <div id="ui-admins"></div>
+            </div>
         </div>
         <button class="btn" style="background:#444;" onclick="navTo('pg-home')">تسجيل الخروج</button>
     </div>
@@ -114,9 +127,9 @@
 
     function setLang(l) {
         const t = {
-            ar: { country: "الجمهورية الجزائرية الديمقراطية الشعبية", dept: "مصلحة النظافة و الوقاية الصحية بلدية المدية", title: "المدية نظيفة", rep: "التبليغ", adm: "الإدارة", drv: "الشاحنة", take: "التقاط صورة", loc: "تحديد الموقع", send: "إرسال التبليغ", exit: "خروج" },
-            fr: { country: "République Algérienne Démocratique et Populaire", dept: "Service d'Hygiène - Médéa", title: "Médéa Propre", rep: "Signalement", adm: "Administration", drv: "Chauffeur", take: "Prendre Photo", loc: "Localisation", send: "Envoyer", exit: "Sortie" },
-            en: { country: "People's Democratic Republic of Algeria", dept: "Hygiene Service - Medea", title: "Clean Medea", rep: "Reporting", adm: "Management", drv: "Truck", take: "Take Photo", loc: "Locate", send: "Send Report", exit: "Exit" }
+            ar: { country: "الجمهورية الجزائرية الديمقراطية الشعبية", dept: "مصلحة النظافة و الوقاية الصحية بلدية المدية", title: "المدية نظيفة", rep: "التبليغ", adm: "الإدارة", drv: "الشاحنة", take: "التقاط صورة", loc: "تحديد الموقع", send: "إرسال التبليغ", exit: "خروج", modQ: "هل لديك تبليغ آخر؟" },
+            fr: { country: "République Algérienne Démocratique et Populaire", dept: "Service d'Hygiène - Médéa", title: "Médéa Propre", rep: "Signalement", adm: "Administration", drv: "Chauffeur", take: "Photo", loc: "Localisation", send: "Envoyer", exit: "Sortie", modQ: "Autre signalement ?" },
+            en: { country: "People's Democratic Republic of Algeria", dept: "Hygiene Service - Medea", title: "Clean Medea", rep: "Reporting", adm: "Management", drv: "Truck", take: "Photo", loc: "Locate", send: "Send", exit: "Exit", modQ: "Another report?" }
         }[l];
         document.getElementById('txt-country').innerText = t.country;
         document.getElementById('txt-dept').innerText = t.dept;
@@ -128,6 +141,7 @@
         document.getElementById('lbl-loc').innerText = t.loc;
         document.getElementById('lbl-send').innerText = t.send;
         document.getElementById('lbl-exit').innerText = t.exit;
+        document.getElementById('modal-q').innerText = t.modQ;
         document.dir = (l === 'ar' ? 'rtl' : 'ltr');
     }
 
@@ -149,22 +163,18 @@
             const lat = p.coords.latitude, lng = p.coords.longitude;
             document.getElementById('in-gps').value = lat.toFixed(6) + "," + lng.toFixed(6);
             fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`).then(r=>r.json()).then(d=>{
-                document.getElementById('in-addr').value = d.display_name.split(',').slice(0,3).join(',');
+                document.getElementById('in-addr').value = d.display_name.split(',').slice(0,2).join(',');
             });
         });
     }
 
-    // الحل النهائي لزر الإرسال والرسائل
+    // الإرسال الجديد مع النافذة المنبثقة الإجبارية
     function sendReport() {
         const addr = document.getElementById('in-addr').value;
-        const gps = document.getElementById('in-gps').value;
         if(!curImgCit || !addr) return alert("يرجى التقاط صورة وتحديد الموقع");
 
-        // إظهار رسالة السؤال (موافق = نعم، إلغاء = لا)
-        const hasMore = confirm("هل لديك تبليغ آخر؟ \n(موافق = نعم / إلغاء = لا)");
-
         const report = {
-            id: Date.now(), img: curImgCit, addr: addr, gps: gps,
+            id: Date.now(), img: curImgCit, addr: addr, gps: document.getElementById('in-gps').value,
             time: new Date().toLocaleTimeString('fr-FR'), date: "07 أفريل 2026", status: 'new'
         };
 
@@ -173,19 +183,26 @@
 
         db.ref('OFFICIAL_DATA').set(appData).then(() => {
             // تصفير الخانات فوراً
-            curImgCit=""; document.getElementById('out-img').style.display='none'; 
-            document.getElementById('ico-cam').style.display='block';
-            document.getElementById('in-addr').value=""; document.getElementById('in-gps').value="";
-
-            if (!hasMore) {
-                // إذا اختار "إلغاء" (لا)
-                alert("شكرا لتعاونك معنا تم الإرسال");
-                navTo('pg-home');
-            } else {
-                // إذا اختار "موافق" (نعم)
-                alert("تم إرسال التبليغ، يمكنك إضافة آخر الآن");
-            }
+            clearFields();
+            // إظهار النافذة المنبثقة المخصصة
+            document.getElementById('custom-modal').style.display = 'flex';
         });
+    }
+
+    function handleChoice(yes) {
+        document.getElementById('custom-modal').style.display = 'none';
+        if (!yes) {
+            alert("شكرا لتعاونك معنا تم الإرسال");
+            navTo('pg-home');
+        } else {
+            alert("تفضل بإضافة تبليغك الجديد");
+        }
+    }
+
+    function clearFields() {
+        curImgCit=""; document.getElementById('out-img').style.display='none'; 
+        document.getElementById('ico-cam').style.display='block';
+        document.getElementById('in-addr').value=""; document.getElementById('in-gps').value="";
     }
 
     function updateUI() {
@@ -194,7 +211,6 @@
         document.getElementById('c2').innerText = rs.filter(r=>r.status==='sent').length;
         document.getElementById('c3').innerText = rs.filter(r=>r.status==='done').length;
 
-        // الإدارة: التبليغ + المنجز
         document.getElementById('admin-list-reports').innerHTML = rs.slice().reverse().map(r => `
             <div class="card" style="text-align:right; border-top:5px solid ${r.status==='done'?'#2E7D32':'#d21034'};">
                 <p style="color:red; font-weight:bold;">📸 [تبليغ مرسل]:</p>
@@ -205,19 +221,18 @@
                     <div style="border-top:2px dashed green; margin-top:10px; padding-top:10px;">
                         <p style="color:green; font-weight:bold;">✅ [رسالة منجزة]:</p>
                         <img src="${r.doneImg}" style="width:100%; border-radius:15px;">
-                        <p>📍 الموقع: ${r.addr} | 🕒 ${r.doneTime} - ${r.doneDate}</p>
+                        <p>📍 ${r.addr} | 🕒 ${r.doneTime} - ${r.doneDate}</p>
                     </div>
                 ` : ''}
                 <button onclick="delRep(${r.id})" style="background:none; border:none; color:red; cursor:pointer;"><i class="fas fa-trash"></i> حذف التبليغ</button>
             </div>
         `).join('');
 
-        // قوائم الأسماء (سائقين ومسؤولين) أسفل الخانات
         document.getElementById('ui-drivers').innerHTML = (appData.drivers || []).map(d => `
-            <div class="item-list"><span>${d.name} (${d.truck})</span><i class="fas fa-trash" style="color:red" onclick="delDr(${d.id})"></i></div>
+            <div class="item-list"><span>${d.name} (${d.phone})</span><i class="fas fa-trash" style="color:red" onclick="delDr(${d.id})"></i></div>
         `).join('');
         document.getElementById('ui-admins').innerHTML = (appData.admins || []).map(a => `
-            <div class="item-list"><span>المسؤول: ${a}</span>${a!=='فتحي'?`<i class="fas fa-trash" style="color:red" onclick="delAd('${a}')"></i>`:''}</div>
+            <div class="item-list"><span>${a}</span>${a!=='فتحي'?`<i class="fas fa-trash" style="color:red" onclick="delAd('${a}')"></i>`:''}</div>
         `).join('');
 
         if(curUser) {
@@ -227,8 +242,7 @@
                 <div class="card">
                     <p>📥 مهمة مرسلة:</p>
                     <img src="${j.img}" style="width:100%; border-radius:15px;">
-                    <p>📍 ${j.addr}</p>
-                    <button class="btn" style="background:var(--navy)" onclick="window.open('https://www.google.com/maps/search/?api=1&query=${j.gps}')">تحديد الموقع</button>
+                    <button class="btn" style="background:var(--navy)" onclick="window.open('https://www.google.com/maps?q=${j.gps}')">خريطة الموقع</button>
                     <label class="btn" style="background:var(--gold)">📸 صورة التنفيذ<input type="file" capture="environment" style="display:none;" onchange="handleImg(this, 'driver')"></label>
                     <button class="btn" style="background:var(--forest)" onclick="finishJob(${j.id})">تم الإنجاز</button>
                 </div>
@@ -248,7 +262,7 @@
     function addAd() { const n=document.getElementById('ad-n').value; if(n){ appData.admins.push(n); db.ref('OFFICIAL_DATA').set(appData); document.getElementById('ad-n').value=""; }}
     function delDr(id) { if(confirm("حذف السائق؟")){ appData.drivers=appData.drivers.filter(x=>x.id!==id); db.ref('OFFICIAL_DATA').set(appData); }}
     function delAd(n) { if(confirm("حذف المسؤول؟")){ appData.admins=appData.admins.filter(x=>x!==n); db.ref('OFFICIAL_DATA').set(appData); }}
-    function delRep(id) { if(confirm("حذف؟")){ appData.reports=appData.reports.filter(x=>x.id!==id); db.ref('OFFICIAL_DATA').set(appData); }}
+    function delRep(id) { if(confirm("حذف السجل؟")){ appData.reports=appData.reports.filter(x=>x.id!==id); db.ref('OFFICIAL_DATA').set(appData); }}
     function assign(id) { const n = prompt("اسم السائق:"); if(n) { const r = appData.reports.find(x=>x.id===id); r.status='sent'; r.driver=n; db.ref('OFFICIAL_DATA').set(appData); }}
     function finishJob(id) {
         if(!curImgDrv) return alert("يرجى أخذ صورة");
@@ -267,5 +281,5 @@
     function navTo(id) { document.querySelectorAll('.page').forEach(p=>p.classList.remove('active')); document.getElementById(id).classList.add('active'); window.scrollTo(0,0); }
 </script>
 </body>
-                </html>
-    
+    </html>
+                                                                                                                          
