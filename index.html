@@ -53,7 +53,7 @@
             <button class="btn" style="background:var(--forest);" onclick="getLoc()"><i class="fas fa-map-marker-alt"></i> <span id="lbl-loc">تحديد العنوان و الأحداثيات</span></button>
             <input type="text" id="in-addr" class="input" placeholder="العنوان">
             <input type="text" id="in-gps" class="input" readonly placeholder="الإحداثيات">
-            <button id="btn-submit" class="btn" style="background:var(--emerald);" onclick="sendReport()"><i class="fas fa-paper-plane"></i> <span id="lbl-send">إرسال التبليغ</span></button>
+            <button class="btn" style="background:var(--emerald);" onclick="sendReport()"><i class="fas fa-paper-plane"></i> <span id="lbl-send">إرسال التبليغ</span></button>
             <button class="btn" style="background:#666;" onclick="navTo('pg-home')">رجوع</button>
         </div>
     </div>
@@ -72,18 +72,15 @@
             <input type="text" id="dr-n" class="input" placeholder="اسم السائق">
             <input type="text" id="dr-p" class="input" placeholder="رقم الهاتف">
             <input type="text" id="dr-t" class="input" placeholder="رقم الشاحنة">
-            <select id="dr-s" class="input">
-                <option value="">-- اختر القطاع --</option>
-                <option value="البلدية">البلدية</option>
-                <option value="القطاع الخاص">القطاع الخاص</option>
-            </select>
+            <select id="dr-s" class="input"><option value="">-- اختر القطاع --</option><option value="البلدية">البلدية</option><option value="القطاع الخاص">القطاع الخاص</option></select>
             <button class="btn" style="background:var(--emerald)" onclick="addDr()">حفظ السائق</button>
-            <div id="ui-drivers-list" style="margin-top:10px;"></div>
+            <div id="ui-drivers-list"></div>
 
             <div id="root-admin-tools" style="display:none; border-top:2px solid #ddd; margin-top:20px; padding-top:20px;">
+                <h3>إدارة المسؤولين</h3>
                 <input type="text" id="ad-n" class="input" placeholder="اسم المسؤول">
                 <button class="btn" style="background:var(--navy)" onclick="addAd()">إضافة مسؤول</button>
-                <div id="ui-admins-list" style="margin-top:10px;"></div>
+                <div id="ui-admins-list"></div>
             </div>
         </div>
         <button class="btn" style="background:#444;" onclick="navTo('pg-home')">تسجيل الخروج</button>
@@ -101,13 +98,13 @@
             <button class="lang-btn" onclick="setLang('fr')">Français</button>
             <button class="lang-btn" onclick="setLang('en')">English</button>
         </div>
-        <button class="btn" style="background:var(--red); margin:0;" onclick="if(confirm('خروج؟')) window.close()"><i class="fas fa-power-off"></i> <span id="lbl-exit">خروج</span></button>
+        <button class="btn" style="background:var(--red); margin:0;" onclick="if(confirm('خروج؟')) window.close()"><i class="fas fa-power-off"></i> <span id="lbl-exit">خروج من التطبيق</span></button>
         <div style="font-size: 0.75rem; font-weight: bold; color: var(--navy); margin-top: 5px;">التطبيق من إعداد د. رابحي فتحي</div>
     </div>
 </div>
 
 <script>
-    const firebaseConfig = { databaseURL: "https://medea-smart-clean-2026-default-rtdb.firebaseio.com/" };
+    const firebaseConfig = { databaseURL: "https://medea-final-project-2026-default-rtdb.firebaseio.com/" };
     if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
 
@@ -115,16 +112,15 @@
     let curImgCit = "", curImgDrv = "", curUser = "";
 
     function initApp() {
-        db.ref('FINAL_STEP_DATA').on('value', s => { if(s.exists()){ appData=s.val(); updateUI(); } });
+        db.ref('APP_DATA_FINAL').on('value', s => { if(s.exists()){ appData=s.val(); updateUI(); } });
         setInterval(() => { document.getElementById('clock').innerText = new Date().toLocaleTimeString('fr-FR'); }, 1000);
     }
 
-    // تفعيل زر اللغة
     function setLang(l) {
         const t = {
             ar: { country: "الجمهورية الجزائرية الديمقراطية الشعبية", dept: "مصلحة النظافة و الوقاية الصحية بلدية المدية", title: "المدية نظيفة", report: "التبليغ", admin: "الإدارة", driver: "الشاحنة", take: "التقاط صورة", loc: "تحديد الموقع", send: "إرسال التبليغ", exit: "خروج" },
-            fr: { country: "République Algérienne Démocratique et Populaire", dept: "Service d'Hygiène - Commune de Médéa", title: "Médéa Propre", report: "Signalement", admin: "Administration", driver: "Chauffeur", take: "Prendre Photo", loc: "Localiser", send: "Envoyer", exit: "Sortie" },
-            en: { country: "People's Democratic Republic of Algeria", dept: "Hygiene Service - Medea Municipality", title: "Clean Medea", report: "Reporting", admin: "Management", driver: "Driver", take: "Take Photo", loc: "Get Location", send: "Send Report", exit: "Exit" }
+            fr: { country: "République Algérienne Démocratique et Populaire", dept: "Service d'Hygiène - Médéa", title: "Médéa Propre", report: "Signalement", admin: "Administration", driver: "Chauffeur", take: "Photo", loc: "Localiser", send: "Envoyer", exit: "Sortie" },
+            en: { country: "People's Democratic Republic of Algeria", dept: "Hygiene Service - Medea", title: "Clean Medea", report: "Reporting", admin: "Management", driver: "Driver", take: "Take Photo", loc: "Locate", send: "Send Report", exit: "Exit" }
         }[l];
         document.getElementById('txt-country').innerText = t.country;
         document.getElementById('txt-dept').innerText = t.dept;
@@ -147,7 +143,7 @@
                 document.getElementById('out-img').src = curImgCit;
                 document.getElementById('out-img').style.display = 'block';
                 document.getElementById('ico-cam').style.display = 'none';
-            } else { curImgDrv = e.target.result; alert("تم التقاط صورة الإنجاز"); }
+            } else { curImgDrv = e.target.result; alert("تم التقاط صورة المنجز"); }
         };
         reader.readAsDataURL(input.files[0]);
     }
@@ -162,12 +158,16 @@
         });
     }
 
-    // منطق الإرسال والرسائل المتسلسلة (إصلاح شامل)
+    // التركيز هنا: إصلاح زر الإرسال والرسائل المتتالية
     function sendReport() {
         const addr = document.getElementById('in-addr').value;
         const gps = document.getElementById('in-gps').value;
-        if(!curImgCit || !addr) return alert("يرجى التقاط صورة وتحديد الموقع");
+        if(!curImgCit || !addr) return alert("يرجى التقاط الصورة وتحديد الموقع");
 
+        // 1. السؤال أولاً
+        const hasMore = confirm("هل لديك تبليغ آخر؟");
+
+        // 2. تجهيز البيانات
         const report = {
             id: Date.now(), img: curImgCit, addr: addr, gps: gps,
             time: new Date().toLocaleTimeString('fr-FR'), date: "07 أفريل 2026", status: 'new'
@@ -176,23 +176,21 @@
         if(!appData.reports) appData.reports = [];
         appData.reports.push(report);
 
-        db.ref('FINAL_STEP_DATA').set(appData).then(() => {
-            // 1. تصفير الخانات فوراً
+        // 3. التنفيذ بناءً على الإجابة
+        db.ref('APP_DATA_FINAL').set(appData).then(() => {
+            // تصفير الخانات في كل الحالات
             curImgCit=""; document.getElementById('out-img').style.display='none'; 
             document.getElementById('ico-cam').style.display='block';
             document.getElementById('in-addr').value=""; document.getElementById('in-gps').value="";
 
-            // 2. إظهار السؤال
-            setTimeout(() => {
-                const check = confirm("هل لديك تبليغ آخر؟");
-                if (check) {
-                    // إذا أجاب "نعم" يبقى في الصفحة
-                } else {
-                    // إذا أجاب "لا" تظهر رسالة الشكر ويرجع للرئيسية
-                    alert("شكرا لتعاونك معنا تم الإرسال");
-                    navTo('pg-home');
-                }
-            }, 500);
+            if (!hasMore) {
+                // إذا أجاب "لا" (أي لا يوجد تبليغ آخر)
+                alert("شكرا لتعاونك معنا تم الإرسال");
+                navTo('pg-home');
+            } else {
+                // إذا أجاب "نعم" يبقى في نفس الصفحة والخانات مصفيرة
+                alert("يمكنك إضافة تبليغ جديد الآن");
+            }
         });
     }
 
@@ -202,10 +200,10 @@
         document.getElementById('c2').innerText = rs.filter(r=>r.status==='sent').length;
         document.getElementById('c3').innerText = rs.filter(r=>r.status==='done').length;
 
-        // قائمة الإدارة: عرض البيانات كاملة مع زر الحذف
+        // الإدارة: عرض التبليغ + المنجز بالكامل مع زر الحذف
         document.getElementById('admin-list-container').innerHTML = rs.slice().reverse().map(r => `
-            <div class="card" style="text-align:right; border-top:5px solid ${r.status==='done'?'green':'red'};">
-                <p style="color:var(--red); font-weight:bold;">📦 [التبليغ المرسل]:</p>
+            <div class="card" style="text-align:right; border-top:5px solid ${r.status==='done'?'#2E7D32':'#d21034'};">
+                <p style="color:red; font-weight:bold;">📸 [التبليغ المرسل]:</p>
                 <img src="${r.img}" style="width:100%; border-radius:15px;">
                 <p>📍 ${r.addr} | 🌍 ${r.gps}</p>
                 <p>🕒 ${r.time} | 📅 ${r.date}</p>
@@ -214,41 +212,31 @@
                     <div style="border-top:2px dashed green; margin-top:10px; padding-top:10px;">
                         <p style="color:green; font-weight:bold;">✅ [الرسالة المنجزة]:</p>
                         <img src="${r.doneImg}" style="width:100%; border-radius:15px;">
-                        <p>📍 الموقع: ${r.addr} | 🌍 ${r.gps}</p>
-                        <p>🕒 الوقت: ${r.doneTime} | 📅 ${r.doneDate}</p>
+                        <p>📍 ${r.addr} | 🕒 ${r.doneTime} | 📅 ${r.doneDate}</p>
                     </div>
                 ` : ''}
-                <button onclick="delRep(${r.id})" style="background:none; border:none; color:red; margin-top:10px; cursor:pointer;"><i class="fas fa-trash"></i> حذف التبليغ</button>
+                <button onclick="delRep(${r.id})" style="color:red; border:none; background:none; cursor:pointer;"><i class="fas fa-trash"></i> حذف السجل</button>
             </div>
         `).join('');
 
-        // قوائم الأسماء (سائقين ومسؤولين) أسفل الخانات
+        // عرض الأسماء أسفل الخانات
         document.getElementById('ui-drivers-list').innerHTML = (appData.drivers || []).map(d => `
-            <div class="item-list">
-                <span>${d.name} - ${d.phone} (${d.truck})</span>
-                <i class="fas fa-trash" style="color:red; cursor:pointer;" onclick="delDr(${d.id})"></i>
-            </div>
+            <div class="item-list"><span>${d.name} - ${d.phone} (${d.truck})</span><i class="fas fa-trash" style="color:red" onclick="delDr(${d.id})"></i></div>
         `).join('');
-
         document.getElementById('ui-admins-list').innerHTML = (appData.admins || []).map(a => `
-            <div class="item-list">
-                <span>المسؤول: ${a}</span>
-                ${a!=='فتحي' ? `<i class="fas fa-trash" style="color:red; cursor:pointer;" onclick="delAd('${a}')"></i>` : ''}
-            </div>
+            <div class="item-list"><span>المسؤول: ${a}</span>${a!=='فتحي'?`<i class="fas fa-trash" style="color:red" onclick="delAd('${a}')"></i>`:''}</div>
         `).join('');
 
-        // صفحة السائق
         if(curUser) {
             document.getElementById('dr-head').innerHTML = `<h3>مرحباً ${curUser}</h3>`;
             const jobs = rs.filter(r=>r.driver===curUser && r.status==='sent');
             document.getElementById('dr-tasks').innerHTML = jobs.map(j => `
                 <div class="card">
-                    <p style="font-weight:bold;">📥 تبليغ وارد للإنجاز:</p>
+                    <p>📥 تبليغ مكلف به:</p>
                     <img src="${j.img}" style="width:100%; border-radius:15px;">
-                    <p>📍 ${j.addr} | 🌍 ${j.gps}</p>
-                    <p>🕒 ${j.time} | 📅 ${j.date}</p>
-                    <button class="btn" style="background:var(--navy)" onclick="window.open('https://www.google.com/maps?q=${j.gps}')">تحديد الموقع على الخريطة</button>
-                    <label class="btn" style="background:var(--gold)">📸 أخذ صورة بعد التنفيذ<input type="file" capture="environment" style="display:none;" onchange="handleImg(this, 'driver')"></label>
+                    <p>📍 ${j.addr} | 🕒 ${j.time}</p>
+                    <button class="btn" style="background:var(--navy)" onclick="window.open('https://www.google.com/maps/search/?api=1&query=${j.gps}')">تحديد الموقع</button>
+                    <label class="btn" style="background:var(--gold)">📸 صورة المنجز<input type="file" capture="environment" style="display:none;" onchange="handleImg(this, 'driver')"></label>
                     <button class="btn" style="background:var(--forest)" onclick="finishJob(${j.id})">تم الإنجاز</button>
                 </div>
             `).join('');
@@ -257,41 +245,33 @@
 
     function addDr() {
         const n=document.getElementById('dr-n').value, p=document.getElementById('dr-p').value, t=document.getElementById('dr-t').value;
-        if(n && t) {
+        if(n) {
             if(!appData.drivers) appData.drivers = [];
             appData.drivers.push({id:Date.now(), name:n, phone:p, truck:t, sector:document.getElementById('dr-s').value});
-            db.ref('FINAL_STEP_DATA').set(appData);
+            db.ref('APP_DATA_FINAL').set(appData);
             document.getElementById('dr-n').value=""; document.getElementById('dr-p').value=""; document.getElementById('dr-t').value="";
-            alert("تم حفظ السائق وتصفير الخانات");
         }
     }
-
-    function addAd() { const n=document.getElementById('ad-n').value; if(n){ appData.admins.push(n); db.ref('FINAL_STEP_DATA').set(appData); document.getElementById('ad-n').value=""; alert("تم حفظ المسؤول وتصفير الخانة"); }}
-    
+    function addAd() { const n=document.getElementById('ad-n').value; if(n){ appData.admins.push(n); db.ref('APP_DATA_FINAL').set(appData); document.getElementById('ad-n').value=""; }}
+    function delDr(id) { if(confirm("حذف السائق؟")){ appData.drivers=appData.drivers.filter(x=>x.id!==id); db.ref('APP_DATA_FINAL').set(appData); }}
+    function delAd(n) { if(confirm("حذف المسؤول؟")){ appData.admins=appData.admins.filter(x=>x!==n); db.ref('APP_DATA_FINAL').set(appData); }}
+    function delRep(id) { if(confirm("حذف هذا السجل نهائياً؟")){ appData.reports=appData.reports.filter(x=>x.id!==id); db.ref('APP_DATA_FINAL').set(appData); }}
+    function assign(id) { const n = prompt("اسم السائق:"); if(n) { const r = appData.reports.find(x=>x.id===id); r.status='sent'; r.driver=n; db.ref('APP_DATA_FINAL').set(appData); }}
     function finishJob(id) {
-        if(!curImgDrv) return alert("يرجى أخذ صورة الإنجاز");
+        if(!curImgDrv) return alert("يرجى التقاط صورة المنجز");
         const r = appData.reports.find(x=>x.id===id);
-        r.status = 'done'; r.doneImg = curImgDrv;
-        r.doneTime = new Date().toLocaleTimeString('fr-FR'); r.doneDate = "07 أفريل 2026";
-        db.ref('FINAL_STEP_DATA').set(appData).then(() => { curImgDrv=""; alert("تم الإنجاز بنجاح"); });
+        r.status='done'; r.doneImg=curImgDrv; r.doneTime=new Date().toLocaleTimeString('fr-FR'); r.doneDate="07 أفريل 2026";
+        db.ref('APP_DATA_FINAL').set(appData).then(() => { curImgDrv=""; alert("تم إرسال المنجز"); });
     }
-
     function auth(role) {
         const u = prompt("الاسم:"), p = prompt("الرمز:");
         if(role==='admin' && (appData.admins||[]).includes(u) && p==='1234') {
-            document.getElementById('root-admin-tools').style.display = (u==='فتحي')?'block':'none';
-            navTo('pg-admin');
+            document.getElementById('root-admin-tools').style.display = (u==='فتحي')?'block':'none'; navTo('pg-admin');
         } else if(role==='driver' && p==='5678') {
-            const d = (appData.drivers||[]).find(x=>x.name===u);
-            if(d) { curUser=u; navTo('pg-driver'); } else alert("سائق غير مسجل");
+            if((appData.drivers||[]).find(x=>x.name===u)){ curUser=u; navTo('pg-driver'); } else alert("غير مسجل");
         }
     }
-
-    function delAd(n) { if(confirm("حذف المسؤول؟")){ appData.admins=appData.admins.filter(x=>x!==n); db.ref('FINAL_STEP_DATA').set(appData); }}
-    function delDr(id) { if(confirm("حذف السائق؟")){ appData.drivers=appData.drivers.filter(x=>x.id!==id); db.ref('FINAL_STEP_DATA').set(appData); }}
-    function delRep(id) { if(confirm("حذف التبليغ؟")){ appData.reports=appData.reports.filter(x=>x.id!==id); db.ref('FINAL_STEP_DATA').set(appData); }}
-    function assign(id) { const n = prompt("اسم السائق:"); if(n) { const r = appData.reports.find(x=>x.id===id); r.status = 'sent'; r.driver = n; db.ref('FINAL_STEP_DATA').set(appData); } }
-    function navTo(id) { document.querySelectorAll('.page').forEach(p=>p.classList.remove('active')); document.getElementById(id).classList.add('active'); updateUI(); window.scrollTo(0,0); }
+    function navTo(id) { document.querySelectorAll('.page').forEach(p=>p.classList.remove('active')); document.getElementById(id).classList.add('active'); window.scrollTo(0,0); }
 </script>
 </body>
                 </html>
