@@ -23,19 +23,15 @@
         .btn { border: none; padding: 15px; border-radius: 15px; width: 100%; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px; margin-bottom: 10px; color: white; font-size: 1.1rem; }
         .input { width: 100%; padding: 12px; border-radius: 12px; border: 2px solid #ddd; margin-bottom: 10px; text-align: center; }
 
-        /* الصفحة الرئيسية - التزام تام بالصورة */
         .giant-btn { background: var(--forest); height: 230px; flex-direction: column; border-radius: 50px; font-size: 2.1rem; box-shadow: 0 15px 45px rgba(46, 125, 50, 0.4); border: 6px solid white; margin: 10px 0; }
         .giant-btn i { font-size: 6.5rem; margin-bottom: 5px; }
 
-        /* صفحة التبليغ - تقليص المساحة الحمراء حسب الصورة */
         .cam-box-wrapper { position: relative; height: 200px; border: 3px dashed #bbb; border-radius: 20px; display: flex; align-items: center; justify-content: center; background: #fff; margin-bottom: 15px; overflow: hidden; }
         .cam-inner-btn { position: absolute; bottom: 15px; background: var(--navy); color: white; padding: 8px 15px; border-radius: 20px; font-size: 0.9rem; cursor: pointer; display: flex; align-items: center; gap: 5px; box-shadow: 0 4px 10px rgba(0,0,0,0.2); }
 
-        /* الإدارة - لمسات جمالية وأزرار البلاغات */
         .admin-nav-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px; }
         .nav-card-btn { height: 100px; border-radius: 20px; border: none; color: white; font-size: 1.2rem; font-weight: 900; cursor: pointer; transition: 0.3s; box-shadow: 0 5px 15px rgba(0,0,0,0.1); }
         
-        /* Modal */
         .modal { display: none; position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.85); z-index:9999; align-items:center; justify-content:center; }
         .modal-content { background:white; padding:30px; border-radius:30px; text-align:center; width:90%; max-width:400px; }
 
@@ -80,7 +76,6 @@
         <i class="fas fa-truck-loading"></i>
         <span>إرســـــال تبلـيـــغ</span>
     </button>
-
     <div class="card" style="background: rgba(255,255,255,0.6); border: 2px dashed var(--navy);">
         <p style="text-align: center; font-weight: bold; color: var(--navy); margin: 0 0 10px 0;">رواق الموظفين والمسؤولين</p>
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
@@ -113,14 +108,11 @@
         <h2 style="margin:0;">لوحة التحكم</h2>
         <button class="btn" style="background:var(--red); width:auto; padding:8px 20px;" onclick="navTo('pg-home')">خروج</button>
     </div>
-
     <div class="admin-nav-grid">
         <button class="nav-card-btn" style="background:orange;" onclick="showAdminList('new')">بلاغات النفايات</button>
         <button class="nav-card-btn" style="background:var(--forest);" onclick="showAdminList('done')">البلاغات المنجزة</button>
     </div>
-
     <div id="admin-list-container"></div>
-
     <div class="card" style="border: 2px solid blue; background: #f0f7ff;">
         <h4 style="margin-top:0; color:blue; text-align:center;">إضافة وتسيير الموظفين</h4>
         <button class="btn" style="background:blue" onclick="openStaffModal()">+ إضافة (مسؤول / سائق)</button>
@@ -192,20 +184,30 @@
         container.innerHTML = `<h3>${type === 'new' ? 'بلاغات المواطنين' : 'الأعمال المنجزة'}</h3>`;
         container.innerHTML += filtered.map(r => `
             <div class="card" style="border-right: 10px solid ${type==='done'?'green':'red'}">
-                <div style="display:flex; gap:10px;">
-                    <img src="${r.img}" style="width:100px; border-radius:15px;">
-                    ${r.doneImg ? `<img src="${r.doneImg}" style="width:100px; border-radius:15px; border:3px solid green;">` : ''}
+                <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+                    <div style="display:flex; gap:10px;">
+                        <img src="${r.img}" style="width:100px; height:100px; border-radius:15px; object-fit:cover;">
+                        ${r.doneImg ? `<img src="${r.doneImg}" style="width:100px; height:100px; border-radius:15px; border:3px solid green; object-fit:cover;">` : ''}
+                    </div>
+                    ${type === 'done' ? `<i class="fas fa-trash-alt" style="color:var(--red); cursor:pointer; font-size:1.5rem;" onclick="deleteReport(${r.id})"></i>` : ''}
                 </div>
-                <p>📍 ${r.addr}<br>🕒 ${r.time} - ${r.date}<br>🌍 ${r.gps}</p>
-                ${r.status==='new' ? `<button class="btn" style="background:var(--forest)" onclick="assignTo(${r.id})">توجيه لسائق</button>` : `<p style="color:green">بواسطة: ${r.driverName}</p>`}
+                <p>📍 ${r.addr}<br>🕒 ${r.time} - ${r.date}<br>🌍 GPS: ${r.gps}</p>
+                ${r.status==='new' ? `<button class="btn" style="background:var(--forest)" onclick="assignTo(${r.id})">توجيه لسائق</button>` : `<p style="color:green; font-weight:bold;">بواسطة: ${r.driverName}<br>✅ تم في: ${r.doneTime}</p>`}
             </div>
-        `).join('');
+        `).join('') || "<p style='text-align:center;'>لا توجد بيانات حالياً</p>";
+    }
+
+    function deleteReport(id) {
+        if(confirm("هل تريد حذف هذا البلاغ المنجز نهائياً من القائمة؟")) {
+            appData.reports = appData.reports.filter(r => r.id !== id);
+            db.ref('CLEAN_MEDEA_FINAL').set(appData).then(() => showAdminList('done'));
+        }
     }
 
     function auth(role) {
         const p = prompt("الرمز:");
         if(role==='admin' && p==='1234') navTo('pg-admin');
-        else if(role==='driver' && p==='5678') { currentLoggedUser = prompt("اسمك:"); navTo('pg-driver'); updateUI(); }
+        else if(role==='driver' && p==='5678') { currentLoggedUser = prompt("اسمك:"); if(currentLoggedUser) { navTo('pg-driver'); updateUI(); } }
     }
 
     function updateUI() {
@@ -214,22 +216,26 @@
             document.getElementById('dr-header').innerHTML = `<h3>مرحباً ${currentLoggedUser}</h3>`;
             document.getElementById('dr-tasks').innerHTML = tasks.map(t => `
                 <div class="card">
-                    <img src="${t.img}" style="width:100%; border-radius:15px;">
-                    <p>📍 ${t.addr}<br>🕒 ${t.time} - ${t.date}<br>🌍 ${t.gps}</p>
-                    <button class="btn" style="background:blue" onclick="window.open('https://www.google.com/maps?q=${t.gps}')">فتح الخريطة</button>
-                    <input type="file" accept="image/*" capture="environment" onchange="handleImg(this, 'driver')">
-                    <button class="btn" style="background:green" onclick="finishTask(${t.id})">إرسال الإنجاز</button>
+                    <img src="${t.img}" style="width:100%; border-radius:15px; max-height:250px; object-fit:cover;">
+                    <p><b>تفاصيل البلاغ:</b><br>📍 ${t.addr}<br>🕒 ${t.time} - ${t.date}<br>🌍 GPS: ${t.gps}</p>
+                    <button class="btn" style="background:blue" onclick="window.open('https://www.google.com/maps?q=${t.gps}')"><i class="fas fa-map-marked-alt"></i> فتح الموقع في الخريطة</button>
+                    <label class="btn" style="background:orange">
+                        <i class="fas fa-camera"></i> تصوير النتيجة بعد التنظيف
+                        <input type="file" accept="image/*" capture="environment" style="display:none;" onchange="handleImg(this, 'driver')">
+                    </label>
+                    <button class="btn" style="background:green" onclick="finishTask(${t.id})">إرسال تقرير الإنجاز</button>
                 </div>
-            `).join('') || "لا توجد مهام حالياً";
+            `).join('') || "<p style='text-align:center;'>لا توجد مهام موكلة إليك حالياً</p>";
         }
-        
-        // عرض قائمة الموظفين في الإدارة (المشرف فقط يظهر كمسؤول)
         const staffUI = document.getElementById('staff-list-ui');
         if(staffUI) {
             staffUI.innerHTML = (appData.staff || []).map(s => `
-                <div style="display:flex; justify-content:space-between; padding:5px; border-bottom:1px solid #eee;">
-                    <span>${s.role}: ${s.name}</span>
-                    <i class="fas fa-trash" style="color:red" onclick="deleteStaff('${s.name}')"></i>
+                <div style="display:flex; justify-content:space-between; padding:10px; border-bottom:1px solid #eee; align-items:center;">
+                    <div>
+                        <b>${s.role}:</b> ${s.name} <br>
+                        <small style="color:#666;">${s.role==='سائق' ? 'شاحنة: '+s.truck+' ('+s.sector+')' : 'مشرف نظام'}</small>
+                    </div>
+                    <i class="fas fa-user-minus" style="color:red; cursor:pointer;" onclick="deleteStaff('${s.name}')"></i>
                 </div>
             `).join('');
         }
@@ -240,29 +246,32 @@
     function toggleStaffFields() { document.getElementById('driver-specifics').style.display = document.getElementById('st-role').value==='سائق'?'block':'none'; }
 
     function saveStaff() {
-        const s = { role: document.getElementById('st-role').value, name: document.getElementById('st-name').value, phone: document.getElementById('st-phone').value, truck: document.getElementById('st-truck').value, sector: document.getElementById('st-sector').value };
+        const s = { role: document.getElementById('st-role').value, name: document.getElementById('st-name').value, phone: document.getElementById('st-phone').value, truck: document.getElementById('st-truck').value || '---', sector: document.getElementById('st-sector').value || '---' };
+        if(!s.name) return alert("الاسم مطلوب");
         if(!appData.staff) appData.staff = [];
         appData.staff.push(s);
         db.ref('CLEAN_MEDEA_FINAL').set(appData).then(() => closeStaffModal());
     }
 
     function assignTo(id) {
-        const dName = prompt("اسم السائق:");
+        const dName = prompt("أدخل اسم السائق المكلف بهذه المهمة:");
         if(dName) {
             const r = appData.reports.find(x => x.id === id);
             r.status = 'sent'; r.driverName = dName;
-            db.ref('CLEAN_MEDEA_FINAL').set(appData);
+            db.ref('CLEAN_MEDEA_FINAL').set(appData).then(() => showAdminList('new'));
         }
     }
 
     function finishTask(id) {
-        if(!tempImgDrv) return alert("صور الإنجاز أولاً");
+        if(!tempImgDrv) return alert("الرجاء التقاط صورة توثق الإنجاز أولاً");
         const r = appData.reports.find(x => x.id === id);
-        r.status = 'done'; r.doneImg = tempImgDrv;
-        db.ref('CLEAN_MEDEA_FINAL').set(appData).then(() => { alert("تم الإرسال"); updateUI(); });
+        r.status = 'done'; 
+        r.doneImg = tempImgDrv;
+        r.doneTime = new Date().toLocaleTimeString('ar-DZ') + " - " + new Date().toLocaleDateString('ar-DZ');
+        db.ref('CLEAN_MEDEA_FINAL').set(appData).then(() => { alert("تم إرسال التقرير النهائي بنجاح"); tempImgDrv=""; updateUI(); });
     }
     
-    function deleteStaff(name) { if(confirm("حذف؟")) { appData.staff = appData.staff.filter(s => s.name !== name); db.ref('CLEAN_MEDEA_FINAL').set(appData); } }
+    function deleteStaff(name) { if(confirm("هل تريد حذف هذا الموظف من النظام؟")) { appData.staff = appData.staff.filter(s => s.name !== name); db.ref('CLEAN_MEDEA_FINAL').set(appData); } }
 </script>
 </body>
 </html>
