@@ -11,47 +11,56 @@
     <style>
         :root { --emerald: #1B5E20; --forest: #2E7D32; --gold: #D4AF37; --red: #d21034; --navy: #14213D; }
         * { box-sizing: border-box; font-family: 'Tajawal', sans-serif; }
-        body { margin: 0; min-height: 100vh; background: #f4f7f6; }
+        
+        /* الصفحة الرئيسية الأصلية - لا تغيير */
+        body { 
+            margin: 0; min-height: 100vh;
+            background: linear-gradient(135deg, rgba(27,94,32,0.2) 0%, rgba(255,255,255,0.9) 50%, rgba(210,16,52,0.2) 100%),
+                        url('https://raw.githubusercontent.com/rabf09-droid/rabf09-droid.github.io/main/1000052240.webp');
+            background-size: cover; background-position: center; background-attachment: fixed;
+        }
 
-        .header { background: white; padding: 10px; text-align: center; border-bottom: 5px solid var(--gold); position: sticky; top: 0; z-index: 1000; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
-        .page { display: none; padding: 15px; animation: fadeIn 0.4s; max-width: 600px; margin: auto; }
+        .header { background: rgba(255,255,255,0.95); padding: 10px; text-align: center; border-bottom: 5px solid var(--gold); position: sticky; top: 0; z-index: 1000; }
+        .page { display: none; padding: 15px; animation: fadeIn 0.4s; max-width: 800px; margin: auto; }
         .page.active { display: block; }
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 
-        .card { background: white; border-radius: 20px; padding: 15px; margin-bottom: 12px; box-shadow: 0 5px 15px rgba(0,0,0,0.08); border: 1px solid #eee; }
-        .btn { border: none; padding: 14px; border-radius: 12px; width: 100%; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px; margin-bottom: 8px; color: white; font-size: 1rem; transition: 0.3s; }
+        .card { background: white; border-radius: 25px; padding: 20px; margin-bottom: 15px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); }
+        .btn { border: none; padding: 15px; border-radius: 15px; width: 100%; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px; color: white; margin-bottom: 10px; }
         
-        /* صفحة التبليغ */
-        .cam-box { position: relative; height: 190px; border: 3px dashed #ccc; border-radius: 15px; background: #fff; display: flex; align-items: center; justify-content: center; overflow: hidden; margin-bottom: 10px; }
-        .cam-btn { position: absolute; bottom: 10px; background: var(--navy); color: white; padding: 8px 15px; border-radius: 20px; font-size: 0.85rem; cursor: pointer; display: flex; align-items: center; gap: 5px; }
-        .input-group { position: relative; margin-bottom: 8px; }
-        .input-group i { position: absolute; right: 12px; top: 50%; transform: translateY(-50%); color: var(--forest); }
-        .input-styled { width: 100%; padding: 12px 40px 12px 12px; border-radius: 10px; border: 1.5px solid #eee; text-align: right; }
+        /* تنسيق التبليغ (الصورة 1000052318) */
+        .cam-frame { position: relative; height: 200px; border: 3px dashed #bbb; border-radius: 20px; background: #fff; overflow: hidden; margin-bottom: 10px; }
+        .cam-btn-in { position: absolute; bottom: 10px; left: 50%; transform: translateX(-50%); background: var(--navy); padding: 8px 20px; border-radius: 25px; color: white; cursor: pointer; font-size: 0.9rem; }
+        .input-box { position: relative; margin-bottom: 10px; }
+        .input-box i { position: absolute; right: 15px; top: 50%; transform: translateY(-50%); color: var(--forest); }
+        .input-box input { width: 100%; padding: 12px 45px 12px 15px; border-radius: 12px; border: 2px solid #eee; text-align: right; }
 
-        /* صفحة الإدارة المحسنة */
-        .admin-menu-btn { background: white; color: var(--navy); border: 2px solid var(--navy); margin-bottom: 10px; height: 60px; font-size: 1.1rem; justify-content: space-between; padding: 0 20px; }
-        .admin-menu-btn i { color: var(--forest); }
-        .sub-section { display: none; margin-top: 10px; border-top: 2px solid #eee; padding-top: 15px; }
+        /* تنسيق الإدارة (الصورة 1000052326) */
+        .admin-nav { background: white; color: var(--navy); border: 2px solid var(--navy); margin-bottom: 8px; font-size: 1.1rem; }
+        .admin-nav i { color: var(--forest); }
+        .panel { display: none; padding: 10px; background: rgba(255,255,255,0.5); border-radius: 15px; }
 
-        .giant-btn { background: var(--forest); height: 220px; flex-direction: column; border-radius: 40px; font-size: 1.8rem; border: 5px solid white; box-shadow: 0 10px 25px rgba(46,125,50,0.3); }
-        .giant-btn i { font-size: 5rem; margin-bottom: 10px; }
+        .giant-btn { background: var(--forest); height: 250px; flex-direction: column; border-radius: 50px; font-size: 2.2rem; border: 6px solid white; box-shadow: 0 15px 45px rgba(46,125,50,0.4); }
+        .giant-btn i { font-size: 7rem; }
     </style>
 </head>
 <body onload="initApp()">
 
 <div class="header">
-    <div style="font-size: 1.5rem; font-weight: 900; color: var(--emerald);">المـديـة نظيـفة</div>
-    <div id="clock" style="font-weight: bold; color: var(--navy); font-size: 0.9rem;">00:00:00</div>
+    <div style="font-size: 1.6rem; font-weight: 900; color: var(--emerald);">المـديـة نظيـفة</div>
+    <div id="clock" style="font-weight: bold; color: var(--navy);">00:00:00</div>
 </div>
 
 <div id="pg-home" class="page active">
-    <button class="btn giant-btn" onclick="navTo('pg-report')">
-        <i class="fas fa-truck-loading"></i>
-        <span>إرســـــال تبلـيـــغ</span>
-    </button>
-    <div class="card" style="margin-top: 20px; border: 2px dashed var(--navy);">
-        <p style="text-align: center; font-weight: bold; margin-bottom: 10px;">رواق الموظفين</p>
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+    <div style="text-align: center; margin: 20px 0;">
+        <button class="btn giant-btn" onclick="navTo('pg-report')">
+            <i class="fas fa-truck-loading"></i>
+            <span>إرســـــال تبلـيـــغ</span>
+        </button>
+    </div>
+    <div class="card" style="background: rgba(255,255,255,0.6); border: 2px dashed var(--navy);">
+        <p style="text-align: center; font-weight: bold; color: var(--navy);">رواق الموظفين والمسؤولين</p>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
             <button class="btn" style="background:var(--navy)" onclick="auth('admin')">الإدارة</button>
             <button class="btn" style="background:var(--gold)" onclick="auth('driver')">السائقين</button>
         </div>
@@ -60,60 +69,55 @@
 
 <div id="pg-report" class="page">
     <div class="card">
-        <div class="cam-box">
-            <i id="ico-cam" class="fas fa-camera fa-4x" style="color:#eee"></i>
+        <div class="cam-frame">
+            <i id="ico-cam" class="fas fa-camera fa-4x" style="color:#eee; position:absolute; top:35%; left:43%;"></i>
             <img id="out-img" style="width:100%; height:100%; object-fit:cover; display:none;">
-            <label class="cam-btn">
+            <label class="cam-btn-in">
                 <i class="fas fa-camera"></i> أخذ صورة
                 <input type="file" accept="image/*" capture="environment" style="display:none;" onchange="handleImg(this, 'citizen')">
             </label>
         </div>
-        <button class="btn" style="background:var(--forest)" onclick="getLoc()"><i class="fas fa-location-dot"></i> تحديد الموقع</button>
-        <div class="input-group"><i class="fas fa-map-pin"></i><input type="text" id="in-addr" class="input-styled" placeholder="العنوان"></div>
-        <div class="input-group"><i class="fas fa-gps"></i><input type="text" id="in-gps" class="input-styled" readonly placeholder="إحداثيات GPS"></div>
-        <button class="btn" style="background:var(--emerald); height: 60px; font-size: 1.2rem;" onclick="sendReport()">إرسال التبليغ</button>
-        <button class="btn" style="background:#888;" onclick="navTo('pg-home')">رجوع</button>
+        <button class="btn" style="background:var(--forest); padding:10px;" onclick="getLoc()"><i class="fas fa-map-marker-alt"></i> تحديد الموقع</button>
+        <div class="input-box"><i class="fas fa-map-pin"></i><input type="text" id="in-addr" placeholder="العنوان"></div>
+        <div class="input-box"><i class="fas fa-location-crosshairs"></i><input type="text" id="in-gps" readonly placeholder="إحداثيات GPS"></div>
+        <button class="btn" style="background:var(--emerald); height:70px; font-size:1.3rem;" onclick="sendReport()">إرسال البلاغ الآن</button>
+        <button class="btn" style="background:#777;" onclick="navTo('pg-home')">رجوع</button>
     </div>
 </div>
 
 <div id="pg-admin" class="page">
-    <div class="card" style="background: var(--navy); color: white; text-align: center;">
-        <h3 style="margin:0;">لوحة التحكم الإدارية</h3>
-    </div>
+    <button class="btn admin-nav" onclick="togglePanel('p-new')">بلاغات النفايات <i class="fas fa-clipboard-list"></i></button>
+    <div id="p-new" class="panel"></div>
 
-    <button class="btn admin-menu-btn" onclick="toggleSec('sec-new')">بلاغات النفايات <i class="fas fa-chevron-down"></i></button>
-    <div id="sec-new" class="sub-section"></div>
+    <button class="btn admin-nav" onclick="togglePanel('p-done')">البلاغات المنجزة <i class="fas fa-check-double"></i></button>
+    <div id="p-done" class="panel"></div>
 
-    <button class="btn admin-menu-btn" onclick="toggleSec('sec-done')">البلاغات المنجزة <i class="fas fa-chevron-down"></i></button>
-    <div id="sec-done" class="sub-section"></div>
-
-    <button class="btn admin-menu-btn" onclick="toggleSec('sec-add')">إضافة موظف <i class="fas fa-user-plus"></i></button>
-    <div id="sec-add" class="sub-section">
-        <div class="card">
-            <p style="font-weight: bold; color: var(--forest);">إضافة مسؤول (المشرف):</p>
-            <input type="text" id="a-name" class="input-styled" style="padding-right:10px; margin-bottom:5px;" placeholder="اسم المسؤول">
+    <button class="btn admin-nav" onclick="togglePanel('p-staff')">إضافة موظف <i class="fas fa-user-plus"></i></button>
+    <div id="p-staff" class="panel">
+        <div id="boss-only" class="card" style="border:1px solid var(--gold); display:none;">
+            <p>إضافة مسؤول جديد:</p>
+            <input type="text" id="a-name" class="input-box" style="width:100%; padding-right:10px;" placeholder="اسم المسؤول">
             <button class="btn" style="background:var(--navy)" onclick="addAdmin()">حفظ المسؤول</button>
         </div>
         <div class="card">
-            <p style="font-weight: bold; color: var(--forest);">إضافة سائق:</p>
-            <input type="text" id="d-name" class="input-styled" style="padding-right:10px; margin-bottom:5px;" placeholder="اسم السائق">
-            <input type="text" id="d-phone" class="input-styled" style="padding-right:10px; margin-bottom:5px;" placeholder="رقم الهاتف">
-            <input type="text" id="d-truck" class="input-styled" style="padding-right:10px; margin-bottom:5px;" placeholder="رقم الشاحنة">
-            <select id="d-sec" class="input-styled" style="padding-right:10px; margin-bottom:5px; width:100%;">
+            <p>إضافة سائق جديد:</p>
+            <input type="text" id="d-name" placeholder="اسم السائق" style="width:100%; margin-bottom:5px; padding:10px;">
+            <input type="text" id="d-phone" placeholder="رقم الهاتف" style="width:100%; margin-bottom:5px; padding:10px;">
+            <input type="text" id="d-truck" placeholder="رقم الشاحنة" style="width:100%; margin-bottom:5px; padding:10px;">
+            <select id="d-sec" style="width:100%; padding:10px; margin-bottom:10px;">
                 <option value="البلدية">البلدية</option>
-                <option value="القطاع الخاص">القطاع الخاص</option>
+                <option value="قطاع خاص">قطاع خاص</option>
             </select>
             <button class="btn" style="background:var(--emerald)" onclick="addDriver()">حفظ السائق</button>
         </div>
     </div>
-    
-    <button class="btn" style="background:var(--red); margin-top: 20px;" onclick="navTo('pg-home')">خروج</button>
+    <button class="btn" style="background:var(--red); margin-top:15px;" onclick="navTo('pg-home')">خروج</button>
 </div>
 
 <div id="pg-driver" class="page">
     <div id="dr-header" class="card" style="background:var(--emerald); color:white; text-align:center;"></div>
     <div id="dr-tasks"></div>
-    <button class="btn" style="background:#444;" onclick="navTo('pg-home')"><i class="fas fa-arrow-right"></i> رجوع</button>
+    <button class="btn" style="background:#444;" onclick="navTo('pg-home')">رجوع</button>
 </div>
 
 <script>
@@ -129,9 +133,10 @@
         setInterval(() => { document.getElementById('clock').innerText = new Date().toLocaleTimeString('fr-FR'); }, 1000);
     }
 
-    function toggleSec(id) {
-        const sec = document.getElementById(id);
-        sec.style.display = (sec.style.display === 'block' ? 'none' : 'block');
+    function togglePanel(id) {
+        document.querySelectorAll('.panel').forEach(p => { if(p.id !== id) p.style.display = 'none'; });
+        const target = document.getElementById(id);
+        target.style.display = (target.style.display === 'block' ? 'none' : 'block');
     }
 
     function handleImg(input, role) {
@@ -142,7 +147,7 @@
                 document.getElementById('out-img').src = tempImgCit;
                 document.getElementById('out-img').style.display = 'block';
                 document.getElementById('ico-cam').style.display = 'none';
-            } else { tempImgDrv = e.target.result; alert("تم حفظ صورة الإنجاز!"); }
+            } else { tempImgDrv = e.target.result; alert("تم التقاط صورة الإنجاز"); }
         };
         reader.readAsDataURL(input.files[0]);
     }
@@ -157,7 +162,7 @@
     }
 
     function sendReport() {
-        if(!tempImgCit) return alert("الرجاء التقاط صورة!");
+        if(!tempImgCit) return alert("الرجاء التقاط صورة");
         const rep = {
             id: Date.now(), img: tempImgCit, addr: document.getElementById('in-addr').value, gps: document.getElementById('in-gps').value,
             time: new Date().toLocaleTimeString('fr-FR'), date: "08 أفريل 2026", status: 'new'
@@ -169,43 +174,41 @@
 
     function updateUI() {
         const rs = appData.reports || [];
-        // بلاغات النفايات (جديدة)
-        document.getElementById('sec-new').innerHTML = rs.filter(r=>r.status==='new').map(r => `
+        // بلاغات النفايات (إدارة)
+        document.getElementById('p-new').innerHTML = rs.filter(r=>r.status==='new').map(r => `
             <div class="card">
                 <img src="${r.img}" style="width:100%; border-radius:10px;">
-                <p>📍 ${r.addr}<br>📅 ${r.date} | ⏰ ${r.time}<br>🌐 ${r.gps}</p>
-                <button class="btn" style="background:var(--forest)" onclick="assignToDriver(${r.id})">توجيه لسائق</button>
+                <p>📍 ${r.addr}<br>🌐 ${r.gps}<br>⏰ ${r.time} - ${r.date}</p>
+                <button class="btn" style="background:var(--forest)" onclick="assignToDriver(${r.id})">توجيه للسائق</button>
             </div>
-        `).join('') || '<p style="text-align:center;">لا توجد بلاغات جديدة</p>';
+        `).join('') || 'لا توجد بلاغات';
 
-        // البلاغات المنجزة
-        document.getElementById('sec-done').innerHTML = rs.filter(r=>r.status==='done').map(r => `
-            <div class="card" style="border-right:8px solid var(--forest)">
-                <p style="color:green; font-weight:bold;">✅ منجز من طرف: ${r.driver}</p>
-                <div style="display:flex; gap:5px;"><img src="${r.img}" style="width:50%;"><img src="${r.doneImg}" style="width:50%;"></div>
+        // بلاغات منجزة (إدارة)
+        document.getElementById('p-done').innerHTML = rs.filter(r=>r.status==='done').map(r => `
+            <div class="card" style="border-right:10px solid green;">
+                <p>السائق: ${r.driver}</p>
+                <img src="${r.doneImg}" style="width:100%; border-radius:10px;">
                 <p>⏰ وقت الإنجاز: ${r.doneTime}<br>📅 التاريخ: ${r.doneDate}</p>
             </div>
-        `).join('') || '<p style="text-align:center;">لا توجد منجزات</p>';
+        `).join('') || 'لا توجد إنجازات';
 
-        // تحديث مهام السائق
+        // مهام السائق
         if(currentLoggedUser) {
-            document.getElementById('dr-header').innerHTML = `<h3>السائق: ${currentLoggedUser}</h3>`;
-            const tasks = rs.filter(r => r.driver === currentLoggedUser && r.status === 'sent');
-            document.getElementById('dr-tasks').innerHTML = tasks.map(t => `
+            document.getElementById('dr-header').innerHTML = `السائق: ${currentLoggedUser}`;
+            document.getElementById('dr-tasks').innerHTML = rs.filter(r=>r.driver===currentLoggedUser && r.status==='sent').map(t => `
                 <div class="card">
-                    <p style="font-weight:bold; color:red;">بلاغ جديد:</p>
                     <img src="${t.img}" style="width:100%; border-radius:10px;">
-                    <p>📍 ${t.addr}<br>📅 ${t.date} | ${t.time}<br>🌐 ${t.gps}</p>
-                    <button class="btn" style="background:var(--navy)" onclick="window.open('http://maps.google.com/?q=${t.gps}')"><i class="fas fa-map"></i> الولوج للخريطة</button>
-                    <label class="btn" style="background:var(--gold)"><i class="fas fa-camera"></i> تصوير الإنجاز<input type="file" capture="environment" style="display:none;" onchange="handleImg(this, 'driver')"></label>
-                    <button class="btn" style="background:var(--forest)" onclick="finishTask(${t.id})">إرسال الإنجاز</button>
+                    <p>📍 ${t.addr}<br>⏰ ${t.time} - ${t.date}<br>🌐 ${t.gps}</p>
+                    <button class="btn" style="background:var(--navy)" onclick="window.open('https://www.google.com/maps?q=${t.gps}')"><i class="fas fa-map"></i> خريطة</button>
+                    <label class="btn" style="background:var(--gold)"><i class="fas fa-camera"></i> صورة الإنجاز<input type="file" capture="environment" style="display:none;" onchange="handleImg(this, 'driver')"></label>
+                    <button class="btn" style="background:var(--emerald)" onclick="finishTask(${t.id})">إرسال الإنجاز</button>
                 </div>
             `).join('');
         }
     }
 
     function assignToDriver(id) {
-        const dr = prompt("أدخل اسم السائق:");
+        const dr = prompt("اسم السائق:");
         if(dr) {
             const r = appData.reports.find(x => x.id === id);
             r.status = 'sent'; r.driver = dr;
@@ -214,29 +217,23 @@
     }
 
     function finishTask(id) {
-        if(!tempImgDrv) return alert("الرجاء تصوير الإنجاز!");
+        if(!tempImgDrv) return alert("التقط صورة الإنجاز!");
         const r = appData.reports.find(x => x.id === id);
         r.status = 'done'; r.doneImg = tempImgDrv; r.doneTime = new Date().toLocaleTimeString('fr-FR'); r.doneDate = "08 أفريل 2026";
-        db.ref('APP_DATA_V4').set(appData).then(() => { tempImgDrv=""; alert("تم!"); });
+        db.ref('APP_DATA_V4').set(appData).then(() => { tempImgDrv=""; alert("تم بنجاح"); });
     }
 
     function auth(role) {
         const u = prompt("الاسم:"), p = prompt("الرمز:");
-        if(role==='admin' && (appData.admins||[]).includes(u) && p==='1234') navTo('pg-admin');
-        else if(role==='driver' && p==='5678') { currentLoggedUser=u; navTo('pg-driver'); }
-    }
-
-    function navTo(id) { document.querySelectorAll('.page').forEach(p=>p.classList.remove('active')); document.getElementById(id).classList.add('active'); }
-    function addAdmin() { const n = document.getElementById('a-name').value; if(n){ appData.admins.push(n); db.ref('APP_DATA_V4').set(appData); alert("تم الحفظ"); }}
-    function addDriver() {
-        const n = document.getElementById('d-name').value;
-        if(n){
-            if(!appData.drivers) appData.drivers = [];
-            appData.drivers.push({name:n, phone:document.getElementById('d-phone').value, truck:document.getElementById('d-truck').value});
-            db.ref('APP_DATA_V4').set(appData); alert("تم الحفظ");
+        if(role==='admin' && (appData.admins||[]).includes(u) && p==='1234') {
+            document.getElementById('boss-only').style.display = (u==='فتحي'?'block':'none');
+            navTo('pg-admin');
+        } else if(role==='driver' && p==='5678') {
+            currentLoggedUser = u; navTo('pg-driver');
         }
     }
+
+    function navTo(id) { document.querySelectorAll('.page').forEach(p=>p.classList.remove('active')); document.getElementById(id).classList.add('active'); window.scrollTo(0,0); }
 </script>
 </body>
-        </html>
-    
+</html>
