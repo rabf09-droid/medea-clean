@@ -44,10 +44,10 @@
 <body onload="initApp()">
 
 <div id="thanks-overlay">
-    <i class="fas fa-heart fa-6x" style="color:var(--gold); margin-bottom:20px; animation: pulse 1s infinite;"></i>
-    <h1 style="font-size:2.8rem; margin:10px 0; font-weight:900;">شكراً لكم!</h1>
-    <p style="font-size:1.5rem; line-height:1.6;">تم إرسال بلاغكم لمصالح بلدية المدية بنجاح.<br>نحن نقدر حرصكم على نظافة مدينتنا.</p>
-    <div style="margin-top:40px; font-weight:bold; color:var(--gold); border:3px solid var(--gold); padding:12px 40px; border-radius:50px; font-size:1.3rem;">معاً لمدية أنظف 2026</div>
+    <i class="fas fa-heart fa-6x" style="color:var(--gold); margin-bottom:20px;"></i>
+    <h1 style="font-size:2.8rem; margin:10px 0;">شكراً لكم!</h1>
+    <p style="font-size:1.5rem;">تم إرسال بلاغكم لمصالح بلدية المدية بنجاح.</p>
+    <div style="margin-top:40px; font-weight:bold; color:var(--gold); font-size:1.3rem;">معاً لمدية أنظف 2026</div>
 </div>
 
 <div id="staff-modal" class="modal">
@@ -124,8 +124,8 @@
     </div>
     <div id="admin-list-container"></div>
     
-    <div id="staff-admin-section" class="card" style="border: 2px solid blue; background: #f0f7ff; display: none;">
-        <h4 style="margin-top:0; color:blue; text-align:center;">إدارة الموظفين</h4>
+    <div id="fathi-management" class="card" style="border: 2px solid blue; background: #f0f7ff; display: none;">
+        <h4 style="margin-top:0; color:blue; text-align:center;">إدارة الموظفين (المشرف)</h4>
         <button class="btn" style="background:blue" onclick="openStaffModal()">+ إضافة (مسؤول / سائق)</button>
         <div id="staff-list-ui" style="margin-top:10px;"></div>
     </div>
@@ -181,10 +181,7 @@
 
     function sendReport() {
         if(!tempImgCit || !document.getElementById('in-addr').value) return alert("يرجى التقاط صورة وتحديد العنوان");
-        
-        const btn = document.getElementById('send-btn');
-        btn.disabled = true;
-        btn.innerText = "جاري الحفظ...";
+        document.getElementById('send-btn').disabled = true;
 
         const rep = { 
             id: Date.now(), img: tempImgCit, addr: document.getElementById('in-addr').value, 
@@ -196,9 +193,8 @@
         appData.reports.push(rep);
 
         db.ref('CLEAN_MEDEA_FINAL').set(appData).then(() => {
-            // حل مشكلة عدم ظهور الرسالة: إظهار الواجهة أولاً
             document.getElementById('thanks-overlay').style.display = 'flex';
-            // الانتظار 5 ثوانٍ قبل تحديث الصفحة للعودة للرئيسية
+            // تأخير 5 ثوانٍ قبل التحديث
             setTimeout(() => { location.reload(); }, 5000);
         });
     }
@@ -208,22 +204,21 @@
         if(!name) return;
         const code = prompt("رمز الدخول:");
         
-        const isAdminFathi = (name === "فتحي" && code === "1234");
-        const staffFound = (appData.staff || []).find(s => s.name === name);
+        const isFathi = (name === "فتحي" && code === "1234");
+        const user = (appData.staff || []).find(s => s.name === name);
 
         if(role === 'admin') {
-            if(isAdminFathi || (staffFound && staffFound.role === 'مسؤول' && code === '1234')) {
+            if(isFathi || (user && user.role === 'مسؤول' && code === '1234')) {
                 currentLoggedUser = name;
                 navTo('pg-admin');
-                // إظهار قسم إدارة الموظفين لفتحي فقط
-                document.getElementById('staff-admin-section').style.display = isAdminFathi ? 'block' : 'none';
-            } else { alert("بيانات دخول الإدارة غير صحيحة."); }
-        } else if(role === 'driver') {
-            if(staffFound && staffFound.role === 'سائق' && code === '5678') {
+                document.getElementById('fathi-management').style.display = isFathi ? 'block' : 'none';
+            } else { alert("بيانات دخول الإدارة غير صحيحة"); }
+        } else {
+            if(user && user.role === 'سائق' && code === '5678') {
                 currentLoggedUser = name;
                 navTo('pg-driver');
                 updateUI();
-            } else { alert("بيانات دخول السائقين غير صحيحة."); }
+            } else { alert("بيانات دخول السائق غير صحيحة"); }
         }
     }
 
@@ -232,51 +227,33 @@
         const container = document.getElementById('admin-list-container');
         const filtered = type === 'new' ? rs.filter(r => r.status !== 'done') : rs.filter(r => r.status === 'done');
         
-        container.innerHTML = `<h3>${type === 'new' ? 'البلاغات الجديدة' : 'سجل الإنجازات'}</h3>`;
-        container.innerHTML += filtered.map(r => `
-            <div class="card" style="border-right: 8px solid ${type==='done'?'#2E7D32':'#d21034'}">
-                <div style="display:flex; justify-content:space-between;">
-                    <div style="display:flex; gap:10px;">
-                        <img src="${r.img}" style="width:80px; height:80px; border-radius:12px; object-fit:cover;">
-                        ${r.doneImg ? `<img src="${r.doneImg}" style="width:80px; height:80px; border-radius:12px; border:2px solid green; object-fit:cover;">` : ''}
-                    </div>
-                    ${type === 'done' ? `<i class="fas fa-trash-alt" style="color:var(--red); font-size:1.3rem;" onclick="deleteReport(${r.id})"></i>` : ''}
-                </div>
-                <p style="font-size:0.9rem; margin:10px 0;">📍 ${r.addr}<br>🕒 ${r.time} - ${r.date}</p>
-                ${r.status==='new' ? `<button class="btn" style="background:var(--forest); font-size:0.9rem; padding:10px;" onclick="assignTo(${r.id})">توجيه لسائق</button>` : `<p style="color:green; font-size:0.8rem; font-weight:bold;">بواسطة: ${r.driverName}<br>✅ تم في: ${r.doneTime}</p>`}
+        container.innerHTML = filtered.map(r => `
+            <div class="card" style="border-right: 8px solid ${type==='done'?'green':'red'}">
+                <img src="${r.img}" style="width:80px; height:80px; border-radius:12px; object-fit:cover;">
+                <p>📍 ${r.addr}</p>
+                ${r.status==='new' ? `<button class="btn" style="background:var(--forest)" onclick="assignTo(${r.id})">توجيه لسائق</button>` : `<p style="color:green;">✅ أنجزها: ${r.driverName}</p>`}
             </div>
-        `).join('') || "<p style='text-align:center;'>لا توجد بيانات حالياً</p>";
-    }
-
-    function deleteReport(id) {
-        if(confirm("هل تريد مسح هذا البلاغ المنجز من الأرشيف؟")) {
-            appData.reports = appData.reports.filter(r => r.id !== id);
-            db.ref('CLEAN_MEDEA_FINAL').set(appData).then(() => showAdminList('done'));
-        }
+        `).join('') || "لا يوجد بيانات.";
     }
 
     function updateUI() {
         if(currentLoggedUser && document.getElementById('pg-driver').classList.contains('active')) {
             const tasks = (appData.reports || []).filter(r => r.driverName === currentLoggedUser && r.status === 'sent');
-            document.getElementById('dr-header').innerHTML = `<h3>المهام الموكلة لـ: ${currentLoggedUser}</h3>`;
+            document.getElementById('dr-header').innerHTML = `<h3>مهام السائق: ${currentLoggedUser}</h3>`;
             document.getElementById('dr-tasks').innerHTML = tasks.map(t => `
                 <div class="card">
-                    <img src="${t.img}" style="width:100%; border-radius:15px; margin-bottom:10px;">
-                    <p>📍 الموقع: ${t.addr}<br>🌍 الإحداثيات: ${t.gps}</p>
-                    <label class="btn" style="background:orange">
-                        <i class="fas fa-camera"></i> تصوير النتيجة
-                        <input type="file" accept="image/*" capture="environment" style="display:none;" onchange="handleImg(this, 'driver')">
-                    </label>
-                    <button class="btn" style="background:green" onclick="finishTask(${t.id})">تأكيد الإنجاز</button>
+                    <p>الموقع: ${t.addr}</p>
+                    <label class="btn" style="background:orange">📸 تصوير النتيجة<input type="file" accept="image/*" capture="environment" style="display:none;" onchange="handleImg(this, 'driver')"></label>
+                    <button class="btn" style="background:green" onclick="finishTask(${t.id})">إتمام المهمة</button>
                 </div>
-            `).join('') || "<p style='text-align:center;'>لا توجد مهام حالية. عمل موفق!</p>";
+            `).join('') || "لا توجد مهام حالياً.";
         }
         const staffUI = document.getElementById('staff-list-ui');
         if(staffUI) {
             staffUI.innerHTML = (appData.staff || []).map(s => `
-                <div style="display:flex; justify-content:space-between; padding:10px; border-bottom:1px solid #eee; align-items:center;">
-                    <span><b>${s.role}:</b> ${s.name}</span>
-                    <i class="fas fa-user-minus" style="color:red; cursor:pointer;" onclick="deleteStaff('${s.name}')"></i>
+                <div style="display:flex; justify-content:space-between; padding:5px; border-bottom:1px solid #eee;">
+                    <span>${s.role}: ${s.name}</span>
+                    <i class="fas fa-trash" style="color:red;" onclick="deleteStaff('${s.name}')"></i>
                 </div>
             `).join('');
         }
@@ -287,15 +264,14 @@
     function toggleStaffFields() { document.getElementById('driver-specifics').style.display = document.getElementById('st-role').value==='سائق'?'block':'none'; }
 
     function saveStaff() {
-        const s = { role: document.getElementById('st-role').value, name: document.getElementById('st-name').value, phone: document.getElementById('st-phone').value, truck: document.getElementById('st-truck').value || '---', sector: document.getElementById('st-sector').value || '---' };
-        if(!s.name) return alert("الاسم مطلوب");
+        const s = { role: document.getElementById('st-role').value, name: document.getElementById('st-name').value, phone: document.getElementById('st-phone').value };
         if(!appData.staff) appData.staff = [];
         appData.staff.push(s);
         db.ref('CLEAN_MEDEA_FINAL').set(appData).then(() => closeStaffModal());
     }
 
     function assignTo(id) {
-        const dName = prompt("أدخل اسم السائق المكلف بالعملية:");
+        const dName = prompt("اسم السائق:");
         if(dName) {
             const r = appData.reports.find(x => x.id === id);
             r.status = 'sent'; r.driverName = dName;
@@ -304,14 +280,14 @@
     }
 
     function finishTask(id) {
-        if(!tempImgDrv) return alert("الرجاء تصوير المكان بعد التنظيف أولاً");
+        if(!tempImgDrv) return alert("صور النتيجة أولاً");
         const r = appData.reports.find(x => x.id === id);
         r.status = 'done'; r.doneImg = tempImgDrv;
-        r.doneTime = new Date().toLocaleTimeString('ar-DZ') + " - " + new Date().toLocaleDateString('ar-DZ');
-        db.ref('CLEAN_MEDEA_FINAL').set(appData).then(() => { alert("تم إرسال تقرير الإنجاز بنجاح"); tempImgDrv=""; updateUI(); });
+        db.ref('CLEAN_MEDEA_FINAL').set(appData).then(() => { alert("تم!"); updateUI(); });
     }
 
-    function deleteStaff(name) { if(confirm("هل أنت متأكد من حذف هذا الموظف؟")) { appData.staff = appData.staff.filter(s => s.name !== name); db.ref('CLEAN_MEDEA_FINAL').set(appData); } }
+    function deleteStaff(name) { if(confirm("حذف؟")) { appData.staff = appData.staff.filter(s => s.name !== name); db.ref('CLEAN_MEDEA_FINAL').set(appData); } }
 </script>
 </body>
-</html>
+    </html>
+                                                                                                
