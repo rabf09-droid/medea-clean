@@ -24,9 +24,11 @@
         .page.active { display: block; }
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 
-        .card { background: white; border-radius: 25px; padding: 20px; margin-bottom: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); border: 1px solid #eee; }
-        .btn { border: none; padding: 15px; border-radius: 15px; width: 100%; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px; margin-bottom: 10px; color: white; font-size: 1.1rem; }
-        .input { width: 100%; padding: 14px; border-radius: 12px; border: 2px solid #ddd; margin-bottom: 10px; text-align: center; }
+        .card { background: white; border-radius: 25px; padding: 20px; margin-bottom: 15px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); border: 1px solid #eee; }
+        .btn { border: none; padding: 15px; border-radius: 15px; width: 100%; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px; margin-bottom: 10px; color: white; font-size: 1.1rem; transition: 0.3s; }
+        .input-wrapper { position: relative; margin-bottom: 10px; }
+        .input-wrapper i { position: absolute; right: 15px; top: 50%; transform: translateY(-50%); color: var(--forest); font-size: 0.9rem; } /* تصغير الأيقونات الخضراء */
+        .input { width: 100%; padding: 14px 40px 14px 14px; border-radius: 12px; border: 2px solid #eee; text-align: center; font-size: 0.9rem; background: #fcfcfc; }
 
         .giant-btn {
             background: var(--forest); height: 280px; flex-direction: column; border-radius: 50px;
@@ -40,7 +42,7 @@
         .stat-box { flex:1; padding:15px; border-radius:20px; color:white; text-align:center; font-weight:bold; }
         .item-list { background:#f9f9f9; padding:12px; border-radius:15px; margin-bottom:8px; display:flex; justify-content:space-between; align-items:center; border-right:6px solid var(--emerald); }
         
-        .footer { background: white; padding: 15px; text-align: center; border-top: 4px solid var(--gold); margin-top: 30px; }
+        .footer { background: white; padding: 15px; text-align: center; border-top: 4px solid var(--gold); margin-top: 15px; } /* تقليص الهامش العلوي للفوتر */
     </style>
 </head>
 <body onload="initApp()">
@@ -85,16 +87,32 @@
 
 <div id="pg-report" class="page">
     <div class="card">
-        <div id="cam-box" style="height:250px; border:3px dashed #bbb; border-radius:20px; display:flex; align-items:center; justify-content:center; background:#fff; margin-bottom:15px; overflow:hidden;">
-            <i id="ico-cam" class="fas fa-camera fa-5x" style="color:#ddd"></i>
+        <div id="cam-box" style="height:230px; border:3px dashed #ddd; border-radius:20px; display:flex; align-items:center; justify-content:center; background:#fff; margin-bottom:15px; overflow:hidden;">
+            <i id="ico-cam" class="fas fa-camera fa-5x" style="color:#eee"></i>
             <img id="out-img" style="width:100%; height:100%; object-fit:cover; display:none;">
         </div>
-        <label class="btn" style="background:var(--navy);"><i class="fas fa-camera"></i> التقاط صورة النفايات<input type="file" accept="image/*" capture="environment" style="display:none;" onchange="handleImg(this, 'citizen')"></label>
-        <button class="btn" style="background:var(--forest);" onclick="getLoc()"><i class="fas fa-map-marker-alt"></i> تحديد الموقع</button>
-        <input type="text" id="in-addr" class="input" placeholder="اسم الحي أو الشارع">
-        <input type="text" id="in-gps" class="input" readonly placeholder="إحداثيات GPS">
-        <button class="btn" style="background:var(--emerald); height: 75px; font-size:1.4rem;" onclick="sendReport()">إرسال البلاغ الآن</button>
-        <button class="btn" style="background:#888;" onclick="navTo('pg-home')">رجوع</button>
+        
+        <label class="btn" style="background:var(--navy); margin-bottom:15px;">
+            <i class="fas fa-camera"></i> التقاط صورة النفايات
+            <input type="file" accept="image/*" capture="environment" style="display:none;" onchange="handleImg(this, 'citizen')">
+        </label>
+
+        <button class="btn" style="background:var(--forest); height: 55px; border-radius: 12px;" onclick="getLoc()">
+            <i class="fas fa-map-marker-alt" style="font-size: 1.1rem;"></i> تحديد الموقع بدقة
+        </button>
+
+        <div class="input-wrapper">
+            <i class="fas fa-map-signs"></i>
+            <input type="text" id="in-addr" class="input" placeholder="اسم الحي أو الشارع">
+        </div>
+
+        <div class="input-wrapper">
+            <i class="fas fa-satellite"></i>
+            <input type="text" id="in-gps" class="input" readonly placeholder="إحداثيات الموقع (GPS)">
+        </div>
+
+        <button class="btn" style="background:var(--emerald); height: 70px; font-size:1.4rem; margin-top:10px; box-shadow: 0 5px 15px rgba(27,94,32,0.3);" onclick="sendReport()">إرسال البلاغ الآن</button>
+        <button class="btn" style="background:#f1f1f1; color: #666; font-size: 1rem;" onclick="navTo('pg-home')">إلغاء و رجوع</button>
     </div>
 </div>
 
@@ -114,10 +132,10 @@
 
     <div class="card">
         <h4><i class="fas fa-user-plus"></i> إضافة سائق جديد</h4>
-        <input type="text" id="d-name" class="input" placeholder="اسم السائق">
-        <input type="text" id="d-phone" class="input" placeholder="رقم الهاتف">
-        <input type="text" id="d-truck" class="input" placeholder="رقم الشاحنة">
-        <select id="d-sec" class="input">
+        <input type="text" id="d-name" class="input" style="padding-right:15px;" placeholder="اسم السائق">
+        <input type="text" id="d-phone" class="input" style="padding-right:15px;" placeholder="رقم الهاتف">
+        <input type="text" id="d-truck" class="input" style="padding-right:15px;" placeholder="رقم الشاحنة">
+        <select id="d-sec" class="input" style="padding-right:15px;">
             <option value="البلدية">شاحنة بلدية</option>
             <option value="قطاع خاص">قطاع خاص</option>
         </select>
@@ -127,7 +145,7 @@
 
     <div class="card" id="boss-area" style="display:none; border:2px solid var(--gold);">
         <h4><i class="fas fa-shield-alt"></i> النظافة مسؤولية (المسؤولين)</h4>
-        <input type="text" id="a-name" class="input" placeholder="اسم المسؤول الجديد">
+        <input type="text" id="a-name" class="input" style="padding-right:15px;" placeholder="اسم المسؤول الجديد">
         <button class="btn" style="background:var(--navy)" onclick="addAdmin()">إضافة مسؤول</button>
         <div id="admins-list-ui" style="margin-top:15px;"></div>
     </div>
@@ -140,10 +158,12 @@
 </div>
 
 <div class="footer">
-    <button onclick="setLang('ar')" class="btn" style="display:inline-block; width:auto; padding:5px 15px; background:white; color:black; border:1px solid #ccc;">العربية</button>
-    <button onclick="setLang('fr')" class="btn" style="display:inline-block; width:auto; padding:5px 15px; background:white; color:black; border:1px solid #ccc;">Fr</button>
-    <button onclick="setLang('en')" class="btn" style="display:inline-block; width:auto; padding:5px 15px; background:white; color:black; border:1px solid #ccc;">En</button>
-    <div style="font-size: 0.8rem; color: var(--navy); font-weight: bold; margin-top: 10px;">إشراف د. رابحي فتحي - بلدية المدية 2026 ©</div>
+    <div style="display: flex; justify-content: center; gap: 10px; margin-bottom: 5px;">
+        <button onclick="setLang('ar')" class="btn" style="width:auto; padding:5px 15px; background:white; color:black; border:1px solid #ccc; font-size: 0.8rem;">العربية</button>
+        <button onclick="setLang('fr')" class="btn" style="width:auto; padding:5px 15px; background:white; color:black; border:1px solid #ccc; font-size: 0.8rem;">Fr</button>
+        <button onclick="setLang('en')" class="btn" style="width:auto; padding:5px 15px; background:white; color:black; border:1px solid #ccc; font-size: 0.8rem;">En</button>
+    </div>
+    <div style="font-size: 0.8rem; color: var(--navy); font-weight: bold;">إشراف د. رابحي فتحي - بلدية المدية 2026 ©</div>
 </div>
 
 <script>
@@ -294,4 +314,4 @@
 </script>
 </body>
             </html>
-    
+            
