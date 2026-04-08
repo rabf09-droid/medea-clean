@@ -170,10 +170,34 @@
 
     function sendReport() {
         if(!tempImgCit || !document.getElementById('in-addr').value) return alert("يرجى ملء البيانات");
-        const rep = { id: Date.now(), img: tempImgCit, addr: document.getElementById('in-addr').value, gps: document.getElementById('in-gps').value, time: new Date().toLocaleTimeString('ar-DZ'), date: new Date().toLocaleDateString('ar-DZ'), status: 'new' };
+        
+        const rep = { 
+            id: Date.now(), 
+            img: tempImgCit, 
+            addr: document.getElementById('in-addr').value, 
+            gps: document.getElementById('in-gps').value, 
+            time: new Date().toLocaleTimeString('ar-DZ'), 
+            date: new Date().toLocaleDateString('ar-DZ'), 
+            status: 'new' 
+        };
+
         if(!appData.reports) appData.reports = [];
         appData.reports.push(rep);
-        db.ref('CLEAN_MEDEA_FINAL').set(appData).then(() => { alert("تم الإرسال!"); location.reload(); });
+
+        db.ref('CLEAN_MEDEA_FINAL').set(appData).then(() => {
+            // رسالة الشكر الاحترافية
+            const thanksMsg = document.createElement('div');
+            thanksMsg.style = "position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(27,94,32,0.95); color:white; display:flex; flex-direction:column; align-items:center; justify-content:center; z-index:10000; text-align:center; padding:20px;";
+            thanksMsg.innerHTML = `
+                <i class="fas fa-check-circle fa-5x" style="color:var(--gold); margin-bottom:20px;"></i>
+                <h1 style="font-size:2rem; font-weight:900;">شكراً لمساهمتكم!</h1>
+                <p style="font-size:1.3rem;">تم استلام بلاغكم بنجاح.. سنعمل فوراً على تنظيف المكان.</p>
+                <div style="margin-top:20px; font-weight:bold; color:var(--gold); border: 2px solid var(--gold); padding: 10px 20px; border-radius: 50px;">معاً لمدية أنظف 2026</div>
+            `;
+            document.body.appendChild(thanksMsg);
+
+            setTimeout(() => { location.reload(); }, 3500);
+        });
     }
 
     function showAdminList(type) {
@@ -198,7 +222,7 @@
     }
 
     function deleteReport(id) {
-        if(confirm("هل تريد حذف هذا البلاغ المنجز نهائياً من القائمة؟")) {
+        if(confirm("هل تريد حذف هذا البلاغ المنجز نهائياً؟")) {
             appData.reports = appData.reports.filter(r => r.id !== id);
             db.ref('CLEAN_MEDEA_FINAL').set(appData).then(() => showAdminList('done'));
         }
@@ -271,7 +295,7 @@
         db.ref('CLEAN_MEDEA_FINAL').set(appData).then(() => { alert("تم إرسال التقرير النهائي بنجاح"); tempImgDrv=""; updateUI(); });
     }
     
-    function deleteStaff(name) { if(confirm("هل تريد حذف هذا الموظف من النظام؟")) { appData.staff = appData.staff.filter(s => s.name !== name); db.ref('CLEAN_MEDEA_FINAL').set(appData); } }
+    function deleteStaff(name) { if(confirm("هل تريد حذف هذا الموظف؟")) { appData.staff = appData.staff.filter(s => s.name !== name); db.ref('CLEAN_MEDEA_FINAL').set(appData); } }
 </script>
 </body>
 </html>
