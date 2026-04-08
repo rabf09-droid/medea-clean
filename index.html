@@ -124,8 +124,8 @@
     </div>
     <div id="admin-list-container"></div>
     
-    <div id="staff-admin-section" class="card" style="border: 2px solid blue; background: #f0f7ff; display: none;">
-        <h4 style="margin-top:0; color:blue; text-align:center;">إدارة الموظفين</h4>
+    <div id="fathi-management" class="card" style="border: 2px solid blue; background: #f0f7ff; display: none;">
+        <h4 style="margin-top:0; color:blue; text-align:center;">إدارة الموظفين (المشرف)</h4>
         <button class="btn" style="background:blue" onclick="openStaffModal()">+ إضافة (مسؤول / سائق)</button>
         <div id="staff-list-ui" style="margin-top:10px;"></div>
     </div>
@@ -184,7 +184,6 @@
         
         const btn = document.getElementById('send-btn');
         btn.disabled = true;
-        btn.innerText = "جاري الحفظ...";
 
         const rep = { 
             id: Date.now(), img: tempImgCit, addr: document.getElementById('in-addr').value, 
@@ -196,13 +195,10 @@
         appData.reports.push(rep);
 
         db.ref('CLEAN_MEDEA_FINAL').set(appData).then(() => {
-            // تصفير الخانات فوراً
+            // تصفير الخانات
             document.getElementById('in-addr').value = "";
             document.getElementById('in-gps').value = "";
             tempImgCit = "";
-            document.getElementById('out-img').style.display = 'none';
-            document.getElementById('ico-cam').style.display = 'block';
-            
             // إظهار واجهة الشكر
             document.getElementById('thanks-overlay').style.display = 'flex';
             setTimeout(() => { location.reload(); }, 5000);
@@ -210,25 +206,26 @@
     }
 
     function auth(role) {
-        const name = prompt("الاسم الكامل:");
-        if(!name) return;
-        const code = prompt("رمز الدخول:");
+        const nameInput = prompt("الاسم الكامل كما هو مسجل:");
+        if(!nameInput) return;
+        const codeInput = prompt("رمز الدخول:");
         
-        const isFathi = (name === "فتحي" && code === "1234");
-        const staffFound = (appData.staff || []).find(s => s.name === name);
+        const isFathi = (nameInput === "فتحي" && codeInput === "1234");
+        // البحث الدقيق في مصفوفة الموظفين
+        const staffMember = (appData.staff || []).find(s => s.name.trim() === nameInput.trim());
 
         if(role === 'admin') {
-            if(isFathi || (staffFound && staffFound.role === 'مسؤول' && code === '1234')) {
-                currentLoggedUser = name;
+            if(isFathi || (staffMember && staffMember.role === 'مسؤول' && codeInput === '1234')) {
+                currentLoggedUser = nameInput;
                 navTo('pg-admin');
-                document.getElementById('staff-admin-section').style.display = isFathi ? 'block' : 'none';
-            } else { alert("بيانات دخول الإدارة غير صحيحة"); }
+                document.getElementById('fathi-management').style.display = isFathi ? 'block' : 'none';
+            } else { alert("عذراً، بيانات دخول المسؤول غير صحيحة"); }
         } else if(role === 'driver') {
-            if(staffFound && staffFound.role === 'سائق' && code === '5678') {
-                currentLoggedUser = name;
+            if(staffMember && staffMember.role === 'سائق' && codeInput === '5678') {
+                currentLoggedUser = nameInput;
                 navTo('pg-driver');
                 updateUI();
-            } else { alert("بيانات دخول السائقين غير صحيحة"); }
+            } else { alert("عذراً، بيانات دخول السائق غير صحيحة"); }
         }
     }
 
@@ -240,48 +237,31 @@
         container.innerHTML = `<h3>${type === 'new' ? 'البلاغات الجديدة' : 'سجل الإنجازات'}</h3>`;
         container.innerHTML += filtered.map(r => `
             <div class="card" style="border-right: 8px solid ${type==='done'?'#2E7D32':'#d21034'}">
-                <div style="display:flex; justify-content:space-between;">
-                    <div style="display:flex; gap:10px;">
-                        <img src="${r.img}" style="width:80px; height:80px; border-radius:12px; object-fit:cover;">
-                        ${r.doneImg ? `<img src="${r.doneImg}" style="width:80px; height:80px; border-radius:12px; border:2px solid green; object-fit:cover;">` : ''}
-                    </div>
-                    ${type === 'done' ? `<i class="fas fa-trash-alt" style="color:var(--red); font-size:1.3rem;" onclick="deleteReport(${r.id})"></i>` : ''}
-                </div>
-                <p style="font-size:0.9rem; margin:10px 0;">📍 ${r.addr}<br>🕒 ${r.time} - ${r.date}</p>
-                ${r.status==='new' ? `<button class="btn" style="background:var(--forest); font-size:0.9rem; padding:10px;" onclick="assignTo(${r.id})">توجيه لسائق</button>` : `<p style="color:green; font-size:0.8rem; font-weight:bold;">بواسطة: ${r.driverName}<br>✅ تم في: ${r.doneTime}</p>`}
+                <img src="${r.img}" style="width:80px; height:80px; border-radius:12px; object-fit:cover;">
+                <p>📍 ${r.addr}</p>
+                ${r.status==='new' ? `<button class="btn" style="background:var(--forest)" onclick="assignTo(${r.id})">توجيه لسائق</button>` : `<p style="color:green;">✅ أنجزها: ${r.driverName}</p>`}
             </div>
-        `).join('') || "<p style='text-align:center;'>لا توجد بيانات حالياً</p>";
-    }
-
-    function deleteReport(id) {
-        if(confirm("هل تريد مسح هذا البلاغ المنجز من الأرشيف؟")) {
-            appData.reports = appData.reports.filter(r => r.id !== id);
-            db.ref('CLEAN_MEDEA_FINAL').set(appData).then(() => showAdminList('done'));
-        }
+        `).join('') || "<p>لا توجد بيانات</p>";
     }
 
     function updateUI() {
         if(currentLoggedUser && document.getElementById('pg-driver').classList.contains('active')) {
             const tasks = (appData.reports || []).filter(r => r.driverName === currentLoggedUser && r.status === 'sent');
-            document.getElementById('dr-header').innerHTML = `<h3>المهام الموكلة لـ: ${currentLoggedUser}</h3>`;
+            document.getElementById('dr-header').innerHTML = `<h3>مهام: ${currentLoggedUser}</h3>`;
             document.getElementById('dr-tasks').innerHTML = tasks.map(t => `
                 <div class="card">
-                    <img src="${t.img}" style="width:100%; border-radius:15px; margin-bottom:10px;">
-                    <p>📍 الموقع: ${t.addr}<br>🌍 الإحداثيات: ${t.gps}</p>
-                    <label class="btn" style="background:orange">
-                        <i class="fas fa-camera"></i> تصوير النتيجة
-                        <input type="file" accept="image/*" capture="environment" style="display:none;" onchange="handleImg(this, 'driver')">
-                    </label>
+                    <p>الموقع: ${t.addr}</p>
+                    <label class="btn" style="background:orange">📸 تصوير النتيجة<input type="file" accept="image/*" capture="environment" style="display:none;" onchange="handleImg(this, 'driver')"></label>
                     <button class="btn" style="background:green" onclick="finishTask(${t.id})">تأكيد الإنجاز</button>
                 </div>
-            `).join('') || "<p style='text-align:center;'>لا توجد مهام حالية. عمل موفق!</p>";
+            `).join('') || "<p>لا توجد مهام موكلة لك حالياً.</p>";
         }
-        const staffUI = document.getElementById('staff-list-ui');
-        if(staffUI) {
-            staffUI.innerHTML = (appData.staff || []).map(s => `
-                <div style="display:flex; justify-content:space-between; padding:10px; border-bottom:1px solid #eee; align-items:center;">
-                    <span><b>${s.role}:</b> ${s.name}</span>
-                    <i class="fas fa-user-minus" style="color:red; cursor:pointer;" onclick="deleteStaff('${s.name}')"></i>
+        const sList = document.getElementById('staff-list-ui');
+        if(sList) {
+            sList.innerHTML = (appData.staff || []).map(s => `
+                <div style="display:flex; justify-content:space-between; padding:5px; border-bottom:1px solid #eee;">
+                    <span>${s.role}: ${s.name}</span>
+                    <i class="fas fa-trash" style="color:red;" onclick="deleteStaff('${s.name}')"></i>
                 </div>
             `).join('');
         }
@@ -292,12 +272,19 @@
     function toggleStaffFields() { document.getElementById('driver-specifics').style.display = document.getElementById('st-role').value==='سائق'?'block':'none'; }
 
     function saveStaff() {
-        const s = { role: document.getElementById('st-role').value, name: document.getElementById('st-name').value, phone: document.getElementById('st-phone').value, truck: document.getElementById('st-truck').value || '---', sector: document.getElementById('st-sector').value || '---' };
-        if(!s.name) return alert("الاسم مطلوب");
+        const name = document.getElementById('st-name').value;
+        if(!name) return alert("يرجى إدخال الاسم");
+        const s = { 
+            role: document.getElementById('st-role').value, 
+            name: name, 
+            phone: document.getElementById('st-phone').value,
+            truck: document.getElementById('st-truck').value || '---',
+            sector: document.getElementById('st-sector').value || '---'
+        };
         if(!appData.staff) appData.staff = [];
         appData.staff.push(s);
         db.ref('CLEAN_MEDEA_FINAL').set(appData).then(() => {
-            // تصفير الخانات بعد الحفظ
+            // تصفير خانات الإضافة
             document.getElementById('st-name').value = "";
             document.getElementById('st-phone').value = "";
             document.getElementById('st-truck').value = "";
@@ -306,7 +293,7 @@
     }
 
     function assignTo(id) {
-        const dName = prompt("أدخل اسم السائق المكلف بالعملية:");
+        const dName = prompt("اسم السائق المكلف:");
         if(dName) {
             const r = appData.reports.find(x => x.id === id);
             r.status = 'sent'; r.driverName = dName;
@@ -315,15 +302,14 @@
     }
 
     function finishTask(id) {
-        if(!tempImgDrv) return alert("الرجاء تصوير المكان بعد التنظيف أولاً");
+        if(!tempImgDrv) return alert("صور النتيجة أولاً");
         const r = appData.reports.find(x => x.id === id);
         r.status = 'done'; r.doneImg = tempImgDrv;
-        r.doneTime = new Date().toLocaleTimeString('ar-DZ') + " - " + new Date().toLocaleDateString('ar-DZ');
-        db.ref('CLEAN_MEDEA_FINAL').set(appData).then(() => { alert("تم إرسال تقرير الإنجاز بنجاح"); tempImgDrv=""; updateUI(); });
+        db.ref('CLEAN_MEDEA_FINAL').set(appData).then(() => { alert("تم الإنجاز!"); updateUI(); });
     }
 
-    function deleteStaff(name) { if(confirm("هل أنت متأكد من حذف هذا الموظف؟")) { appData.staff = appData.staff.filter(s => s.name !== name); db.ref('CLEAN_MEDEA_FINAL').set(appData); } }
+    function deleteStaff(name) { if(confirm("حذف الموظف؟")) { appData.staff = appData.staff.filter(s => s.name !== name); db.ref('CLEAN_MEDEA_FINAL').set(appData); } }
 </script>
 </body>
-            </html>
-            
+    </html>
+    
