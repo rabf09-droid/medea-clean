@@ -12,7 +12,6 @@
         :root { --emerald: #1B5E20; --forest: #2E7D32; --gold: #D4AF37; --red: #d21034; --navy: #14213D; }
         * { box-sizing: border-box; font-family: 'Tajawal', sans-serif; }
         
-        /* الخلفية الوطنية مع صورة البلدية */
         body { 
             margin: 0; min-height: 100vh;
             background: linear-gradient(135deg, rgba(27,94,32,0.2) 0%, rgba(255,255,255,0.9) 50%, rgba(210,16,52,0.2) 100%),
@@ -29,14 +28,12 @@
         .btn { border: none; padding: 15px; border-radius: 15px; width: 100%; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px; margin-bottom: 10px; color: white; font-size: 1.1rem; }
         .input { width: 100%; padding: 14px; border-radius: 12px; border: 2px solid #ddd; margin-bottom: 10px; text-align: center; }
 
-        /* زر التبليغ الضخم */
         .giant-btn {
             background: var(--forest); height: 280px; flex-direction: column; border-radius: 50px;
             font-size: 2.3rem; box-shadow: 0 15px 45px rgba(46, 125, 50, 0.4); border: 6px solid white;
         }
         .giant-btn i { font-size: 8rem; margin-bottom: 10px; }
 
-        /* نافذة نعم أو لا */
         .modal { display: none; position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.85); z-index:9999; align-items:center; justify-content:center; }
         .modal-content { background:white; padding:30px; border-radius:30px; text-align:center; width:90%; max-width:400px; }
 
@@ -70,15 +67,15 @@
 </div>
 
 <div id="pg-home" class="page active">
-    <div style="text-align: center; margin: 40px 0;">
+    <div style="text-align: center; margin: 20px 0;">
         <button class="btn giant-btn" onclick="navTo('pg-report')">
             <i class="fas fa-truck-loading"></i>
             <span>إرســـــال تبلـيـــغ</span>
         </button>
     </div>
 
-    <div class="card" style="margin-top: 100px; background: rgba(255,255,255,0.6); border: 2px dashed var(--navy);">
-        <p style="text-align: center; font-weight: bold; color: var(--navy); margin-top: 0;">رواق الموظفين والمسؤولين</p>
+    <div class="card" style="margin-top: 20px; background: rgba(255,255,255,0.6); border: 2px dashed var(--navy);">
+        <p style="text-align: center; font-weight: bold; color: var(--navy); margin-top: 0; margin-bottom: 10px;">رواق الموظفين والمسؤولين</p>
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
             <button class="btn" style="background:var(--navy); height: 60px;" onclick="auth('admin')"><i class="fas fa-user-shield"></i> الإدارة</button>
             <button class="btn" style="background:var(--gold); height: 60px;" onclick="auth('driver')"><i class="fas fa-truck"></i> السائقين</button>
@@ -150,7 +147,6 @@
 </div>
 
 <script>
-    // ربط قاعدة البيانات - نسخة المرحلة التجريبية
     const firebaseConfig = { databaseURL: "https://medea-clean-2026-v4-default-rtdb.firebaseio.com/" };
     if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
@@ -202,7 +198,6 @@
 
     function modalResponse(keepGoing) {
         document.getElementById('choice-modal').style.display = 'none';
-        // تصفير الخانات
         tempImgCit=""; document.getElementById('out-img').style.display='none'; 
         document.getElementById('ico-cam').style.display='block';
         document.getElementById('in-addr').value=""; document.getElementById('in-gps').value="";
@@ -215,7 +210,6 @@
         document.getElementById('s2').innerText = rs.filter(r=>r.status==='sent').length;
         document.getElementById('s3').innerText = rs.filter(r=>r.status==='done').length;
 
-        // عرض الإدارة
         document.getElementById('admin-feed').innerHTML = rs.slice().reverse().map(r => `
             <div class="card" style="border-right:10px solid ${r.status==='done'?'#2E7D32':(r.status==='sent'?'#fb8c00':'#d21034')};">
                 <div style="display:flex; justify-content:space-between; align-items:center;">
@@ -235,7 +229,6 @@
         document.getElementById('drivers-list-ui').innerHTML = (appData.drivers || []).map(d => `<div class="item-list"><span>${d.name} (${d.phone})</span><i class="fas fa-trash" style="color:red; cursor:pointer;" onclick="deleteDriver(${d.id})"></i></div>`).join('');
         document.getElementById('admins-list-ui').innerHTML = (appData.admins || []).map(a => `<div class="item-list"><span>${a}</span>${a!=='فتحي'?`<i class="fas fa-trash" style="color:red; cursor:pointer;" onclick="deleteAdmin('${a}')"></i>`:''}</div>`).join('');
 
-        // عرض السائق (هنا مربط الفرس)
         if(currentLoggedUser) {
             document.getElementById('dr-header').innerHTML = `<h3>مرحباً بالسائق: ${currentLoggedUser}</h3>`;
             const myTasks = rs.filter(r => r.driver === currentLoggedUser && r.status === 'sent');
@@ -300,4 +293,5 @@
     function setLang(l) { alert("سيتم تفعيل كامل اللغات في النسخة النهائية"); }
 </script>
 </body>
-</html>
+            </html>
+    
