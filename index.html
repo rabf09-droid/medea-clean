@@ -35,14 +35,23 @@
         .modal { display: none; position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.85); z-index:9999; align-items:center; justify-content:center; }
         .modal-content { background:white; padding:30px; border-radius:30px; text-align:center; width:90%; max-width:400px; }
 
+        #thanks-overlay { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(27,94,32,0.98); color:white; flex-direction:column; align-items:center; justify-content:center; z-index:20000; text-align:center; }
+
         .footer { background: white; padding: 15px; text-align: center; border-top: 4px solid var(--gold); margin-top: 10px; }
     </style>
 </head>
 <body onload="initApp()">
 
+<div id="thanks-overlay">
+    <i class="fas fa-check-circle fa-6x" style="color:var(--gold); margin-bottom:20px;"></i>
+    <h1 style="font-size:2.5rem; margin:10px 0;">شكراً لمساهمتكم!</h1>
+    <p style="font-size:1.4rem; padding:0 20px;">تم استلام بلاغكم بنجاح.. سنقوم بالمعالجة في أقرب وقت.</p>
+    <div style="margin-top:30px; font-weight:bold; color:var(--gold); border:2px solid var(--gold); padding:10px 30px; border-radius:50px;">معاً لمدية أنظف 2026</div>
+</div>
+
 <div id="staff-modal" class="modal">
     <div class="modal-content">
-        <h3 id="staff-title">إضافة موظف جديد</h3>
+        <h3>إضافة موظف جديد</h3>
         <select id="st-role" class="input" onchange="toggleStaffFields()">
             <option value="سائق">سائق</option>
             <option value="مسؤول">مسؤول (مشرف)</option>
@@ -67,7 +76,7 @@
     <div style="font-size: 1.6rem; font-weight: 900; color: var(--emerald);">المـديـة نظيـفة</div>
     <div style="display: flex; justify-content: space-around; border-top: 1px solid #eee; margin-top: 5px; padding-top: 5px;">
         <div id="clock" style="font-weight: bold; color: var(--navy);">00:00:00</div>
-        <div style="font-weight: bold;">08 أفريل 2026</div>
+        <div id="date-display" style="font-weight: bold;">08 أفريل 2026</div>
     </div>
 </div>
 
@@ -98,7 +107,7 @@
         <button class="btn" style="background:var(--forest); padding: 12px;" onclick="getLoc()"><i class="fas fa-map-marker-alt"></i> تحديد الموقع</button>
         <input type="text" id="in-addr" class="input" placeholder="اسم الحي أو الشارع">
         <input type="text" id="in-gps" class="input" readonly placeholder="إحداثيات GPS">
-        <button class="btn" style="background:var(--emerald); height: 70px; font-size:1.4rem;" onclick="sendReport()">إرسال البلاغ الآن</button>
+        <button id="submit-report-btn" class="btn" style="background:var(--emerald); height: 70px; font-size:1.4rem;" onclick="sendReport()">إرسال البلاغ الآن</button>
         <button class="btn" style="background:#888;" onclick="navTo('pg-home')">رجوع</button>
     </div>
 </div>
@@ -106,7 +115,7 @@
 <div id="pg-admin" class="page">
     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
         <h2 style="margin:0;">لوحة التحكم</h2>
-        <button class="btn" style="background:var(--red); width:auto; padding:8px 20px;" onclick="navTo('pg-home')">خروج</button>
+        <button class="btn" style="background:var(--red); width:auto; padding:8px 20px;" onclick="location.reload()">خروج</button>
     </div>
     <div class="admin-nav-grid">
         <button class="nav-card-btn" style="background:orange;" onclick="showAdminList('new')">بلاغات النفايات</button>
@@ -123,7 +132,7 @@
 <div id="pg-driver" class="page">
     <div id="dr-header" class="card" style="background:var(--emerald); color:white; text-align:center;"></div>
     <div id="dr-tasks"></div>
-    <button class="btn" style="background:#444;" onclick="navTo('pg-home')">رجوع</button>
+    <button class="btn" style="background:#444;" onclick="location.reload()">خروج</button>
 </div>
 
 <div class="footer">
@@ -169,8 +178,11 @@
     }
 
     function sendReport() {
-        if(!tempImgCit || !document.getElementById('in-addr').value) return alert("يرجى ملء البيانات");
+        if(!tempImgCit || !document.getElementById('in-addr').value) return alert("يرجى التقاط صورة وتحديد العنوان أولاً");
         
+        document.getElementById('submit-report-btn').disabled = true;
+        document.getElementById('submit-report-btn').innerText = "جاري الإرسال...";
+
         const rep = { 
             id: Date.now(), 
             img: tempImgCit, 
@@ -185,19 +197,31 @@
         appData.reports.push(rep);
 
         db.ref('CLEAN_MEDEA_FINAL').set(appData).then(() => {
-            // رسالة الشكر الاحترافية
-            const thanksMsg = document.createElement('div');
-            thanksMsg.style = "position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(27,94,32,0.95); color:white; display:flex; flex-direction:column; align-items:center; justify-content:center; z-index:10000; text-align:center; padding:20px;";
-            thanksMsg.innerHTML = `
-                <i class="fas fa-check-circle fa-5x" style="color:var(--gold); margin-bottom:20px;"></i>
-                <h1 style="font-size:2rem; font-weight:900;">شكراً لمساهمتكم!</h1>
-                <p style="font-size:1.3rem;">تم استلام بلاغكم بنجاح.. سنعمل فوراً على تنظيف المكان.</p>
-                <div style="margin-top:20px; font-weight:bold; color:var(--gold); border: 2px solid var(--gold); padding: 10px 20px; border-radius: 50px;">معاً لمدية أنظف 2026</div>
-            `;
-            document.body.appendChild(thanksMsg);
-
-            setTimeout(() => { location.reload(); }, 3500);
+            document.getElementById('thanks-overlay').style.display = 'flex';
+            setTimeout(() => { location.reload(); }, 4000);
         });
+    }
+
+    function auth(role) {
+        const name = prompt(`يرجى إدخال اسمك (${role === 'admin' ? 'المسؤول' : 'السائق'}):`);
+        if(!name) return;
+
+        // التحقق من وجود الاسم في قائمة الموظفين
+        const userExists = (appData.staff || []).find(s => s.name === name && (role === 'admin' ? s.role === 'مسؤول' : s.role === 'سائق'));
+        
+        // ملاحظة: الرمز الافتراضي 1234 للإدارة و 5678 للسائقين (يمكنك جعلها ديناميكية لاحقاً)
+        const code = prompt("يرجى إدخال رمز الدخول:");
+        
+        if(role === 'admin' && code === '1234' && userExists) {
+            currentLoggedUser = name;
+            navTo('pg-admin');
+        } else if(role === 'driver' && code === '5678' && userExists) {
+            currentLoggedUser = name;
+            navTo('pg-driver');
+            updateUI();
+        } else {
+            alert("خطأ في الاسم أو الرمز، أو ليس لديك صلاحية الدخول!");
+        }
     }
 
     function showAdminList(type) {
@@ -208,30 +232,24 @@
         container.innerHTML = `<h3>${type === 'new' ? 'بلاغات المواطنين' : 'الأعمال المنجزة'}</h3>`;
         container.innerHTML += filtered.map(r => `
             <div class="card" style="border-right: 10px solid ${type==='done'?'green':'red'}">
-                <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+                <div style="display:flex; justify-content:space-between;">
                     <div style="display:flex; gap:10px;">
-                        <img src="${r.img}" style="width:100px; height:100px; border-radius:15px; object-fit:cover;">
-                        ${r.doneImg ? `<img src="${r.doneImg}" style="width:100px; height:100px; border-radius:15px; border:3px solid green; object-fit:cover;">` : ''}
+                        <img src="${r.img}" style="width:80px; height:80px; border-radius:10px; object-fit:cover;">
+                        ${r.doneImg ? `<img src="${r.doneImg}" style="width:80px; height:80px; border-radius:10px; border:2px solid green; object-fit:cover;">` : ''}
                     </div>
-                    ${type === 'done' ? `<i class="fas fa-trash-alt" style="color:var(--red); cursor:pointer; font-size:1.5rem;" onclick="deleteReport(${r.id})"></i>` : ''}
+                    ${type === 'done' ? `<i class="fas fa-trash-alt" style="color:var(--red); cursor:pointer;" onclick="deleteReport(${r.id})"></i>` : ''}
                 </div>
-                <p>📍 ${r.addr}<br>🕒 ${r.time} - ${r.date}<br>🌍 GPS: ${r.gps}</p>
-                ${r.status==='new' ? `<button class="btn" style="background:var(--forest)" onclick="assignTo(${r.id})">توجيه لسائق</button>` : `<p style="color:green; font-weight:bold;">بواسطة: ${r.driverName}<br>✅ تم في: ${r.doneTime}</p>`}
+                <p style="font-size:0.9rem; margin:10px 0;">📍 ${r.addr}<br>🕒 ${r.time} - ${r.date}</p>
+                ${r.status==='new' ? `<button class="btn" style="background:var(--forest); font-size:0.9rem; padding:8px;" onclick="assignTo(${r.id})">توجيه لسائق</button>` : `<p style="color:green; font-size:0.8rem;">بواسطة: ${r.driverName}<br>✅ تم في: ${r.doneTime}</p>`}
             </div>
-        `).join('') || "<p style='text-align:center;'>لا توجد بيانات حالياً</p>";
+        `).join('') || "<p>لا يوجد بلاغات.</p>";
     }
 
     function deleteReport(id) {
-        if(confirm("هل تريد حذف هذا البلاغ المنجز نهائياً؟")) {
+        if(confirm("حذف البلاغ نهائياً؟")) {
             appData.reports = appData.reports.filter(r => r.id !== id);
             db.ref('CLEAN_MEDEA_FINAL').set(appData).then(() => showAdminList('done'));
         }
-    }
-
-    function auth(role) {
-        const p = prompt("الرمز:");
-        if(role==='admin' && p==='1234') navTo('pg-admin');
-        else if(role==='driver' && p==='5678') { currentLoggedUser = prompt("اسمك:"); if(currentLoggedUser) { navTo('pg-driver'); updateUI(); } }
     }
 
     function updateUI() {
@@ -240,26 +258,22 @@
             document.getElementById('dr-header').innerHTML = `<h3>مرحباً ${currentLoggedUser}</h3>`;
             document.getElementById('dr-tasks').innerHTML = tasks.map(t => `
                 <div class="card">
-                    <img src="${t.img}" style="width:100%; border-radius:15px; max-height:250px; object-fit:cover;">
-                    <p><b>تفاصيل البلاغ:</b><br>📍 ${t.addr}<br>🕒 ${t.time} - ${t.date}<br>🌍 GPS: ${t.gps}</p>
-                    <button class="btn" style="background:blue" onclick="window.open('https://www.google.com/maps?q=${t.gps}')"><i class="fas fa-map-marked-alt"></i> فتح الموقع في الخريطة</button>
+                    <img src="${t.img}" style="width:100%; border-radius:15px; margin-bottom:10px;">
+                    <p>📍 ${t.addr}<br>🌍 GPS: ${t.gps}</p>
                     <label class="btn" style="background:orange">
-                        <i class="fas fa-camera"></i> تصوير النتيجة بعد التنظيف
+                        <i class="fas fa-camera"></i> تصوير النتيجة
                         <input type="file" accept="image/*" capture="environment" style="display:none;" onchange="handleImg(this, 'driver')">
                     </label>
-                    <button class="btn" style="background:green" onclick="finishTask(${t.id})">إرسال تقرير الإنجاز</button>
+                    <button class="btn" style="background:green" onclick="finishTask(${t.id})">إتمام المهمة</button>
                 </div>
-            `).join('') || "<p style='text-align:center;'>لا توجد مهام موكلة إليك حالياً</p>";
+            `).join('') || "<p>لا توجد مهام حالية.</p>";
         }
         const staffUI = document.getElementById('staff-list-ui');
         if(staffUI) {
             staffUI.innerHTML = (appData.staff || []).map(s => `
-                <div style="display:flex; justify-content:space-between; padding:10px; border-bottom:1px solid #eee; align-items:center;">
-                    <div>
-                        <b>${s.role}:</b> ${s.name} <br>
-                        <small style="color:#666;">${s.role==='سائق' ? 'شاحنة: '+s.truck+' ('+s.sector+')' : 'مشرف نظام'}</small>
-                    </div>
-                    <i class="fas fa-user-minus" style="color:red; cursor:pointer;" onclick="deleteStaff('${s.name}')"></i>
+                <div style="display:flex; justify-content:space-between; padding:8px; border-bottom:1px solid #eee;">
+                    <span><b>${s.role}:</b> ${s.name}</span>
+                    <i class="fas fa-user-minus" style="color:red;" onclick="deleteStaff('${s.name}')"></i>
                 </div>
             `).join('');
         }
@@ -278,7 +292,7 @@
     }
 
     function assignTo(id) {
-        const dName = prompt("أدخل اسم السائق المكلف بهذه المهمة:");
+        const dName = prompt("أدخل اسم السائق المكلف:");
         if(dName) {
             const r = appData.reports.find(x => x.id === id);
             r.status = 'sent'; r.driverName = dName;
@@ -287,15 +301,14 @@
     }
 
     function finishTask(id) {
-        if(!tempImgDrv) return alert("الرجاء التقاط صورة توثق الإنجاز أولاً");
+        if(!tempImgDrv) return alert("يرجى تصوير النتيجة أولاً");
         const r = appData.reports.find(x => x.id === id);
-        r.status = 'done'; 
-        r.doneImg = tempImgDrv;
+        r.status = 'done'; r.doneImg = tempImgDrv;
         r.doneTime = new Date().toLocaleTimeString('ar-DZ') + " - " + new Date().toLocaleDateString('ar-DZ');
-        db.ref('CLEAN_MEDEA_FINAL').set(appData).then(() => { alert("تم إرسال التقرير النهائي بنجاح"); tempImgDrv=""; updateUI(); });
+        db.ref('CLEAN_MEDEA_FINAL').set(appData).then(() => { alert("تم الإنجاز!"); tempImgDrv=""; updateUI(); });
     }
-    
-    function deleteStaff(name) { if(confirm("هل تريد حذف هذا الموظف؟")) { appData.staff = appData.staff.filter(s => s.name !== name); db.ref('CLEAN_MEDEA_FINAL').set(appData); } }
+
+    function deleteStaff(name) { if(confirm("حذف الموظف؟")) { appData.staff = appData.staff.filter(s => s.name !== name); db.ref('CLEAN_MEDEA_FINAL').set(appData); } }
 </script>
 </body>
 </html>
