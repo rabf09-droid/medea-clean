@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>نظام المدية نظيفة 2026 - المرحلة التجريبية</title>
+    <title>نظام المدية نظيفة 2026 - الإصدار المعتمد</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700;900&display=swap" rel="stylesheet">
@@ -26,14 +26,8 @@
         .giant-btn { background: var(--forest); height: 230px; flex-direction: column; border-radius: 50px; font-size: 2.1rem; box-shadow: 0 15px 45px rgba(46, 125, 50, 0.4); border: 6px solid white; margin: 10px 0; }
         .giant-btn i { font-size: 6.5rem; margin-bottom: 5px; }
 
-        .cam-box-wrapper { position: relative; height: 200px; border: 3px dashed #bbb; border-radius: 20px; display: flex; align-items: center; justify-content: center; background: #fff; margin-bottom: 15px; overflow: hidden; }
-        .cam-inner-btn { position: absolute; bottom: 15px; background: var(--navy); color: white; padding: 8px 15px; border-radius: 20px; font-size: 0.9rem; cursor: pointer; display: flex; align-items: center; gap: 5px; box-shadow: 0 4px 10px rgba(0,0,0,0.2); }
-
-        .admin-nav-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px; }
-        .nav-card-btn { height: 100px; border-radius: 20px; border: none; color: white; font-size: 1.2rem; font-weight: 900; cursor: pointer; transition: 0.3s; box-shadow: 0 5px 15px rgba(0,0,0,0.1); }
-        
-        /* واجهة الشكر المحسنة */
-        #thanks-screen { display: none; position: fixed; top:0; left:0; width:100%; height:100%; background: var(--forest); color: white; z-index: 99999; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 20px; }
+        /* واجهة الشكر القسرية */
+        #thanks-screen { display: none; position: fixed; top:0; left:0; width:100%; height:100%; background: var(--forest); color: white; z-index: 100000; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 20px; }
 
         .modal { display: none; position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.85); z-index:9999; align-items:center; justify-content:center; }
         .modal-content { background:white; padding:30px; border-radius:30px; text-align:center; width:90%; max-width:400px; }
@@ -44,17 +38,17 @@
 <body onload="initApp()">
 
 <div id="thanks-screen">
-    <i class="fas fa-check-circle fa-7x" style="color:var(--gold); margin-bottom:20px;"></i>
-    <h1 style="font-size: 2.5rem;">تم استلام تبليغكم!</h1>
-    <p style="font-size: 1.4rem;">شكراً لمساهمتكم في جعل مدينتنا أنظف.</p>
-    <div style="margin-top:20px; font-weight:bold; color:var(--gold);">سيتم توجيهكم للرئيسية خلال لحظات...</div>
+    <i class="fas fa-hand-holding-heart fa-7x" style="color:var(--gold); margin-bottom:25px;"></i>
+    <h1 style="font-size: 2.8rem; margin:0;">شكراً جزيلاً!</h1>
+    <p style="font-size: 1.5rem; line-height: 1.7;">لقد استلمنا بلاغكم بنجاح.<br>مساهمتكم تصنع الفرق في نظافة المدية.</p>
+    <div style="margin-top:30px; font-weight:bold; color:var(--gold); font-size: 1.2rem;">ستعود للتطبيق تلقائياً بعد ثوانٍ...</div>
 </div>
 
 <div id="staff-modal" class="modal">
     <div class="modal-content">
-        <h3>إضافة موظف جديد</h3>
+        <h3>إضافة عضو جديد للفريق</h3>
         <select id="st-role" class="input" onchange="toggleStaffFields()">
-            <option value="سائق">سائق</option>
+            <option value="سائق">سائق شاحنة</option>
             <option value="مسؤول">مسؤول (مشرف ميداني)</option>
         </select>
         <input type="text" id="st-name" class="input" placeholder="الاسم الكامل">
@@ -66,8 +60,8 @@
                 <option value="خاص">قطاع خاص</option>
             </select>
         </div>
-        <button class="btn" style="background:var(--forest)" onclick="saveStaff()">حفظ البيانات</button>
-        <button class="btn" style="background:var(--red)" onclick="closeStaffModal()">إغلاق</button>
+        <button class="btn" style="background:var(--forest)" onclick="saveStaff()">تأكيد الحفظ</button>
+        <button class="btn" style="background:var(--red)" onclick="closeStaffModal()">إلغاء</button>
     </div>
 </div>
 
@@ -108,25 +102,25 @@
         <button class="btn" style="background:var(--forest); padding: 12px;" onclick="getLoc()"><i class="fas fa-map-marker-alt"></i> تحديد الموقع</button>
         <input type="text" id="in-addr" class="input" placeholder="اسم الحي أو الشارع">
         <input type="text" id="in-gps" class="input" readonly placeholder="إحداثيات GPS">
-        <button id="submit-btn" class="btn" style="background:var(--emerald); height: 70px; font-size:1.4rem;" onclick="sendReport()">إرسال البلاغ الآن</button>
+        <button id="final-send-btn" class="btn" style="background:var(--emerald); height: 70px; font-size:1.4rem;" onclick="sendReport()">إرسال التبليغ الآن</button>
         <button class="btn" style="background:#888;" onclick="navTo('pg-home')">رجوع</button>
     </div>
 </div>
 
 <div id="pg-admin" class="page">
     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-        <h2 id="admin-welcome" style="margin:0;">لوحة التحكم</h2>
+        <h2 id="admin-title" style="margin:0;">لوحة التحكم</h2>
         <button class="btn" style="background:var(--red); width:auto; padding:8px 20px;" onclick="location.reload()">خروج</button>
     </div>
     <div class="admin-nav-grid">
-        <button class="nav-card-btn" style="background:orange;" onclick="showAdminList('new')">بلاغات النفايات</button>
-        <button class="nav-card-btn" style="background:var(--forest);" onclick="showAdminList('done')">البلاغات المنجزة</button>
+        <button class="nav-card-btn" style="background:orange;" onclick="showAdminList('new')">بلاغات المواطنين</button>
+        <button class="nav-card-btn" style="background:var(--forest);" onclick="showAdminList('done')">الأعمال المنجزة</button>
     </div>
     <div id="admin-list-container"></div>
     
-    <div id="staff-management-section" class="card" style="border: 2px solid blue; background: #f0f7ff; display: none;">
-        <h4 style="margin-top:0; color:blue; text-align:center;">إدارة فريق العمل</h4>
-        <button class="btn" style="background:blue" onclick="openStaffModal()">+ إضافة (سائق / مسؤول)</button>
+    <div id="fathi-only-section" class="card" style="border: 2px solid blue; background: #f0f7ff; display: none;">
+        <h4 style="margin-top:0; color:blue; text-align:center;">صلاحيات المشرف (فتحي)</h4>
+        <button class="btn" style="background:blue" onclick="openStaffModal()">+ إضافة عضو جديد</button>
         <div id="staff-list-ui" style="margin-top:10px;"></div>
     </div>
 </div>
@@ -134,7 +128,7 @@
 <div id="pg-driver" class="page">
     <div id="dr-header" class="card" style="background:var(--emerald); color:white; text-align:center;"></div>
     <div id="dr-tasks"></div>
-    <button class="btn" style="background:#444;" onclick="location.reload()">خروج</button>
+    <button class="btn" style="background:#444;" onclick="location.reload()">تسجيل الخروج</button>
 </div>
 
 <div class="footer">
@@ -182,8 +176,9 @@
     function sendReport() {
         if(!tempImgCit || !document.getElementById('in-addr').value) return alert("يرجى ملء كافة البيانات");
         
-        document.getElementById('submit-btn').disabled = true;
-        document.getElementById('submit-btn').innerText = "جاري الحفظ...";
+        const btn = document.getElementById('final-send-btn');
+        btn.disabled = true;
+        btn.innerText = "جاري الإرسال...";
 
         const rep = { 
             id: Date.now(), img: tempImgCit, addr: document.getElementById('in-addr').value, 
@@ -195,37 +190,40 @@
         appData.reports.push(rep);
 
         db.ref('CLEAN_MEDEA_FINAL').set(appData).then(() => {
+            // حل مشكلة رسالة الشكر: إظهار الواجهة وإيقاف كل شيء
             document.getElementById('thanks-screen').style.display = 'flex';
-            setTimeout(() => { location.reload(); }, 5000);
+            setTimeout(() => { location.reload(); }, 5000); // 5 ثواني كاملة للمواطن
         });
     }
 
     function auth(role) {
-        const userName = prompt("أدخل اسم المستخدم:");
-        if(!userName) return;
+        const name = prompt("الاسم الكامل:");
+        if(!name) return;
         const pass = prompt("الرمز السري:");
         
-        // التحقق من صلاحيات المشرف "فتحي"
-        if(role === 'admin' && userName === "فتحي" && pass === "1234") {
-            currentLoggedUser = "المشرف فتحي";
-            document.getElementById('staff-management-section').style.display = 'block';
+        // 1. الدخول الخاص بالمشرف فتحي (صلاحيات مطلقة)
+        if(role === 'admin' && name === "فتحي" && pass === "1234") {
+            currentLoggedUser = "فتحي";
+            document.getElementById('fathi-only-section').style.display = 'block';
+            document.getElementById('admin-title').innerText = "لوحة التحكم (المشرف العام)";
             navTo('pg-admin');
             return;
         }
 
-        // التحقق من الموظفين المضافين
-        const user = (appData.staff || []).find(s => s.name === userName);
+        // 2. التحقق من المسؤولين المضافين والسائقين
+        const found = (appData.staff || []).find(s => s.name === name);
         
-        if(role === 'admin' && user && user.role === 'مسؤول' && pass === "1234") {
-            currentLoggedUser = userName;
-            document.getElementById('staff-management-section').style.display = 'none'; // لا يمكنه رؤية الإدارة
+        if(role === 'admin' && found && found.role === 'مسؤول' && pass === "1234") {
+            currentLoggedUser = name;
+            document.getElementById('fathi-only-section').style.display = 'none'; // لا يمكنه رؤية إدارة الموظفين
+            document.getElementById('admin-title').innerText = "لوحة تحكم: " + name;
             navTo('pg-admin');
-        } else if(role === 'driver' && user && user.role === 'سائق' && pass === "5678") {
-            currentLoggedUser = userName;
+        } else if(role === 'driver' && found && found.role === 'سائق' && pass === "5678") {
+            currentLoggedUser = name;
             navTo('pg-driver');
             updateUI();
         } else {
-            alert("بيانات الدخول غير صحيحة أو ليس لديك صلاحية لهذه الصفحة.");
+            alert("خطأ: البيانات غير صحيحة أو لست مسجلاً في هذا القسم.");
         }
     }
 
@@ -234,7 +232,7 @@
         const container = document.getElementById('admin-list-container');
         const filtered = type === 'new' ? rs.filter(r => r.status !== 'done') : rs.filter(r => r.status === 'done');
         
-        container.innerHTML = `<h3>${type === 'new' ? 'بلاغات قيد الانتظار' : 'سجل العمليات المكتملة'}</h3>`;
+        container.innerHTML = `<h3>${type === 'new' ? 'بلاغات المواطنين' : 'سجل العمليات المكتملة'}</h3>`;
         container.innerHTML += filtered.map(r => `
             <div class="card" style="border-right: 10px solid ${type==='done'?'green':'red'}">
                 <div style="display:flex; justify-content:space-between;">
@@ -244,40 +242,33 @@
                 <p>📍 ${r.addr}<br>🕒 ${r.time} - ${r.date}</p>
                 ${r.status==='new' ? `<button class="btn" style="background:var(--forest)" onclick="assignTo(${r.id})">توجيه لسائق</button>` : `<p style="color:green; font-weight:bold;">المنجز: ${r.driverName}</p>`}
             </div>
-        `).join('') || "<p style='text-align:center;'>لا يوجد بيانات.</p>";
-    }
-
-    function deleteReport(id) {
-        if(confirm("حذف نهائي للبلاغ؟")) {
-            appData.reports = appData.reports.filter(r => r.id !== id);
-            db.ref('CLEAN_MEDEA_FINAL').set(appData).then(() => showAdminList('done'));
-        }
+        `).join('') || "<p style='text-align:center;'>لا يوجد بلاغات في هذا القسم.</p>";
     }
 
     function updateUI() {
         if(currentLoggedUser && document.getElementById('pg-driver').classList.contains('active')) {
             const tasks = (appData.reports || []).filter(r => r.driverName === currentLoggedUser && r.status === 'sent');
-            document.getElementById('dr-header').innerHTML = `<h3>مرحباً ${currentLoggedUser}</h3>`;
+            document.getElementById('dr-header').innerHTML = `<h3>مرحباً بالسائق: ${currentLoggedUser}</h3>`;
             document.getElementById('dr-tasks').innerHTML = tasks.map(t => `
                 <div class="card">
                     <img src="${t.img}" style="width:100%; border-radius:15px;">
-                    <p>الموقع: ${t.addr}</p>
+                    <p>الموقع المطلوب: ${t.addr}</p>
                     <label class="btn" style="background:orange">
-                        <i class="fas fa-camera"></i> تصوير النتيجة
+                        <i class="fas fa-camera"></i> تصوير العمل بعد الإنجاز
                         <input type="file" accept="image/*" capture="environment" style="display:none;" onchange="handleImg(this, 'driver')">
                     </label>
-                    <button class="btn" style="background:green" onclick="finishTask(${t.id})">تأكيد الإنجاز</button>
+                    <button class="btn" style="background:green" onclick="finishTask(${t.id})">إرسال تقرير الإنجاز</button>
                 </div>
-            `).join('') || "<p>لا مهام حالية.</p>";
+            `).join('') || "<p>لا توجد مهام حالية موكلة إليك.</p>";
         }
         
-        // تحديث قائمة الموظفين في لوحة المشرف فتحي
+        // تحديث قائمة الموظفين (للمشرف فتحي فقط)
         const staffUI = document.getElementById('staff-list-ui');
         if(staffUI) {
             staffUI.innerHTML = (appData.staff || []).map(s => `
-                <div style="display:flex; justify-content:space-between; padding:8px; border-bottom:1px solid #ddd;">
+                <div style="display:flex; justify-content:space-between; padding:8px; border-bottom:1px solid #ddd; font-size: 0.9rem;">
                     <span><b>${s.role}:</b> ${s.name}</span>
-                    <i class="fas fa-user-minus" style="color:red; cursor:pointer;" onclick="deleteStaff('${s.name}')"></i>
+                    <i class="fas fa-trash" style="color:red; cursor:pointer;" onclick="deleteStaff('${s.name}')"></i>
                 </div>
             `).join('');
         }
@@ -296,7 +287,7 @@
     }
 
     function assignTo(id) {
-        const dName = prompt("اسم السائق المكلف:");
+        const dName = prompt("اسم السائق المكلف بالعملية:");
         if(dName) {
             const r = appData.reports.find(x => x.id === id);
             r.status = 'sent'; r.driverName = dName;
@@ -305,15 +296,15 @@
     }
 
     function finishTask(id) {
-        if(!tempImgDrv) return alert("صور النتيجة أولاً");
+        if(!tempImgDrv) return alert("يرجى تصوير المكان بعد التنظيف");
         const r = appData.reports.find(x => x.id === id);
         r.status = 'done'; r.doneImg = tempImgDrv;
         r.doneTime = new Date().toLocaleTimeString('ar-DZ');
-        db.ref('CLEAN_MEDEA_FINAL').set(appData).then(() => { alert("تم الإرسال"); updateUI(); });
+        db.ref('CLEAN_MEDEA_FINAL').set(appData).then(() => { alert("تم توثيق الإنجاز بنجاح"); updateUI(); });
     }
 
     function deleteStaff(name) { if(confirm("حذف الموظف؟")) { appData.staff = appData.staff.filter(s => s.name !== name); db.ref('CLEAN_MEDEA_FINAL').set(appData); } }
+    function deleteReport(id) { if(confirm("مسح البلاغ من الأرشيف؟")) { appData.reports = appData.reports.filter(r => r.id !== id); db.ref('CLEAN_MEDEA_FINAL').set(appData).then(() => showAdminList('done')); } }
 </script>
 </body>
-            </html>
-    
+</html>
