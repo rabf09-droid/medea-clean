@@ -3,568 +3,630 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>نظام المدية نظيفة 2026 - المرحلة التجريبية</title>
+    <title>نظام المدية نظيفة 2026</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        :root { --emerald: #1B5E20; --forest: #2E7D32; --gold: #D4AF37; --red: #d21034; --navy: #14213D; --orange: #f39c12; }
-        * { box-sizing: border-box; font-family: 'Tajawal', sans-serif; }
-        body { margin: 0; min-height: 100vh; background: linear-gradient(135deg, rgba(27,94,32,0.2) 0%, rgba(255,255,255,0.9) 50%, rgba(210,16,52,0.2) 100%), url('https://raw.githubusercontent.com/rabf09-droid/rabf09-droid.github.io/main/1000052240.webp'); background-size: cover; background-position: center; background-attachment: fixed; }
-        .header { background: rgba(255,255,255,0.95); padding: 10px; text-align: center; border-bottom: 5px solid var(--gold); position: sticky; top: 0; z-index: 1000; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
-        .page { display: none; padding: 15px; animation: fadeIn 0.4s; max-width: 800px; margin: auto; }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, sans-serif; }
+        body { background: linear-gradient(135deg, #e8f5e9 0%, #fff3e0 100%); min-height: 100vh; }
+        .header { background: white; padding: 15px; text-align: center; border-bottom: 4px solid #D4AF37; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        .header h1 { color: #1B5E20; font-size: 1.8rem; margin: 5px 0; }
+        .header h2 { color: #2E7D32; font-size: 1rem; margin: 5px 0; }
+        .header p { font-size: 0.75rem; color: #333; margin: 5px 0; }
+        .info-bar { display: flex; justify-content: space-around; padding: 10px; background: #f5f5f5; border-bottom: 2px solid #D4AF37; }
+        .info-bar div { font-weight: bold; color: #14213D; }
+        .page { display: none; padding: 20px; max-width: 600px; margin: auto; animation: fadeIn 0.3s; }
         .page.active { display: block; }
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-        .card { background: white; border-radius: 25px; padding: 20px; margin-bottom: 15px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); border: 1px solid #eee; }
-        .btn { border: none; padding: 15px; border-radius: 15px; width: 100%; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px; margin-bottom: 10px; color: white; font-size: 1.1rem; transition: 0.3s; }
+        .btn { width: 100%; padding: 20px; border: none; border-radius: 20px; font-size: 1.5rem; font-weight: bold; cursor: pointer; margin: 10px 0; color: white; transition: transform 0.2s; box-shadow: 0 5px 15px rgba(0,0,0,0.2); }
         .btn:active { transform: scale(0.98); }
-        .input { width: 100%; padding: 12px; border-radius: 12px; border: 2px solid #ddd; margin-bottom: 10px; text-align: center; font-size: 1rem; }
-        .giant-btn { background: var(--forest); height: 230px; flex-direction: column; border-radius: 50px; font-size: 2.1rem; box-shadow: 0 15px 45px rgba(46, 125, 50, 0.4); border: 6px solid white; margin: 10px 0; }
-        .giant-btn i { font-size: 6.5rem; margin-bottom: 5px; }
-        .cam-box-wrapper { position: relative; height: 200px; border: 3px dashed #bbb; border-radius: 20px; display: flex; align-items: center; justify-content: center; background: #fff; margin-bottom: 15px; overflow: hidden; }
-        .cam-inner-btn { position: absolute; bottom: 15px; background: var(--navy); color: white; padding: 8px 15px; border-radius: 20px; font-size: 0.9rem; cursor: pointer; display: flex; align-items: center; gap: 5px; box-shadow: 0 4px 10px rgba(0,0,0,0.2); }
-        .admin-nav-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px; }
-        .nav-card-btn { height: 100px; border-radius: 20px; border: none; color: white; font-size: 1.2rem; font-weight: 900; cursor: pointer; transition: 0.3s; box-shadow: 0 5px 15px rgba(0,0,0,0.1); }
-        .modal { display: none; position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.85); z-index:9999; align-items:center; justify-content:center; }
-        .modal-content { background:white; padding:30px; border-radius:30px; text-align:center; width:90%; max-width:400px; }
-        #thanks-overlay { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:var(--forest); color:white; flex-direction:column; align-items:center; justify-content:center; z-index:100000; text-align:center; padding: 20px; }
-        @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.1); } 100% { transform: scale(1); } }
-        .footer { background: white; padding: 15px; text-align: center; border-top: 4px solid var(--gold); margin-top: 10px; }
-        .spinner { border: 4px solid rgba(255,255,255,0.3); border-radius: 50%; border-top: 4px solid white; width: 30px; height: 30px; animation: spin 1s linear infinite; display: inline-block; vertical-align: middle; margin-left: 10px; }
+        .btn-green { background: #2E7D32; }
+        .btn-blue { background: #14213D; }
+        .btn-yellow { background: #f39c12; }
+        .btn-red { background: #d21034; }
+        .btn-gray { background: #888; }
+        .card { background: white; border-radius: 20px; padding: 20px; margin: 15px 0; box-shadow: 0 5px 15px rgba(0,0,0,0.1); border: 2px dashed #14213D; }
+        .input { width: 100%; padding: 15px; border: 2px solid #ddd; border-radius: 12px; margin: 10px 0; font-size: 1rem; text-align: center; }
+        .cam-box { position: relative; height: 250px; border: 3px dashed #bbb; border-radius: 20px; display: flex; align-items: center; justify-content: center; background: #f9f9f9; margin: 15px 0; overflow: hidden; }
+        .cam-box img { width: 100%; height: 100%; object-fit: cover; }
+        .cam-btn { position: absolute; bottom: 15px; background: #14213D; color: white; padding: 10px 20px; border-radius: 25px; cursor: pointer; display: flex; align-items: center; gap: 8px; }
+        .spinner { border: 4px solid rgba(255,255,255,0.3); border-top: 4px solid white; border-radius: 50%; width: 30px; height: 30px; animation: spin 1s linear infinite; display: inline-block; vertical-align: middle; margin-right: 10px; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 9999; align-items: center; justify-content: center; }
+        .modal-content { background: white; padding: 30px; border-radius: 25px; width: 90%; max-width: 400px; text-align: center; }
+        #thanks-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #2E7D32; color: white; flex-direction: column; align-items: center; justify-content: center; z-index: 10000; text-align: center; padding: 20px; }
+        .footer { background: white; padding: 15px; text-align: center; border-top: 4px solid #D4AF37; margin-top: 20px; font-size: 0.85rem; color: #14213D; font-weight: bold; }
+        .status-badge { display: inline-block; padding: 5px 12px; border-radius: 15px; font-size: 0.8rem; font-weight: bold; margin: 5px; }
+        .status-new { background: #ffeb3b; color: #000; }
+        .status-sent { background: #2196F3; color: white; }
+        .status-done { background: #4CAF50; color: white; }
+        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
     </style>
 </head>
-<body onload="initApp()">
+<body>
 
 <div id="thanks-overlay">
-    <i class="fas fa-heart fa-6x" style="color:var(--gold); margin-bottom:20px; animation: pulse 1s infinite;"></i>
-    <h1 style="font-size:2.8rem; margin:10px 0; font-weight:900;">شكراً لكم!</h1>
-    <p style="font-size:1.5rem; line-height:1.6;">تم إرسال بلاغكم لمصالح بلدية المدية بنجاح.<br>نحن نقدر حرصكم على نظافة مدينتنا.</p>
-    <div style="margin-top:40px; font-weight:bold; color:var(--gold); border:3px solid var(--gold); padding:12px 40px; border-radius:50px; font-size:1.3rem;">معاً لمدية أنظف 2026</div>
+    <i class="fas fa-heart" style="font-size: 5rem; color: #D4AF37; margin-bottom: 20px; animation: pulse 1s infinite;"></i>
+    <h1 style="font-size: 2.5rem; margin: 10px 0;">شكراً لكم!</h1>
+    <p style="font-size: 1.3rem; line-height: 1.6;">تم إرسال بلاغكم بنجاح<br>نحن نقدر حرصكم على نظافة مدينتنا</p>
+    <div style="margin-top: 30px; padding: 15px 40px; border: 3px solid #D4AF37; border-radius: 50px; font-size: 1.2rem; font-weight: bold;">معاً لمدية أنظف 2026</div>
 </div>
 
 <div id="staff-modal" class="modal">
     <div class="modal-content">
-        <h3>إضافة موظف جديد</h3>
-        <select id="st-role" class="input" onchange="toggleStaffFields()">            <option value="سائق">سائق</option>
-            <option value="مسؤول">مسؤول (مشرف)</option>
+        <h3 style="margin-bottom: 20px;">إضافة موظف جديد</h3>
+        <select id="st-role" class="input" onchange="toggleStaffFields()">
+            <option value="سائق">سائق</option>
+            <option value="مسؤول">مسؤول</option>
         </select>
         <input type="text" id="st-name" class="input" placeholder="الاسم الكامل">
         <input type="text" id="st-phone" class="input" placeholder="رقم الهاتف">
-        <div id="driver-specifics">
+        <div id="driver-fields">
             <input type="text" id="st-truck" class="input" placeholder="رقم الشاحنة">
-            <select id="st-sector" class="input">
-                <option value="البلدية">قطاع البلدية</option>
-                <option value="خاص">قطاع خاص</option>
-            </select>
         </div>
-        <button class="btn" style="background:var(--forest)" onclick="saveStaff()">حفظ البيانات</button>
-        <button class="btn" style="background:var(--red)" onclick="closeStaffModal()">إغلاق</button>
+        <button class="btn btn-green" onclick="saveStaff()" style="margin-top: 15px;">حفظ</button>
+        <button class="btn btn-red" onclick="closeModal()">إغلاق</button>
     </div>
 </div>
 
 <div class="header">
-    <div style="font-size: 0.75rem; font-weight: bold;">الجمهورية الجزائرية الديمقراطية الشعبية</div>
-    <div style="font-size: 0.8rem; color: var(--forest); font-weight: bold;">مصلحة النظافة لبلدية المدية</div>
-    <div style="font-size: 1.6rem; font-weight: 900; color: var(--emerald);">المـديـة نظيـفة</div>
-    <div style="display: flex; justify-content: space-around; border-top: 1px solid #eee; margin-top: 5px; padding-top: 5px;">
-        <div id="clock" style="font-weight: bold; color: var(--navy);">00:00:00</div>
-        <div style="font-weight: bold;" id="current-date">--/--/----</div>
-    </div>
+    <p>الجمهورية الجزائرية الديمقراطية الشعبية</p>
+    <h2>مصلحة النظافة لبلدية المدية</h2>
+    <h1>المـديـة نظيـفة</h1>
 </div>
 
-<div id="pg-home" class="page active">
-    <button class="btn giant-btn" onclick="navTo('pg-report')">
-        <i class="fas fa-truck-loading"></i>
+<div class="info-bar">
+    <div id="current-date">----/--/--</div>
+    <div id="clock">00:00:00</div>
+</div><!-- الصفحة الرئيسية -->
+<div id="home" class="page active">
+    <button class="btn btn-green" onclick="navTo('report')" style="height: 250px; flex-direction: column; justify-content: center;">
+        <i class="fas fa-truck-loading" style="font-size: 5rem; margin-bottom: 15px;"></i>
         <span>إرســـــال تبلـيـــغ</span>
     </button>
-    <div class="card" style="background: rgba(255,255,255,0.6); border: 2px dashed var(--navy);">
-        <p style="text-align: center; font-weight: bold; color: var(--navy); margin: 0 0 10px 0;">رواق الموظفين والمسؤولين</p>
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
-            <button class="btn" style="background:var(--navy); height: 60px;" onclick="auth('admin')"><i class="fas fa-user-shield"></i> الإدارة</button>
-            <button class="btn" style="background:var(--gold); height: 60px;" onclick="auth('driver')"><i class="fas fa-truck"></i> السائقين</button>
+    
+    <div class="card">
+        <h3 style="text-align: center; margin-bottom: 15px; color: #14213D;">رواق الموظفين والمسؤولين</h3>
+        <div class="grid-2">
+            <button class="btn btn-blue" onclick="auth('admin')" style="height: 70px;">
+                <i class="fas fa-user-shield"></i> الإدارة
+            </button>
+            <button class="btn btn-yellow" onclick="auth('driver')" style="height: 70px;">
+                <i class="fas fa-truck"></i> السائقين
+            </button>
         </div>
     </div>
 </div>
 
-<div id="pg-report" class="page">
+<!-- صفحة إرسال بلاغ -->
+<div id="report" class="page">
     <div class="card">
-        <div class="cam-box-wrapper">
-            <i id="ico-cam" class="fas fa-camera fa-5x" style="color:#ddd"></i>
-            <img id="out-img" style="width:100%; height:100%; object-fit:cover; display:none;">
-            <label class="cam-inner-btn">
+        <div class="cam-box">
+            <i id="cam-icon" class="fas fa-camera" style="font-size: 4rem; color: #ddd;"></i>
+            <img id="cam-img" style="display: none;">
+            <label class="cam-btn">
                 <i class="fas fa-camera"></i> التقاط الصورة
-                <input type="file" accept="image/*" capture="environment" style="display:none;" onchange="handleImg(this, 'citizen')">
-            </label>        </div>
-        <button class="btn" style="background:var(--forest); padding: 12px;" onclick="getLoc()"><i class="fas fa-map-marker-alt"></i> تحديد الموقع</button>
-        <input type="text" id="in-addr" class="input" placeholder="اسم الحي أو الشارع">
-        <input type="text" id="in-gps" class="input" readonly placeholder="إحداثيات GPS">
-        <button id="send-btn" class="btn" style="background:var(--emerald); height: 70px; font-size:1.4rem;" onclick="sendReport()">
-            <span id="send-btn-text">إرسال البلاغ الآن</span>
-            <div id="send-spinner" class="spinner" style="display:none;"></div>
+                <input type="file" accept="image/*" capture="environment" style="display: none;" onchange="handleImage(this)">
+            </label>
+        </div>
+        
+        <button class="btn btn-green" onclick="getLocation()">
+            <i class="fas fa-map-marker-alt"></i> تحديد الموقع
         </button>
-        <button class="btn" style="background:#888;" onclick="navTo('pg-home')">رجوع</button>
+        
+        <input type="text" id="addr" class="input" placeholder="اسم الحي أو الشارع">
+        <input type="text" id="gps" class="input" readonly placeholder="إحداثيات GPS">
+        
+        <button id="send-btn" class="btn btn-green" onclick="sendReport()" style="height: 70px; font-size: 1.4rem;">
+            إرسال البلاغ الآن
+        </button>
+        
+        <button class="btn btn-gray" onclick="navTo('home')">رجوع</button>
     </div>
 </div>
-<div id="pg-admin" class="page">
+
+<!-- صفحة الإدارة -->
+<div id="admin" class="page">
     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-        <h2 style="margin:0;">لوحة التحكم</h2>
-        <button class="btn" style="background:var(--red); width:auto; padding:8px 20px;" onclick="location.reload()">خروج</button>
+        <h2>لوحة التحكم</h2>
+        <button class="btn btn-red" onclick="location.reload()" style="width: auto; padding: 10px 20px;">خروج</button>
     </div>
     
-    <button class="btn" style="background:var(--navy); margin-bottom: 15px;" onclick="exportToCSV()">
-        <i class="fas fa-file-excel"></i> تحميل سجل البلاغات (Excel)
+    <button class="btn btn-blue" onclick="exportData()">
+        <i class="fas fa-file-excel"></i> تحميل الأرشيف (Excel)
     </button>
-
-    <div class="admin-nav-grid">
-        <button class="nav-card-btn" style="background:orange;" onclick="showAdminList('new')">بلاغات النفايات</button>
-        <button class="nav-card-btn" style="background:var(--forest);" onclick="showAdminList('done')">البلاغات المنجزة</button>
+    
+    <div class="grid-2" style="margin: 20px 0;">
+        <button class="btn btn-yellow" onclick="showList('new')" style="height: 100px;">
+            <i class="fas fa-exclamation-triangle" style="font-size: 2rem; display: block; margin-bottom: 10px;"></i>
+            بلاغات جديدة
+        </button>
+        <button class="btn btn-green" onclick="showList('done')" style="height: 100px;">
+            <i class="fas fa-check-circle" style="font-size: 2rem; display: block; margin-bottom: 10px;"></i>
+            منجزة
+        </button>
     </div>
-    <div id="admin-list-container"></div>
+    
     <div class="card" style="border: 2px solid blue; background: #f0f7ff;">
-        <h4 style="margin-top:0; color:blue; text-align:center;">إدارة الموظفين</h4>
-        <button class="btn" style="background:blue" onclick="openStaffModal()">+ إضافة (مسؤول / سائق)</button>
-        <div id="staff-list-ui" style="margin-top:10px;"></div>
+        <h4 style="color: blue; margin-bottom: 15px;">إدارة الموظفين</h4>
+        <button class="btn btn-blue" onclick="openModal()">+ إضافة موظف</button>
+        <div id="staff-list" style="margin-top: 15px;"></div>
     </div>
+    
+    <div id="reports-list" style="margin-top: 20px;"></div>
 </div>
 
-<div id="pg-driver" class="page">
-    <div id="dr-header" class="card" style="background:var(--emerald); color:white; text-align:center;"></div>
-    <div id="dr-tasks"></div>
-    <button class="btn" style="background:#444;" onclick="location.reload()">خروج</button>
+<!-- صفحة السائق -->
+<div id="driver" class="page">
+    <div class="card" style="background: #2E7D32; color: white; text-align: center;">
+        <h3 id="driver-name">المهام الموكلة</h3>
+    </div>
+    <div id="driver-tasks"></div>
+    <button class="btn btn-gray" onclick="location.reload()">خروج</button>
 </div>
 
 <div class="footer">
-    <div style="font-size: 0.8rem; color: var(--navy); font-weight: bold;">إشراف د. رابحي فتحي - بلدية المدية 2026 ©</div>
+    إشراف د. رابحي فتحي - بلدية المدية 2026 ©
 </div><script>
-    // محاولة الاتصال بـ Firebase مع fallback للتخزين المحلي
-    let useLocalStorage = false;
-    let appData = { reports: [], staff: [] };
-    let currentLoggedUser = "", tempImgCit = "", tempImgDrv = "";
-    
-    // Firebase Configuration
-    const firebaseConfig = { 
-        databaseURL: "https://medea-clean-2026-v4-default-rtdb.firebaseio.com/" 
+// المتغيرات العامة
+let reports = JSON.parse(localStorage.getItem('medea_reports') || '[]');
+let staff = JSON.parse(localStorage.getItem('medea_staff') || '[]');
+let currentUser = '';
+let tempImage = '';
+let tempDoneImage = '';
+
+// تهيئة Firebase
+let db = null;
+let firebaseReady = false;
+
+try {
+    const firebaseConfig = {
+        databaseURL: "https://medea-clean-2026-v4-default-rtdb.firebaseio.com/"
     };
     
-    let db;
-    let firebaseConnected = false;
+    if (!firebase.apps.length) {
+        firebase.initializeApp(firebaseConfig);
+    }
+    db = firebase.database();
     
-    // محاولة تهيئة Firebase
-    try {
-        if (!firebase.apps.length) {
-            firebase.initializeApp(firebaseConfig);
-        }
-        db = firebase.database();
-        
-        // فحص الاتصال الحقيقي
-        const connectedRef = db.ref(".info/connected");
-        connectedRef.on('value', (snap) => {
-            firebaseConnected = snap.val() === true;
-            console.log("Firebase:", firebaseConnected ? "متصل ✅" : "غير متصل ❌");
-            
-            if(!firebaseConnected) {
-                useLocalStorage = true;
-                alert("⚠️ وضع عدم الاتصال:\n\nسيتم حفظ البيانات محلياً\nوستُرسل عند توفر الإنترنت");
-            } else {
-                useLocalStorage = false;
-                // مزامنة البيانات المحلية
-                syncLocalData();
-            }
-        });
-        
-        // مهلة للاتصال (10 ثواني)
-        setTimeout(() => {
-            if(!firebaseConnected) {
-                useLocalStorage = true;
-                console.log("⏱️ Timeout - Using LocalStorage");
-            }
-        }, 10000);
-        
-    } catch(e) {
-        console.error("Firebase Init Error:", e);
-        useLocalStorage = true;
-    }
-    function initApp() {
-        document.getElementById('current-date').innerText = new Date().toLocaleDateString('ar-DZ');
-        
-        // تحميل البيانات من LocalStorage إذا كان موجوداً
-        if(localStorage.getItem('medea_reports')) {
-            const localReports = JSON.parse(localStorage.getItem('medea_reports'));
-            console.log(`📱 تم تحميل ${localReports.length} بلاغ من التخزين المحلي`);
-        }
-        
-        // الاستماع للبيانات من Firebase
-        if(db && !useLocalStorage) {
-            db.ref('CLEAN_MEDEA_FINAL').on('value', snap => { 
-                if(snap.exists()){ 
-                    appData = snap.val(); 
-                    updateUI(); 
-                }
-            });
-        }
-        
-        setInterval(() => { 
-            document.getElementById('clock').innerText = new Date().toLocaleTimeString('fr-FR'); 
-        }, 1000);
-    }
-
-    function navTo(id) { 
-        document.querySelectorAll('.page').forEach(p=>p.classList.remove('active')); 
-        document.getElementById(id).classList.add('active'); 
-    }
-
-    // ضغط الصور
-    function compressImage(base64, maxWidth = 640, quality = 0.6) {
-        return new Promise((resolve) => {
-            const img = new Image();
-            img.onload = () => {
-                const canvas = document.createElement('canvas');
-                let width = img.width;
-                let height = img.height;
-                
-                if (width > maxWidth) {
-                    height = Math.round((height * maxWidth) / width);
-                    width = maxWidth;
-                }
-                
-                canvas.width = width;
-                canvas.height = height;
-                const ctx = canvas.getContext('2d');
-                ctx.fillStyle = '#fff';
-                ctx.fillRect(0, 0, width, height);
-                ctx.drawImage(img, 0, 0, width, height);
-                                resolve(canvas.toDataURL('image/jpeg', quality));
-            };
-            img.src = base64;
-        });
-    }
-
-    function handleImg(input, role) {
-        if (!input.files || !input.files[0]) return;
-        
-        const reader = new FileReader();
-        reader.onload = async e => {
-            const compressed = await compressImage(e.target.result, 640, 0.6);
-            
-            if(role === 'citizen') {
-                tempImgCit = compressed;
-                document.getElementById('out-img').src = compressed;
-                document.getElementById('out-img').style.display = 'block';
-                document.getElementById('ico-cam').style.display = 'none';
-            } else { 
-                tempImgDrv = compressed; 
-            }
-        };
-        reader.readAsDataURL(input.files[0]);
-    }
-
-    function getLoc() {
-        const btn = event.target;
-        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري التحديد...';
-        btn.disabled = true;
-        
-        navigator.geolocation.getCurrentPosition(
-            p => {
-                const lat = p.coords.latitude, lng = p.coords.longitude;
-                document.getElementById('in-gps').value = `${lat},${lng}`;
-                
-                fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&accept-language=ar`, {timeout: 8000})
-                    .then(r=>r.json())
-                    .then(d=>{
-                        document.getElementById('in-addr').value = d.display_name ? d.display_name.split(',').slice(0,3).join(',') : "المدية، الجزائر";
-                        btn.innerHTML = '<i class="fas fa-map-marker-alt"></i> تحديد الموقع';
-                        btn.disabled = false;
-                    })
-                    .catch(()=>{
-                        document.getElementById('in-addr').value = "المدية، الجزائر";
-                        btn.innerHTML = '<i class="fas fa-map-marker-alt"></i> تحديد الموقع';
-                        btn.disabled = false;
-                    });
-            },
-            err => { 
-                document.getElementById('in-addr').value = "المدية، الجزائر";                btn.innerHTML = '<i class="fas fa-map-marker-alt"></i> تحديد الموقع';
-                btn.disabled = false;
-            },
-            { enableHighAccuracy: false, timeout: 10000 }
-        );
-    }
-
-    // دالة الحفظ الموحدة (Firebase أو LocalStorage)
-    async function saveReport(report) {
-        if(useLocalStorage || !firebaseConnected) {
-            // حفظ محلي
-            const localReports = JSON.parse(localStorage.getItem('medea_reports') || '[]');
-            localReports.push({...report, synced: false});
-            localStorage.setItem('medea_reports', JSON.stringify(localReports));
-            console.log("💾 تم الحفظ محلياً");
-            return {success: true, local: true};
-        } else {
-            // حفظ في Firebase
-            try {
-                await db.ref('CLEAN_MEDEA_FINAL/reports').push(report);
-                console.log("☁️ تم الإرسال للسحابة");
-                return {success: true, local: false};
-            } catch(e) {
-                console.error("Firebase Error:", e);
-                // Fallback للتخزين المحلي
-                const localReports = JSON.parse(localStorage.getItem('medea_reports') || '[]');
-                localReports.push({...report, synced: false});
-                localStorage.setItem('medea_reports', JSON.stringify(localReports));
-                return {success: true, local: true};
-            }
-        }
-    }
-
-    // مزامنة البيانات المحلية
-    async function syncLocalData() {
-        const localReports = JSON.parse(localStorage.getItem('medea_reports') || '[]');
-        const unsynced = localReports.filter(r => !r.synced);
-        
-        if(unsynced.length > 0 && db) {
-            console.log(`🔄 مزامنة ${unsynced.length} بلاغ...`);
-            
-            for(const report of unsynced) {
-                try {
-                    await db.ref('CLEAN_MEDEA_FINAL/reports').push(report);
-                    report.synced = true;
-                } catch(e) {
-                    console.error("Sync failed:", e);
-                }
-            }
-                        localStorage.setItem('medea_reports', JSON.stringify(localReports));
-            alert(`✅ تم مزامنة ${unsynced.length} بلاغ مع السحابة`);
-        }
-    }
-
-    async function sendReport() {
-        if(!document.getElementById('in-addr').value.trim()) { 
-            alert("⚠️ أدخل العنوان"); 
-            return; 
-        }
-        
-        const btn = document.getElementById('send-btn');
-        const btnText = document.getElementById('send-btn-text');
-        const spinner = document.getElementById('send-spinner');
-        
-        btn.disabled = true;
-        btnText.innerText = "جاري الإرسال...";
-        spinner.style.display = 'inline-block';
-        
-        const rep = { 
-            id: Date.now(), 
-            img: tempImgCit || "no-image", 
-            addr: document.getElementById('in-addr').value.trim(), 
-            gps: document.getElementById('in-gps').value || "غير محدد", 
-            time: new Date().toLocaleTimeString('ar-DZ'), 
-            date: new Date().toLocaleDateString('ar-DZ'), 
-            status: 'new',
-            driverName: null,
-            doneImg: null,
-            doneTime: null,
-            hasImage: !!tempImgCit
-        };
-        
-        const result = await saveReport(rep);
-        
-        // عرض رسالة الشكر دائماً
-        document.getElementById('thanks-overlay').style.display = 'flex';
-        
-        // Reset form
-        tempImgCit = "";
-        document.getElementById('out-img').style.display = 'none';
-        document.getElementById('ico-cam').style.display = 'block';
-        document.getElementById('in-addr').value = '';
-        document.getElementById('in-gps').value = '';
-        
-        btn.disabled = false;
-        btnText.innerText = "إرسال البلاغ الآن";
-        spinner.style.display = 'none';
-        
-        // رسالة إضافية إذا تم الحفظ محلياً        if(result.local) {
-            setTimeout(() => {
-                alert("📱 تم الحفظ على الجهاز\n\nسيتم الإرسال تلقائياً عند توفر الإنترنت");
-            }, 1000);
-        }
-        
-        setTimeout(() => { 
-            document.getElementById('thanks-overlay').style.display = 'none';
-            location.reload(); 
-        }, 4500);
-    }
-
-    function auth(role) {
-        const name = prompt("الاسم:"); if(!name) return;
-        const code = prompt("الرمز:");
-        if((name==="فتحي" && code==="1234") || (role==='admin' && code==="1234") || (role==='driver' && code==="5678")) {
-            currentLoggedUser = name; 
-            navTo(role==='admin'?'pg-admin':'pg-driver'); 
+    // فحص الاتصال
+    db.ref('.info/connected').on('value', (snap) => {
+        firebaseReady = snap.val() === true;
+        console.log("Firebase:", firebaseReady ? "Connected ✓" : "Disconnected ✗");
+    });
+    
+    // مزامنة البيانات
+    db.ref('CLEAN_MEDEA_FINAL').on('value', (snap) => {
+        if (snap.exists()) {
+            const data = snap.val();
+            if (data.reports) reports = data.reports;
+            if (data.staff) staff = data.staff;
             updateUI();
-        } else { alert("❌ رمز خاطئ"); }
-    }
-
-    function showAdminList(type) {
-        // دمج البيانات من Firebase و LocalStorage
-        const localReports = JSON.parse(localStorage.getItem('medea_reports') || '[]');
-        const allReports = [...(appData.reports || []), ...localReports];
-        
-        const container = document.getElementById('admin-list-container');
-        const filtered = type === 'new' ? allReports.filter(r => r.status !== 'done') : allReports.filter(r => r.status === 'done');
-        
-        container.innerHTML = `<h3>${type==='new'?'البلاغات الجديدة':'المنجزة'} (${filtered.length}) ${useLocalStorage?'📱':''}</h3>`;
-        
-        if(filtered.length===0) { 
-            container.innerHTML += "<p style='text-align:center;'>لا توجد بيانات</p>"; 
-            return; 
         }
-        
-        container.innerHTML += filtered.map(r => `
-            <div class="card" style="border-right:8px solid ${type==='done'?'#2E7D32':'#d21034'}; ${r.synced===false?'opacity:0.7;':''}">
-                <div style="display:flex; justify-content:space-between;">
-                    <div style="display:flex; gap:10px;">
-                        ${r.hasImage ? `<img src="${r.img}" style="width:80px;height:80px;border-radius:12px;object-fit:cover;">` : '<div style="width:80px;height:80px;background:#ddd;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:0.7rem;">بدون صورة</div>'}
-                        ${r.doneImg?`<img src="${r.doneImg}" style="width:80px;height:80px;border-radius:12px;border:2px solid green;object-fit:cover;">`:''}
-                    </div>
-                    ${type==='done'?`<i class="fas fa-trash" style="color:red;cursor:pointer;" onclick="deleteReport(${r.id})"></i>`:''}
-                </div>
-                <p style="font-size:0.9rem;margin:10px 0;">📍 ${r.addr}<br>🌍 ${r.gps}<br>🕒 ${r.time}</p>
-                ${r.synced===false?'<span style="background:orange;color:white;padding:2px 8px;border-radius:10px;font-size:0.75rem;">📱 محلي</span>':''}
-                ${r.status==='new'?`<button class="btn" style="background:var(--forest);padding:10px;" onclick="assignTo(${r.id})">توجيه لسائق</button>`:`<p style="color:green;">👷 ${r.driverName}<br>✅ ${r.doneTime}</p>`}
-            </div>`).join('');    }
+    });
+} catch (e) {
+    console.log("Firebase not available, using LocalStorage only");
+}
 
-    function exportToCSV() {
-        const localReports = JSON.parse(localStorage.getItem('medea_reports') || '[]');
-        const allReports = [...(appData.reports || []), ...localReports];
-        
-        if(allReports.length===0) { alert("لا توجد بيانات"); return; }
-        
-        let csv = "\ufeffالمعرف,التاريخ,العنوان,الحالة,السائق,مزامنة\n";
-        allReports.forEach(r => { 
-            csv += `${r.id},${r.date},"${r.addr}",${r.status},${r.driverName||'---'},${r.synced!==false?'نعم':'لا'}\n`; 
-        });
-        
-        const blob = new Blob([csv], {type:'text/csv;charset=utf-8;'});
-        const link = document.createElement("a"); 
-        link.href = URL.createObjectURL(blob);
-        link.download = `Archive_${new Date().toISOString().split('T')[0]}.csv`; 
-        link.click();
-    }
+// بدء التطبيق
+function initApp() {
+    console.log("App initialized");
+    updateTime();
+    setInterval(updateTime, 1000);
+    updateUI();
+}
 
-    function deleteReport(id) {
-        if(!confirm("حذف؟")) return;
-        
-        // حذف من LocalStorage
-        let localReports = JSON.parse(localStorage.getItem('medea_reports') || '[]');
-        localReports = localReports.filter(r => r.id !== id);
-        localStorage.setItem('medea_reports', JSON.stringify(localReports));
-        
-        // حذف من Firebase إذا موجود
-        if(db) {
-            db.ref('CLEAN_MEDEA_FINAL/reports').orderByChild('id').equalTo(id).once('value', s => {
-                s.forEach(c => { c.ref.remove(); });
-            });
-        }
-        
-        showAdminList('done');
-    }
+function updateTime() {    const now = new Date();
+    document.getElementById('current-date').textContent = now.toLocaleDateString('ar-DZ');
+    document.getElementById('clock').textContent = now.toLocaleTimeString('fr-FR');
+}
 
-    function updateUI() {
-        if(currentLoggedUser && document.getElementById('pg-driver').classList.contains('active')) {
-            const tasks = (appData.reports||[]).filter(r => r.driverName===currentLoggedUser && r.status==='sent');
-            document.getElementById('dr-header').innerHTML = `<h3>مهام: ${currentLoggedUser}</h3>`;
-            document.getElementById('dr-tasks').innerHTML = tasks.length ? tasks.map(t => `
-                <div class="card">
-                    <img src="${t.img}" style="width:100%;border-radius:15px;margin-bottom:10px;">
-                    <p>📍 ${t.addr}</p>
-                    <label class="btn" style="background:orange;"><i class="fas fa-camera"></i> تصوير<input type="file" accept="image/*" capture="environment" style="display:none;" onchange="handleImg(this,'driver')"></label>
-                    <button class="btn" style="background:green" onclick="finishTask(${t.id})">إنجاز</button>
-                </div>`).join('') : "<p>لا توجد مهام</p>";
-        }    }
+function navTo(pageId) {
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    document.getElementById(pageId).classList.add('active');
+}
 
-    function openStaffModal() { document.getElementById('staff-modal').style.display='flex'; }
-    function closeStaffModal() { document.getElementById('staff-modal').style.display='none'; }
-    function toggleStaffFields() { document.getElementById('driver-specifics').style.display=document.getElementById('st-role').value==='سائق'?'block':'none'; }
-
-    function saveStaff() {
-        const n=document.getElementById('st-name').value.trim();
-        if(!n) { alert("الاسم مطلوب"); return; }
-        const s = {role:document.getElementById('st-role').value, name:n, phone:document.getElementById('st-phone').value.trim()};
-        
-        if(db && !useLocalStorage) {
-            db.ref('CLEAN_MEDEA_FINAL/staff').push(s).then(()=>{alert("تم ✅"); closeStaffModal();});
-        } else {
-            const staff = JSON.parse(localStorage.getItem('medea_staff') || '[]');
-            staff.push(s);
-            localStorage.setItem('medea_staff', JSON.stringify(staff));
-            alert("تم الحفظ محلياً 📱");
-            closeStaffModal();
-        }
-    }
-
-    function assignTo(id) {
-        const dName = prompt("اسم السائق:"); if(!dName) return;
-        
-        // تحديث في LocalStorage
-        let localReports = JSON.parse(localStorage.getItem('medea_reports') || '[]');
-        const localReport = localReports.find(r => r.id === id);
-        if(localReport) {
-            localReport.status = 'sent';
-            localReport.driverName = dName;
-            localStorage.setItem('medea_reports', JSON.stringify(localReports));
-        }
-        
-        // تحديث في Firebase
-        if(db) {
-            db.ref('CLEAN_MEDEA_FINAL/reports').orderByChild('id').equalTo(id).once('value', s => {
-                s.forEach(c => { c.ref.update({status:'sent', driverName:dName}); });
-            });
-        }
-        
-        showAdminList('new');
-    }
-
-    function finishTask(id) {
-        if(!tempImgDrv) { alert("صور أولاً"); return; }
-        
-        const updateData = {
-            status:'done', 
-            doneImg:tempImgDrv,             doneTime:new Date().toLocaleString('ar-DZ')
+// معالجة الصورة
+function handleImage(input) {
+    if (!input.files || !input.files[0]) return;
+    
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        // ضغط الصورة
+        const img = new Image();
+        img.onload = function() {
+            const canvas = document.createElement('canvas');
+            let width = img.width;
+            let height = img.height;
+            
+            if (width > 640) {
+                height = Math.round((height * 640) / width);
+                width = 640;
+            }
+            
+            canvas.width = width;
+            canvas.height = height;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(img, 0, 0, width, height);
+            
+            tempImage = canvas.toDataURL('image/jpeg', 0.6);
+            
+            document.getElementById('cam-img').src = tempImage;
+            document.getElementById('cam-img').style.display = 'block';
+            document.getElementById('cam-icon').style.display = 'none';
         };
-        
-        // تحديث LocalStorage
-        let localReports = JSON.parse(localStorage.getItem('medea_reports') || '[]');
-        const localReport = localReports.find(r => r.id === id);
-        if(localReport) {
-            Object.assign(localReport, updateData);
-            localStorage.setItem('medea_reports', JSON.stringify(localReports));
-        }
-        
-        // تحديث Firebase
-        if(db) {
-            db.ref('CLEAN_MEDEA_FINAL/reports').orderByChild('id').equalTo(id).once('value', s => {
-                s.forEach(c => { c.ref.update(updateData); });
-            });
-        }
-        
-        alert("تم 🎉"); 
-        tempImgDrv=""; 
-        updateUI();
-    }
+        img.src = e.target.result;
+    };
+    reader.readAsDataURL(input.files[0]);
+}
 
-    function deleteStaff(name) {
-        if(!confirm(`حذف ${name}؟`)) return;
-        
-        let staff = JSON.parse(localStorage.getItem('medea_staff') || '[]');
-        staff = staff.filter(s => s.name !== name);
-        localStorage.setItem('medea_staff', JSON.stringify(staff));
-        
-        if(db) {
-            db.ref('CLEAN_MEDEA_FINAL/staff').orderByChild('name').equalTo(name).once('value', s => {
-                s.forEach(c => { c.ref.remove(); });
-            });
+// تحديد الموقع
+function getLocation() {
+    const btn = event.target;
+    btn.innerHTML = '<div class="spinner"></div> جاري التحديد...';
+    btn.disabled = true;
+        navigator.geolocation.getCurrentPosition(
+        (pos) => {
+            const lat = pos.coords.latitude;
+            const lng = pos.coords.longitude;
+            document.getElementById('gps').value = `${lat}, ${lng}`;
+            
+            // الحصول على العنوان
+            fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&accept-language=ar`)
+                .then(r => r.json())
+                .then(d => {
+                    if (d.display_name) {
+                        document.getElementById('addr').value = d.display_name.split(',').slice(0, 3).join(',');
+                    }
+                    btn.innerHTML = '<i class="fas fa-map-marker-alt"></i> تحديد الموقع';
+                    btn.disabled = false;
+                })
+                .catch(() => {
+                    document.getElementById('addr').value = "المدية، الجزائر";
+                    btn.innerHTML = '<i class="fas fa-map-marker-alt"></i> تحديد الموقع';
+                    btn.disabled = false;
+                });
+        },
+        (err) => {
+            alert("تعذر تحديد الموقع");
+            document.getElementById('addr').value = "المدية، الجزائر";
+            btn.innerHTML = '<i class="fas fa-map-marker-alt"></i> تحديد الموقع';
+            btn.disabled = false;
+        },
+        { enableHighAccuracy: false, timeout: 10000 }
+    );
+}
+
+// إرسال البلاغ
+async function sendReport() {
+    const addr = document.getElementById('addr').value.trim();
+    const gps = document.getElementById('gps').value;
+    
+    if (!addr) {
+        alert("الرجاء إدخال العنوان");
+        return;
+    }
+    
+    const btn = document.getElementById('send-btn');
+    const originalText = btn.textContent;
+    btn.disabled = true;
+    btn.innerHTML = '<div class="spinner"></div> جاري الإرسال...';
+    
+    const report = {
+        id: Date.now(),
+        img: tempImage || "no-image",        addr: addr,
+        gps: gps || "غير محدد",
+        time: new Date().toLocaleTimeString('ar-DZ'),
+        date: new Date().toLocaleDateString('ar-DZ'),
+        status: 'new',
+        driverName: null,
+        doneImg: null,
+        doneTime: null,
+        hasImage: !!tempImage,
+        synced: false
+    };
+    
+    // حفظ محلي دائماً
+    reports.push(report);
+    localStorage.setItem('medea_reports', JSON.stringify(reports));
+    
+    // محاولة الحفظ في Firebase
+    if (db && firebaseReady) {
+        try {
+            await db.ref('CLEAN_MEDEA_FINAL/reports').push(report);
+            report.synced = true;
+            localStorage.setItem('medea_reports', JSON.stringify(reports));
+        } catch (e) {
+            console.log("Save to Firebase failed, saved locally");
         }
     }
+    
+    // إظهار رسالة الشكر
+    document.getElementById('thanks-overlay').style.display = 'flex';
+    
+    // إعادة تعيين النموذج
+    tempImage = '';
+    document.getElementById('cam-img').style.display = 'none';
+    document.getElementById('cam-icon').style.display = 'block';
+    document.getElementById('addr').value = '';
+    document.getElementById('gps').value = '';
+    btn.disabled = false;
+    btn.textContent = originalText;
+    
+    setTimeout(() => {
+        document.getElementById('thanks-overlay').style.display = 'none';
+        navTo('home');
+    }, 4500);
+}
+
+// المصادقة
+function auth(role) {
+    const name = prompt("الاسم الكامل:");
+    if (!name) return;
+        const code = prompt("رمز الدخول:");
+    
+    if ((name === "فتحي" && code === "1234") || 
+        (role === 'admin' && code === "1234") || 
+        (role === 'driver' && code === "5678")) {
+        currentUser = name;
+        navTo(role);
+        updateUI();
+    } else {
+        alert("رمز الدخول غير صحيح");
+    }
+}
+
+// عرض القوائم
+function showList(type) {
+    const container = document.getElementById('reports-list');
+    const filtered = type === 'new' 
+        ? reports.filter(r => r.status !== 'done')
+        : reports.filter(r => r.status === 'done');
+    
+    container.innerHTML = `<h3 style="margin-bottom: 15px;">${type === 'new' ? 'البلاغات الجديدة' : 'المنجزة'} (${filtered.length})</h3>`;
+    
+    if (filtered.length === 0) {
+        container.innerHTML += '<p style="text-align: center; color: #666;">لا توجد بيانات</p>';
+        return;
+    }
+    
+    container.innerHTML += filtered.map(r => `
+        <div class="card" style="border-right: 6px solid ${type === 'done' ? '#4CAF50' : '#f44336'};">
+            <div style="display: flex; gap: 10px; margin-bottom: 10px;">
+                ${r.hasImage ? `<img src="${r.img}" style="width: 80px; height: 80px; border-radius: 12px; object-fit: cover;">` : '<div style="width: 80px; height: 80px; background: #ddd; border-radius: 12px; display: flex; align-items: center; justify-content: center;">بدون صورة</div>'}
+                ${r.doneImg ? `<img src="${r.doneImg}" style="width: 80px; height: 80px; border-radius: 12px; border: 2px solid green; object-fit: cover;">` : ''}
+            </div>
+            <p style="font-size: 0.9rem; margin: 10px 0;">
+                📍 ${r.addr}<br>
+                🌍 ${r.gps}<br>
+                🕒 ${r.time} - ${r.date}
+            </p>
+            <span class="status-badge status-${r.status}">${r.status === 'new' ? 'جديد' : r.status === 'sent' ? 'قيد التنفيذ' : 'منجز'}</span>
+            ${r.driverName ? `<span style="display: block; margin-top: 10px; color: green; font-weight: bold;">👷 ${r.driverName}</span>` : ''}
+            ${type === 'new' && r.status === 'new' ? `<button class="btn btn-green" onclick="assignTask(${r.id})" style="margin-top: 10px; padding: 10px;">توجيه لسائق</button>` : ''}
+            ${type === 'done' ? `<button class="btn btn-red" onclick="deleteReport(${r.id})" style="margin-top: 10px; padding: 10px;">حذف</button>` : ''}
+        </div>
+    `).join('');
+}
+
+// تعيين مهمة
+function assignTask(id) {
+    const driverName = prompt("أدخل اسم السائق:");
+    if (!driverName) return;    
+    const report = reports.find(r => r.id === id);
+    if (report) {
+        report.status = 'sent';
+        report.driverName = driverName;
+        localStorage.setItem('medea_reports', JSON.stringify(reports));
+        
+        if (db && firebaseReady) {
+            db.ref('CLEAN_MEDEA_FINAL/reports').orderByChild('id').equalTo(id).once('value', snap => {
+                snap.forEach(child => {
+                    child.ref.update({ status: 'sent', driverName: driverName });
+                });
+            });
+        }
+        
+        showList('new');
+        alert(`تم توجيه المهمة لـ: ${driverName}`);
+    }
+}
+
+// حذف بلاغ
+function deleteReport(id) {
+    if (!confirm("هل تريد حذف هذا البلاغ؟")) return;
+    
+    reports = reports.filter(r => r.id !== id);
+    localStorage.setItem('medea_reports', JSON.stringify(reports));
+    
+    if (db && firebaseReady) {
+        db.ref('CLEAN_MEDEA_FINAL/reports').orderByChild('id').equalTo(id).once('value', snap => {
+            snap.forEach(child => child.ref.remove());
+        });
+    }
+    
+    showList('done');
+}
+
+// تصدير البيانات
+function exportData() {
+    if (reports.length === 0) {
+        alert("لا توجد بيانات للتصدير");
+        return;
+    }
+    
+    let csv = "\ufeffالمعرف,التاريخ,الوقت,العنوان,GPS,الحالة,السائق\n";
+    reports.forEach(r => {
+        const statusText = r.status === 'done' ? 'منجز' : r.status === 'sent' ? 'قيد التنفيذ' : 'جديد';
+        csv += `${r.id},${r.date},${r.time},"${r.addr}",${r.gps},${statusText},${r.driverName || '---'}\n`;
+    });
+    
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `Archive_Medea_${new Date().toISOString().split('T')[0]}.csv`;
+    link.click();
+    URL.revokeObjectURL(url);
+}
+
+// تحديث الواجهة
+function updateUI() {
+    // تحديث قائمة الموظفين
+    const staffList = document.getElementById('staff-list');
+    if (staffList) {
+        staffList.innerHTML = staff.length > 0 
+            ? staff.map(s => `
+                <div style="display: flex; justify-content: space-between; padding: 10px; border-bottom: 1px solid #eee; align-items: center;">
+                    <span><b>${s.role}:</b> ${s.name}</span>
+                    <i class="fas fa-trash" style="color: red; cursor: pointer;" onclick="deleteStaff('${s.name}')"></i>
+                </div>
+            `).join('')
+            : '<p style="text-align: center; color: #666;">لا يوجد موظفون</p>';
+    }
+    
+    // تحديث مهام السائق
+    if (currentUser && document.getElementById('driver').classList.contains('active')) {
+        const tasks = reports.filter(r => r.driverName === currentUser && r.status === 'sent');
+        document.getElementById('driver-name').textContent = `المهام الموكلة لـ: ${currentUser}`;
+        
+        const tasksContainer = document.getElementById('driver-tasks');
+        if (tasks.length === 0) {
+            tasksContainer.innerHTML = '<p style="text-align: center; padding: 30px; color: #666;">لا توجد مهام حالياً</p>';
+        } else {
+            tasksContainer.innerHTML = tasks.map(t => `
+                <div class="card">
+                    <img src="${t.img}" style="width: 100%; border-radius: 15px; margin-bottom: 15px;">
+                    <p style="font-weight: bold; margin-bottom: 10px;">📍 ${t.addr}</p>
+                    <p style="color: #666; margin-bottom: 15px;">🌍 ${t.gps}</p>
+                    <label class="btn btn-yellow" style="display: block; margin-bottom: 10px;">
+                        <i class="fas fa-camera"></i> تصوير بعد التنظيف
+                        <input type="file" accept="image/*" capture="environment" style="display: none;" onchange="handleDoneImage(this, ${t.id})">
+                    </label>
+                    <button class="btn btn-green" onclick="completeTask(${t.id})">تأكيد الإنجاز</button>
+                </div>
+            `).join('');
+        }
+    }
+}
+
+// معالجة صورة الإنجاز
+function handleDoneImage(input, id) {    if (!input.files || !input.files[0]) return;
+    
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        const img = new Image();
+        img.onload = function() {
+            const canvas = document.createElement('canvas');
+            let width = img.width;
+            let height = img.height;
+            
+            if (width > 640) {
+                height = Math.round((height * 640) / width);
+                width = 640;
+            }
+            
+            canvas.width = width;
+            canvas.height = height;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(img, 0, 0, width, height);
+            
+            tempDoneImage = canvas.toDataURL('image/jpeg', 0.6);
+        };
+        img.src = e.target.result;
+    };
+    reader.readAsDataURL(input.files[0]);
+}
+
+// إكمال المهمة
+function completeTask(id) {
+    if (!tempDoneImage) {
+        alert("الرجاء تصوير المكان بعد التنظيف أولاً");
+        return;
+    }
+    
+    const report = reports.find(r => r.id === id);
+    if (report) {
+        report.status = 'done';
+        report.doneImg = tempDoneImage;
+        report.doneTime = new Date().toLocaleString('ar-DZ');
+        localStorage.setItem('medea_reports', JSON.stringify(reports));
+        
+        if (db && firebaseReady) {
+            db.ref('CLEAN_MEDEA_FINAL/reports').orderByChild('id').equalTo(id).once('value', snap => {
+                snap.forEach(child => {
+                    child.ref.update({
+                        status: 'done',
+                        doneImg: tempDoneImage,
+                        doneTime: report.doneTime
+                    });
+                });            });
+        }
+        
+        tempDoneImage = '';
+        updateUI();
+        alert("🎉 تم إنجاز المهمة بنجاح!");
+    }
+}
+
+// إدارة الموظفين
+function openModal() {
+    document.getElementById('staff-modal').style.display = 'flex';
+}
+
+function closeModal() {
+    document.getElementById('staff-modal').style.display = 'none';
+}
+
+function toggleStaffFields() {
+    // يمكن إضافة حقول إضافية هنا
+}
+
+function saveStaff() {
+    const name = document.getElementById('st-name').value.trim();
+    const phone = document.getElementById('st-phone').value.trim();
+    const role = document.getElementById('st-role').value;
+    const truck = document.getElementById('st-truck').value.trim();
+    
+    if (!name) {
+        alert("الاسم مطلوب");
+        return;
+    }
+    
+    const newStaff = { role, name, phone, truck: truck || '---' };
+    staff.push(newStaff);
+    localStorage.setItem('medea_staff', JSON.stringify(staff));
+    
+    if (db && firebaseReady) {
+        db.ref('CLEAN_MEDEA_FINAL/staff').push(newStaff);
+    }
+    
+    closeModal();
+    updateUI();
+    alert("تم إضافة الموظف بنجاح ✓");
+    
+    // تفريغ الحقول
+    document.getElementById('st-name').value = '';
+    document.getElementById('st-phone').value = '';
+    document.getElementById('st-truck').value = '';
+}
+function deleteStaff(name) {
+    if (!confirm(`هل تريد حذف ${name}؟`)) return;
+    
+    staff = staff.filter(s => s.name !== name);
+    localStorage.setItem('medea_staff', JSON.stringify(staff));
+    
+    if (db && firebaseReady) {
+        db.ref('CLEAN_MEDEA_FINAL/staff').orderByChild('name').equalTo(name).once('value', snap => {
+            snap.forEach(child => child.ref.remove());
+        });
+    }
+    
+    updateUI();
+}
+
+// بدء التطبيق عند التحميل
+window.onload = initApp;
 </script>
 </body>
 </html>
