@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>المدينة نظيفة</title>
+    <title>المدينة نظيفة - 2026</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700;900&display=swap" rel="stylesheet">
@@ -11,115 +11,163 @@
     
     <style>
         :root { --emerald: #1B5E20; --gold: #D4AF37; --red: #d21034; --navy: #14213D; }
-        * { font-family: 'Tajawal', sans-serif; }
-        body { margin:0; background: linear-gradient(135deg, #f0f4f0, #fff); }
-        .header { background:rgba(255,255,255,0.97); padding:10px; text-align:center; border-bottom:5px solid var(--gold); position:sticky; top:0; z-index:100; }
+        * { font-family: 'Tajawal', sans-serif; box-sizing: border-box; margin:0; padding:0; }
+        body { background: linear-gradient(135deg, rgba(27,94,32,0.08), #ffffff); min-height:100vh; }
+        .header { background:rgba(255,255,255,0.97); padding:12px; text-align:center; border-bottom:6px solid var(--gold); position:sticky; top:0; z-index:100; box-shadow:0 4px 12px rgba(0,0,0,0.1); }
         .page { display:none; padding:15px; }
         .page.active { display:block; }
-        .btn { width:100%; padding:15px; margin:10px 0; border:none; border-radius:15px; font-weight:bold; font-size:1.1rem; color:white; }
+        .btn { width:100%; padding:16px; margin:12px 0; border:none; border-radius:15px; font-size:1.15rem; font-weight:bold; color:white; cursor:pointer; }
         .green { background:var(--emerald); }
         .red { background:var(--red); }
         .navy { background:var(--navy); }
-        .card, .modal-content { background:white; border-radius:20px; padding:20px; box-shadow:0 10px 25px rgba(0,0,0,0.1); }
-        .input, select { width:100%; padding:12px; margin:8px 0; border:2px solid #ddd; border-radius:12px; text-align:center; }
+        .card { background:white; border-radius:22px; padding:20px; margin:15px 0; box-shadow:0 10px 25px rgba(0,0,0,0.1); }
+        .input { width:100%; padding:14px; margin:10px 0; border:2px solid #ddd; border-radius:12px; text-align:center; font-size:1rem; }
         .modal { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.85); z-index:9999; align-items:center; justify-content:center; }
+        .modal-content { background:white; padding:25px; border-radius:25px; width:92%; max-width:420px; }
     </style>
 </head>
 <body onload="initApp()">
 
 <div class="header">
-    <div style="font-size:0.75rem;font-weight:bold;">الجمهورية الجزائرية الديمقراطية الشعبية</div>
-    <div style="color:var(--emerald);font-weight:bold;">مصلحة النظافة لبلدية المدية</div>
-    <div style="font-size:1.8rem;font-weight:900;color:var(--emerald);">المدينة نظيفة</div>
-    <div style="display:flex;justify-content:space-around;margin-top:5px;font-weight:bold;">
+    <div style="font-size:0.75rem; font-weight:bold;">الجمهورية الجزائرية الديمقراطية الشعبية</div>
+    <div style="color:var(--emerald); font-weight:bold;">مصلحة النظافة لبلدية المدية</div>
+    <div style="font-size:1.85rem; font-weight:900; color:var(--emerald);">المدينة نظيفة</div>
+    <div style="display:flex; justify-content:space-around; margin-top:8px; font-weight:bold; color:#333;">
         <span id="clock">00:00:00</span>
         <span>09 أفريل 2026</span>
     </div>
 </div>
 
-<!-- صفحاتك الأصلية -->
-<div id="pg-home" class="page active"> ... (سأكملها في الرد إذا احتجت) </div>
+<!-- الصفحة الرئيسية -->
+<div id="pg-home" class="page active">
+    <div class="card">
+        <button class="btn green" style="height:240px; font-size:2.1rem;" onclick="navTo('pg-report')">
+            <i class="fas fa-truck-loading fa-3x"></i><br>إرسال تبليغ
+        </button>
+    </div>
 
-<!-- Modal إضافة موظف (محسن) -->
-<div id="staff-modal" class="modal">
-    <div class="modal-content">
-        <h3>إضافة موظف جديد</h3>
-        <select id="st-role" class="input" onchange="toggleFields()">
-            <option value="سائق">سائق</option>
-            <option value="مسؤول">مسؤول (مشرف)</option>
-        </select>
-        <input type="text" id="st-name" class="input" placeholder="الاسم الكامل">
-        <input type="text" id="st-phone" class="input" placeholder="رقم الهاتف">
-        <div id="driver-fields">
-            <input type="text" id="st-truck" class="input" placeholder="رقم الشاحنة">
-            <select id="st-sector" class="input">
-                <option value="البلدية">قطاع البلدية</option>
-            </select>
-        </div>
-        <button class="btn green" onclick="saveStaff()">حفظ البيانات</button>
-        <button class="btn red" onclick="closeModal()">إغلاق</button>
+    <div class="card">
+        <p style="text-align:center; font-weight:bold; margin-bottom:15px; color:var(--navy);">رواق الموظفين والمسؤولين</p>
+        <button class="btn navy" onclick="auth('admin')"><i class="fas fa-user-shield"></i> الإدارة</button>
+        <button class="btn" style="background:#D4AF37; color:black;" onclick="auth('driver')"><i class="fas fa-truck"></i> السائقين</button>
     </div>
 </div>
 
+<!-- صفحة إرسال التبليغ -->
+<div id="pg-report" class="page">
+    <div class="card">
+        <div style="border:3px dashed #999; border-radius:20px; height:230px; position:relative; overflow:hidden; background:#f9f9f9;">
+            <i id="ico-cam" class="fas fa-camera fa-5x" style="color:#ccc; position:absolute; top:50%; left:50%; transform:translate(-50%,-50%);"></i>
+            <img id="out-img" style="width:100%; height:100%; object-fit:cover; display:none;">
+            <label style="position:absolute; bottom:15px; left:50%; transform:translateX(-50%); background:var(--navy); color:white; padding:10px 25px; border-radius:30px; cursor:pointer;">
+                <i class="fas fa-camera"></i> التقاط الصورة
+                <input type="file" accept="image/*" capture="environment" style="display:none;" onchange="handleImg(this, 'citizen')">
+            </label>
+        </div>
+
+        <button class="btn green" onclick="getLoc()"><i class="fas fa-map-marker-alt"></i> تحديد الموقع</button>
+        <input type="text" id="in-addr" class="input" placeholder="اسم الشارع أو الحي أو GPS">
+
+        <button class="btn green" onclick="sendReport()">إرسال البلاغ الآن</button>
+        <button class="btn red" onclick="navTo('pg-home')">رجوع</button>
+    </div>
+</div>
+
+<!-- Thanks Overlay -->
+<div id="thanks-overlay" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:var(--emerald); color:white; flex-direction:column; align-items:center; justify-content:center; z-index:10000; text-align:center; padding:20px;">
+    <i class="fas fa-heart fa-6x" style="color:var(--gold); margin-bottom:20px;"></i>
+    <h1 style="font-size:2.4rem;">شكراً لك!</h1>
+    <p style="font-size:1.3rem;">تم إرسال بلاغك بنجاح</p>
+    <div style="margin-top:30px; font-size:1.2rem;">معاً لمدينة أنظف 2026</div>
+</div>
+
 <script>
-// ===================== Firebase =====================
-const firebaseConfig = { /* ضع config الخاص بك هنا */ };
+// ===================== Firebase Config =====================
+const firebaseConfig = {
+    apiKey: "YOUR_API_KEY_HERE",
+    authDomain: "your-project.firebaseapp.com",
+    databaseURL: "https://your-project-default-rtdb.firebaseio.com",
+    projectId: "your-project",
+    storageBucket: "your-project.appspot.com",
+    messagingSenderId: "123456789",
+    appId: "1:123456789:web:xxxxxxxxxxxxxxxx"
+};
 
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 
 let appData = { reports: [], staff: [] };
+let currentUser = null;
+let tempImg = null;
 
 function initApp() {
-    db.ref('CLEAN_MEDEA_FINAL').on('value', snap => {
+    db.ref('CLEAN_MEDEA_FINAL').on('value', (snap) => {
         appData = snap.val() || { reports: [], staff: [] };
-        console.log("✅ تم تحميل البيانات");
     });
 
-    setInterval(() => document.getElementById('clock').textContent = new Date().toLocaleTimeString('ar-DZ'), 1000);
+    setInterval(() => {
+        document.getElementById('clock').textContent = new Date().toLocaleTimeString('ar-DZ');
+    }, 1000);
 }
 
-function toggleFields() {
-    document.getElementById('driver-fields').style.display = 
-        document.getElementById('st-role').value === 'سائق' ? 'block' : 'none';
+function navTo(page) {
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    document.getElementById(page).classList.add('active');
 }
 
-function saveStaff() {
-    const name = document.getElementById('st-name').value.trim();
-    if (!name) return alert("الاسم مطلوب!");
+function handleImg(input) {
+    const reader = new FileReader();
+    reader.onload = e => {
+        tempImg = e.target.result;
+        document.getElementById('out-img').src = tempImg;
+        document.getElementById('out-img').style.display = 'block';
+        document.getElementById('ico-cam').style.display = 'none';
+    };
+    reader.readAsDataURL(input.files[0]);
+}
 
-    const staffMember = {
-        role: document.getElementById('st-role').value,
-        name: name,
-        phone: document.getElementById('st-phone').value || '',
-        truck: document.getElementById('st-truck') ? document.getElementById('st-truck').value : '',
-        sector: document.getElementById('st-sector') ? document.getElementById('st-sector').value : '',
-        addedBy: "د. رابحي فتحي - بلدية المدية 2026",
-        date: new Date().toLocaleDateString('ar-DZ')
+function getLoc() {
+    if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(pos => {
+            document.getElementById('in-addr').value = `GPS: ${pos.coords.latitude.toFixed(5)}, ${pos.coords.longitude.toFixed(5)}`;
+        });
+    }
+}
+
+function sendReport() {
+    if (!tempImg) return alert("يرجى التقاط صورة أولاً");
+    const addr = document.getElementById('in-addr').value || "غير محدد";
+
+    const report = {
+        id: Date.now(),
+        img: tempImg,
+        addr: addr,
+        date: new Date().toLocaleDateString('ar-DZ'),
+        time: new Date().toLocaleTimeString('ar-DZ'),
+        status: "new"
     };
 
-    if (!appData.staff) appData.staff = [];
-    appData.staff.push(staffMember);
-
+    appData.reports.unshift(report);
     db.ref('CLEAN_MEDEA_FINAL').set(appData).then(() => {
-        alert("✅ تم حفظ الموظف بنجاح");
-        closeModal();
-        // تنظيف الحقول
-        document.getElementById('st-name').value = '';
-        document.getElementById('st-phone').value = '';
-        if(document.getElementById('st-truck')) document.getElementById('st-truck').value = '';
-    }).catch(err => alert("خطأ: " + err.message));
+        document.getElementById('thanks-overlay').style.display = 'flex';
+        setTimeout(() => location.reload(), 3500);
+    });
 }
 
-function closeModal() {
-    document.getElementById('staff-modal').style.display = 'none';
+function auth(type) {
+    if (type === 'admin') {
+        currentUser = "admin";
+        alert("✅ تم الدخول كإدارة\n\n(سيتم إضافة لوحة التحكم الكاملة في الرد القادم إن شاء الله)");
+    } else {
+        const name = prompt("أدخل اسم السائق:");
+        if (name) {
+            currentUser = name;
+            alert("✅ مرحباً " + name);
+        }
+    }
 }
 
-function openStaffModal() {
-    document.getElementById('staff-modal').style.display = 'flex';
-}
-
-// باقي الدوال (sendReport, getLoc, etc.) يمكن إضافتها حسب الحاجة
+window.onload = initApp;
 </script>
 </body>
 </html>
