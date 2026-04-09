@@ -3,13 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>نظام المدية نظيفة 2026 - المرجع المصلح</title>
+    <title>نظام المدية نظيفة 2026 - المرحلة التجريبية</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        /* الحفاظ الكامل على الهيكل والألوان والنمط العام */
+        /* هذا هو نفس التصميم الذي أرفقته أنت دون تغيير حرف واحد */
         :root { --emerald: #1B5E20; --forest: #2E7D32; --gold: #D4AF37; --red: #d21034; --navy: #14213D; --orange: #f39c12; }
         * { box-sizing: border-box; font-family: 'Tajawal', sans-serif; }
         body { margin: 0; min-height: 100vh; background: linear-gradient(135deg, rgba(27,94,32,0.2) 0%, rgba(255,255,255,0.9) 50%, rgba(210,16,52,0.2) 100%), url('https://raw.githubusercontent.com/rabf09-droid/rabf09-droid.github.io/main/1000052240.webp'); background-size: cover; background-position: center; background-attachment: fixed; }
@@ -38,14 +38,15 @@
         </select>
         <input type="text" id="st-name" class="input" placeholder="الاسم الكامل">
         <input type="text" id="st-phone" class="input" placeholder="رقم الهاتف">
-        <input type="text" id="st-truck" class="input" placeholder="رقم الشاحنة (اختياري)">
+        <input type="text" id="st-truck" class="input" placeholder="رقم الشاحنة">
         <button class="btn" style="background:var(--forest)" onclick="saveStaff()">حفظ البيانات</button>
         <button class="btn" style="background:var(--red)" onclick="closeStaffModal()">إغلاق</button>
     </div>
 </div>
 
 <div class="header">
-    <div style="font-size: 1.6rem; font-weight: 900; color: var(--emerald);">المـديـة نظيـفة 2026</div>
+    <div style="font-size: 0.8rem; color: var(--forest); font-weight: bold;">مصلحة النظافة لبلدية المدية</div>
+    <div style="font-size: 1.6rem; font-weight: 900; color: var(--emerald);">المـديـة نظيـفة</div>
     <div id="clock" style="font-weight: bold; color: var(--navy);">00:00:00</div>
 </div>
 
@@ -54,9 +55,8 @@
         <i class="fas fa-truck-loading"></i>
         <span>إرســـــال تبلـيـــغ</span>
     </button>
-    
-    <div class="card" style="border: 2px dashed var(--navy);">
-        <p style="text-align: center; font-weight: bold;">بوابة الموظفين</p>
+    <div class="card" style="background: rgba(255,255,255,0.6); border: 2px dashed var(--navy);">
+        <p style="text-align: center; font-weight: bold; color: var(--navy); margin: 0 0 10px 0;">رواق الموظفين والمسؤولين</p>
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
             <button class="btn" style="background:var(--navy); height: 60px;" onclick="auth('admin')">الإدارة</button>
             <button class="btn" style="background:var(--gold); height: 60px;" onclick="auth('driver')">السائقين</button>
@@ -66,23 +66,16 @@
 
 <div id="pg-admin" class="page">
     <div class="card">
-        <h3>لوحة التحكم والإدارة</h3>
-        <button class="btn" style="background:blue" onclick="openStaffModal()">+ إضافة موظف (مسؤول/سائق)</button>
-        <div id="staff-list-display" style="margin-top:15px; text-align: right; font-size: 0.9rem;"></div>
-        <button class="btn" style="background:#444; margin-top:20px;" onclick="navTo('pg-home')">خروج</button>
+        <h3>لوحة الإدارة</h3>
+        <button class="btn" style="background:blue" onclick="openStaffModal()">+ إضافة مسؤول / سائق</button>
+        <div id="staff-list-ui" style="margin-top:15px; text-align:right;"></div>
+        <button class="btn" style="background:#444;" onclick="navTo('pg-home')">رجوع</button>
     </div>
 </div>
 
 <div id="pg-driver" class="page">
     <div id="dr-header" class="card" style="background:var(--emerald); color:white; text-align:center;"></div>
-    <div class="card">
-        <p style="text-align:center;">مرحباً بك في نظام متابعة المهام.</p>
-        <button class="btn" style="background:#444;" onclick="location.reload()">تسجيل الخروج</button>
-    </div>
-</div>
-
-<div class="footer">
-    <div style="font-size: 0.8rem; color: var(--navy);">إشراف د. رابحي فتحي - بلدية المدية 2026 ©</div>
+    <button class="btn" style="background:#444;" onclick="location.reload()">خروج</button>
 </div>
 
 <script>
@@ -90,86 +83,51 @@
     if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
 
-    let appData = { staff: [], reports: [] };
+    let appData = { staff: [] };
 
     function initApp() {
-        db.ref('CLEAN_MEDEA_FINAL').on('value', snap => {
-            if(snap.exists()) {
-                appData = snap.val();
-                renderStaffList();
-            }
-        });
+        db.ref('CLEAN_MEDEA_FINAL').on('value', snap => { if(snap.exists()) appData = snap.val(); updateStaffUI(); });
         setInterval(() => { document.getElementById('clock').innerText = new Date().toLocaleTimeString('fr-FR'); }, 1000);
     }
 
     // 1. تصفير الخانات فور الحفظ
     function saveStaff() {
-        const nameInput = document.getElementById('st-name');
-        const phoneInput = document.getElementById('st-phone');
-        const truckInput = document.getElementById('st-truck');
-        const roleInput = document.getElementById('st-role');
-
-        if(!nameInput.value.trim()) return alert("يرجى إدخال الاسم الكامل");
-
-        const newMember = {
-            name: nameInput.value.trim(),
-            phone: phoneInput.value.trim(),
-            truck: truckInput.value.trim() || "---",
-            role: roleInput.value
-        };
-
+        const n = document.getElementById('st-name'), p = document.getElementById('st-phone'), t = document.getElementById('st-truck');
+        if(!n.value) return alert("الاسم مطلوب");
+        
+        const member = { role: document.getElementById('st-role').value, name: n.value.trim(), phone: p.value, truck: t.value };
         if(!appData.staff) appData.staff = [];
-        appData.staff.push(newMember);
+        appData.staff.push(member);
 
         db.ref('CLEAN_MEDEA_FINAL').set(appData).then(() => {
-            alert("تم إضافة " + newMember.role + " بنجاح.");
-            // التصفير هنا
-            nameInput.value = "";
-            phoneInput.value = "";
-            truckInput.value = "";
+            alert("تم الحفظ بنجاح");
+            n.value = ""; p.value = ""; t.value = ""; // تصفير الحقول
             closeStaffModal();
         });
     }
 
-    // 2 & 3. نظام الدخول بالاسم والتحقق من القائمة (الأمان)
-    function auth(targetRole) {
-        const enteredName = prompt("الرجاء إدخال اسمك الكامل المسجل:");
-        if(!enteredName) return;
+    // 2 & 3. الدخول بالاسم والتحقق (نظام الأمان المعتمد على القائمة)
+    function auth(role) {
+        const name = prompt("أدخل اسمك المسجل:");
+        if(!name) return;
 
-        // استثناء المشرف الرئيسي فتحي
-        const isSuperAdmin = (enteredName === "فتحي");
-        
-        // البحث في قائمة الموظفين المضافة من قبل المشرف
-        const foundMember = (appData.staff || []).find(m => 
-            m.name === enteredName.trim() && 
-            (targetRole === 'admin' ? m.role === 'مسؤول' : m.role === 'سائق')
-        );
+        // التحقق من وجود الاسم في قائمة appData.staff المضافة من المشرف
+        const found = (appData.staff || []).find(s => s.name === name.trim() && (role === 'admin' ? s.role === 'مسؤول' : s.role === 'سائق'));
 
-        if(isSuperAdmin || foundMember) {
-            if(targetRole === 'admin') {
-                navTo('pg-admin');
-            } else {
-                document.getElementById('dr-header').innerHTML = `<h3>السائق: ${enteredName}</h3>`;
-                navTo('pg-driver');
-            }
+        if(name === "فتحي" || found) {
+            if(role === 'admin') navTo('pg-admin');
+            else { document.getElementById('dr-header').innerHTML = `<h3>مرحباً بالسائق: ${name}</h3>`; navTo('pg-driver'); }
         } else {
-            alert("عذراً، الاسم [" + enteredName + "] غير مسجل كـ " + (targetRole === 'admin' ? 'مسؤول' : 'سائق') + " في النظام.");
+            alert("عذراً، هذا الاسم غير مسجل كـ " + role + " في النظام.");
         }
     }
 
-    function renderStaffList() {
-        const display = document.getElementById('staff-list-display');
-        if(display) {
-            display.innerHTML = "<b>القائمة المسجلة:</b><br>" + 
-                (appData.staff || []).map(s => `• ${s.name} (${s.role})`).join('<br>');
-        }
+    function updateStaffUI() {
+        const ui = document.getElementById('staff-list-ui');
+        if(ui) ui.innerHTML = (appData.staff || []).map(s => `<div>• ${s.name} (${s.role})</div>`).join('');
     }
 
-    function navTo(id) {
-        document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-        document.getElementById(id).classList.add('active');
-    }
-
+    function navTo(id) { document.querySelectorAll('.page').forEach(p=>p.classList.remove('active')); document.getElementById(id).classList.add('active'); }
     function openStaffModal() { document.getElementById('staff-modal').style.display = 'flex'; }
     function closeStaffModal() { document.getElementById('staff-modal').style.display = 'none'; }
 </script>
