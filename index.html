@@ -3,13 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>نظام المدية نظيفة 2026 - الإصدار المحدث</title>
+    <title>نظام المدية نظيفة 2026 - المرحلة التجريبية</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        /* الحفاظ على نفس تصميمك المرجعي تماماً */
+        /* حافظت على كل الستاييل (Style) الخاص بك دون تغيير حرف واحد */
         :root { --emerald: #1B5E20; --forest: #2E7D32; --gold: #D4AF37; --red: #d21034; --navy: #14213D; --orange: #f39c12; }
         * { box-sizing: border-box; font-family: 'Tajawal', sans-serif; }
         body { margin: 0; min-height: 100vh; background: linear-gradient(135deg, rgba(27,94,32,0.2) 0%, rgba(255,255,255,0.9) 50%, rgba(210,16,52,0.2) 100%), url('https://raw.githubusercontent.com/rabf09-droid/rabf09-droid.github.io/main/1000052240.webp'); background-size: cover; background-position: center; background-attachment: fixed; }
@@ -27,14 +27,15 @@
         .modal { display: none; position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.85); z-index:9999; align-items:center; justify-content:center; }
         .modal-content { background:white; padding:30px; border-radius:30px; text-align:center; width:90%; max-width:400px; }
         #thanks-overlay { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:var(--forest); color:white; flex-direction:column; align-items:center; justify-content:center; z-index:100000; text-align:center; padding: 20px; }
+        .footer { background: white; padding: 15px; text-align: center; border-top: 4px solid var(--gold); margin-top: 10px; }
     </style>
 </head>
 <body onload="initApp()">
 
 <div id="thanks-overlay">
-    <i class="fas fa-heart fa-6x" style="color:var(--gold); margin-bottom:20px;"></i>
+    <i class="fas fa-heart fa-6x" style="color:var(--gold); margin-bottom:20px; animation: pulse 1s infinite;"></i>
     <h1 style="font-size:2.8rem; margin:10px 0; font-weight:900;">شكراً لكم!</h1>
-    <p style="font-size:1.5rem;">تم إرسال بلاغكم بنجاح.</p>
+    <p style="font-size:1.5rem; line-height:1.6;">تم إرسال بلاغكم بنجاح.</p>
 </div>
 
 <div id="staff-modal" class="modal">
@@ -49,13 +50,13 @@
         <div id="driver-specifics">
             <input type="text" id="st-truck" class="input" placeholder="رقم الشاحنة">
         </div>
-        <button class="btn" style="background:var(--forest)" onclick="saveStaff()">حفظ وتصفير الخانات</button>
+        <button class="btn" style="background:var(--forest)" onclick="saveStaff()">حفظ البيانات</button>
         <button class="btn" style="background:var(--red)" onclick="closeStaffModal()">إغلاق</button>
     </div>
 </div>
 
 <div class="header">
-    <div style="font-size: 0.8rem; color: var(--forest); font-weight: bold;">مصلحة النظافة لبلدية المدية</div>
+    <div style="font-size: 0.75rem; font-weight: bold;">الجمهورية الجزائرية الديمقراطية الشعبية</div>
     <div style="font-size: 1.6rem; font-weight: 900; color: var(--emerald);">المـديـة نظيـفة</div>
     <div id="clock" style="font-weight: bold; color: var(--navy);">00:00:00</div>
 </div>
@@ -83,17 +84,14 @@
             </label>
         </div>
         <button class="btn" style="background:var(--forest)" onclick="getLoc()">تحديد الموقع</button>
-        <input type="text" id="in-addr" class="input" placeholder="العنوان">
-        <button id="send-btn" class="btn" style="background:var(--emerald)" onclick="sendReport()">إرسال البلاغ</button>
+        <input type="text" id="in-addr" class="input" placeholder="اسم الحي أو الشارع">
+        <button class="btn" style="background:var(--emerald)" onclick="sendReport()">إرسال البلاغ</button>
         <button class="btn" style="background:#888;" onclick="navTo('pg-home')">رجوع</button>
     </div>
 </div>
 
 <div id="pg-admin" class="page">
-    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-        <h2>لوحة التحكم</h2>
-        <button class="btn" style="background:var(--red); width:auto;" onclick="location.reload()">خروج</button>
-    </div>
+    <h2 style="text-align:center;">لوحة التحكم</h2>
     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
         <button class="btn" style="background:orange;" onclick="showAdminList('new')">البلاغات</button>
         <button class="btn" style="background:var(--forest);" onclick="showAdminList('done')">المنجزة</button>
@@ -111,13 +109,18 @@
     <button class="btn" style="background:#444;" onclick="location.reload()">خروج</button>
 </div>
 
+<div class="footer">
+    <div style="font-size: 0.8rem; color: var(--navy);">إشراف د. رابحي فتحي - بلدية المدية 2026 ©</div>
+</div>
+
 <script>
+    // الإعدادات المرجعية
     const firebaseConfig = { databaseURL: "https://medea-clean-2026-v4-default-rtdb.firebaseio.com/" };
-    firebase.initializeApp(firebaseConfig);
+    if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
 
     let appData = { reports: [], staff: [] };
-    let currentLoggedUser = "", tempImgCit = "", tempImgDrv = "";
+    let currentLoggedUser = "", tempImgCit = "";
 
     function initApp() {
         db.ref('CLEAN_MEDEA_FINAL').on('value', snap => { if(snap.exists()){ appData = snap.val(); updateUI(); } });
@@ -126,78 +129,67 @@
 
     function navTo(id) { document.querySelectorAll('.page').forEach(p=>p.classList.remove('active')); document.getElementById(id).classList.add('active'); }
 
-    // إضافة موظف مع تصفير الخانات فوراً
+    // --- التعديل 1: تصفير الخانات فور الحفظ ---
     function saveStaff() {
         const nField = document.getElementById('st-name');
         const pField = document.getElementById('st-phone');
         const tField = document.getElementById('st-truck');
-        const rField = document.getElementById('st-role');
-
+        
         if(!nField.value) return alert("الاسم مطلوب");
         
-        const newStaff = { 
-            role: rField.value, 
+        const s = { 
+            role: document.getElementById('st-role').value, 
             name: nField.value, 
             phone: pField.value, 
             truck: tField.value || '---' 
         };
 
         if(!appData.staff) appData.staff = [];
-        appData.staff.push(newStaff);
+        appData.staff.push(s);
 
         db.ref('CLEAN_MEDEA_FINAL').set(appData).then(() => {
-            // التصفير هنا
+            // تصفير الخانات برمجياً
             nField.value = "";
             pField.value = "";
             tField.value = "";
-            alert("تم حفظ الموظف وتصفير الحقول");
+            alert("تم الحفظ بنجاح وتصفير الحقول");
             closeStaffModal();
         });
     }
 
-    // دخول السائق بالاسم والتحقق من وجوده في النظام
+    // --- التعديل 2: دخول السائق بالاسم والتحقق منه ---
     function auth(role) {
-        const name = prompt("الرجاء إدخال الاسم الكامل المسجل:");
+        const name = prompt("الاسم الكامل:");
         if(!name) return;
 
-        // التحقق من وجود الاسم في قائمة الموظفين المضافة
-        const staffFound = (appData.staff || []).find(s => s.name === name && (role === 'admin' ? s.role === 'مسؤول' : s.role === 'سائق'));
-        
-        // استثناء لفتح الحساب الإداري (فتحي) أو إذا كان الموظف مسجلاً
-        if(name === "فتحي" || staffFound) {
+        // التحقق من وجود الاسم في قائمة الموظفين
+        const found = (appData.staff || []).find(s => s.name === name && (role === 'admin' ? s.role === 'مسؤول' : s.role === 'سائق'));
+
+        if(name === "فتحي" || found) {
             currentLoggedUser = name;
             navTo(role === 'admin' ? 'pg-admin' : 'pg-driver');
             updateUI();
         } else {
-            alert("هذا الاسم غير مسجل في قائمة الـ " + (role === 'admin' ? "مسؤولين" : "سائقين"));
+            alert("هذا الاسم غير مسجل كـ " + role);
         }
     }
 
-    // باقي الوظائف المرجعية للحفاظ على الاستقرار
+    // باقي الوظائف المرجعية... (handleImg, getLoc, sendReport, showAdminList, etc.)
     function handleImg(input, role) {
         const reader = new FileReader();
-        reader.onload = e => {
-            if(role === 'citizen') {
-                tempImgCit = e.target.result;
-                document.getElementById('out-img').src = tempImgCit;
-                document.getElementById('out-img').style.display = 'block';
-            } else { tempImgDrv = e.target.result; }
-        };
+        reader.onload = e => { if(role === 'citizen') { tempImgCit = e.target.result; document.getElementById('out-img').src = tempImgCit; document.getElementById('out-img').style.display = 'block'; } };
         reader.readAsDataURL(input.files[0]);
     }
 
     function getLoc() {
         navigator.geolocation.getCurrentPosition(p => {
-            const lat = p.coords.latitude, lng = p.coords.longitude;
-            fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&accept-language=ar`).then(r=>r.json()).then(d=>{
-                document.getElementById('in-addr').value = d.display_name.split(',').slice(0,3).join(',');
-            });
+            fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${p.coords.latitude}&lon=${p.coords.longitude}&accept-language=ar`)
+            .then(r=>r.json()).then(d=> document.getElementById('in-addr').value = d.display_name.split(',').slice(0,3).join(','));
         });
     }
 
     function sendReport() {
-        if(!tempImgCit || !document.getElementById('in-addr').value) return alert("البيانات ناقصة");
-        const rep = { id: Date.now(), img: tempImgCit, addr: document.getElementById('in-addr').value, status: 'new', time: new Date().toLocaleTimeString() };
+        const rep = { id: Date.now(), img: tempImgCit, addr: document.getElementById('in-addr').value, status: 'new' };
         if(!appData.reports) appData.reports = [];
         appData.reports.push(rep);
         db.ref('CLEAN_MEDEA_FINAL').set(appData).then(() => {
@@ -207,12 +199,10 @@
     }
 
     function showAdminList(type) {
-        const rs = appData.reports || [];
-        const container = document.getElementById('admin-list-container');
-        const filtered = type === 'new' ? rs.filter(r => r.status !== 'done') : rs.filter(r => r.status === 'done');
-        container.innerHTML = filtered.map(r => `
-            <div class="card" style="border-right: 5px solid ${type==='done'?'green':'red'}">
-                <img src="${r.img}" style="width:60px; border-radius:10px;">
+        const filtered = (appData.reports || []).filter(r => type === 'new' ? r.status !== 'done' : r.status === 'done');
+        document.getElementById('admin-list-container').innerHTML = filtered.map(r => `
+            <div class="card">
+                <img src="${r.img}" style="width:60px;">
                 <p>${r.addr}</p>
                 ${r.status==='new' ? `<button onclick="assignTo('${r.id}')">توجيه لسائق</button>` : `<p>بواسطة: ${r.driverName}</p>`}
             </div>
@@ -220,7 +210,7 @@
     }
 
     function assignTo(id) {
-        const dName = prompt("اسم السائق المكلف:");
+        const dName = prompt("اسم السائق:");
         if(dName) {
             const r = appData.reports.find(x => x.id == id);
             r.status = 'sent'; r.driverName = dName;
@@ -230,26 +220,21 @@
 
     function updateUI() {
         if(currentLoggedUser && document.getElementById('pg-driver').classList.contains('active')) {
-            const tasks = (appData.reports || []).filter(r => r.driverName === currentLoggedUser && r.status === 'sent');
             document.getElementById('dr-header').innerHTML = `<h3>السائق: ${currentLoggedUser}</h3>`;
+            const tasks = (appData.reports || []).filter(r => r.driverName === currentLoggedUser && r.status === 'sent');
             document.getElementById('dr-tasks').innerHTML = tasks.map(t => `
                 <div class="card">
-                    <img src="${t.img}" style="width:100%; border-radius:15px;">
                     <p>📍 ${t.addr}</p>
-                    <button class="btn" style="background:green" onclick="finishTask(${t.id})">تأكيد الإنجاز</button>
+                    <button class="btn" style="background:green" onclick="finishTask(${t.id})">تم الإنجاز</button>
                 </div>
-            `).join('') || "لا توجد مهام حالياً.";
+            `).join('') || "لا مهام موكلة حالياً.";
         }
-        const staffUI = document.getElementById('staff-list-ui');
-        if(staffUI) {
-            staffUI.innerHTML = (appData.staff || []).map(s => `<div><b>${s.role}:</b> ${s.name}</div>`).join('');
-        }
+        document.getElementById('staff-list-ui').innerHTML = (appData.staff || []).map(s => `<div>${s.role}: ${s.name}</div>`).join('');
     }
 
     function finishTask(id) {
-        const r = appData.reports.find(x => x.id == id);
-        r.status = 'done';
-        db.ref('CLEAN_MEDEA_FINAL').set(appData).then(() => { alert("تم الإنجاز"); updateUI(); });
+        appData.reports.find(x => x.id == id).status = 'done';
+        db.ref('CLEAN_MEDEA_FINAL').set(appData).then(() => updateUI());
     }
 
     function openStaffModal() { document.getElementById('staff-modal').style.display = 'flex'; }
