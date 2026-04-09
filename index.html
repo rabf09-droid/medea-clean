@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>المدينة نظيفة - 2026</title>
+    <title>نظام المدية نظيفة 2026</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700;900&display=swap" rel="stylesheet">
@@ -74,6 +74,7 @@
     </div>
 </div>
 
+<!-- pg-home -->
 <div id="pg-home" class="page active">
     <button class="btn giant-btn" onclick="navTo('pg-report')">
         <i class="fas fa-truck-loading"></i>
@@ -91,7 +92,7 @@
 <script>
 // ===================== Firebase =====================
 const firebaseConfig = {
-    apiKey: "YOUR_API_KEY_HERE",   // ← غير هذا بمعلوماتك
+    apiKey: "YOUR_API_KEY_HERE",   // ← غيّر هذا
     authDomain: "your-project.firebaseapp.com",
     databaseURL: "https://your-project-default-rtdb.firebaseio.com",
     projectId: "your-project",
@@ -106,6 +107,7 @@ const db = firebase.database();
 let appData = { reports: [], staff: [] };
 let currentLoggedUser = "";
 let tempImgCit = "";
+let tempImgDrv = "";
 
 function initApp() {
     db.ref('CLEAN_MEDEA_FINAL').on('value', snap => {
@@ -113,44 +115,60 @@ function initApp() {
     });
     
     setInterval(() => {
-        document.getElementById('clock').textContent = new Date().toLocaleTimeString('ar-DZ');
+        document.getElementById('clock').innerText = new Date().toLocaleTimeString('ar-DZ');
     }, 1000);
 }
 
-function navTo(page) {
+function navTo(id) {
     document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-    document.getElementById(page).classList.add('active');
+    document.getElementById(id).classList.add('active');
 }
 
-function handleImg(input) {
+function handleImg(input, role) {
     const reader = new FileReader();
     reader.onload = e => {
-        tempImgCit = e.target.result;
-        document.getElementById('out-img').src = tempImgCit;
-        document.getElementById('out-img').style.display = 'block';
-        document.getElementById('ico-cam').style.display = 'none';
+        if(role === 'citizen') {
+            tempImgCit = e.target.result;
+            document.getElementById('out-img').src = tempImgCit;
+            document.getElementById('out-img').style.display = 'block';
+            document.getElementById('ico-cam').style.display = 'none';
+        } else {
+            tempImgDrv = e.target.result;
+        }
     };
     reader.readAsDataURL(input.files[0]);
 }
 
 function getLoc() {
-    navigator.geolocation.getCurrentPosition(pos => {
-        document.getElementById('in-addr').value = `GPS: ${pos.coords.latitude.toFixed(5)}, ${pos.coords.longitude.toFixed(5)}`;
+    navigator.geolocation.getCurrentPosition(p => {
+        document.getElementById('in-gps').value = p.coords.latitude + "," + p.coords.longitude;
     });
 }
 
 function sendReport() {
-    if (!tempImgCit) return alert("يرجى التقاط صورة أولاً");
-    alert("✅ تم إرسال البلاغ بنجاح");
-    document.getElementById('thanks-overlay').style.display = 'flex';
-    setTimeout(() => location.reload(), 4000);
+    if(!tempImgCit) return alert("يرجى التقاط صورة أولاً");
+    const rep = {
+        id: Date.now(),
+        img: tempImgCit,
+        addr: document.getElementById('in-addr').value || "غير محدد",
+        gps: document.getElementById('in-gps').value,
+        date: new Date().toLocaleDateString('ar-DZ'),
+        time: new Date().toLocaleTimeString('ar-DZ'),
+        status: 'new'
+    };
+    if(!appData.reports) appData.reports = [];
+    appData.reports.push(rep);
+    db.ref('CLEAN_MEDEA_FINAL').set(appData).then(() => {
+        document.getElementById('thanks-overlay').style.display = 'flex';
+        setTimeout(() => location.reload(), 4000);
+    });
 }
 
 function auth(role) {
     const name = prompt("أدخل اسمك:");
-    if (name) {
+    if(name) {
         currentLoggedUser = name;
-        alert("✅ تم الدخول باسم: " + name);
+        alert("تم الدخول باسم: " + name);
     }
 }
 
@@ -165,17 +183,24 @@ function saveStaff() {
     const name = document.getElementById('st-name').value.trim();
     if (!name) return alert("الاسم مطلوب!");
 
-    if (!appData.staff) appData.staff = [];
-    appData.staff.push({
+    const staff = {
         role: document.getElementById('st-role').value,
         name: name,
         phone: document.getElementById('st-phone').value,
         truck: document.getElementById('st-truck').value || '',
+        sector: document.getElementById('st-sector').value || '',
         addedBy: "إعداد وإشراف د. رابحي فتحي - بلدية المدية 2026"
-    });
+    };
+
+    if (!appData.staff) appData.staff = [];
+    appData.staff.push(staff);
 
     db.ref('CLEAN_MEDEA_FINAL').set(appData).then(() => {
         alert("✅ تم حفظ الموظف بنجاح");
+        // تفريغ الحقول
+        document.getElementById('st-name').value = '';
+        document.getElementById('st-phone').value = '';
+        document.getElementById('st-truck').value = '';
         closeStaffModal();
     });
 }
@@ -183,4 +208,4 @@ function saveStaff() {
 window.onload = initApp;
 </script>
 </body>
-        </html>
+</html>
