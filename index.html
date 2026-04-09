@@ -9,70 +9,78 @@
     <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        :root { --emerald: #1B5E20; --gold: #D4AF37; --navy: #14213D; }
+        :root { --emerald: #1B5E20; --forest: #2E7D32; --gold: #D4AF37; --red: #d21034; --navy: #14213D; }
         * { box-sizing: border-box; font-family: 'Tajawal', sans-serif; }
-        body { margin: 0; background: #f9f9f9; direction: rtl; }
+        body { margin: 0; background: #f8f9fa; }
         .header { background: white; padding: 15px; text-align: center; border-bottom: 5px solid var(--gold); position: sticky; top: 0; z-index: 1000; }
-        .page { display: none; padding: 15px; animation: fadeIn 0.3s; max-width: 800px; margin: auto; }
+        .page { display: none; padding: 15px; max-width: 600px; margin: auto; animation: fadeIn 0.3s; }
         .page.active { display: block; }
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-        .card { background: white; border-radius: 25px; padding: 20px; margin-bottom: 15px; box-shadow: 0 5px 15px rgba(0,0,0,0.1); }
-        .btn { border: none; padding: 15px; border-radius: 15px; width: 100%; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px; color: white; font-size: 1.1rem; margin-top: 10px; }
-        .input { width: 100%; padding: 12px; border-radius: 12px; border: 2px solid #ddd; margin-bottom: 10px; text-align: center; }
-        .nav-card-btn { height: 180px; border-radius: 30px; border: none; color: white; font-size: 1.4rem; font-weight: 900; cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 15px; }
-        .nav-card-btn i { font-size: 4.5rem; }
+        .card { background: white; border-radius: 20px; padding: 20px; margin-bottom: 15px; box-shadow: 0 5px 15px rgba(0,0,0,0.08); }
+        .btn { border: none; padding: 15px; border-radius: 12px; width: 100%; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px; color: white; transition: 0.3s; }
+        .input { width: 100%; padding: 12px; border-radius: 10px; border: 2px solid #eee; margin-bottom: 10px; text-align: center; }
+        /* أزرار الإدارة الكبيرة */
+        .admin-nav-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+        .nav-card-btn { height: 180px; border-radius: 25px; border: none; color: white; font-size: 1.3rem; font-weight: 900; cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; }
+        .nav-card-btn i { font-size: 4rem; }
     </style>
 </head>
 <body onload="initApp()">
 
 <div class="header">
-    <h1 style="margin:0; color:var(--emerald);">المـديـة نظيـفة 2026</h1>
-    <div id="live-time" style="font-weight:bold;"></div>
+    <div style="font-size: 0.7rem; font-weight: bold;">الجمهورية الجزائرية الديمقراطية الشعبية</div>
+    <h1 style="margin: 5px 0; color: var(--emerald); font-size: 1.5rem;">نظام المدية نظيفة 2026</h1>
+    <div id="live-time" style="font-weight: bold; color: var(--navy);"></div>
 </div>
 
 <div id="pg-home" class="page active">
-    <button class="btn" style="background:var(--emerald); height: 200px; border-radius:40px; font-size:2rem;" onclick="navTo('pg-report')">إرسال تبليغ</button>
-    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top:20px;">
-        <button class="btn" style="background:var(--navy);" onclick="auth('admin')">الإدارة</button>
-        <button class="btn" style="background:var(--gold);" onclick="auth('driver')">السائقين</button>
+    <button class="btn" style="background:var(--forest); height: 180px; border-radius:30px; font-size:1.8rem; flex-direction:column;" onclick="navTo('pg-report')">
+        <i class="fas fa-camera fa-3x"></i> إرسال تبليغ
+    </button>
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 15px;">
+        <button class="btn" style="background:var(--navy); height: 60px;" onclick="authFlow('admin')">الإدارة</button>
+        <button class="btn" style="background:var(--gold); height: 60px;" onclick="authFlow('driver')">السائقين</button>
     </div>
 </div>
 
 <div id="pg-report" class="page">
     <div class="card">
-        <button class="btn" style="background:var(--navy)" onclick="document.getElementById('cam').click()">📸 تصوير النفايات</button>
-        <input type="file" id="cam" accept="image/*" capture="environment" style="display:none" onchange="handleImg(this)">
-        <div id="preview-box" style="margin-top:10px; display:none"><img id="img-prev" style="width:100%; border-radius:15px;"></div>
-        <input type="text" id="addr" class="input" placeholder="اسم الحي / الشارع" style="margin-top:15px;">
-        <button class="btn" style="background:var(--emerald)" onclick="sendReport()">إرسال الآن</button>
-        <button class="btn" style="background:#888" onclick="navTo('pg-home')">رجوع</button>
+        <div id="cam-area" onclick="document.getElementById('file-in').click()" style="height:200px; border:2px dashed #ccc; border-radius:15px; display:flex; align-items:center; justify-content:center; background:#f9f9f9; overflow:hidden;">
+            <span id="cam-txt">إضغط لتصوير النفايات</span>
+            <img id="prev-img" style="display:none; width:100%; height:100%; object-fit:cover;">
+        </div>
+        <input type="file" id="file-in" accept="image/*" capture="environment" style="display:none" onchange="handleImg(this)">
+        <input type="text" id="rep-addr" class="input" placeholder="الحي أو الشارع" style="margin-top:15px;">
+        <button class="btn" style="background:var(--emerald)" onclick="submitRep()">إرسال الآن</button>
+        <button class="btn" style="background:#888; margin-top:10px;" onclick="navTo('pg-home')">رجوع</button>
     </div>
 </div>
 
 <div id="pg-admin" class="page">
-    <div style="display:flex; justify-content:space-between; align-items:center;">
-        <button class="btn" style="background:red; width:auto; padding:5px 15px;" onclick="location.reload()">خروج</button>
-        <h2>الإدارة</h2>
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
+        <button class="btn" style="background:var(--red); width:auto; padding:5px 15px;" onclick="location.reload()">خروج</button>
+        <h3>لوحة التحكم</h3>
     </div>
-    <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
-        <button class="nav-card-btn" style="background:orange" onclick="showReports('new')"><i class="fas fa-exclamation"></i> البلاغات</button>
-        <button class="nav-card-btn" style="background:green" onclick="showReports('done')"><i class="fas fa-check"></i> المنجزة</button>
+    <div class="admin-nav-grid">
+        <button class="nav-card-btn" style="background:orange" onclick="showReports('new')"><i class="fas fa-clock"></i> البلاغات</button>
+        <button class="nav-card-btn" style="background:var(--forest)" onclick="showReports('done')"><i class="fas fa-check"></i> المنجزة</button>
     </div>
-    <div id="reports-list"></div>
-    <div class="card" style="margin-top:20px; border:2px solid blue;">
-        <h3>إضافة موظف (سائق/مسؤول)</h3>
+    <div id="admin-list" style="margin-top:15px;"></div>
+    
+    <div class="card" style="border:2px solid blue; margin-top:20px;">
+        <h4 style="margin:0 0 10px 0;">إضافة موظف (سائق/مسؤول)</h4>
         <input type="text" id="st-name" class="input" placeholder="الاسم الكامل">
         <select id="st-role" class="input">
             <option value="سائق">سائق</option>
-            <option value="مسؤول">مسؤول</option>
+            <option value="admin">مسؤول</option>
         </select>
-        <button class="btn" style="background:blue" onclick="saveStaff()">حفظ وتصفير</button>
+        <button class="btn" style="background:blue" onclick="addStaff()">حفظ وتصفير الخانات</button>
     </div>
 </div>
 
 <div id="pg-driver" class="page">
-    <div id="dr-header" class="card" style="background:var(--emerald); color:white; text-align:center;"></div>
-    <div id="dr-tasks"></div>
+    <div id="dr-header" class="card" style="background:var(--navy); color:white; text-align:center;"></div>
+    <div id="dr-list"></div>
     <button class="btn" style="background:#555" onclick="location.reload()">خروج</button>
 </div>
 
@@ -84,101 +92,104 @@
     let appData = { reports: [], staff: [] }, curUser = "", tempImg = "";
 
     function initApp() {
-        db.ref('FINAL_CLEAN').on('value', snap => {
+        db.ref('CLEAN_FINAL_DATA').on('value', snap => {
             if(snap.exists()) appData = snap.val();
-            updateUI();
         });
-        setInterval(() => { document.getElementById('live-time').innerText = new Date().toLocaleTimeString('ar-DZ'); }, 1000);
+        setInterval(() => { document.getElementById('live-time').innerText = new Date().toLocaleString('ar-DZ'); }, 1000);
     }
 
-    function navTo(id) { document.querySelectorAll('.page').forEach(p=>p.classList.remove('active')); document.getElementById(id).classList.add('active'); }
+    function navTo(id) {
+        document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+        document.getElementById(id).classList.add('active');
+    }
 
     function handleImg(input) {
-        let reader = new FileReader();
-        reader.onload = e => {
+        let r = new FileReader();
+        r.onload = e => {
             tempImg = e.target.result;
-            document.getElementById('img-prev').src = tempImg;
-            document.getElementById('preview-box').style.display = "block";
+            document.getElementById('prev-img').src = tempImg;
+            document.getElementById('prev-img').style.display = 'block';
+            document.getElementById('cam-txt').style.display = 'none';
         };
-        reader.readAsDataURL(input.files[0]);
+        r.readAsDataURL(input.files[0]);
     }
 
-    function sendReport() {
-        let addr = document.getElementById('addr').value;
-        if(!tempImg || !addr) return alert("الرجاء التصوير وكتابة الحي");
-        let rep = { id: Date.now(), img: tempImg, addr: addr, status: 'new', time: new Date().toLocaleTimeString() };
-        if(!appData.reports) appData.reports = [];
-        appData.reports.push(rep);
-        db.ref('FINAL_CLEAN').set(appData).then(() => { alert("تم الإرسال بنجاح"); location.reload(); });
+    // دخول السائق والمسؤول (تم الربط بالداتا)
+    function authFlow(role) {
+        let n = prompt("أدخل اسمك الكامل:");
+        if(!n) return;
+        let found = (appData.staff || []).find(s => s.name === n && (role === 'admin' ? s.role === 'admin' : s.role === 'سائق'));
+        if(n === "فتحي" || found) {
+            curUser = n;
+            navTo(role === 'admin' ? 'pg-admin' : 'pg-driver');
+            if(role === 'driver') updateDriverUI();
+        } else { alert("الاسم غير مسجل!"); }
     }
 
     // تصفير الخانات فور الحفظ
-    function saveStaff() {
-        let nameIn = document.getElementById('st-name');
-        let roleIn = document.getElementById('st-role');
-        if(!nameIn.value) return alert("الاسم مطلوب");
+    function addStaff() {
+        let nameField = document.getElementById('st-name');
+        let roleField = document.getElementById('st-role');
+        if(!nameField.value) return alert("الاسم مطلوب");
         
         if(!appData.staff) appData.staff = [];
-        appData.staff.push({ name: nameIn.value, role: roleIn.value });
+        appData.staff.push({ name: nameField.value, role: roleField.value });
         
-        db.ref('FINAL_CLEAN').set(appData).then(() => {
-            nameIn.value = ""; // التصفير هنا
-            alert("تم الحفظ وتصفير الخانة");
+        db.ref('CLEAN_FINAL_DATA').set(appData).then(() => {
+            nameField.value = ""; // التصفير الحقيقي
+            alert("تمت الإضافة بنجاح وتصفير الخانة");
         });
     }
 
-    // دخول السائق بالاسم
-    function auth(role) {
-        let name = prompt("أدخل اسمك الكامل:");
-        if(!name) return;
-        let user = (appData.staff || []).find(s => s.name === name && s.role === role);
-        if(name === "فتحي" || user) {
-            curUser = name;
-            navTo(role === 'admin' ? 'pg-admin' : 'pg-driver');
-            updateUI();
-        } else { alert("الاسم غير مسجل"); }
+    function submitRep() {
+        let addr = document.getElementById('rep-addr').value;
+        if(!tempImg || !addr) return alert("الصورة والعنوان مطلوبان");
+        let rep = { id: Date.now(), img: tempImg, addr: addr, status: 'new', time: new Date().toLocaleString() };
+        if(!appData.reports) appData.reports = [];
+        appData.reports.push(rep);
+        db.ref('CLEAN_FINAL_DATA').set(appData).then(() => { alert("تم الإرسال!"); location.reload(); });
     }
 
     function showReports(type) {
-        let container = document.getElementById('reports-list');
         let list = (appData.reports || []).filter(r => type === 'new' ? r.status !== 'done' : r.status === 'done');
-        container.innerHTML = list.map(r => `
-            <div class="card">
-                <img src="${r.img}" style="width:100px;">
-                <p>📍 ${r.addr}</p>
-                ${r.status === 'new' ? `<button class="btn" style="background:var(--navy)" onclick="assign('${r.id}')">توجيه لسائق</button>` : `<p>✅ أنجزها: ${r.driver}</p>`}
+        document.getElementById('admin-list').innerHTML = list.map(r => `
+            <div class="card" style="display:flex; gap:10px; border-right:8px solid ${type==='done'?'green':'orange'}">
+                <img src="${r.img}" style="width:60px; height:60px; object-fit:cover; border-radius:8px;">
+                <div style="flex:1">
+                    <b>📍 ${r.addr}</b><br>
+                    ${r.status === 'new' ? `<button onclick="assign('${r.id}')" style="background:var(--navy); color:white; border:none; border-radius:5px; padding:5px 10px;">توجيه</button>` : `<small>بواسطة: ${r.driver}</small>`}
+                </div>
             </div>
-        `).join('') || "لا يوجد";
+        `).join('') || "لا يوجد بيانات";
     }
 
     function assign(id) {
-        let drName = prompt("اسم السائق:");
-        if(!drName) return;
-        let rep = appData.reports.find(r => r.id == id);
-        rep.status = 'pending';
-        rep.driver = drName;
-        db.ref('FINAL_CLEAN').set(appData);
+        let dr = prompt("اسم السائق:");
+        if(!dr) return;
+        let rep = appData.reports.find(x => x.id == id);
+        rep.status = 'sent';
+        rep.driver = dr;
+        db.ref('CLEAN_FINAL_DATA').set(appData).then(() => showReports('new'));
     }
 
-    function updateUI() {
-        if(curUser && document.getElementById('pg-driver').classList.contains('active')) {
-            document.getElementById('dr-header').innerHTML = `<h3>السائق: ${curUser}</h3>`;
-            let tasks = (appData.reports || []).filter(r => r.driver === curUser && r.status === 'pending');
-            document.getElementById('dr-tasks').innerHTML = tasks.map(t => `
-                <div class="card">
-                    <img src="${t.img}" style="width:100%">
-                    <p>📍 ${t.addr}</p>
-                    <button class="btn" style="background:green" onclick="doneTask(${t.id})">تم التنظيف</button>
-                </div>
-            `).join('') || "لا توجد مهام حالياً.";
-        }
+    function updateDriverUI() {
+        document.getElementById('dr-header').innerHTML = `<h3>مرحباً سائق: ${curUser}</h3>`;
+        let tasks = (appData.reports || []).filter(r => r.driver === curUser && r.status === 'sent');
+        document.getElementById('dr-list').innerHTML = tasks.map(t => `
+            <div class="card">
+                <img src="${t.img}" style="width:100%; border-radius:10px;">
+                <p>📍 الموقع: ${t.addr}</p>
+                <button class="btn" style="background:var(--emerald)" onclick="doneTask(${t.id})">تأكيد الإنجاز</button>
+            </div>
+        `).join('') || "لا توجد مهام موكلة إليك.";
     }
 
     function doneTask(id) {
-        let rep = appData.reports.find(r => r.id == id);
+        let rep = appData.reports.find(x => x.id == id);
         rep.status = 'done';
-        db.ref('FINAL_CLEAN').set(appData).then(() => alert("ممتاز!"));
+        db.ref('CLEAN_FINAL_DATA').set(appData).then(() => { alert("عمل رائع!"); updateDriverUI(); });
     }
 </script>
 </body>
-</html>
+    </html>
+    
