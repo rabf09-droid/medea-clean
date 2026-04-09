@@ -22,7 +22,6 @@
         .btn { border: none; padding: 15px; border-radius: 15px; width: 100%; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px; margin-bottom: 10px; color: white; font-size: 1.1rem; }
         .input { width: 100%; padding: 12px; border-radius: 12px; border: 2px solid #ddd; margin-bottom: 10px; text-align: center; font-size: 1rem; }
 
-        /* واجهة الشكر */
         #thanks-overlay { display:none; position:fixed; inset:0; background:var(--forest); color:white; flex-direction:column; align-items:center; justify-content:center; z-index:10000; text-align:center; }
         
         .giant-btn { background: var(--forest); height: 230px; flex-direction: column; border-radius: 50px; font-size: 2.1rem; border: 6px solid white; box-shadow: 0 15px 45px rgba(46,125,50,0.3); }
@@ -35,16 +34,15 @@
 <body onload="initApp()">
 
 <div id="thanks-overlay">
-    <i class="fas fa-heart fa-6x" style="color:var(--gold); margin-bottom:20px;"></i>
+    <i class="fas fa-check-circle fa-6x" style="color:var(--gold); margin-bottom:20px;"></i>
     <h1 style="font-size:2.5rem; font-weight:900;">شكراً لكم!</h1>
-    <p style="font-size:1.3rem;">تم إرسال بلاغكم لمصالح بلدية المدية بنجاح.<br>نحن نقدر حرصكم على نظافة مدينتنا.</p>
-    <div style="margin-top:30px; border:2px solid var(--gold); padding:10px 30px; border-radius:50px; color:var(--gold); font-weight:bold;">معاً لمدية أنظف 2026</div>
+    <p style="font-size:1.3rem;">تم إرسال بلاغكم بنجاح.<br>نحن نقدر حرصكم على نظافة مدينتنا.</p>
 </div>
 
 <div class="header">
     <div style="font-size: 0.7rem; font-weight: bold;">الجمهورية الجزائرية الديمقراطية الشعبية</div>
     <div style="font-size: 1.6rem; font-weight: 900; color: var(--emerald);">المـديـة نظيـفة</div>
-    <div id="clock" style="font-weight: bold; color: var(--navy); border-top:1px solid #eee; margin-top:5px;">00:00:00</div>
+    <div id="clock" style="font-weight: bold; color: var(--navy);">00:00:00</div>
 </div>
 
 <div id="pg-home" class="page active">
@@ -52,8 +50,8 @@
         <i class="fas fa-truck-loading"></i>
         <span>إرســـــال تبلـيـــغ</span>
     </button>
-    <div class="card" style="border: 2px dashed var(--navy); background: rgba(255,255,255,0.7);">
-        <p style="text-align: center; font-weight: bold; margin: 0 0 10px 0;">رواق الموظفين والمسؤولين</p>
+    <div class="card" style="border: 2px dashed var(--navy);">
+        <p style="text-align: center; font-weight: bold;">رواق الموظفين والمسؤولين</p>
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
             <button class="btn" style="background:var(--navy)" onclick="auth('admin')"><i class="fas fa-user-shield"></i> الإدارة</button>
             <button class="btn" style="background:var(--gold)" onclick="auth('driver')"><i class="fas fa-truck"></i> السائقين</button>
@@ -71,10 +69,13 @@
                 <input type="file" accept="image/*" capture="environment" style="display:none;" onchange="handleImg(this)">
             </label>
         </div>
-        <button class="btn" style="background:var(--forest)" onclick="getLoc()">تحديد الموقع تلقائياً</button>
-        <input type="text" id="in-addr" class="input" placeholder="اسم الحي أو الشارع">
+        <button class="btn" id="loc-btn" style="background:var(--forest)" onclick="getLoc()">
+            <i class="fas fa-map-marker-alt"></i> تحديد الموقع تلقائياً
+        </button>
+        <input type="text" id="in-addr" class="input" placeholder="سيظهر اسم الحي هنا تلقائياً">
         <input type="text" id="in-gps" class="input" readonly placeholder="إحداثيات GPS">
-        <button id="send-btn" class="btn" style="background:var(--emerald); height:70px; font-size:1.3rem;" onclick="sendReport()">إرسال البلاغ الآن</button>
+        
+        <button id="send-btn" class="btn" style="background:var(--emerald); height:70px;" onclick="sendReport()">إرسال البلاغ الآن</button>
         <button class="btn" style="background:#666;" onclick="navTo('pg-home')">رجوع</button>
     </div>
 </div>
@@ -84,14 +85,9 @@
         <h3>لوحة التحكم</h3>
         <button class="btn" style="background:var(--red); width:auto; padding:5px 15px;" onclick="location.reload()">خروج</button>
     </div>
-    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom:15px;">
-        <button class="btn" style="background:var(--orange); height:100px;">بلاغات النفايات</button>
-        <button class="btn" style="background:var(--forest); height:100px;">المنجزة</button>
-    </div>
     <div class="card" style="border: 2px solid blue;">
-        <h4 style="text-align:center; color:blue; margin-top:0;">إدارة الموظفين</h4>
         <button class="btn" style="background:blue" onclick="openModal()">+ إضافة موظف جديد</button>
-        <div id="staff-list-ui"></div>
+        <div id="staff-list-ui" style="margin-top:10px;"></div>
     </div>
 </div>
 
@@ -104,18 +100,17 @@
         </select>
         <input type="text" id="st-name" class="input" placeholder="الاسم الكامل">
         <input type="text" id="st-phone" class="input" placeholder="رقم الهاتف">
-        <input type="text" id="st-truck" class="input" placeholder="رقم الشاحنة (للسائقين)">
-        <button class="btn" style="background:var(--forest)" onclick="saveStaff()">حفظ وإضافة</button>
+        <input type="text" id="st-truck" class="input" placeholder="رقم الشاحنة">
+        <button class="btn" style="background:var(--forest)" onclick="saveStaff()">حفظ</button>
         <button class="btn" style="background:var(--red)" onclick="closeModal()">إلغاء</button>
     </div>
 </div>
 
 <div id="pg-driver" class="page">
     <div class="card" style="background:var(--emerald); color:white; text-align:center;">
-        <h2 id="dr-welcome">مرحباً بالسائق</h2>
+        <h2 id="dr-welcome">صفحة السائق</h2>
     </div>
-    <div id="dr-tasks"></div>
-    <button class="btn" style="background:#444;" onclick="location.reload()">تسجيل الخروج</button>
+    <button class="btn" style="background:#444;" onclick="location.reload()">خروج</button>
 </div>
 
 <script>
@@ -124,7 +119,7 @@
     const db = firebase.database();
 
     let appData = { reports: [], staff: [] };
-    let currentLoggedUser = "", tempImg = "";
+    let tempImg = "";
 
     function initApp() {
         db.ref('CLEAN_MEDEA_FINAL').on('value', snap => { if(snap.exists()){ appData = snap.val(); updateUI(); } });
@@ -144,19 +139,39 @@
         reader.readAsDataURL(input.files[0]);
     }
 
+    // دالة تحديد الموقع مع جلب اسم الشارع (التحويل من GPS إلى عنوان)
     function getLoc() {
+        const btn = document.getElementById('loc-btn');
+        btn.innerText = "جاري تحديد الموقع...";
+        
         navigator.geolocation.getCurrentPosition(p => {
-            document.getElementById('in-gps').value = p.coords.latitude.toFixed(5) + "," + p.coords.longitude.toFixed(5);
+            const lat = p.coords.latitude;
+            const lon = p.coords.longitude;
+            document.getElementById('in-gps').value = lat.toFixed(5) + "," + lon.toFixed(5);
+
+            // جلب العنوان باللغة العربية باستخدام Nominatim
+            fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}&accept-language=ar`)
+            .then(res => res.json())
+            .then(data => {
+                const addr = data.address;
+                const road = addr.road || addr.suburb || addr.neighbourhood || "شارع غير مسمى";
+                const city = addr.city || addr.town || "المدية";
+                document.getElementById('in-addr').value = road + "، " + city;
+                btn.innerHTML = `<i class="fas fa-check"></i> تم تحديد الموقع`;
+            })
+            .catch(() => {
+                document.getElementById('in-addr').value = "المدية (تعذر جلب اسم الشارع)";
+                btn.innerText = "تم التحديد";
+            });
         });
     }
 
-    // إرسال التبليغ + إظهار رسالة الشكر + تصفير
     function sendReport() {
         if(!tempImg || !document.getElementById('in-addr').value) return alert("يرجى التقاط صورة وتحديد العنوان");
         
         const report = {
             id: Date.now(), img: tempImg, addr: document.getElementById('in-addr').value,
-            gps: document.getElementById('in-gps').value, status: 'new', date: new Date().toLocaleDateString()
+            gps: document.getElementById('in-gps').value, status: 'new'
         };
 
         if(!appData.reports) appData.reports = [];
@@ -169,57 +184,39 @@
                 // تصفير الخانات
                 tempImg = ""; document.getElementById('out-img').style.display='none';
                 document.getElementById('ico-cam').style.display='block';
-                document.getElementById('in-addr').value=""; document.getElementById('in-gps').value="";
+                document.getElementById('in-addr').value=""; 
+                document.getElementById('in-gps').value="";
                 navTo('pg-home');
             }, 4000);
         });
     }
 
-    // الدخول بالاسم فقط (اصلاح مشكلة التداخل)
     function auth(role) {
-        const name = prompt("الرجاء إدخال الاسم الكامل المسجل:");
+        const name = prompt("الاسم الكامل:");
         if(!name) return;
+        if(name === "فتحي" && role === 'admin') { navTo('pg-admin'); return; }
 
-        // حالة خاصة لـ فتحي
-        if(name === "فتحي" && role === 'admin') {
-            currentLoggedUser = "فتحي"; navTo('pg-admin'); return;
-        }
-
-        const staff = (appData.staff || []).find(s => s.name === name.trim());
-        
-        if(staff) {
-            if(role === 'admin' && staff.role === 'مسؤول') {
-                currentLoggedUser = staff.name; navTo('pg-admin');
-            } else if(role === 'driver' && staff.role === 'سائق') {
-                currentLoggedUser = staff.name; 
-                document.getElementById('dr-welcome').innerText = "مرحباً السائق: " + staff.name;
-                navTo('pg-driver');
-            } else {
-                alert("هذا الاسم غير مسجل كـ " + (role==='admin'?'مسؤول':'سائق'));
-            }
+        const user = (appData.staff || []).find(s => s.name === name.trim());
+        if(user && ((role === 'admin' && user.role === 'مسؤول') || (role === 'driver' && user.role === 'سائق'))) {
+            if(role === 'driver') document.getElementById('dr-welcome').innerText = "مرحباً: " + user.name;
+            navTo(role === 'admin' ? 'pg-admin' : 'pg-driver');
         } else {
-            alert("الاسم غير موجود في النظام. يرجى مراجعة الإدارة.");
+            alert("بيانات غير صحيحة");
         }
     }
 
-    // حفظ الموظف وتصفير الخانات فوراً
     function saveStaff() {
-        const name = document.getElementById('st-name'), 
-              phone = document.getElementById('st-phone'), 
-              truck = document.getElementById('st-truck'),
-              role = document.getElementById('st-role').value;
+        const n = document.getElementById('st-name'), p = document.getElementById('st-phone'), t = document.getElementById('st-truck');
+        if(!n.value) return alert("الاسم مطلوب");
 
-        if(!name.value) return alert("الاسم مطلوب");
-
-        const newMember = { name: name.value.trim(), phone: phone.value, truck: truck.value, role: role };
-        
+        const s = { name: n.value.trim(), phone: p.value, truck: t.value, role: document.getElementById('st-role').value };
         if(!appData.staff) appData.staff = [];
-        appData.staff.push(newMember);
+        appData.staff.push(s);
 
         db.ref('CLEAN_MEDEA_FINAL').set(appData).then(() => {
-            alert("تم الحفظ بنجاح");
-            // تصفير الخانات
-            name.value = ""; phone.value = ""; truck.value = "";
+            alert("تمت الإضافة");
+            // تصفير الخانات فوراً
+            n.value = ""; p.value = ""; t.value = "";
             closeModal();
         });
     }
@@ -227,18 +224,13 @@
     function updateUI() {
         const list = document.getElementById('staff-list-ui');
         if(list) {
-            list.innerHTML = (appData.staff || []).map(s => `
-                <div style="padding:10px; border-bottom:1px solid #eee; display:flex; justify-content:space-between;">
-                    <span>${s.name} (${s.role})</span>
-                    <i class="fas fa-trash" style="color:red;" onclick="deleteStaff('${s.name}')"></i>
-                </div>
-            `).join('');
+            list.innerHTML = (appData.staff || []).map(s => `<div style="padding:5px; border-bottom:1px solid #eee;">• ${s.name} (${s.role})</div>`).join('');
         }
     }
 
     function openModal() { document.getElementById('staff-modal').style.display = 'flex'; }
     function closeModal() { document.getElementById('staff-modal').style.display = 'none'; }
-    function deleteStaff(name) { if(confirm("حذف الموظف؟")) { appData.staff = appData.staff.filter(s=>s.name !== name); db.ref('CLEAN_MEDEA_FINAL').set(appData); } }
 </script>
 </body>
-</html>
+                                                  </html>
+                                         
