@@ -11,40 +11,37 @@
     <style>
         :root { --emerald: #1B5E20; --forest: #2E7D32; --gold: #D4AF37; --red: #d21034; --navy: #14213D; --orange: #f39c12; }
         * { box-sizing: border-box; font-family: 'Tajawal', sans-serif; }
-        
         body { margin: 0; min-height: 100vh; background: linear-gradient(135deg, rgba(27,94,32,0.2) 0%, rgba(255,255,255,0.9) 50%, rgba(210,16,52,0.2) 100%), url('https://raw.githubusercontent.com/rabf09-droid/rabf09-droid.github.io/main/1000052240.webp'); background-size: cover; background-position: center; background-attachment: fixed; }
-
         .header { background: rgba(255,255,255,0.95); padding: 10px; text-align: center; border-bottom: 5px solid var(--gold); position: sticky; top: 0; z-index: 1000; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
-        .page { display: none; padding: 15px; max-width: 800px; margin: auto; }
-        .page.active { display: block; animation: fadeIn 0.4s; }
+        .page { display: none; padding: 15px; animation: fadeIn 0.4s; max-width: 800px; margin: auto; }
+        .page.active { display: block; }
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-
         .card { background: white; border-radius: 25px; padding: 20px; margin-bottom: 15px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); border: 1px solid #eee; }
-        .btn { border: none; padding: 15px; border-radius: 15px; width: 100%; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px; color: white; transition: 0.3s; }
-        .input { width: 100%; padding: 12px; border-radius: 12px; border: 2px solid #ddd; margin-bottom: 10px; text-align: center; }
-
+        .btn { border: none; padding: 15px; border-radius: 15px; width: 100%; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px; margin-bottom: 10px; color: white; font-size: 1.1rem; transition: 0.3s; }
+        .input { width: 100%; padding: 12px; border-radius: 12px; border: 2px solid #ddd; margin-bottom: 10px; text-align: center; font-size: 1rem; }
         .giant-btn { background: var(--forest); height: 230px; flex-direction: column; border-radius: 50px; font-size: 2.1rem; box-shadow: 0 15px 45px rgba(46, 125, 50, 0.4); border: 6px solid white; margin: 10px 0; }
         .giant-btn i { font-size: 6.5rem; }
-
-        /* أيقونات الإدارة الكبيرة جداً */
-        .admin-nav-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px; }
-        .nav-card-btn { height: 180px; border-radius: 30px; border: none; color: white; cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; font-weight: 900; font-size: 1.4rem; box-shadow: 0 8px 16px rgba(0,0,0,0.2); }
-        .nav-card-btn i { font-size: 4.5rem; }
+        .cam-box-wrapper { position: relative; height: 200px; border: 3px dashed #bbb; border-radius: 20px; display: flex; align-items: center; justify-content: center; background: #fff; margin-bottom: 15px; overflow: hidden; }
         
+        /* تكبير أيقونات الإدارة كما طلبت */
+        .admin-nav-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px; }
+        .nav-card-btn { height: 160px; border-radius: 25px; border: none; color: white; font-weight: 900; cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; font-size: 1.4rem; box-shadow: 0 8px 20px rgba(0,0,0,0.15); }
+        .nav-card-btn i { font-size: 4rem; }
+
         #thanks-overlay { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:var(--forest); color:white; flex-direction:column; align-items:center; justify-content:center; z-index:100000; text-align:center; padding: 20px; }
         .modal { display: none; position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.85); z-index:9999; align-items:center; justify-content:center; }
-        .modal-content { background:white; padding:30px; border-radius:30px; width:90%; max-width:400px; text-align:center; }
+        .modal-content { background:white; padding:30px; border-radius:30px; text-align:center; width:90%; max-width:400px; }
         .footer { background: white; padding: 15px; text-align: center; border-top: 4px solid var(--gold); margin-top: 10px; }
-        .staff-name-tag { display: inline-block; background: #e8f5e9; color: #2e7d32; padding: 5px 15px; border-radius: 20px; margin: 5px; font-weight: bold; border: 1px solid #2e7d32; }
+        .staff-tag { background: #e8f5e9; color: var(--emerald); padding: 5px 12px; border-radius: 15px; font-size: 0.9rem; margin: 4px; display: inline-block; border: 1px solid var(--emerald); font-weight: bold; }
     </style>
 </head>
 <body onload="initApp()">
 
 <div id="thanks-overlay">
-    <i class="fas fa-heart fa-6x" style="color:var(--gold); margin-bottom:20px;"></i>
-    <h1 style="font-size:2.2rem; margin:10px 0;">شكرا معا سنجعل بيئتنا نظيفة</h1>
-    <div id="thanks-details" style="background:rgba(255,255,255,0.1); padding:15px; border-radius:20px; margin:20px; font-size:1.1rem; line-height:1.6; text-align:right; width:90%; max-width:400px;"></div>
-    <button class="btn" style="background:var(--gold); color:var(--navy); width:200px;" onclick="location.reload()">إغلاق</button>
+    <i class="fas fa-heart fa-5x" style="color:var(--gold); margin-bottom:20px;"></i>
+    <h1 style="font-size:2rem;">شكرا معا سنجعل بيئتنا نظيفة</h1>
+    <div id="thanks-card" style="background:white; color:black; padding:15px; border-radius:20px; width:90%; max-width:400px; text-align:right; margin:15px 0;"></div>
+    <button class="btn" style="background:var(--navy); width:200px;" onclick="location.reload()">العودة</button>
 </div>
 
 <div class="header">
@@ -53,13 +50,13 @@
     <div style="font-size: 1.6rem; font-weight: 900; color: var(--emerald);">المـديـة نظيـفة</div>
     <div style="display: flex; justify-content: space-around; border-top: 1px solid #eee; margin-top: 5px; padding-top: 5px;">
         <div id="clock" style="font-weight: bold; color: var(--navy);">00:00:00</div>
-        <div style="font-weight: bold;">09 أفريل 2026</div>
+        <div id="date-now" style="font-weight: bold;">09 أفريل 2026</div>
     </div>
 </div>
 
 <div id="pg-home" class="page active">
     <button class="btn giant-btn" onclick="navTo('pg-report')">
-        <i class="fas fa-truck-pickup"></i>
+        <i class="fas fa-trash-alt"></i>
         <span>إرســـــال تبلـيـــغ</span>
     </button>
     <div class="card" style="background: rgba(255,255,255,0.6); border: 2px dashed var(--navy);">
@@ -72,11 +69,14 @@
 
 <div id="pg-report" class="page">
     <div class="card">
-        <div style="height: 200px; border: 3px dashed #bbb; border-radius: 20px; position: relative; overflow: hidden; background: #fff; display: flex; align-items: center; justify-content: center;">
+        <div class="cam-box-wrapper">
             <img id="out-img" style="width:100%; height:100%; object-fit:cover; display:none;">
-            <label class="btn" style="background:var(--navy); width:auto; padding:10px 20px; position:absolute;"><i class="fas fa-camera"></i> صورة النفايات<input type="file" accept="image/*" capture="environment" style="display:none;" onchange="handleImg(this, 'citizen')"></label>
+            <label id="cam-label" style="background:var(--navy); color:white; padding:10px 20px; border-radius:15px; cursor:pointer;">
+                <i class="fas fa-camera"></i> تصوير النفايات
+                <input type="file" accept="image/*" capture="environment" style="display:none;" onchange="handleImg(this, 'citizen')">
+            </label>
         </div>
-        <button class="btn" style="background:var(--forest); margin-top:15px;" onclick="getLoc()">تحديد الموقع تلقائياً</button>
+        <button class="btn" style="background:var(--forest);" onclick="getLoc()">تحديد الموقع تلقائياً</button>
         <input type="text" id="in-addr" class="input" placeholder="اسم الحي أو الشارع">
         <input type="text" id="in-gps" class="input" readonly placeholder="إحداثيات GPS">
         <button id="send-btn" class="btn" style="background:var(--emerald); height: 70px; font-size:1.4rem;" onclick="sendReport()">إرسال البلاغ الآن</button>
@@ -86,16 +86,23 @@
 
 <div id="pg-admin" class="page">
     <div class="admin-nav-grid">
-        <button class="nav-card-btn" style="background:var(--orange);" onclick="showAdminList('new')"><i class="fas fa-exclamation-circle"></i>بلاغات النفايات</button>
-        <button class="nav-card-btn" style="background:var(--forest);" onclick="showAdminList('done')"><i class="fas fa-check-double"></i>البلاغات المنجزة</button>
+        <button class="nav-card-btn" style="background:var(--orange);" onclick="showAdminList('new')">
+            <i class="fas fa-clock"></i> بلاغات النفايات
+        </button>
+        <button class="nav-card-btn" style="background:var(--forest);" onclick="showAdminList('done')">
+            <i class="fas fa-check-circle"></i> البلاغات المنجزة
+        </button>
     </div>
     <div id="admin-list-container"></div>
     <div class="card" style="border: 2px solid blue;">
-        <h4 style="text-align:center; color:blue;">إدارة المسؤولين والسائقين</h4>
-        <button class="btn" style="background:blue" onclick="openStaffModal()">+ إضافة مسؤول / سائق</button>
-        <button class="btn" style="background:var(--navy); margin-top:10px;" onclick="exportLog()">💾 حفظ سجل (مدية نظيفة)</button>
-        <div id="staff-list-display" style="margin-top:15px; border-top:1px solid #ddd; padding-top:10px;"></div>
+        <button class="btn" style="background:blue" onclick="openStaffModal()">+ إضافة (مسؤول / سائق)</button>
+        <button class="btn" style="background:var(--navy); margin-top:10px;" onclick="exportToStorage()">💾 حفظ السجل العام في الذاكرة</button>
+        <div id="staff-display-area" style="margin-top:15px; border-top:1px solid #ddd; padding-top:10px;">
+            <b style="color:var(--navy)">الأسماء المسجلة:</b><br>
+            <div id="staff-names-list"></div>
+        </div>
     </div>
+    <button class="btn" style="background:var(--red)" onclick="location.reload()">خروج</button>
 </div>
 
 <div id="pg-driver" class="page">
@@ -116,19 +123,15 @@
         <div id="driver-specifics">
             <input type="text" id="st-truck" class="input" placeholder="رقم الشاحنة">
             <select id="st-sector" class="input">
-                <option value="البلدية">قطاع البلدية</option>
+                <option value="بلدية">بلدية</option>
                 <option value="خاص">قطاع خاص</option>
             </select>
         </div>
-        <button class="btn" style="background:var(--forest)" onclick="saveStaff()">حفظ وتصفير</button>
-        <button class="btn" style="background:var(--red); margin-top:10px;" onclick="closeStaffModal()">إلغاء</button>
+        <button class="btn" style="background:var(--forest)" onclick="saveStaff()">حفظ البيانات وتصفير</button>
+        <button class="btn" style="background:var(--red)" onclick="closeStaffModal()">إغلاق</button>
     </div>
-</div>
-
-<div class="footer">
-    <div style="font-size: 0.8rem; color: var(--navy); font-weight: bold;">إشراف د. رابحي فتحي - بلدية المدية 2026 ©</div>
-    </div>
-    <script>
+            </div>
+            <script>
     const firebaseConfig = { databaseURL: "https://medea-clean-2026-v4-default-rtdb.firebaseio.com/" };
     if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
@@ -138,7 +141,10 @@
 
     function initApp() {
         db.ref('CLEAN_MEDEA_FINAL').on('value', snap => { if(snap.exists()){ appData = snap.val(); updateUI(); } });
-        setInterval(() => { document.getElementById('clock').innerText = new Date().toLocaleTimeString('ar-DZ'); }, 1000);
+        setInterval(() => { 
+            document.getElementById('clock').innerText = new Date().toLocaleTimeString('ar-DZ'); 
+            document.getElementById('date-now').innerText = new Date().toLocaleDateString('ar-DZ');
+        }, 1000);
     }
 
     function navTo(id) { document.querySelectorAll('.page').forEach(p=>p.classList.remove('active')); document.getElementById(id).classList.add('active'); }
@@ -150,7 +156,8 @@
                 tempImgCit = e.target.result;
                 document.getElementById('out-img').src = tempImgCit;
                 document.getElementById('out-img').style.display = 'block';
-            } else { tempImgDrv = e.target.result; }
+                document.getElementById('cam-label').style.display = 'none';
+            } else { tempImgDrv = e.target.result; alert("تم التقاط صورة الإنجاز."); }
         };
         reader.readAsDataURL(input.files[0]);
     }
@@ -164,14 +171,15 @@
         });
     }
 
-    // وظيفة الإرسال مع رسالة الشكر التفصيلية
+    // إرسال البلاغ مع رسالة الشكر التفصيلية
     function sendReport() {
         const addr = document.getElementById('in-addr').value;
-        if(!tempImgCit || !addr) return alert("يرجى التقاط صورة وتحديد العنوان");
+        if(!tempImgCit || !addr) return alert("يرجى توفير الصورة والعنوان");
         
         const rep = { 
             id: Date.now(), img: tempImgCit, addr: addr, 
-            gps: document.getElementById('in-gps').value, time: new Date().toLocaleTimeString('ar-DZ'), 
+            gps: document.getElementById('in-gps').value, 
+            time: new Date().toLocaleTimeString('ar-DZ'), 
             date: new Date().toLocaleDateString('ar-DZ'), status: 'new' 
         };
 
@@ -179,15 +187,19 @@
         appData.reports.push(rep);
 
         db.ref('CLEAN_MEDEA_FINAL').set(appData).then(() => {
-            const details = `📸 تم إرفاق الصورة<br>📍 العنوان: ${addr}<br>🌍 GPS: ${rep.gps}<br>🕒 التوقيت: ${rep.time}<br>📅 التاريخ: ${rep.date}`;
-            document.getElementById('thanks-details').innerHTML = details;
+            document.getElementById('thanks-card').innerHTML = `
+                <img src="${rep.img}" style="width:100%; border-radius:10px; height:150px; object-fit:cover;">
+                <p>📍 الحي: ${rep.addr}</p>
+                <p>🌍 الإحداثيات: ${rep.gps}</p>
+                <p>🕒 الوقت: ${rep.time} - ${rep.date}</p>
+            `;
             document.getElementById('thanks-overlay').style.display = 'flex';
         });
     }
 
-    // الدخول بالاسم فقط للمسؤولين والسائقين
+    // دخول المسؤول والسائق بالاسم فقط
     function auth(role) {
-        const name = prompt("أدخل الاسم الكامل المسجل:");
+        const name = prompt("الرجاء إدخال اسمك المسجل:");
         if(!name) return;
         const found = (appData.staff || []).find(s => s.name === name && (role === 'admin' ? s.role === 'مسؤول' : s.role === 'سائق'));
         
@@ -196,80 +208,81 @@
             navTo(role === 'admin' ? 'pg-admin' : 'pg-driver');
             updateUI();
         } else {
-            alert("هذا الاسم غير مسجل في النظام كـ " + role);
+            alert("هذا الاسم غير مسجل في قائمة الموظفين.");
         }
     }
 
-    // إضافة موظف مع تصفير الخانات
+    // تصفير الخانات بعد الإضافة
     function saveStaff() {
-        const nInput = document.getElementById('st-name'), pInput = document.getElementById('st-phone'), tInput = document.getElementById('st-truck');
-        const s = { role: document.getElementById('st-role').value, name: nInput.value, phone: pInput.value, truck: tInput.value || '---', sector: document.getElementById('st-sector').value || '---' };
+        const n = document.getElementById('st-name'), p = document.getElementById('st-phone'), t = document.getElementById('st-truck');
+        const s = { 
+            role: document.getElementById('st-role').value, 
+            name: n.value, phone: p.value, 
+            truck: t.value || '---', sector: document.getElementById('st-sector').value 
+        };
         if(!s.name) return alert("الاسم مطلوب");
-        
         if(!appData.staff) appData.staff = [];
         appData.staff.push(s);
-        
         db.ref('CLEAN_MEDEA_FINAL').set(appData).then(() => {
-            nInput.value = ""; pInput.value = ""; tInput.value = ""; // تصفير الخانات
+            n.value = ""; p.value = ""; t.value = ""; // تصفير الخانات
             closeStaffModal();
-            updateUI();
         });
     }
 
     function updateUI() {
-        // عرض قائمة الأسماء المضافة في لوحة الإدارة
-        const display = document.getElementById('staff-list-display');
-        if(display) display.innerHTML = (appData.staff || []).map(s => `<span class="staff-name-tag">${s.name} (${s.role})</span>`).join('');
+        // عرض قائمة الأسماء للمشرف والسائقين
+        const listUI = document.getElementById('staff-names-list');
+        if(listUI) {
+            listUI.innerHTML = (appData.staff || []).map(s => `<span class="staff-tag">${s.name}</span>`).join('');
+        }
 
         if(currentLoggedUser && document.getElementById('pg-driver').classList.contains('active')) {
             const tasks = (appData.reports || []).filter(r => r.driverName === currentLoggedUser && r.status === 'sent');
-            document.getElementById('dr-header').innerHTML = `<h3>مهام السائق: ${currentLoggedUser}</h3>`;
+            document.getElementById('dr-header').innerHTML = `<h3>مرحباً بالسائق: ${currentLoggedUser}</h3>`;
             document.getElementById('dr-tasks').innerHTML = tasks.map(t => `
                 <div class="card">
                     <img src="${t.img}" style="width:100%; border-radius:15px; margin-bottom:10px;">
                     <p>📍 الموقع: ${t.addr}<br>🌍 GPS: ${t.gps}</p>
-                    <label class="btn" style="background:orange">تصوير النتيجة<input type="file" accept="image/*" capture="environment" style="display:none;" onchange="handleImg(this, 'driver')"></label>
-                    <button class="btn" style="background:green; margin-top:10px;" onclick="finishTask(${t.id})">إتمام المهمة</button>
+                    <label class="btn" style="background:orange">التقاط صورة الإنجاز<input type="file" capture="environment" style="display:none;" onchange="handleImg(this, 'driver')"></label>
+                    <button class="btn" style="background:green" onclick="finishTask(${t.id})">تأكيد الإنجاز النهائي</button>
                 </div>
-            `).join('') || "لا توجد مهام حالية.";
+            `).join('') || "لا توجد مهام موكلة إليك حالياً.";
         }
     }
 
     function showAdminList(type) {
         const container = document.getElementById('admin-list-container');
-        const rs = appData.reports || [];
-        const filtered = type === 'new' ? rs.filter(r => r.status !== 'done') : rs.filter(r => r.status === 'done');
+        const filtered = (appData.reports || []).filter(r => type === 'new' ? r.status !== 'done' : r.status === 'done');
         container.innerHTML = filtered.map(r => `
-            <div class="card" style="border-right: 10px solid ${type==='done'?'#2E7D32':'#d21034'}">
+            <div class="card" style="border-right: 10px solid ${type==='done'?'green':'red'}">
                 <div style="display:flex; gap:10px;">
-                    <img src="${r.img}" style="width:100px; height:100px; border-radius:12px; object-fit:cover;">
-                    ${r.doneImg ? `<img src="${r.doneImg}" style="width:100px; height:100px; border-radius:12px; border:2px solid green; object-fit:cover;">` : ''}
+                    <img src="${r.img}" style="width:90px; height:90px; border-radius:10px; object-fit:cover;">
+                    ${r.doneImg ? `<img src="${r.doneImg}" style="width:90px; height:90px; border-radius:10px; border:2px solid green; object-fit:cover;">` : ''}
                 </div>
-                <p>📍 ${r.addr}<br>🕒 ${r.time} - ${r.date}</p>
-                ${type==='new' ? `<button class="btn" style="background:var(--forest)" onclick="assignTo(${r.id})">توجيه لسائق</button>` : `<p style="color:green; font-weight:bold;">✅ بواسطة: ${r.driverName}<br><span style="color:red; cursor:pointer;" onclick="deleteReport(${r.id})">🗑️ حذف نهائي</span></p>`}
+                <p style="font-size:0.9rem;">📍 ${r.addr}<br>🕒 ${r.time} - ${r.date}</p>
+                ${type === 'new' ? `<button class="btn" style="background:var(--forest)" onclick="assignTo(${r.id})">توجيه لسائق</button>` : `<p style="color:green; font-weight:bold;">✅ المنجز: ${r.driverName}<br><span style="color:red; cursor:pointer;" onclick="deleteReport(${r.id})">حذف البلاغ</span></p>`}
             </div>
-        `).join('') || "<p style='text-align:center;'>لا توجد بيانات</p>";
+        `).join('') || "السجل فارغ حالياً.";
     }
 
-    // وظيفة تخزين السجل في ملف نصي (مدية نظيفة)
-    function exportLog() {
-        let content = "سجل بلاغات نظام مدية نظيفة 2026\n==========================\n";
+    // وظيفة تخزين السجل العام في الذاكرة (ملف مدية نظيفة)
+    function exportToStorage() {
+        let logContent = "سجل بلاغات نظام مدية نظيفة 2026\n============================\n";
         (appData.reports || []).forEach(r => {
-            content += `تاريخ: ${r.date} | وقت: ${r.time} | العنوان: ${r.addr} | الإحداثيات: ${r.gps} | الحالة: ${r.status} | السائق: ${r.driverName || '---'}\n`;
+            logContent += `تاريخ: ${r.date} | وقت: ${r.time} | عنوان: ${r.addr} | GPS: ${r.gps} | الحالة: ${r.status} | السائق: ${r.driverName || '---'}\n`;
         });
-        const blob = new Blob([content], { type: 'text/plain' });
+        const blob = new Blob([logContent], { type: 'text/plain' });
         const a = document.createElement('a');
         a.href = URL.createObjectURL(blob);
-        a.download = 'مدية_نظيفة.txt';
+        a.download = 'مدية_نظيفة_2026.txt';
         a.click();
     }
 
-    function deleteReport(id) { if(confirm("حذف البلاغ؟")) { appData.reports = appData.reports.filter(r => r.id !== id); db.ref('CLEAN_MEDEA_FINAL').set(appData); } }
-    function assignTo(id) { const dName = prompt("اسم السائق:"); if(dName) { const r = appData.reports.find(x => x.id === id); r.status = 'sent'; r.driverName = dName; db.ref('CLEAN_MEDEA_FINAL').set(appData); } }
-    function finishTask(id) { if(!tempImgDrv) return alert("صور النتيجة أولاً"); const r = appData.reports.find(x => x.id === id); r.status = 'done'; r.doneImg = tempImgDrv; r.doneTime = new Date().toLocaleTimeString(); db.ref('CLEAN_MEDEA_FINAL').set(appData).then(() => { alert("تم الإنجاز بنجاح"); tempImgDrv=""; updateUI(); }); }
+    function deleteReport(id) { if(confirm("هل تريد الحذف؟")) { appData.reports = appData.reports.filter(r => r.id !== id); db.ref('CLEAN_MEDEA_FINAL').set(appData).then(()=>showAdminList('done')); } }
+    function assignTo(id) { const dName = prompt("أدخل اسم السائق:"); if(dName) { const r = appData.reports.find(x => x.id === id); r.status = 'sent'; r.driverName = dName; db.ref('CLEAN_MEDEA_FINAL').set(appData).then(() => showAdminList('new')); } }
+    function finishTask(id) { if(!tempImgDrv) return alert("يجب تصوير النتيجة"); const r = appData.reports.find(x => x.id === id); r.status = 'done'; r.doneImg = tempImgDrv; r.doneTime = new Date().toLocaleTimeString(); db.ref('CLEAN_MEDEA_FINAL').set(appData).then(() => { alert("تم الإنجاز بنجاح"); tempImgDrv=""; updateUI(); }); }
     function openStaffModal() { document.getElementById('staff-modal').style.display = 'flex'; }
     function closeStaffModal() { document.getElementById('staff-modal').style.display = 'none'; }
     function toggleStaffFields() { document.getElementById('driver-specifics').style.display = document.getElementById('st-role').value==='سائق'?'block':'none'; }
-</script>
-</body>
-</html>
+            </script>
+            
