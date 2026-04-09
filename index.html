@@ -106,8 +106,7 @@
         </button>
         <button class="btn" style="background:#888;" onclick="navTo('pg-home')">رجوع</button>
     </div>
-    </div>
-    <div id="pg-admin" class="page">
+                                                                                   </div><div id="pg-admin" class="page">
     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
         <h2 style="margin:0;">لوحة التحكم</h2>
         <button class="btn" style="background:var(--red); width:auto; padding:8px 20px;" onclick="location.reload()">خروج</button>
@@ -137,8 +136,7 @@
 
 <div class="footer">
     <div style="font-size: 0.8rem; color: var(--navy); font-weight: bold;">إشراف د. رابحي فتحي - بلدية المدية 2026 ©</div>
-    </div>
-    <script>
+</div><script>
     const firebaseConfig = { databaseURL: "https://medea-clean-2026-v4-default-rtdb.firebaseio.com/" };
     if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
@@ -147,10 +145,25 @@
 
     function initApp() {
         document.getElementById('current-date').innerText = new Date().toLocaleDateString('ar-DZ');
+        
+        // Check Firebase connection
+        const connectedRef = db.ref(".info/connected");
+        connectedRef.on("value", (snap) => {
+            if (snap.val() === true) {
+                console.log("✅ متصل بقاعدة البيانات");
+            } else {
+                console.log("❌ غير متصل بقاعدة البيانات");
+                alert("⚠️ تحذير: لا يوجد اتصال بقاعدة البيانات. تحقق من الإنترنت.");
+            }
+        });
+        
         db.ref('CLEAN_MEDEA_FINAL').on('value', snap => { 
             if(snap.exists()){ appData = snap.val(); updateUI(); } 
-            else { appData = { reports: [], staff: [] }; db.ref('CLEAN_MEDEA_FINAL').set(appData); }
+            else { appData = { reports: [], staff: [] }; }
+        }, error => {
+            console.error("Database Error:", error);
         });
+        
         setInterval(() => { document.getElementById('clock').innerText = new Date().toLocaleTimeString('fr-FR'); }, 1000);
     }
 
@@ -158,61 +171,147 @@
 
     function handleImg(input, role) {
         if (!input.files || !input.files[0]) return;
+        
+        // Check image size (max 2MB)
+        if (input.files[0].size > 2 * 1024 * 1024) {
+            alert("⚠️ حجم الصورة كبير جداً! الرجاء اختيار صورة أصغر من 2 ميجابايت");
+            input.value = '';
+            return;
+        }
+        
         const reader = new FileReader();
         reader.onload = e => {
             if(role === 'citizen') {
                 tempImgCit = e.target.result;
                 document.getElementById('out-img').src = tempImgCit;
                 document.getElementById('out-img').style.display = 'block';
-                document.getElementById('ico-cam').style.display = 'none';
-            } else { tempImgDrv = e.target.result; }
+                document.getElementById('ico-cam').style.display = 'none';            } else { tempImgDrv = e.target.result; }
         };
+        reader.onerror = () => alert("خطأ في قراءة الصورة");
         reader.readAsDataURL(input.files[0]);
     }
 
     function getLoc() {
-        navigator.geolocation.getCurrentPosition(p => {
-            const lat = p.coords.latitude, lng = p.coords.longitude;
-            document.getElementById('in-gps').value = lat + "," + lng;
-            fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&accept-language=ar`)
-                .then(r=>r.json()).then(d=>{
-                    if (d && d.display_name) document.getElementById('in-addr').value = d.display_name.split(',').slice(0,3).join(',');
-                });
-        }, err => { alert("تعذر تحديد الموقع"); });
+        if (!navigator.geolocation) {
+            alert("متصفحك لا يدعم تحديد الموقع");
+            return;
+        }
+        
+        const btn = event.target;
+        btn.innerHTML = '<div class="spinner"></div> جاري التحديد...';
+        btn.disabled = true;
+        
+        navigator.geolocation.getCurrentPosition(
+            p => {
+                const lat = p.coords.latitude, lng = p.coords.longitude;
+                document.getElementById('in-gps').value = lat + "," + lng;
+                
+                fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&accept-language=ar`, {timeout: 5000})
+                    .then(r=>r.json())
+                    .then(d=>{
+                        if (d && d.display_name) {
+                            document.getElementById('in-addr').value = d.display_name.split(',').slice(0,3).join(',');
+                        }
+                        btn.innerHTML = '<i class="fas fa-map-marker-alt"></i> تحديد الموقع';
+                        btn.disabled = false;
+                    })
+                    .catch(()=>{
+                        alert("تعذر الحصول على العنوان تلقائياً");
+                        document.getElementById('in-addr').value = "المدية، الجزائر";
+                        btn.innerHTML = '<i class="fas fa-map-marker-alt"></i> تحديد الموقع';
+                        btn.disabled = false;
+                    });
+            },
+            err => {
+                alert("⚠️ تعذر تحديد الموقع. تأكد من تفعيل GPS");
+                document.getElementById('in-addr').value = "المدية، الجزائر";
+                btn.innerHTML = '<i class="fas fa-map-marker-alt"></i> تحديد الموقع';
+                btn.disabled = false;
+            },
+            { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+        );
     }
 
     function sendReport() {
-        if(!tempImgCit) { alert("يرجى التقاط صورة أولاً"); return; }
-        if(!document.getElementById('in-addr').value.trim()) { alert("يرجى إدخال العنوان"); return; }
+        // Validation
+        if(!tempImgCit) {             alert("⚠️ الرجاء التقاط صورة أولاً 📸"); 
+            return; 
+        }
+        if(!document.getElementById('in-addr').value.trim()) { 
+            alert("⚠️ الرجى إدخال العنوان أو تحديد الموقع 📍"); 
+            return; 
+        }
         
         const btn = document.getElementById('send-btn');
         const btnText = document.getElementById('send-btn-text');
-        const spinner = document.getElementById('send-spinner');        btn.disabled = true; btnText.innerText = "جاري الإرسال..."; spinner.style.display = 'inline-block';
+        const spinner = document.getElementById('send-spinner');
+        
+        // Disable button
+        btn.disabled = true;
+        btnText.innerText = "جاري الإرسال...";
+        spinner.style.display = 'inline-block';
         
         const rep = { 
-            id: Date.now(), img: tempImgCit, addr: document.getElementById('in-addr').value.trim(), 
+            id: Date.now(), 
+            img: tempImgCit, 
+            addr: document.getElementById('in-addr').value.trim(), 
             gps: document.getElementById('in-gps').value || "غير محدد", 
-            time: new Date().toLocaleTimeString('ar-DZ'), date: new Date().toLocaleDateString('ar-DZ'), 
-            status: 'new', driverName: null, doneImg: null, doneTime: null
+            time: new Date().toLocaleTimeString('ar-DZ'), 
+            date: new Date().toLocaleDateString('ar-DZ'), 
+            status: 'new',
+            driverName: null,
+            doneImg: null,
+            doneTime: null
         };
         
-        db.ref('CLEAN_MEDEA_FINAL/reports').push(rep).then(() => {
-            document.getElementById('thanks-overlay').style.display = 'flex';
-            tempImgCit = ""; document.getElementById('out-img').style.display = 'none';
-            document.getElementById('ico-cam').style.display = 'block';
-            document.getElementById('in-addr').value = ''; document.getElementById('in-gps').value = '';
-            setTimeout(() => { document.getElementById('thanks-overlay').style.display = 'none'; location.reload(); }, 4500);
-        }).catch(error => {
-            alert("حدث خطأ أثناء الإرسال"); btn.disabled = false; btnText.innerText = "إرسال البلاغ الآن"; spinner.style.display = 'none';
+        // Try to save with timeout
+        const savePromise = db.ref('CLEAN_MEDEA_FINAL/reports').push(rep);
+        const timeoutPromise = new Promise((_, reject) => {
+            setTimeout(() => reject(new Error('انتهت مهلة الإرسال')), 15000); // 15 seconds timeout
         });
+        
+        Promise.race([savePromise, timeoutPromise])
+            .then(() => {
+                console.log("✅ تم الإرسال بنجاح");
+                // Show thank you overlay
+                document.getElementById('thanks-overlay').style.display = 'flex';
+                
+                // Reset form
+                tempImgCit = "";
+                document.getElementById('out-img').style.display = 'none';
+                document.getElementById('ico-cam').style.display = 'block';
+                document.getElementById('in-addr').value = '';
+                document.getElementById('in-gps').value = '';
+                document.getElementById('send-btn').disabled = false;
+                btnText.innerText = "إرسال البلاغ الآن";                spinner.style.display = 'none';
+                
+                // Reload after delay
+                setTimeout(() => { 
+                    document.getElementById('thanks-overlay').style.display = 'none';
+                    location.reload(); 
+                }, 4500);
+            })
+            .catch(error => {
+                console.error("❌ خطأ في الإرسال:", error);
+                alert("⚠️ فشل إرسال البلاغ!\n\nالأسباب المحتملة:\n• ضعف الاتصال بالإنترنت\n• حجم الصورة كبير جداً\n• مشكلة في الخادم\n\nحاول مرة أخرى أو صغر حجم الصورة.");
+                
+                // Re-enable button
+                btn.disabled = false;
+                btnText.innerText = "إرسال البلاغ الآن";
+                spinner.style.display = 'none';
+            });
     }
 
     function auth(role) {
-        const name = prompt("الاسم الكامل:"); if(!name) return;
+        const name = prompt("الاسم الكامل:"); if(!name || !name.trim()) return;
         const code = prompt("رمز الدخول:");
-        if((name==="فتحي" && code==="1234") || (role==='admin' && code==="1234") || (role==='driver' && code==="5678")) {
-            currentLoggedUser = name; navTo(role==='admin'?'pg-admin':'pg-driver'); updateUI();
-        } else { alert("رمز الدخول غير صحيح"); }
+        if((name.trim()==="فتحي" && code==="1234") || (role==='admin' && code==="1234") || (role==='driver' && code==="5678")) {
+            currentLoggedUser = name.trim(); 
+            navTo(role==='admin'?'pg-admin':'pg-driver'); 
+            updateUI();
+        } else { 
+            alert("❌ رمز الدخول غير صحيح"); 
+        }
     }
 
     function showAdminList(type) {
@@ -220,83 +319,146 @@
         const container = document.getElementById('admin-list-container');
         const filtered = type === 'new' ? rs.filter(r => r.status !== 'done') : rs.filter(r => r.status === 'done');
         container.innerHTML = `<h3>${type==='new'?'البلاغات الجديدة':'سجل الإنجازات'} (${filtered.length})</h3>`;
-        if(filtered.length===0) { container.innerHTML += "<p style='text-align:center;'>لا توجد بيانات</p>"; return; }
+        if(filtered.length===0) { container.innerHTML += "<p style='text-align:center;color:#666;'>لا توجد بيانات</p>"; return; }
         container.innerHTML += filtered.map(r => `
             <div class="card" style="border-right:8px solid ${type==='done'?'#2E7D32':'#d21034'}">
                 <div style="display:flex; justify-content:space-between;">
-                    <div style="display:flex; gap:10px;">
-                        <img src="${r.img}" style="width:80px;height:80px;border-radius:12px;object-fit:cover;">
+                    <div style="display:flex; gap:10px; flex-wrap:wrap;">
+                        <img src="${r.img}" style="width:80px;height:80px;border-radius:12px;object-fit:cover;" onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%2280%22 height=%2280%22><rect fill=%22%23ddd%22 width=%2280%22 height=%2280%22/><text x=%2250%%22 y=%2250%%22 text-anchor=%22middle%22 dy=%22.3em%22 fill=%22%23999%22>صورة</text></svg>'">
                         ${r.doneImg?`<img src="${r.doneImg}" style="width:80px;height:80px;border-radius:12px;border:2px solid green;object-fit:cover;">`:''}
                     </div>
-                    ${type==='done'?`<i class="fas fa-trash-alt" style="color:var(--red);cursor:pointer;" onclick="deleteReport(${r.id})"></i>`:''}
+                    ${type==='done'?`<i class="fas fa-trash-alt" style="color:var(--red);cursor:pointer;font-size:1.2rem;" onclick="deleteReport(${r.id})"></i>`:''}
                 </div>
                 <p style="font-size:0.9rem;margin:10px 0;">📍 ${r.addr}<br>🌍 ${r.gps}<br>🕒 ${r.time} - ${r.date}</p>
-                ${r.status==='new'?`<button class="btn" style="background:var(--forest);padding:10px;" onclick="assignTo(${r.id})">توجيه لسائق</button>`:`<p style="color:green;font-weight:bold;">👷 ${r.driverName}<br>✅ ${r.doneTime}</p>`}
+                ${r.status==='new'?`<button class="btn" style="background:var(--forest);padding:10px;font-size:0.9rem;" onclick="assignTo(${r.id})">👷 توجيه لسائق</button>`:`<p style="color:green;font-weight:bold;background:#e8f5e9;padding:8px;border-radius:8px;">👷 ${r.driverName}<br>✅ ${r.doneTime}</p>`}
             </div>`).join('');
     }
-
     function exportToCSV() {
-        const rs = appData.reports || []; if(rs.length===0) { alert("لا توجد بيانات"); return; }        let csv = "\ufeffالمعرف,التاريخ,الوقت,العنوان,GPS,الحالة,السائق\n";
-        rs.forEach(r => { csv += `${r.id},${r.date},${r.time},"${r.addr}",${r.gps},${r.status},${r.driverName||'---'}\n`; });
+        const rs = appData.reports || []; 
+        if(rs.length===0) { alert("لا توجد بيانات للتصدير"); return; }
+        let csv = "\ufeffالمعرف,التاريخ,الوقت,العنوان,GPS,الحالة,السائق\n";
+        rs.forEach(r => { 
+            const statusText = r.status==='done'?'منجز':(r.status==='sent'?'قيد التنفيذ':'جديد');
+            csv += `${r.id},${r.date},${r.time},"${r.addr.replace(/"/g,'""')}",${r.gps},${statusText},${r.driverName||'---'}\n`; 
+        });
         const blob = new Blob([csv], {type:'text/csv;charset=utf-8;'});
-        const link = document.createElement("a"); link.href = URL.createObjectURL(blob);
-        link.download = `Archive_${new Date().toISOString().split('T')[0]}.csv`; link.click();
+        const link = document.createElement("a"); 
+        link.href = URL.createObjectURL(blob);
+        link.download = `Archive_Medea_${new Date().toISOString().split('T')[0]}.csv`; 
+        link.click();
+        URL.revokeObjectURL(link.href);
     }
 
     function deleteReport(id) {
-        if(!confirm("حذف البلاغ؟")) return;
+        if(!confirm("⚠️ هل تريد حذف هذا البلاغ نهائياً؟")) return;
         db.ref('CLEAN_MEDEA_FINAL/reports').orderByChild('id').equalTo(id).once('value', s => {
-            s.forEach(c => { c.ref.remove().then(()=>showAdminList('done')); });
+            s.forEach(c => { 
+                c.ref.remove()
+                    .then(()=>{ alert("✅ تم الحذف"); showAdminList('done'); })
+                    .catch(()=>alert("❌ فشل الحذف"));
+            });
         });
     }
 
     function updateUI() {
         if(currentLoggedUser && document.getElementById('pg-driver').classList.contains('active')) {
             const tasks = (appData.reports||[]).filter(r => r.driverName===currentLoggedUser && r.status==='sent');
-            document.getElementById('dr-header').innerHTML = `<h3>المهام لـ: ${currentLoggedUser}</h3>`;
+            document.getElementById('dr-header').innerHTML = `<h3>المهام الموكلة لـ: ${currentLoggedUser}</h3>`;
             document.getElementById('dr-tasks').innerHTML = tasks.length ? tasks.map(t => `
                 <div class="card">
-                    <img src="${t.img}" style="width:100%;border-radius:15px;margin-bottom:10px;">
-                    <p>📍 ${t.addr}<br>🌍 ${t.gps}</p>
-                    <label class="btn" style="background:orange;"><i class="fas fa-camera"></i> تصوير<input type="file" accept="image/*" capture="environment" style="display:none;" onchange="handleImg(this,'driver')"></label>
-                    <button class="btn" style="background:green" onclick="finishTask(${t.id})">تأكيد الإنجاز</button>
-                </div>`).join('') : "<p style='text-align:center;'>لا توجد مهام</p>";
+                    <img src="${t.img}" style="width:100%;border-radius:15px;margin-bottom:10px;" onerror="this.style.display='none'">
+                    <p style="font-weight:bold;">📍 ${t.addr}</p>
+                    <p style="font-size:0.9rem;color:#666;margin-bottom:15px;">🌍 ${t.gps}</p>
+                    <label class="btn" style="background:orange;margin-bottom:10px;">
+                        <i class="fas fa-camera"></i> تصوير النتيجة
+                        <input type="file" accept="image/*" capture="environment" style="display:none;" onchange="handleImg(this,'driver')">
+                    </label>
+                    <button class="btn" style="background:green" onclick="finishTask(${t.id})">✅ تأكيد الإنجاز</button>
+                </div>`).join('') : "<p style='text-align:center;padding:30px;color:#666;font-size:1.1rem;'>🎉 لا توجد مهام حالية<br>عمل موفق!</p>";
         }
         const staffUI = document.getElementById('staff-list-ui');
-        if(staffUI) staffUI.innerHTML = (appData.staff||[]).map(s => `<div style="display:flex;justify-content:space-between;padding:10px;border-bottom:1px solid #eee;"><span><b>${s.role}:</b> ${s.name}</span><i class="fas fa-user-minus" style="color:red;cursor:pointer;" onclick="deleteStaff('${s.name}')"></i></div>`).join('') || "<p>لا موظفين</p>";
+        if(staffUI) {
+            const staff = appData.staff||[];
+            staffUI.innerHTML = staff.length ? staff.map(s => `<div style="display:flex;justify-content:space-between;padding:10px;border-bottom:1px solid #eee;align-items:center;"><span><b>${s.role}:</b> ${s.name} ${s.truck&&s.truck!=='---'?`(شاحنة: ${s.truck})`:''}</span><i class="fas fa-user-minus" style="color:red;cursor:pointer;font-size:1.2rem;" onclick="deleteStaff('${s.name}')"></i></div>`).join('') : "<p style='text-align:center;color:#666;'>لا يوجد موظفون مسجلون</p>";
+        }
     }
-
-    function openStaffModal() { document.getElementById('staff-modal').style.display='flex'; document.getElementById('st-name').value=''; document.getElementById('st-phone').value=''; document.getElementById('st-truck').value=''; }
+    function openStaffModal() { 
+        document.getElementById('staff-modal').style.display='flex'; 
+        document.getElementById('st-name').value=''; 
+        document.getElementById('st-phone').value=''; 
+        document.getElementById('st-truck').value=''; 
+    }
     function closeStaffModal() { document.getElementById('staff-modal').style.display='none'; }
     function toggleStaffFields() { document.getElementById('driver-specifics').style.display=document.getElementById('st-role').value==='سائق'?'block':'none'; }
 
     function saveStaff() {
-        const n=document.getElementById('st-name').value.trim(), p=document.getElementById('st-phone').value.trim(), t=document.getElementById('st-truck').value.trim();
-        if(!n) { alert("الاسم مطلوب"); return; }
-        const s = {role:document.getElementById('st-role').value, name:n, phone:p, truck:t||'---', sector:document.getElementById('st-sector').value||'---'};
-        db.ref('CLEAN_MEDEA_FINAL/staff').push(s).then(()=>{alert("تم الحفظ ✅"); closeStaffModal();}).catch(()=>alert("خطأ"));
+        const n=document.getElementById('st-name').value.trim(), 
+              p=document.getElementById('st-phone').value.trim(), 
+              t=document.getElementById('st-truck').value.trim();
+        if(!n) { alert("⚠️ الاسم مطلوب"); return; }
+        if((appData.staff||[]).some(s=>s.name===n)) {
+            if(!confirm("هذا الموظف موجود بالفعل. إضافة مرة أخرى؟")) return;
+        }
+        const s = {
+            role:document.getElementById('st-role').value, 
+            name:n, 
+            phone:p, 
+            truck:t||'---', 
+            sector:document.getElementById('st-sector').value||'---'
+        };
+        db.ref('CLEAN_MEDEA_FINAL/staff').push(s)
+            .then(()=>{alert("✅ تم حفظ الموظف بنجاح"); closeStaffModal();})
+            .catch(()=>alert("❌ فشل الحفظ"));
     }
 
     function assignTo(id) {
-        const dName = prompt("اسم السائق:"); if(!dName) return;
+        const dName = prompt("أدخل اسم السائق المكلف:"); 
+        if(!dName || !dName.trim()) return;
         db.ref('CLEAN_MEDEA_FINAL/reports').orderByChild('id').equalTo(id).once('value', s => {
-            s.forEach(c => { c.ref.update({status:'sent', driverName:dName.trim()}).then(()=>showAdminList('new')); });
+            s.forEach(c => { 
+                c.ref.update({status:'sent', driverName:dName.trim()})
+                    .then(()=>{alert(`✅ تم التوجيه لـ: ${dName.trim()}`); showAdminList('new');})
+                    .catch(()=>alert("❌ فشل التوجيه"));
+            });
         });
     }
 
     function finishTask(id) {
-        if(!tempImgDrv) { alert("صور المكان أولاً"); return; }        db.ref('CLEAN_MEDEA_FINAL/reports').orderByChild('id').equalTo(id).once('value', s => {
-            s.forEach(c => {
-                c.ref.update({status:'done', doneImg:tempImgDrv, doneTime:new Date().toLocaleTimeString('ar-DZ')+' - '+new Date().toLocaleDateString('ar-DZ')})
-                .then(()=>{alert("تم الإنجاز 🎉"); tempImgDrv=""; updateUI();});
+        if(!tempImgDrv) { alert("⚠️ الرجاء تصوير المكان بعد التنظيف أولاً 📸"); return; }
+        const btn = event.target;
+        btn.disabled = true;
+        btn.innerHTML = '<div class="spinner"></div> جاري الحفظ...';
+        
+        db.ref('CLEAN_MEDEA_FINAL/reports').orderByChild('id').equalTo(id).once('value', s => {
+            s.forEach(c => {                c.ref.update({
+                    status:'done', 
+                    doneImg:tempImgDrv, 
+                    doneTime:new Date().toLocaleTimeString('ar-DZ')+' - '+new Date().toLocaleDateString('ar-DZ')
+                })
+                .then(()=>{
+                    alert("🎉 تم إنجاز المهمة بنجاح!"); 
+                    tempImgDrv=""; 
+                    btn.disabled = false;
+                    btn.innerHTML = '✅ تأكيد الإنجاز';
+                    updateUI();
+                })
+                .catch(()=>{
+                    alert("❌ فشل الحفظ");
+                    btn.disabled = false;
+                    btn.innerHTML = '✅ تأكيد الإنجاز';
+                });
             });
         });
     }
 
     function deleteStaff(name) {
-        if(!confirm(`حذف ${name}؟`)) return;
+        if(!confirm(`⚠️ حذف الموظف "${name}" نهائياً؟`)) return;
         db.ref('CLEAN_MEDEA_FINAL/staff').orderByChild('name').equalTo(name).once('value', s => {
-            s.forEach(c => { c.ref.remove(); });
+            s.forEach(c => { 
+                c.ref.remove()
+                    .then(()=>alert("✅ تم الحذف"))
+                    .catch(()=>alert("❌ فشل الحذف"));
+            });
         });
     }
 </script>
