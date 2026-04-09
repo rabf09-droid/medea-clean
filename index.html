@@ -55,12 +55,23 @@
         <div style="border:3px dashed #999; border-radius:20px; height:230px; position:relative; overflow:hidden; background:#f9f9f9;">
             <i id="ico-cam" class="fas fa-camera fa-5x" style="color:#ccc; position:absolute; top:50%; left:50%; transform:translate(-50%,-50%);"></i>
             <img id="out-img" style="width:100%; height:100%; object-fit:cover; display:none;">
-            <label style="position:absolute
-                <!-- لوحة التحكم -->
+            <label style="position:absolute; bottom:15px; left:50%; transform:translateX(-50%); background:var(--navy); color:white; padding:10px 25px; border-radius:30px; cursor:pointer;">
+                <i class="fas fa-camera"></i> التقاط الصورة
+                <input type="file" accept="image/*" capture="environment" style="display:none;" onchange="handleImg(this)">
+            </label>
+        </div>
+        <button class="btn green" onclick="getLoc()">تحديد الموقع</button>
+        <input type="text" id="in-addr" class="input" placeholder="اسم الشارع أو الحي">
+        <button class="btn green" onclick="sendReport()">إرسال البلاغ الآن</button>
+        <button class="btn red" onclick="navTo('pg-home')">رجوع</button>
+    </div>
+</div>
+
+<!-- لوحة التحكم -->
 <div id="pg-admin" class="page">
     <div class="card">
         <h3 style="text-align:center; color:var(--navy);">لوحة التحكم</h3>
-        <button class="btn" style="background:#D4AF37;" onclick="alert('سيتم إضافة تحميل Excel قريباً')">تحميل سجل البلاغات (Excel)</button>
+        <button class="btn" style="background:#D4AF37;" onclick="alert('سيتم إضافة تحميل Excel قريباً إن شاء الله')">تحميل سجل البلاغات (Excel)</button>
         
         <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin:15px 0;">
             <button class="btn green">البلاغات المنجزة</button>
@@ -87,13 +98,16 @@
         </div>
         <button class="btn green" onclick="saveStaff()">حفظ البيانات</button>
         <button class="btn red" onclick="closeStaffModal()">إغلاق</button>
+        <small style="display:block; text-align:center; margin-top:10px; color:#666;">
+            إعداد وإشراف د. رابحي فتحي - بلدية المدية 2026
+        </small>
     </div>
 </div>
 
 <script>
-// ===================== Firebase =====================
+// ===================== Firebase Config =====================
 const firebaseConfig = {
-    apiKey: "YOUR_API_KEY_HERE",
+    apiKey: "YOUR_API_KEY_HERE",   // ← غيّر هذا
     authDomain: "your-project.firebaseapp.com",
     databaseURL: "https://your-project-default-rtdb.firebaseio.com",
     projectId: "your-project",
@@ -143,11 +157,14 @@ function getLoc() {
 function sendReport() {
     if (!tempImg) return alert("يرجى التقاط صورة أولاً");
     alert("✅ تم إرسال البلاغ بنجاح");
-    // يمكنك إضافة Thanks Overlay لاحقاً
 }
 
-function openStaffModal() { document.getElementById('staff-modal').style.display = 'flex'; }
-function closeStaffModal() { document.getElementById('staff-modal').style.display = 'none'; }
+function openStaffModal() { 
+    document.getElementById('staff-modal').style.display = 'flex'; 
+}
+function closeStaffModal() { 
+    document.getElementById('staff-modal').style.display = 'none'; 
+}
 
 function toggleStaffFields() {
     document.getElementById('driver-fields').style.display = 
@@ -173,10 +190,10 @@ function saveStaff() {
         alert("✅ تم حفظ الموظف بنجاح");
         closeStaffModal();
         document.getElementById('st-name').value = '';
-    });
+    }).catch(err => alert("خطأ: " + err.message));
 }
 
 window.onload = initApp;
 </script>
 </body>
-    </html>
+            </html>
