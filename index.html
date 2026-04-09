@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>المدية نظيفة 2026</title>
+    <title>نظام المدية نظيفة 2026</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700;900&display=swap" rel="stylesheet">
@@ -11,30 +11,44 @@
     <style>
         :root { --emerald: #1B5E20; --forest: #2E7D32; --gold: #D4AF37; --red: #d21034; --navy: #14213D; }
         * { box-sizing: border-box; font-family: 'Tajawal', sans-serif; }
-        body { margin: 0; min-height: 100vh; background: linear-gradient(135deg, rgba(27,94,32,0.1), rgba(255,255,255,0.9)), url('https://raw.githubusercontent.com/rabf09-droid/rabf09-droid.github.io/main/1000052240.webp'); background-size: cover; background-attachment: fixed; }
+        
+        body { margin: 0; min-height: 100vh; background-image: url('https://raw.githubusercontent.com/rabf09-droid/rabf09-droid.github.io/main/1000052240.webp'); background-size: cover; background-attachment: fixed; }
 
-        .header { background: white; padding: 10px; text-align: center; border-bottom: 5px solid var(--gold); }
-        .page { display: none; padding: 15px; max-width: 600px; margin: auto; }
+        /* الترويسة العلوية حسب صورك */
+        .header { background: rgba(255,255,255,0.95); padding: 10px; text-align: center; border-bottom: 5px solid var(--gold); position: sticky; top: 0; z-index: 1000; }
+        
+        .page { display: none; padding: 15px; max-width: 800px; margin: auto; }
         .page.active { display: block; }
 
-        .card { background: rgba(255,255,255,0.95); border-radius: 25px; padding: 20px; margin-bottom: 15px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); border: 1px solid #eee; }
+        .card { background: white; border-radius: 25px; padding: 20px; margin-bottom: 15px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); border: 1px solid #eee; }
         .btn { border: none; padding: 15px; border-radius: 15px; width: 100%; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px; margin-bottom: 10px; color: white; font-size: 1.1rem; }
-        
-        .giant-btn { background: var(--forest); height: 230px; flex-direction: column; border-radius: 50px; font-size: 2.1rem; border: 6px solid white; box-shadow: 0 15px 45px rgba(46,125,50,0.3); }
+        .input { width: 100%; padding: 12px; border-radius: 12px; border: 2px solid #ddd; margin-bottom: 10px; text-align: center; }
+
+        /* الزر العملاق كما في صورك */
+        .giant-btn { background: var(--forest); height: 230px; flex-direction: column; border-radius: 50px; font-size: 2.1rem; border: 6px solid white; box-shadow: 0 15px 45px rgba(46, 125, 50, 0.4); }
         .giant-btn i { font-size: 6.5rem; }
 
-        .input { width: 100%; padding: 12px; border-radius: 12px; border: 2px solid #ddd; margin-bottom: 10px; text-align: center; font-size: 1rem; }
-        .footer { background: white; padding: 15px; text-align: center; border-top: 4px solid var(--gold); margin-top: 20px; font-weight: bold; }
+        /* شاشة الشكر المطلوبة */
+        #thanks-screen { display:none; position:fixed; inset:0; background:var(--forest); color:white; flex-direction:column; align-items:center; justify-content:center; z-index:10000; text-align:center; padding: 20px; }
+
+        /* تذييل الإشراف حسب طلبك */
+        .footer { background: white; padding: 15px; text-align: center; border-top: 4px solid var(--gold); margin-top: 10px; font-weight: bold; }
     </style>
 </head>
 <body onload="initApp()">
 
+<div id="thanks-screen">
+    <i class="fas fa-check-circle fa-6x" style="color:var(--gold); margin-bottom:20px;"></i>
+    <h1>شكراً لكم!</h1>
+    <p style="font-size:1.5rem;">تم إرسال بلاغكم بنجاح.<br>معاً لمدية أنظف 2026</p>
+</div>
+
 <div class="header">
-    <div style="font-size: 0.7rem;">الجمهورية الجزائرية الديمقراطية الشعبية</div>
+    <div style="font-size: 0.75rem;">الجمهورية الجزائرية الديمقراطية الشعبية</div>
     <div style="font-size: 1.6rem; font-weight: 900; color: var(--emerald);">المـديـة نظيـفة</div>
-    <div style="display: flex; justify-content: space-around; margin-top: 5px;">
-        <div id="clock" style="font-weight: bold;">00:00:00</div>
-        <div style="font-weight: bold;">09 أفريل 2026</div>
+    <div style="display: flex; justify-content: space-around; margin-top: 5px; border-top: 1px solid #eee; padding-top: 5px;">
+        <div id="clock">00:00:00</div>
+        <div>09 أفريل 2026</div>
     </div>
 </div>
 
@@ -43,9 +57,9 @@
         <i class="fas fa-truck-loading"></i>
         <span>إرســـــال تبلـيـــغ</span>
     </button>
-    <div class="card" style="border: 2px dashed var(--navy); background: rgba(255,255,255,0.7);">
-        <p style="text-align: center; font-weight: bold;">دخول الموظفين</p>
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+    <div class="card" style="border: 2px dashed var(--navy);">
+        <p style="text-align: center; font-weight: bold; color: var(--navy);">دخول الموظفين</p>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
             <button class="btn" style="background:var(--navy)" onclick="login('admin')">الإدارة</button>
             <button class="btn" style="background:var(--gold)" onclick="login('driver')">السائقين</button>
         </div>
@@ -54,33 +68,35 @@
 
 <div id="pg-report" class="page">
     <div class="card">
-        <div style="height:200px; border:3px dashed #ccc; border-radius:20px; display:flex; align-items:center; justify-content:center; position:relative; overflow:hidden; background:white;">
-            <i id="cam-ico" class="fas fa-camera fa-4x" style="color:#eee"></i>
-            <img id="img-prev" style="width:100%; height:100%; object-fit:cover; display:none;">
+        <div style="height:200px; border:2px solid #ccc; border-radius:20px; display:flex; align-items:center; justify-content:center; position:relative; overflow:hidden; background:#f9f9f9;">
+            <i id="cam-icon" class="fas fa-camera fa-4x" style="color:#ccc"></i>
+            <img id="img-preview" style="width:100%; height:100%; object-fit:cover; display:none;">
             <input type="file" accept="image/*" capture="environment" id="file-in" style="display:none" onchange="preview(this)">
-            <button class="btn" style="position:absolute; bottom:10px; width:auto; background:var(--navy)" onclick="document.getElementById('file-in').click()">تصوير</button>
+            <button class="btn" style="position:absolute; bottom:10px; width:auto; background:var(--navy)" onclick="document.getElementById('file-input').click()">تصوير</button>
         </div>
-        <button class="btn" style="background:var(--forest); margin-top:15px;" onclick="getLoc()">تحديد الموقع</button>
+        <button class="btn" style="background:var(--forest); margin-top:15px;" onclick="getLoc()">تحديد الموقع GPS</button>
         <input type="text" id="in-addr" class="input" placeholder="اسم الحي">
-        <input type="text" id="in-gps" class="input" readonly placeholder="إحداثيات GPS">
-        <button class="btn" style="background:var(--emerald); height:70px;" onclick="send()">إرسال الآن</button>
+        <input type="text" id="in-gps" class="input" readonly placeholder="الإحداثيات">
+        <button class="btn" style="background:var(--emerald)" onclick="submitReport()">إرسال الآن</button>
         <button class="btn" style="background:#888" onclick="navTo('pg-home')">رجوع</button>
     </div>
 </div>
 
 <div id="pg-admin" class="page">
     <div class="card">
-        <h3>لوحة التحكم</h3>
-        <div id="admin-list"></div>
+        <h3>لوحة الإدارة</h3>
+        <button class="btn" style="background:var(--gold); color:black;" onclick="downloadArchive()">📁 تحميل أرشيف البيانات</button>
+        <hr>
+        <div id="admin-reports"></div>
         <button class="btn" style="background:var(--red)" onclick="location.reload()">خروج</button>
     </div>
 </div>
 
 <div id="pg-driver" class="page">
     <div class="card" style="background:var(--emerald); color:white; text-align:center;">
-        <h3 id="dr-header">صفحة السائق</h3>
+        <h3 id="dr-name-label">صفحة المهام</h3>
     </div>
-    <div id="driver-list"></div>
+    <div id="driver-tasks"></div>
     <button class="btn" style="background:#444" onclick="location.reload()">خروج</button>
 </div>
 
@@ -93,11 +109,11 @@
     if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
 
-    let data = { reports: [], staff: [] };
-    let im = "";
+    let localData = { reports: [], staff: [] };
+    let currentImg = "";
 
     function initApp() {
-        db.ref('CLEAN_DATA').on('value', s => { if(s.exists()) data = s.val(); render(); });
+        db.ref('CLEAN_DATA_FINAL').on('value', snap => { if(snap.exists()) localData = snap.val(); render(); });
         setInterval(() => { document.getElementById('clock').innerText = new Date().toLocaleTimeString('fr-FR'); }, 1000);
     }
 
@@ -106,10 +122,10 @@
     function preview(input) {
         const r = new FileReader();
         r.onload = e => {
-            im = e.target.result;
-            document.getElementById('img-prev').src = im;
-            document.getElementById('img-prev').style.display = 'block';
-            document.getElementById('cam-ico').style.display = 'none';
+            currentImg = e.target.result;
+            document.getElementById('img-preview').src = currentImg;
+            document.getElementById('img-preview').style.display = 'block';
+            document.getElementById('cam-icon').style.display = 'none';
         };
         r.readAsDataURL(input.files[0]);
     }
@@ -120,30 +136,56 @@
         });
     }
 
-    function send() {
-        if(!im || !document.getElementById('in-addr').value) return alert("أكمل البيانات");
-        const r = { 
-            id: Date.now(), img: im, addr: document.getElementById('in-addr').value, 
-            gps: document.getElementById('in-gps').value, time: new Date().toLocaleTimeString(), date: new Date().toLocaleDateString()
+    function submitReport() {
+        if(!currentImg || !document.getElementById('in-addr').value) return alert("أكمل البيانات");
+        const rep = { 
+            id: Date.now(), img: currentImg, addr: document.getElementById('in-addr').value, 
+            gps: document.getElementById('in-gps').value, time: new Date().toLocaleTimeString(), date: new Date().toLocaleDateString() 
         };
-        if(!data.reports) data.reports = [];
-        data.reports.push(r);
-        db.ref('CLEAN_DATA').set(data).then(() => {
-            alert("تم الإرسال بنجاح");
-            location.reload();
+        if(!localData.reports) localData.reports = [];
+        localData.reports.push(rep);
+        db.ref('CLEAN_DATA_FINAL').set(localData).then(() => {
+            document.getElementById('thanks-screen').style.display = 'flex';
+            setTimeout(() => {
+                document.getElementById('thanks-screen').style.display = 'none';
+                // التصفير الكامل حسب طلبك
+                currentImg = ""; document.getElementById('img-preview').style.display='none';
+                document.getElementById('cam-icon').style.display='block';
+                document.getElementById('in-addr').value=""; document.getElementById('in-gps').value="";
+                navTo('pg-home');
+            }, 3000);
         });
     }
 
-    function login(type) {
-        const n = prompt("الاسم:");
-        if(n === "فتحي") navTo(type === 'admin' ? 'pg-admin' : 'pg-driver');
+    function login(role) {
+        const name = prompt("الاسم الكامل:");
+        if(!name) return;
+        if(name === "فتحي" && role === 'admin') { navTo('pg-admin'); return; }
+        
+        const user = (localData.staff || []).find(s => s.name === name);
+        if(user) {
+            if(role === 'admin' && user.role === 'مسؤول') navTo('pg-admin');
+            else if(role === 'driver' && user.role === 'سائق') {
+                document.getElementById('dr-name-label').innerText = "السائق: " + name;
+                navTo('pg-driver');
+            } else alert("خطأ في الصلاحية");
+        } else alert("الاسم غير مسجل");
     }
 
     function render() {
-        const list = data.reports || [];
-        const h = list.map(r => `<div class="card"><img src="${r.img}" style="width:100px;"><p>${r.addr}</p></div>`).join('');
-        document.getElementById('admin-list').innerHTML = h;
-        document.getElementById('driver-list').innerHTML = h;
+        const rs = localData.reports || [];
+        const html = rs.map(r => `<div class="card"><img src="${r.img}" style="width:60px;"> ${r.addr}</div>`).join('');
+        document.getElementById('admin-reports').innerHTML = html;
+        document.getElementById('driver-tasks').innerHTML = html;
+    }
+
+    function downloadArchive() {
+        let csv = "ID,Address,GPS,Date\n";
+        (localData.reports || []).forEach(r => { csv += `${r.id},${r.addr},${r.gps},${r.date}\n`; });
+        const blob = new Blob(["\ufeff" + csv], { type: 'text/csv' });
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url; a.download = 'archive_medea.csv'; a.click();
     }
 </script>
 </body>
