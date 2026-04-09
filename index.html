@@ -137,35 +137,86 @@
 
 <div class="footer">
     <div style="font-size: 0.8rem; color: var(--navy); font-weight: bold;">إشراف د. رابحي فتحي - بلدية المدية 2026 ©</div>
-    </div>
-    <script>
-    const firebaseConfig = { databaseURL: "https://medea-clean-2026-v4-default-rtdb.firebaseio.com/" };
-    if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
-    const db = firebase.database();
+</div><script>
+    // محاولة الاتصال بـ Firebase مع fallback للتخزين المحلي
+    let useLocalStorage = false;
     let appData = { reports: [], staff: [] };
     let currentLoggedUser = "", tempImgCit = "", tempImgDrv = "";
-    let connectionStatus = true;
-
-    // فحص الاتصال
-    db.ref('.info/connected').on('value', (snap) => {
-        connectionStatus = snap.val() === true;
-        if(!connectionStatus) {
-            alert("⚠️ لا يوجد اتصال بقاعدة البيانات. تحقق من الإنترنت.");
+    
+    // Firebase Configuration
+    const firebaseConfig = { 
+        databaseURL: "https://medea-clean-2026-v4-default-rtdb.firebaseio.com/" 
+    };
+    
+    let db;
+    let firebaseConnected = false;
+    
+    // محاولة تهيئة Firebase
+    try {
+        if (!firebase.apps.length) {
+            firebase.initializeApp(firebaseConfig);
         }
-    });
-
+        db = firebase.database();
+        
+        // فحص الاتصال الحقيقي
+        const connectedRef = db.ref(".info/connected");
+        connectedRef.on('value', (snap) => {
+            firebaseConnected = snap.val() === true;
+            console.log("Firebase:", firebaseConnected ? "متصل ✅" : "غير متصل ❌");
+            
+            if(!firebaseConnected) {
+                useLocalStorage = true;
+                alert("⚠️ وضع عدم الاتصال:\n\nسيتم حفظ البيانات محلياً\nوستُرسل عند توفر الإنترنت");
+            } else {
+                useLocalStorage = false;
+                // مزامنة البيانات المحلية
+                syncLocalData();
+            }
+        });
+        
+        // مهلة للاتصال (10 ثواني)
+        setTimeout(() => {
+            if(!firebaseConnected) {
+                useLocalStorage = true;
+                console.log("⏱️ Timeout - Using LocalStorage");
+            }
+        }, 10000);
+        
+    } catch(e) {
+        console.error("Firebase Init Error:", e);
+        useLocalStorage = true;
+    }
     function initApp() {
         document.getElementById('current-date').innerText = new Date().toLocaleDateString('ar-DZ');
-        db.ref('CLEAN_MEDEA_FINAL').on('value', snap => { 
-            if(snap.exists()){ appData = snap.val(); updateUI(); } 
-        });
-        setInterval(() => { document.getElementById('clock').innerText = new Date().toLocaleTimeString('fr-FR'); }, 1000);
+        
+        // تحميل البيانات من LocalStorage إذا كان موجوداً
+        if(localStorage.getItem('medea_reports')) {
+            const localReports = JSON.parse(localStorage.getItem('medea_reports'));
+            console.log(`📱 تم تحميل ${localReports.length} بلاغ من التخزين المحلي`);
+        }
+        
+        // الاستماع للبيانات من Firebase
+        if(db && !useLocalStorage) {
+            db.ref('CLEAN_MEDEA_FINAL').on('value', snap => { 
+                if(snap.exists()){ 
+                    appData = snap.val(); 
+                    updateUI(); 
+                }
+            });
+        }
+        
+        setInterval(() => { 
+            document.getElementById('clock').innerText = new Date().toLocaleTimeString('fr-FR'); 
+        }, 1000);
     }
 
-    function navTo(id) { document.querySelectorAll('.page').forEach(p=>p.classList.remove('active')); document.getElementById(id).classList.add('active'); }
+    function navTo(id) { 
+        document.querySelectorAll('.page').forEach(p=>p.classList.remove('active')); 
+        document.getElementById(id).classList.add('active'); 
+    }
 
-    // ضغط أقوى للصور
-    function compressImage(base64, maxWidth = 640, quality = 0.5) {
+    // ضغط الصور
+    function compressImage(base64, maxWidth = 640, quality = 0.6) {
         return new Promise((resolve) => {
             const img = new Image();
             img.onload = () => {
@@ -184,10 +235,7 @@
                 ctx.fillStyle = '#fff';
                 ctx.fillRect(0, 0, width, height);
                 ctx.drawImage(img, 0, 0, width, height);
-                
-                const compressedBase64 = canvas.toDataURL('image/jpeg', quality);
-                const sizeInKB = Math.round((compressedBase64.length * 3) / 4 / 1024);
-                console.log(`📦 حجم الصورة بعد الضغط: ${sizeInKB} KB`);                resolve(compressedBase64);
+                                resolve(canvas.toDataURL('image/jpeg', quality));
             };
             img.src = base64;
         });
@@ -196,27 +244,17 @@
     function handleImg(input, role) {
         if (!input.files || !input.files[0]) return;
         
-        const btn = input.parentElement;
-        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري المعالجة...';
-        
         const reader = new FileReader();
         reader.onload = async e => {
-            try {
-                const compressedBase64 = await compressImage(e.target.result, 640, 0.5);
-                
-                if(role === 'citizen') {
-                    tempImgCit = compressedBase64;
-                    document.getElementById('out-img').src = compressedBase64;
-                    document.getElementById('out-img').style.display = 'block';
-                    document.getElementById('ico-cam').style.display = 'none';
-                } else { 
-                    tempImgDrv = compressedBase64; 
-                }
-                
-                btn.innerHTML = '<i class="fas fa-camera"></i> التقاط الصورة';
-            } catch(err) {
-                alert("خطأ في معالجة الصورة");
-                btn.innerHTML = '<i class="fas fa-camera"></i> التقاط الصورة';
+            const compressed = await compressImage(e.target.result, 640, 0.6);
+            
+            if(role === 'citizen') {
+                tempImgCit = compressed;
+                document.getElementById('out-img').src = compressed;
+                document.getElementById('out-img').style.display = 'block';
+                document.getElementById('ico-cam').style.display = 'none';
+            } else { 
+                tempImgDrv = compressed; 
             }
         };
         reader.readAsDataURL(input.files[0]);
@@ -235,10 +273,7 @@
                 fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&accept-language=ar`, {timeout: 8000})
                     .then(r=>r.json())
                     .then(d=>{
-                        if (d && d.display_name) {
-                            document.getElementById('in-addr').value = d.display_name.split(',').slice(0,3).join(',');                        } else {
-                            document.getElementById('in-addr').value = "المدية، الجزائر";
-                        }
+                        document.getElementById('in-addr').value = d.display_name ? d.display_name.split(',').slice(0,3).join(',') : "المدية، الجزائر";
                         btn.innerHTML = '<i class="fas fa-map-marker-alt"></i> تحديد الموقع';
                         btn.disabled = false;
                     })
@@ -249,31 +284,64 @@
                     });
             },
             err => { 
-                alert("⚠️ تعذر تحديد الموقع"); 
-                document.getElementById('in-addr').value = "المدية، الجزائر";
-                btn.innerHTML = '<i class="fas fa-map-marker-alt"></i> تحديد الموقع';
+                document.getElementById('in-addr').value = "المدية، الجزائر";                btn.innerHTML = '<i class="fas fa-map-marker-alt"></i> تحديد الموقع';
                 btn.disabled = false;
             },
-            { enableHighAccuracy: false, timeout: 10000, maximumAge: 0 }
+            { enableHighAccuracy: false, timeout: 10000 }
         );
     }
 
-    function sendReport() {
-        if(!connectionStatus) {
-            alert("⚠️ لا يوجد اتصال بالإنترنت!");
-            return;
+    // دالة الحفظ الموحدة (Firebase أو LocalStorage)
+    async function saveReport(report) {
+        if(useLocalStorage || !firebaseConnected) {
+            // حفظ محلي
+            const localReports = JSON.parse(localStorage.getItem('medea_reports') || '[]');
+            localReports.push({...report, synced: false});
+            localStorage.setItem('medea_reports', JSON.stringify(localReports));
+            console.log("💾 تم الحفظ محلياً");
+            return {success: true, local: true};
+        } else {
+            // حفظ في Firebase
+            try {
+                await db.ref('CLEAN_MEDEA_FINAL/reports').push(report);
+                console.log("☁️ تم الإرسال للسحابة");
+                return {success: true, local: false};
+            } catch(e) {
+                console.error("Firebase Error:", e);
+                // Fallback للتخزين المحلي
+                const localReports = JSON.parse(localStorage.getItem('medea_reports') || '[]');
+                localReports.push({...report, synced: false});
+                localStorage.setItem('medea_reports', JSON.stringify(localReports));
+                return {success: true, local: true};
+            }
         }
+    }
+
+    // مزامنة البيانات المحلية
+    async function syncLocalData() {
+        const localReports = JSON.parse(localStorage.getItem('medea_reports') || '[]');
+        const unsynced = localReports.filter(r => !r.synced);
         
+        if(unsynced.length > 0 && db) {
+            console.log(`🔄 مزامنة ${unsynced.length} بلاغ...`);
+            
+            for(const report of unsynced) {
+                try {
+                    await db.ref('CLEAN_MEDEA_FINAL/reports').push(report);
+                    report.synced = true;
+                } catch(e) {
+                    console.error("Sync failed:", e);
+                }
+            }
+                        localStorage.setItem('medea_reports', JSON.stringify(localReports));
+            alert(`✅ تم مزامنة ${unsynced.length} بلاغ مع السحابة`);
+        }
+    }
+
+    async function sendReport() {
         if(!document.getElementById('in-addr').value.trim()) { 
             alert("⚠️ أدخل العنوان"); 
             return; 
-        }
-        
-        // السماح بالإرسال حتى بدون صورة إذا كانت الشبكة ضعيفة
-        if(!tempImgCit) {
-            if(!confirm("⚠️ لم يتم التقاط صورة.\n\nهل تريد إرسال البلاغ بدون صورة؟")) {
-                return;
-            }
         }
         
         const btn = document.getElementById('send-btn');
@@ -285,7 +353,8 @@
         spinner.style.display = 'inline-block';
         
         const rep = { 
-            id: Date.now(),             img: tempImgCit || "no-image", 
+            id: Date.now(), 
+            img: tempImgCit || "no-image", 
             addr: document.getElementById('in-addr').value.trim(), 
             gps: document.getElementById('in-gps').value || "غير محدد", 
             time: new Date().toLocaleTimeString('ar-DZ'), 
@@ -297,45 +366,32 @@
             hasImage: !!tempImgCit
         };
         
-        // محاولة الإرسال مع إعادة المحاولة
-        let attempts = 0;
-        const maxAttempts = 3;
+        const result = await saveReport(rep);
         
-        function trySend() {
-            attempts++;
-            const savePromise = db.ref('CLEAN_MEDEA_FINAL/reports').push(rep);
-            const timeoutPromise = new Promise((_, reject) => {
-                setTimeout(() => reject(new Error('timeout')), 15000);
-            });
-            
-            Promise.race([savePromise, timeoutPromise])
-                .then(() => {
-                    document.getElementById('thanks-overlay').style.display = 'flex';
-                    tempImgCit = "";
-                    document.getElementById('out-img').style.display = 'none';
-                    document.getElementById('ico-cam').style.display = 'block';
-                    document.getElementById('in-addr').value = '';
-                    document.getElementById('in-gps').value = '';
-                    
-                    setTimeout(() => { 
-                        document.getElementById('thanks-overlay').style.display = 'none';
-                        location.reload(); 
-                    }, 4500);
-                })
-                .catch(error => {
-                    console.error(`محاولة ${attempts} فشلت:`, error);
-                    if(attempts < maxAttempts) {
-                        btnText.innerText = `إعادة المحاولة ${attempts}/${maxAttempts}...`;
-                        setTimeout(trySend, 2000);
-                    } else {
-                        alert("❌ فشل الإرسال بعد ${maxAttempts} محاولات.\n\nالأسباب:\n• الإنترنت ضعيف جداً\n• مشكلة في الخادم\n\nنصائح:\n• حاول في وقت لاحق\n• استخدم إنترنت أسرع\n• أرسل بدون صورة");
-                        btn.disabled = false;
-                        btnText.innerText = "إرسال البلاغ الآن";
-                        spinner.style.display = 'none';
-                    }
-                });
-        }        
-        trySend();
+        // عرض رسالة الشكر دائماً
+        document.getElementById('thanks-overlay').style.display = 'flex';
+        
+        // Reset form
+        tempImgCit = "";
+        document.getElementById('out-img').style.display = 'none';
+        document.getElementById('ico-cam').style.display = 'block';
+        document.getElementById('in-addr').value = '';
+        document.getElementById('in-gps').value = '';
+        
+        btn.disabled = false;
+        btnText.innerText = "إرسال البلاغ الآن";
+        spinner.style.display = 'none';
+        
+        // رسالة إضافية إذا تم الحفظ محلياً        if(result.local) {
+            setTimeout(() => {
+                alert("📱 تم الحفظ على الجهاز\n\nسيتم الإرسال تلقائياً عند توفر الإنترنت");
+            }, 1000);
+        }
+        
+        setTimeout(() => { 
+            document.getElementById('thanks-overlay').style.display = 'none';
+            location.reload(); 
+        }, 4500);
     }
 
     function auth(role) {
@@ -349,13 +405,22 @@
     }
 
     function showAdminList(type) {
-        const rs = appData.reports || [];
+        // دمج البيانات من Firebase و LocalStorage
+        const localReports = JSON.parse(localStorage.getItem('medea_reports') || '[]');
+        const allReports = [...(appData.reports || []), ...localReports];
+        
         const container = document.getElementById('admin-list-container');
-        const filtered = type === 'new' ? rs.filter(r => r.status !== 'done') : rs.filter(r => r.status === 'done');
-        container.innerHTML = `<h3>${type==='new'?'البلاغات الجديدة':'المنجزة'} (${filtered.length})</h3>`;
-        if(filtered.length===0) { container.innerHTML += "<p style='text-align:center;'>لا توجد بيانات</p>"; return; }
+        const filtered = type === 'new' ? allReports.filter(r => r.status !== 'done') : allReports.filter(r => r.status === 'done');
+        
+        container.innerHTML = `<h3>${type==='new'?'البلاغات الجديدة':'المنجزة'} (${filtered.length}) ${useLocalStorage?'📱':''}</h3>`;
+        
+        if(filtered.length===0) { 
+            container.innerHTML += "<p style='text-align:center;'>لا توجد بيانات</p>"; 
+            return; 
+        }
+        
         container.innerHTML += filtered.map(r => `
-            <div class="card" style="border-right:8px solid ${type==='done'?'#2E7D32':'#d21034'}">
+            <div class="card" style="border-right:8px solid ${type==='done'?'#2E7D32':'#d21034'}; ${r.synced===false?'opacity:0.7;':''}">
                 <div style="display:flex; justify-content:space-between;">
                     <div style="display:flex; gap:10px;">
                         ${r.hasImage ? `<img src="${r.img}" style="width:80px;height:80px;border-radius:12px;object-fit:cover;">` : '<div style="width:80px;height:80px;background:#ddd;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:0.7rem;">بدون صورة</div>'}
@@ -364,25 +429,46 @@
                     ${type==='done'?`<i class="fas fa-trash" style="color:red;cursor:pointer;" onclick="deleteReport(${r.id})"></i>`:''}
                 </div>
                 <p style="font-size:0.9rem;margin:10px 0;">📍 ${r.addr}<br>🌍 ${r.gps}<br>🕒 ${r.time}</p>
+                ${r.synced===false?'<span style="background:orange;color:white;padding:2px 8px;border-radius:10px;font-size:0.75rem;">📱 محلي</span>':''}
                 ${r.status==='new'?`<button class="btn" style="background:var(--forest);padding:10px;" onclick="assignTo(${r.id})">توجيه لسائق</button>`:`<p style="color:green;">👷 ${r.driverName}<br>✅ ${r.doneTime}</p>`}
-            </div>`).join('');
-    }
+            </div>`).join('');    }
 
     function exportToCSV() {
-        const rs = appData.reports || []; if(rs.length===0) { alert("لا توجد بيانات"); return; }
-        let csv = "\ufeffالمعرف,التاريخ,العنوان,الحالة,السائق,صورة\n";
-        rs.forEach(r => { csv += `${r.id},${r.date},"${r.addr}",${r.status},${r.driverName||'---'},${r.hasImage?'نعم':'لا'}\n`; });
+        const localReports = JSON.parse(localStorage.getItem('medea_reports') || '[]');
+        const allReports = [...(appData.reports || []), ...localReports];
+        
+        if(allReports.length===0) { alert("لا توجد بيانات"); return; }
+        
+        let csv = "\ufeffالمعرف,التاريخ,العنوان,الحالة,السائق,مزامنة\n";
+        allReports.forEach(r => { 
+            csv += `${r.id},${r.date},"${r.addr}",${r.status},${r.driverName||'---'},${r.synced!==false?'نعم':'لا'}\n`; 
+        });
+        
         const blob = new Blob([csv], {type:'text/csv;charset=utf-8;'});
-        const link = document.createElement("a"); link.href = URL.createObjectURL(blob);
-        link.download = `Archive_${new Date().toISOString().split('T')[0]}.csv`; link.click();
+        const link = document.createElement("a"); 
+        link.href = URL.createObjectURL(blob);
+        link.download = `Archive_${new Date().toISOString().split('T')[0]}.csv`; 
+        link.click();
     }
 
     function deleteReport(id) {
         if(!confirm("حذف؟")) return;
-        db.ref('CLEAN_MEDEA_FINAL/reports').orderByChild('id').equalTo(id).once('value', s => {
-            s.forEach(c => { c.ref.remove().then(()=>showAdminList('done')); });
-        });
+        
+        // حذف من LocalStorage
+        let localReports = JSON.parse(localStorage.getItem('medea_reports') || '[]');
+        localReports = localReports.filter(r => r.id !== id);
+        localStorage.setItem('medea_reports', JSON.stringify(localReports));
+        
+        // حذف من Firebase إذا موجود
+        if(db) {
+            db.ref('CLEAN_MEDEA_FINAL/reports').orderByChild('id').equalTo(id).once('value', s => {
+                s.forEach(c => { c.ref.remove(); });
+            });
+        }
+        
+        showAdminList('done');
     }
+
     function updateUI() {
         if(currentLoggedUser && document.getElementById('pg-driver').classList.contains('active')) {
             const tasks = (appData.reports||[]).filter(r => r.driverName===currentLoggedUser && r.status==='sent');
@@ -394,10 +480,7 @@
                     <label class="btn" style="background:orange;"><i class="fas fa-camera"></i> تصوير<input type="file" accept="image/*" capture="environment" style="display:none;" onchange="handleImg(this,'driver')"></label>
                     <button class="btn" style="background:green" onclick="finishTask(${t.id})">إنجاز</button>
                 </div>`).join('') : "<p>لا توجد مهام</p>";
-        }
-        const staffUI = document.getElementById('staff-list-ui');
-        if(staffUI) staffUI.innerHTML = (appData.staff||[]).map(s => `<div style="display:flex;justify-content:space-between;padding:10px;border-bottom:1px solid #eee;"><span><b>${s.role}:</b> ${s.name}</span><i class="fas fa-user-minus" style="color:red;cursor:pointer;" onclick="deleteStaff('${s.name}')"></i></div>`).join('') || "<p>لا موظفين</p>";
-    }
+        }    }
 
     function openStaffModal() { document.getElementById('staff-modal').style.display='flex'; }
     function closeStaffModal() { document.getElementById('staff-modal').style.display='none'; }
@@ -406,32 +489,82 @@
     function saveStaff() {
         const n=document.getElementById('st-name').value.trim();
         if(!n) { alert("الاسم مطلوب"); return; }
-        const s = {role:document.getElementById('st-role').value, name:n, phone:document.getElementById('st-phone').value.trim(), truck:document.getElementById('st-truck').value.trim()||'---'};
-        db.ref('CLEAN_MEDEA_FINAL/staff').push(s).then(()=>{alert("تم ✅"); closeStaffModal();});
+        const s = {role:document.getElementById('st-role').value, name:n, phone:document.getElementById('st-phone').value.trim()};
+        
+        if(db && !useLocalStorage) {
+            db.ref('CLEAN_MEDEA_FINAL/staff').push(s).then(()=>{alert("تم ✅"); closeStaffModal();});
+        } else {
+            const staff = JSON.parse(localStorage.getItem('medea_staff') || '[]');
+            staff.push(s);
+            localStorage.setItem('medea_staff', JSON.stringify(staff));
+            alert("تم الحفظ محلياً 📱");
+            closeStaffModal();
+        }
     }
 
     function assignTo(id) {
         const dName = prompt("اسم السائق:"); if(!dName) return;
-        db.ref('CLEAN_MEDEA_FINAL/reports').orderByChild('id').equalTo(id).once('value', s => {
-            s.forEach(c => { c.ref.update({status:'sent', driverName:dName}).then(()=>showAdminList('new')); });
-        });
+        
+        // تحديث في LocalStorage
+        let localReports = JSON.parse(localStorage.getItem('medea_reports') || '[]');
+        const localReport = localReports.find(r => r.id === id);
+        if(localReport) {
+            localReport.status = 'sent';
+            localReport.driverName = dName;
+            localStorage.setItem('medea_reports', JSON.stringify(localReports));
+        }
+        
+        // تحديث في Firebase
+        if(db) {
+            db.ref('CLEAN_MEDEA_FINAL/reports').orderByChild('id').equalTo(id).once('value', s => {
+                s.forEach(c => { c.ref.update({status:'sent', driverName:dName}); });
+            });
+        }
+        
+        showAdminList('new');
     }
 
     function finishTask(id) {
         if(!tempImgDrv) { alert("صور أولاً"); return; }
-        db.ref('CLEAN_MEDEA_FINAL/reports').orderByChild('id').equalTo(id).once('value', s => {
-            s.forEach(c => {
-                c.ref.update({status:'done', doneImg:tempImgDrv, doneTime:new Date().toLocaleString('ar-DZ')})
-                .then(()=>{alert("تم 🎉"); tempImgDrv=""; updateUI();});
+        
+        const updateData = {
+            status:'done', 
+            doneImg:tempImgDrv,             doneTime:new Date().toLocaleString('ar-DZ')
+        };
+        
+        // تحديث LocalStorage
+        let localReports = JSON.parse(localStorage.getItem('medea_reports') || '[]');
+        const localReport = localReports.find(r => r.id === id);
+        if(localReport) {
+            Object.assign(localReport, updateData);
+            localStorage.setItem('medea_reports', JSON.stringify(localReports));
+        }
+        
+        // تحديث Firebase
+        if(db) {
+            db.ref('CLEAN_MEDEA_FINAL/reports').orderByChild('id').equalTo(id).once('value', s => {
+                s.forEach(c => { c.ref.update(updateData); });
             });
-        });
+        }
+        
+        alert("تم 🎉"); 
+        tempImgDrv=""; 
+        updateUI();
     }
 
     function deleteStaff(name) {
         if(!confirm(`حذف ${name}؟`)) return;
-        db.ref('CLEAN_MEDEA_FINAL/staff').orderByChild('name').equalTo(name).once('value', s => {
-            s.forEach(c => { c.ref.remove(); });
-        });
-    }</script>
+        
+        let staff = JSON.parse(localStorage.getItem('medea_staff') || '[]');
+        staff = staff.filter(s => s.name !== name);
+        localStorage.setItem('medea_staff', JSON.stringify(staff));
+        
+        if(db) {
+            db.ref('CLEAN_MEDEA_FINAL/staff').orderByChild('name').equalTo(name).once('value', s => {
+                s.forEach(c => { c.ref.remove(); });
+            });
+        }
+    }
+</script>
 </body>
 </html>
