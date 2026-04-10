@@ -4,9 +4,11 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>المدية نظيفة 2026</title>
+<!-- Font Awesome -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<!-- Firebase -->
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 <style>
 *{box-sizing:border-box;margin:0;padding:0;font-family:'Tajawal',sans-serif}
 html,body{overflow-x:hidden;width:100%;background:linear-gradient(135deg,#f5f7fa,#e4e8f0);min-height:100vh}
@@ -14,9 +16,9 @@ html,body{overflow-x:hidden;width:100%;background:linear-gradient(135deg,#f5f7fa
 .conn.ok{background:#4CAF50;color:#fff}
 .conn.no{background:#f44336;color:#fff}
 .conn.wait{background:#FF9800;color:#fff}
-.hdr{background:#fff;padding:15px 10px;text-align:center;border-bottom:3px solid #D4AF37;box-shadow:0 2px 8px rgba(0,0,0,.1)}
-.hdr .c{font-size:.75rem;color:#14213D;margin:5px 0;font-weight:600}
-.hdr .d{font-size:.9rem;color:#2E7D32;margin:5px 0;font-weight:700}
+.hdr{background:#fff;padding:15px 10px;text-align:center;border-bottom:3px solid #D4AF37;box-shadow:0 2px 8px rgba(0,0,0,.1);margin-top:40px}
+.hdr .c{font-size:.75rem;color:#14213D;margin:5px 0;font-weight:600;line-height:1.4}
+.hdr .d{font-size:.9rem;color:#2E7D32;margin:5px 0;font-weight:700;line-height:1.4}
 .hdr .t{font-size:2rem;color:#1B5E20;margin:8px 0;font-weight:900;text-shadow:2px 2px 4px rgba(0,0,0,.1)}
 .ib{display:flex;justify-content:space-around;padding:10px;background:linear-gradient(90deg,#fff8e1,#fff3e0);border-bottom:2px solid #D4AF37;font-size:.95rem}
 .ib div{font-weight:700;color:#14213D;display:flex;align-items:center;gap:6px}
@@ -29,25 +31,26 @@ html,body{overflow-x:hidden;width:100%;background:linear-gradient(135deg,#f5f7fa
 .g2{display:grid;grid-template-columns:1fr 1fr;gap:15px}
 .sb2{height:65px;font-size:1rem}
 .ft{background:#fff;padding:15px;text-align:center;border-top:3px solid #D4AF37;margin-top:20px;font-size:.9rem;color:#14213D;font-weight:700}
+i.fas,i.fab,i.far{display:inline-block}
 </style>
 </head>
 <body>
 
-<div id="cs" class="conn ok">✅ متصل</div>
+<div id="cs" class="conn ok"><i class="fas fa-check-circle"></i> متصل ✅</div>
 
 <div class="hdr">
-<div class="c">الجمهورية الجزائرية الديمقراطية الشعبية</div>
-<div class="d">مصلحة النظافة والوقاية الصحية لبلدية المدية</div>
-<div class="t">🗑️ المدية نظيفة</div>
+<div class="c"><i class="fas fa-flag"></i> الجمهورية الجزائرية الديمقراطية الشعبية</div>
+<div class="d"><i class="fas fa-broom"></i> مصلحة النظافة والوقاية الصحية لبلدية المدية</div>
+<div class="t"><i class="fas fa-trash-alt"></i> المدية نظيفة</div>
 </div>
 
 <div class="ib">
-<div>🕐 <span id="ck">00:00:00</span></div>
-<div>📅 <span id="cd">--/--/----</span></div>
+<div><i class="far fa-clock"></i> <span id="ck">00:00:00</span></div>
+<div><i class="far fa-calendar-alt"></i> <span id="cd">--/--/----</span></div>
 </div>
 
 <div class="pg">
-<button class="btn bg mb" onclick="alert('صفحة إرسال التبليغ')">
+<button class="btn bg mb" onclick="nt('rp')">
 <i class="fas fa-truck-loading" style="font-size:3rem"></i>
 <br>إرسال تبليغ 🚛
 </button>
@@ -57,11 +60,11 @@ html,body{overflow-x:hidden;width:100%;background:linear-gradient(135deg,#f5f7fa
 <i class="fas fa-users"></i> رواق الموظفين والمسؤولين 👥
 </h3>
 <div class="g2">
-<button class="btn by sb2" onclick="alert('صفحة السائقين')">
-<i class="fas fa-truck"></i> السائقين 🚚
+<button class="btn by sb2" onclick="nt('dr')">
+<i class="fas fa-truck"></i> السائقين
 </button>
-<button class="btn bb sb2" onclick="alert('صفحة الإدارة')">
-<i class="fas fa-user-shield"></i> الإدارة 🛡️
+<button class="btn bb sb2" onclick="nt('ad')">
+<i class="fas fa-user-shield"></i> الإدارة
 </button>
 </div>
 </div>
@@ -72,8 +75,21 @@ html,body{overflow-x:hidden;width:100%;background:linear-gradient(135deg,#f5f7fa
 </div>
 
 <script>
+// Firebase Config
+const firebaseConfig={databaseURL:"https://medea-clean-2026-default-rtdb.firebaseio.com/"};
+if(!firebase.apps.length)firebase.initializeApp(firebaseConfig);
+const DB=firebase.database();
+let R=[],S=[],CU='',CR='';
+
+function uc(s){const e=document.getElementById('cs');if(!e)return;if(s==='c'){e.className='conn ok';e.innerHTML='<i class="fas fa-check-circle"></i> متصل ✅'}else if(s==='o'){e.className='conn no';e.innerHTML='<i class="fas fa-wifi-slash"></i> غير متصل ❌'}else{e.className='conn wait';e.innerHTML='<i class="fas fa-spinner fa-spin"></i> جاري الاتصال...'}}
+
+function ifb(){try{DB.ref(".info/connected").on("value",sn=>{if(sn.val()===true){uc('c')}else uc('w')});setTimeout(()=>{uc('o')},10000)}catch(e){uc('o')}}
+
+function nt(id){if(id==='ad'){const name=prompt("الاسم:"),code=prompt("الرمز:");if(name==="فتحي"&&code==="1234"){alert('✅ لوحة الإدارة');CU=name;CR='ad'}else if(code==="5678"){alert('✅ صفحة السائقين');CU=name;CR='dr'}else alert('❌ رمز خاطئ')}else if(id==='dr'){alert('📱 صفحة السائقين');CR='dr'}else if(id==='rp'){alert('📝 صفحة إرسال التبليغ')}}
+
 function ut(){const n=new Date();document.getElementById('cd').textContent=n.toLocaleDateString('ar-DZ');document.getElementById('ck').textContent=n.toLocaleTimeString('fr-FR')}
-ut();setInterval(ut,1000);
+
+window.addEventListener('load',()=>{uc('w');ifb();ut();setInterval(ut,1000)});
 </script>
 
 </body>
