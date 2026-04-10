@@ -13,8 +13,9 @@ html,body{overflow-x:hidden;width:100%;background:linear-gradient(135deg,#f5f7fa
 .hdr .d{font-size:.9rem;color:#2E7D32;margin:5px 0;font-weight:700;line-height:1.4}
 .hdr .t{font-size:2rem;color:#1B5E20;margin:8px 0;font-weight:900;text-shadow:2px 2px 4px rgba(0,0,0,.1)}
 .ib{display:flex;justify-content:space-around;padding:10px;background:linear-gradient(90deg,#fff8e1,#fff3e0);border-bottom:2px solid #D4AF37;font-size:.95rem}
-.ib div{font-weight:700;color:#14213D;display:flex;align-items:center;gap:6px}
-.pg{display:block;padding:20px;max-width:600px;margin:auto;min-height:80vh}
+.page{display:none;padding:20px;max-width:600px;margin:auto;min-height:80vh;animation:fade .3s}
+.page.active{display:block}
+@keyframes fade{from{opacity:0}to{opacity:1}}
 .btn{width:100%;padding:16px;border:none;border-radius:15px;font-size:1.1rem;font-weight:700;cursor:pointer;margin:10px 0;color:#fff;box-shadow:0 4px 12px rgba(0,0,0,.15);transition:.3s;display:flex;align-items:center;justify-content:center;gap:10px}
 .btn:active{transform:scale(.97)}
 .bg{background:linear-gradient(135deg,#2E7D32,#1B5E20)}.bb{background:linear-gradient(135deg,#14213D,#0d1526)}.by{background:linear-gradient(135deg,#f39c12,#d68910)}.br{background:linear-gradient(135deg,#d21034,#a00d28)}.bx{background:linear-gradient(135deg,#757575,#616161)}
@@ -23,6 +24,7 @@ html,body{overflow-x:hidden;width:100%;background:linear-gradient(135deg,#f5f7fa
 .g2{display:grid;grid-template-columns:1fr 1fr;gap:15px}
 .sb2{height:65px;font-size:1rem}
 .ft{background:#fff;padding:15px;text-align:center;border-top:3px solid #D4AF37;margin-top:20px;font-size:.9rem;color:#14213D;font-weight:700}
+.in{width:100%;padding:14px;border:2px solid #e0e0e0;border-radius:12px;margin:10px 0;text-align:center;font-size:1rem}
 </style>
 </head>
 <body>
@@ -40,25 +42,83 @@ html,body{overflow-x:hidden;width:100%;background:linear-gradient(135deg,#f5f7fa
 <div>[📅] <span id="cd">--/--/----</span></div>
 </div>
 
-<div class="pg">
-<button class="btn bg mb">
+<!-- الصفحة الرئيسية -->
+<div id="home" class="page active">
+<button class="btn bg mb" onclick="showPage('report')">
 <span style="font-size:3rem">🚚</span>
 <br>إرسال تبليغ
 </button>
-
 <div class="cd">
 <h3 style="text-align:center;margin-bottom:15px;color:#14213D;font-size:1.2rem">
 [👥] رواق الموظفين والمسؤولين
 </h3>
 <div class="g2">
-<button class="btn by sb2" onclick="au('dr')">
+<button class="btn by sb2" onclick="showPage('driver')">
 [🚚] السائقين
 </button>
-<button class="btn bb sb2" onclick="au('ad')">
+<button class="btn bb sb2" onclick="showPage('admin')">
 [🛡️] الإدارة
 </button>
 </div>
 </div>
+</div>
+
+<!-- صفحة إرسال التبليغ -->
+<div id="report" class="page">
+<h2 style="margin-bottom:20px;color:#1B5E20">[📝] إرسال تبليغ جديد</h2>
+<div class="cd">
+<div style="height:200px;background:#f5f5f5;border:3px dashed #bdbdbd;border-radius:18px;display:flex;align-items:center;justify-content:center;margin-bottom:15px">
+<span style="color:#999;font-size:3rem">📷</span>
+</div>
+<button class="btn bg">[📷] التقاط الصورة</button>
+<button class="btn bb">[📍] تحديد الموقع</button>
+<input type="text" class="in" placeholder="اسم الحي أو الشارع">
+<input type="text" class="in" placeholder="إحداثيات GPS" readonly>
+<button class="btn bg" style="height:60px;font-size:1.2rem">[✉️] إرسال البلاغ الآن</button>
+<button class="btn bx" onclick="showPage('home')">[←] رجوع</button>
+</div>
+</div>
+
+<!-- صفحة الإدارة -->
+<div id="admin" class="page">
+<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
+<h2 style="color:#1B5E20">[⚙️] لوحة التحكم</h2>
+<button class="btn br" onclick="showPage('home')" style="width:auto;padding:10px 20px">[✕] خروج</button>
+</div>
+<div class="cd">
+<h3 style="margin-bottom:15px">[🔐] الدخول للمشرفين</h3>
+<input type="text" id="adminName" class="in" placeholder="الاسم الكامل">
+<input type="password" id="adminCode" class="in" placeholder="رمز الدخول">
+<button class="btn bb" onclick="loginAdmin()">[✓] دخول</button>
+</div>
+<div id="adminPanel" style="display:none">
+<button class="btn bg" style="margin-top:15px">[📊] عرض البلاغات</button>
+<button class="btn by" style="margin-top:15px">[👥] إدارة الموظفين</button>
+<button class="btn bb" style="margin-top:15px">[📥] تصدير Excel</button>
+</div>
+<button class="btn bx" onclick="showPage('home')" style="margin-top:15px">[←] رجوع</button></div>
+
+<!-- صفحة السائقين -->
+<div id="driver" class="page">
+<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
+<h2 style="color:#1B5E20">[🚚] مساحة السائقين</h2>
+<button class="btn br" onclick="showPage('home')" style="width:auto;padding:10px 20px">[✕] خروج</button>
+</div>
+<div class="cd">
+<h3 style="margin-bottom:15px">[🔐] دخول السائق</h3>
+<input type="text" id="driverName" class="in" placeholder="الاسم">
+<input type="password" id="driverCode" class="in" placeholder="الرمز (5678)">
+<button class="btn by" onclick="loginDriver()">[✓] دخول</button>
+</div>
+<div id="driverPanel" style="display:none;margin-top:20px">
+<h3 style="margin-bottom:15px;color:#2E7D32">[📋] مهامك الموكلة</h3>
+<div style="background:#f9f9f9;padding:15px;border-radius:12px;margin-bottom:10px">
+<p style="font-weight:700;margin-bottom:10px">[📍] البلاغ #1</p>
+<p style="color:#666;font-size:.9rem">الموقع: وسط المدينة<br>الحالة: قيد الانتظار</p>
+<button class="btn bg" style="margin-top:10px">[✓] تأكيد الإنجاز</button>
+</div>
+</div>
+<button class="btn bx" onclick="showPage('home')" style="margin-top:15px">[←] رجوع</button>
 </div>
 
 <div class="ft">
@@ -67,7 +127,36 @@ html,body{overflow-x:hidden;width:100%;background:linear-gradient(135deg,#f5f7fa
 
 <script>
 function ut(){const n=new Date();document.getElementById('cd').textContent=n.toLocaleDateString('ar-DZ');document.getElementById('ck').textContent=n.toLocaleTimeString('fr-FR')}
-function au(role){if(role==='ad'){const name=prompt("الاسم:"),code=prompt("الرمز:");if(name==="فتحي"&&code==="1234")alert('✓ لوحة الإدارة - مرحباً '+name);else if(code==="5678")alert('✓ صفحة السائقين');else alert('✗ رمز خاطئ')}else if(role==='dr'){alert('📱 صفحة السائقين - مهامك جاهزة')}}
+
+function showPage(id){
+document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+document.getElementById(id).classList.add('active');
+}
+
+function loginAdmin(){
+const name=document.getElementById('adminName').value;
+const code=document.getElementById('adminCode').value;
+if(name==="فتحي"&&code==="1234"){
+alert('✓ مرحباً '+name+' - لديك صلاحيات كاملة');
+document.getElementById('adminPanel').style.display='block';
+}else if(code==="1234"){
+alert('✓ لوحة الإدارة - مرحباً '+name);
+document.getElementById('adminPanel').style.display='block';
+}else{
+alert('✗ رمز الدخول غير صحيح')
+}
+}
+function loginDriver(){
+const name=document.getElementById('driverName').value;
+const code=document.getElementById('driverCode').value;
+if(code==="5678"){
+alert('✓ صفحة السائقين - مهامك جاهزة');
+document.getElementById('driverPanel').style.display='block';
+}else{
+alert('✗ رمز خاطئ')
+}
+}
+
 ut();setInterval(ut,1000);
 </script>
 
