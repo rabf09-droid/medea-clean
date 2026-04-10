@@ -1,638 +1,122 @@
-<!DOCTYPE html>
-<html lang="ar" dir="rtl">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>نظام المدية نظيفة 2026</title>
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Tajawal:wght@400;500;700;900&display=swap" rel="stylesheet">
-    <style>
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Tajawal', sans-serif; }
-        html, body { overflow-x: hidden; width: 100%; position: relative; background: linear-gradient(135deg, #f5f7fa 0%, #e4e8f0 100%); }
-        
-        /* مؤشر حالة الاتصال */
-        .connection-status {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            background: linear-gradient(90deg, #4CAF50 0%, #2E7D32 100%);
-            color: white;
-            text-align: center;
-            padding: 8px;
-            font-size: 0.85rem;
-            font-weight: 700;
-            z-index: 10000;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
-            transition: all 0.3s;
-        }
-        .connection-status.offline {
-            background: linear-gradient(90deg, #f44336 0%, #c62828 100%);
-        }
-        .connection-status i { margin-left: 6px; }
-        
-        .header { background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%); padding: 12px 8px; text-align: center; border-bottom: 3px solid #D4AF37; box-shadow: 0 2px 8px rgba(0,0,0,0.08); margin-top: 35px; }
-        .header .country { font-size: 0.7rem; color: #14213D; margin: 3px 0; font-weight: 600; }
-        .header .dept { font-size: 0.85rem; color: #2E7D32; margin: 4px 0; font-weight: 700; font-family: 'Amiri', serif; }
-        .header .title { font-size: 1.8rem; color: #1B5E20; margin: 6px 0; font-weight: 900; font-family: 'Amiri', serif; text-shadow: 2px 2px 4px rgba(0,0,0,0.1); }
-        
-        .info-bar { display: flex; justify-content: space-around; padding: 8px; background: linear-gradient(90deg, #fff8e1 0%, #fff3e0 100%); border-bottom: 2px solid #D4AF37; font-size: 0.9rem; }
-        .info-bar div { font-weight: 700; color: #14213D; display: flex; align-items: center; gap: 6px; }
-        .info-bar i { color: #D4AF37; font-size: 0.95rem; }
-        
-        .page { display: none; padding: 15px; max-width: 600px; margin: auto; animation: fadeIn 0.3s; position: relative; z-index: 1; min-height: 80vh; }
-        .page.active { display: block; }
-        .page:not(.active) { visibility: hidden; position: absolute; top: 0; left: 0; width: 100%; height: 0; overflow: hidden; opacity: 0; pointer-events: none; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-        
-        .btn { width: 100%; padding: 14px; border: none; border-radius: 15px; font-size: 1rem; font-weight: 700; cursor: pointer; margin: 8px 0; color: white; transition: all 0.3s; box-shadow: 0 4px 12px rgba(0,0,0,0.15); display: flex; align-items: center; justify-content: center; gap: 8px; }        .btn:active { transform: scale(0.97); }
-        .btn i { font-size: 1.1rem; }
-        .btn-green { background: linear-gradient(135deg, #2E7D32 0%, #1B5E20 100%); }
-        .btn-blue { background: linear-gradient(135deg, #14213D 0%, #0d1526 100%); }
-        .btn-yellow { background: linear-gradient(135deg, #f39c12 0%, #d68910 100%); }
-        .btn-red { background: linear-gradient(135deg, #d21034 0%, #a00d28 100%); }
-        .btn-gray { background: linear-gradient(135deg, #757575 0%, #616161 100%); }
-        .btn-orange { background: linear-gradient(135deg, #FF9800 0%, #F57C00 100%); }
-        
-        .card { background: white; border-radius: 18px; padding: 18px; margin: 12px 0; box-shadow: 0 4px 12px rgba(0,0,0,0.08); border: 2px dashed #14213D; }
-        .input { width: 100%; padding: 12px; border: 2px solid #e0e0e0; border-radius: 12px; margin: 8px 0; font-size: 0.95rem; text-align: center; transition: border-color 0.3s; }
-        .input:focus { outline: none; border-color: #2E7D32; }
-        
-        .cam-box { position: relative; height: 220px; border: 3px dashed #bdbdbd; border-radius: 18px; display: flex; align-items: center; justify-content: center; background: #fafafa; margin: 12px 0; overflow: hidden; }
-        .cam-box img { width: 100%; height: 100%; object-fit: cover; }
-        .cam-btn { position: absolute; bottom: 12px; background: #14213D; color: white; padding: 8px 16px; border-radius: 20px; cursor: pointer; display: flex; align-items: center; gap: 6px; font-size: 0.85rem; box-shadow: 0 3px 8px rgba(0,0,0,0.2); }
-        .cam-btn i { font-size: 0.95rem; }
-        
-        .spinner { border: 3px solid rgba(255,255,255,0.3); border-top: 3px solid white; border-radius: 50%; width: 22px; height: 22px; animation: spin 1s linear infinite; display: inline-block; vertical-align: middle; margin-left: 8px; }
-        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-        
-        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.75); z-index: 9999; align-items: center; justify-content: center; backdrop-filter: blur(3px); }
-        .modal-content { background: white; padding: 25px; border-radius: 22px; width: 90%; max-width: 380px; text-align: center; box-shadow: 0 10px 40px rgba(0,0,0,0.3); }
-        .modal-content h3 { color: #1B5E20; margin-bottom: 18px; font-size: 1.3rem; }
-        
-        #thanks-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: linear-gradient(135deg, #2E7D32 0%, #1B5E20 100%); color: white; flex-direction: column; align-items: center; justify-content: center; z-index: 10000; text-align: center; padding: 20px; animation: fadeIn 0.4s; }
-        @keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.1); } }
-        
-        .footer { background: white; padding: 12px; text-align: center; border-top: 3px solid #D4AF37; margin-top: 15px; font-size: 0.8rem; color: #14213D; font-weight: 700; }
-        
-        .status-badge { display: inline-block; padding: 5px 12px; border-radius: 15px; font-size: 0.8rem; font-weight: 700; margin: 5px; box-shadow: 0 2px 6px rgba(0,0,0,0.1); }
-        .status-new { background: #ffeb3b; color: #000; }
-        .status-sent { background: #2196F3; color: white; }
-        .status-done { background: #4CAF50; color: white; }
-        
-        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-        .icon-sm { font-size: 1.1rem !important; }
-        .icon-md { font-size: 1.3rem !important; }
-        .icon-lg { font-size: 1.6rem !important; }
-        .main-btn { height: 140px; font-size: 1.4rem; flex-direction: column; gap: 10px; }
-        .main-btn i { font-size: 2.5rem; }
-        .staff-btn { height: 60px; font-size: 0.95rem; }
-        .staff-btn i { font-size: 1.1rem; }
-        .report-img { width: 70px; height: 70px; border-radius: 12px; object-fit: cover; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
-        
-        @media (max-width: 480px) {
-            .header .title { font-size: 1.6rem; }
-            .main-btn { height: 120px; font-size: 1.2rem; }
-            .main-btn i { font-size: 2.2rem; }
-        }    </style>
-</head>
-<body><!-- مؤشر حالة الاتصال -->
-<div id="conn-status" class="connection-status">
-    <i class="fas fa-spinner fa-spin"></i> جاري الاتصال بالخادم...
-</div>
-
-<div id="thanks-overlay">
-    <i class="fas fa-heart" style="font-size: 4rem; color: #FFD700; margin-bottom: 20px; animation: pulse 1s infinite;"></i>
-    <h1 style="font-size: 2rem; margin: 10px 0; font-family: 'Amiri', serif;">شكراً لكم!</h1>
-    <p style="font-size: 1.1rem; line-height: 1.6; margin: 10px 0;">تم إرسال بلاغكم بنجاح<br>نحن نقدر حرصكم على نظافة مدينتنا</p>
-    <div style="margin-top: 25px; padding: 12px 35px; border: 2px solid #FFD700; border-radius: 40px; font-size: 1rem; font-weight: 700; background: rgba(255,255,255,0.1);">معاً لمدية أنظف 2026</div>
-</div>
-
-<div id="staff-modal" class="modal">
-    <div class="modal-content">
-        <h3><i class="fas fa-user-plus" style="margin-left: 8px;"></i>إضافة موظف جديد</h3>
-        <select id="st-role" class="input" onchange="toggleStaffFields()">
-            <option value="سائق">سائق</option>
-            <option value="مسؤول">مسؤول</option>
-        </select>
-        <input type="text" id="st-name" class="input" placeholder="الاسم الكامل">
-        <input type="text" id="st-phone" class="input" placeholder="رقم الهاتف">
-        <div id="driver-fields">
-            <input type="text" id="st-truck" class="input" placeholder="رقم الشاحنة">
-        </div>
-        <button class="btn btn-green" onclick="saveStaff()" style="margin-top: 15px;">
-            <i class="fas fa-save"></i> حفظ
-        </button>
-        <button class="btn btn-red" onclick="closeModal()">
-            <i class="fas fa-times"></i> إغلاق
-        </button>
-    </div>
-</div>
-
-<div class="header">
-    <div class="country">الجمهورية الجزائرية الديمقراطية الشعبية</div>
-    <div class="dept">مصلحة النظافة لبلدية المدية</div>
-    <div class="title">المـديـة نظيـفة</div>
-</div>
-
-<div class="info-bar">
-    <div><i class="far fa-calendar-alt"></i> <span id="current-date">----/--/--</span></div>
-    <div><i class="far fa-clock"></i> <span id="clock">00:00:00</span></div>
-</div>
-
-<!-- الصفحة الرئيسية -->
-<div id="home" class="page active">
-    <button class="btn btn-green main-btn" onclick="navTo('report')">
-        <i class="fas fa-truck-loading"></i>
-        <span>إرســـــال تبلـيـــغ</span>
-    </button>    
-    <div class="card">
-        <h3 style="text-align: center; margin-bottom: 12px; color: #14213D; font-size: 1.05rem;">
-            <i class="fas fa-users" style="margin-left: 6px; color: #2E7D32;"></i>
-            رواق الموظفين والمسؤولين
-        </h3>
-        <div class="grid-2">
-            <button class="btn btn-blue staff-btn" onclick="auth('admin')">
-                <i class="fas fa-user-shield icon-sm"></i> الإدارة
-            </button>
-            <button class="btn btn-yellow staff-btn" onclick="auth('driver')">
-                <i class="fas fa-truck icon-sm"></i> السائقين
-            </button>
-        </div>
-    </div>
-</div>
-
-<!-- صفحة إرسال بلاغ -->
-<div id="report" class="page">
-    <div class="card">
-        <div class="cam-box">
-            <i id="cam-icon" class="fas fa-camera" style="font-size: 3rem; color: #bdbdbd;"></i>
-            <img id="cam-img" style="display: none;">
-            <label class="cam-btn">
-                <i class="fas fa-camera"></i> التقاط الصورة
-                <input type="file" accept="image/*" capture="environment" style="display: none;" onchange="handleImage(this)">
-            </label>
-        </div>
-        
-        <button class="btn btn-green" onclick="getLocation()">
-            <i class="fas fa-map-marker-alt icon-sm"></i> تحديد الموقع
-        </button>
-        
-        <input type="text" id="addr" class="input" placeholder="اسم الحي أو الشارع">
-        <input type="text" id="gps" class="input" readonly placeholder="إحداثيات GPS">
-        
-        <button id="send-btn" class="btn btn-green" onclick="sendReport()" style="height: 55px; font-size: 1.1rem;">
-            إرسال البلاغ الآن
-        </button>
-        
-        <button class="btn btn-gray" onclick="navTo('home')">
-            <i class="fas fa-arrow-right icon-sm"></i> رجوع
-        </button>
-    </div>
-</div>
-
-<!-- صفحة الإدارة -->
-<div id="admin" class="page">
-    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
-        <h2 style="font-size: 1.3rem; color: #1B5E20;">            <i class="fas fa-tachometer-alt" style="margin-left: 8px;"></i>لوحة التحكم
-        </h2>
-        <button class="btn btn-red" onclick="location.reload()" style="width: auto; padding: 8px 18px; font-size: 0.9rem;">
-            <i class="fas fa-sign-out-alt icon-sm"></i> خروج
-        </button>
-    </div>
-    
-    <button class="btn btn-blue" onclick="exportData()" style="padding: 16px;">
-        <i class="fas fa-file-excel icon-md"></i> تحميل الأرشيف (Excel)
-    </button>
-    
-    <div class="grid-2" style="margin: 15px 0;">
-        <button class="btn btn-yellow" onclick="showList('new')" style="height: 90px;">
-            <i class="fas fa-exclamation-triangle icon-lg" style="display: block; margin-bottom: 8px;"></i>
-            بلاغات جديدة
-        </button>
-        <button class="btn btn-green" onclick="showList('done')" style="height: 90px;">
-            <i class="fas fa-check-circle icon-lg" style="display: block; margin-bottom: 8px;"></i>
-            منجزة
-        </button>
-    </div>
-    
-    <div class="card" style="border: 2px solid #1976D2; background: #f0f7ff;">
-        <h4 style="color: #1976D2; margin-bottom: 12px; font-size: 1.05rem;">
-            <i class="fas fa-user-cog" style="margin-left: 6px;"></i>إدارة الموظفين
-        </h4>
-        <button class="btn btn-blue" onclick="openModal()" style="padding: 12px;">
-            <i class="fas fa-user-plus icon-sm"></i> + إضافة موظف
-        </button>
-        <div id="staff-list" style="margin-top: 12px;"></div>
-    </div>
-    
-    <div id="reports-list" style="margin-top: 15px;"></div>
-</div>
-
-<!-- صفحة السائق -->
-<div id="driver" class="page">
-    <div class="card" style="background: linear-gradient(135deg, #2E7D32 0%, #1B5E20 100%); color: white; text-align: center; padding: 20px;">
-        <h3 id="driver-name" style="font-size: 1.2rem; font-family: 'Amiri', serif;">
-            <i class="fas fa-tasks" style="margin-left: 8px;"></i>المهام الموكلة
-        </h3>
-    </div>
-    <div id="driver-tasks"></div>
-    <button class="btn btn-gray" onclick="location.reload()">
-        <i class="fas fa-sign-out-alt icon-sm"></i> خروج
-    </button>
-</div>
-
-<div class="footer">
-    <i class="fas fa-shield-alt" style="margin-left: 5px; color: #D4AF37;"></i>    إشراف د. رابحي فتحي - بلدية المدية 2026 ©
-            </div><script>
-const APP_NAME = "المدية نظيفة";
-const STORAGE_KEY = "medea_clean_data_v2";
-const STAFF_KEY = "medea_clean_staff";
-
-let reports = [];
-let staff = [];
-let currentUser = '';
-let currentUserRole = '';
-let tempImage = '';
-let tempDoneImage = '';
-let db = null;
-let firebaseReady = false;
-let isOnline = navigator.onLine;
-
-// ============================================
-// 📡 مراقبة حالة الاتصال
-// ============================================
-function updateConnectionStatus(online, firebase) {
-    const el = document.getElementById('conn-status');
-    if (!online) {
-        el.className = 'connection-status offline';
-        el.innerHTML = '<i class="fas fa-wifi-slash"></i> لا يوجد اتصال بالإنترنت - المزامنة معطلة';
-    } else if (!firebase) {
-        el.className = 'connection-status offline';
-        el.innerHTML = '<i class="fas fa-exclamation-triangle"></i> متصل بالإنترنت لكن Firebase غير متاح';
-    } else {
-        el.className = 'connection-status';
-        el.innerHTML = '<i class="fas fa-cloud"></i> متصل بالسحابة - المزامنة الفورية نشطة ✅';
-    }
-}
-
-window.addEventListener('online', () => { isOnline = true; checkFirebase(); });
-window.addEventListener('offline', () => { isOnline = false; updateConnectionStatus(false, false); });
-
-function checkFirebase() {
-    if (!isOnline) return;
-    setTimeout(() => {
-        if (db && firebaseReady) {
-            updateConnectionStatus(true, true);
-            loadFromFirebase();
-        } else {
-            updateConnectionStatus(true, false);
-        }
-    }, 2000);
-}
-
-// ============================================
-// 🔥 تهيئة Firebase
-// ============================================try {
-    const firebaseConfig = { databaseURL: "https://medea-clean-2026-v4-default-rtdb.firebaseio.com/" };
-    if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
-    db = firebase.database();
-    
-    const connectedRef = db.ref(".info/connected");
-    connectedRef.on("value", (snap) => {
-        firebaseReady = snap.val() === true;
-        console.log(`${APP_NAME}: Firebase ${firebaseReady ? 'متصل ✓' : 'غير متصل ✗'}`);
-        updateConnectionStatus(isOnline, firebaseReady);
-        if (firebaseReady) loadFromFirebase();
-    });
-    
-} catch (e) { 
-    console.log("Firebase غير متاح");
-    updateConnectionStatus(isOnline, false);
-}
-
-function loadFromFirebase() {
-    if (!db) return;
-    db.ref('CLEAN_MEDEA_FINAL').once('value', (snap) => {
-        if (snap.exists()) {
-            const data = snap.val();
-            if (data.reports) { reports = data.reports; localStorage.setItem(STORAGE_KEY, JSON.stringify(reports)); }
-            if (data.staff) { staff = data.staff; localStorage.setItem(STAFF_KEY, JSON.stringify(staff)); }
-            updateUI();
-            console.log("✅ تم المزامنة مع السحابة");
-        }
-    });
-    
-    db.ref('CLEAN_MEDEA_FINAL').on('value', (snap) => {
-        if (snap.exists()) {
-            const data = snap.val();
-            if (data.reports) reports = data.reports;
-            if (data.staff) staff = data.staff;
-            updateUI();
-        }
-    });
-}
-
-// ============================================
-// 🚀 بدء التطبيق
-// ============================================
-function initApp() { 
-    updateTime(); 
-    setInterval(updateTime, 1000);
-    reports = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
-    staff = JSON.parse(localStorage.getItem(STAFF_KEY) || '[]');
-    updateConnectionStatus(isOnline, firebaseReady);
-    updateUI();    console.log(`✅ ${APP_NAME} جاهز`);
-}
-
-function updateTime() {
-    const now = new Date();
-    document.getElementById('current-date').textContent = now.toLocaleDateString('ar-DZ');
-    document.getElementById('clock').textContent = now.toLocaleTimeString('fr-FR');
-}
-
-function navTo(id) {
-    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-    document.getElementById(id).classList.add('active');
-}
-
-// ============================================
-// 📸 معالجة الصور
-// ============================================
-function handleImage(input) {
-    if (!input.files || !input.files[0]) return;
-    const reader = new FileReader();
-    reader.onload = e => {
-        const img = new Image();
-        img.onload = () => {
-            const c = document.createElement('canvas');
-            let w = img.width, h = img.height;
-            if (w > 640) { h = Math.round(h * 640 / w); w = 640; }
-            c.width = w; c.height = h;
-            c.getContext('2d').drawImage(img, 0, 0, w, h);
-            tempImage = c.toDataURL('image/jpeg', 0.6);
-            document.getElementById('cam-img').src = tempImage;
-            document.getElementById('cam-img').style.display = 'block';
-            document.getElementById('cam-icon').style.display = 'none';
-        };
-        img.src = e.target.result;
-    };
-    reader.readAsDataURL(input.files[0]);
-}
-
-// ============================================
-// 📍 تحديد الموقع (مع معالجة فشل GPS في APK)
-// ============================================
-function getLocation() {
-    const btn = event.target;
-    const orig = btn.innerHTML;
-    btn.innerHTML = '<div class="spinner"></div> جاري التحديد...';
-    btn.disabled = true;
-    
-    if (navigator.geolocation) {
-        navigator.geolocation.getCurrentPosition(pos => {
-            const lat = pos.coords.latitude, lng = pos.coords.longitude;            document.getElementById('gps').value = `${lat}, ${lng}`;
-            
-            fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&accept-language=ar`)
-                .then(r => r.json()).then(d => {
-                    if (d.display_name) {
-                        document.getElementById('addr').value = d.display_name.split(',').slice(0,3).join(',');
-                        alert(`✅ تم تحديد الموقع:\n${document.getElementById('addr').value}\n\nالإحداثيات: ${lat}, ${lng}`);
-                    }
-                    btn.innerHTML = orig; btn.disabled = false;
-                }).catch(() => fallbackLocation(btn, orig));
-        }, () => fallbackLocation(btn, orig), { enableHighAccuracy: false, timeout: 5000 });
-    } else { fallbackLocation(btn, orig); }
-}
-
-function fallbackLocation(btn, orig) {
-    const addr = document.getElementById('addr');
-    addr.value = "";
-    addr.placeholder = "⚠️ فشل GPS.. اكتب اسم الحي يدوياً (مثال: وزرة، المدية)";
-    addr.focus();
-    document.getElementById('gps').value = "36.2642, 2.7545";
-    btn.innerHTML = orig; btn.disabled = false;
-    alert("⚠️ تعذر تحديد الموقع تلقائياً\n\nيرجى كتابة العنوان يدوياً في الحقل أعلاه");
-}
-
-// ============================================
-// 📤 إرسال البلاغ
-// ============================================
-async function sendReport() {
-    const addr = document.getElementById('addr').value.trim();
-    if (!addr) { alert("الرجاء إدخال العنوان"); return; }
-    
-    const btn = document.getElementById('send-btn');
-    const orig = btn.innerHTML;
-    btn.disabled = true; btn.innerHTML = '<div class="spinner"></div> جاري الإرسال...';
-    
-    const report = { 
-        id: Date.now(), 
-        img: tempImage || "no-image", 
-        addr, 
-        gps: document.getElementById('gps').value || "غير محدد", 
-        time: new Date().toLocaleTimeString('ar-DZ'), 
-        date: new Date().toLocaleDateString('ar-DZ'), 
-        status: 'new', 
-        driverName: null, 
-        doneImg: null, 
-        doneTime: null, 
-        hasImage: !!tempImage, 
-        synced: false, 
-        deleted: false 
-    };    
-    reports.push(report);
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(reports));
-    
-    if (db && firebaseReady) { 
-        try { 
-            await db.ref('CLEAN_MEDEA_FINAL/reports').push(report); 
-            report.synced = true;
-        } catch(e){ console.log("Firebase error"); } 
-    }
-    
-    document.getElementById('thanks-overlay').style.display = 'flex';
-    tempImage = ''; 
-    document.getElementById('cam-img').style.display = 'none'; 
-    document.getElementById('cam-icon').style.display = 'block';
-    document.getElementById('addr').value = ''; 
-    document.getElementById('gps').value = '';
-    btn.disabled = false; 
-    btn.innerHTML = orig;
-    
-    setTimeout(() => { 
-        document.getElementById('thanks-overlay').style.display = 'none'; 
-        navTo('home'); 
-    }, 4500);
-}
-
-// ============================================
-// 🔐 المصادقة
-// ============================================
-function auth(role) {
-    const name = prompt("الاسم الكامل:"); if (!name) return;
-    const code = prompt("رمز الدخول:");
-    
-    if ((name === "فتحي" && code === "1234") || (role === 'admin' && code === "1234")) {
-        currentUser = name; currentUserRole = 'admin'; navTo('admin'); updateUI();
-        alert(`مرحباً ${name} - مشرف`);
-    } else if (role === 'driver' && code === "5678") {
-        currentUser = name; currentUserRole = 'driver'; navTo('driver'); updateUI();
-        alert(`مرحباً ${name} - سائق`);
-    } else { alert("❌ رمز خاطئ"); }
-}
-
-// ============================================
-// 📋 عرض البلاغات
-// ============================================
-function showList(type) {
-    const container = document.getElementById('reports-list');
-    const active = reports.filter(r => !r.deleted);
-    const filtered = type === 'new' ? active.filter(r => r.status !== 'done') : active.filter(r => r.status === 'done');
-        container.innerHTML = `<h3 style="margin-bottom:15px;color:#1B5E20;"><i class="fas fa-${type==='new'?'exclamation-triangle':'check-circle'}" style="margin-left:8px;"></i>${type==='new'?'البلاغات الجديدة':'المنجزة'} (${filtered.length})</h3>`;
-    
-    if(!filtered.length) { container.innerHTML += '<p style="text-align:center;color:#666;padding:20px;">لا توجد بيانات</p>'; return; }
-    
-    container.innerHTML += filtered.map(r => `
-        <div class="card" style="border-right:5px solid ${type==='done'?'#4CAF50':'#f44336'};margin-bottom:12px;padding:14px;">
-            <div style="display:flex;gap:10px;margin-bottom:10px;">
-                ${r.hasImage ? `<img src="${r.img}" class="report-img">` : '<div style="width:70px;height:70px;background:#e0e0e0;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:0.65rem;">بدون صورة</div>'}
-                ${r.doneImg ? `<img src="${r.doneImg}" class="report-img" style="border:2px solid #4CAF50;">` : ''}
-            </div>
-            <p style="font-size:0.88rem;margin:8px 0;line-height:1.6;color:#424242;">
-                <i class="fas fa-map-marker-alt" style="color:#f44336;"></i> ${r.addr}<br>
-                <i class="fas fa-globe" style="color:#2196F3;"></i> ${r.gps}<br>
-                <i class="far fa-clock" style="color:#FF9800;"></i> ${r.time} - ${r.date}
-            </p>
-            <span class="status-badge status-${r.status}">${r.status==='new'?'جديد':r.status==='sent'?'قيد التنفيذ':'منجز'}</span>
-            ${r.driverName?`<span style="display:block;margin-top:8px;color:#2E7D32;font-weight:700;"><i class="fas fa-user"></i> ${r.driverName}</span>`:''}
-            ${type==='new'&&r.status==='new'?`<button class="btn btn-green" onclick="assignTask(${r.id})" style="margin-top:10px;padding:10px;font-size:0.9rem;"><i class="fas fa-paper-plane icon-sm"></i> توجيه لسائق</button>`:''}
-            ${type==='done'&&currentUserRole==='admin'?`<button class="btn btn-red" onclick="deleteReport(${r.id})" style="margin-top:10px;padding:10px;font-size:0.9rem;"><i class="fas fa-trash icon-sm"></i> حذف</button>`:''}
-            ${type==='done'&&currentUserRole!=='admin'?`<span style="display:block;margin-top:10px;font-size:0.8rem;color:#757575;"><i class="fas fa-lock"></i> الحذف للمشرف فقط</span>`:''}
-        </div>`).join('');
-}
-
-function assignTask(id) {
-    const name = prompt("أدخل اسم السائق:"); if(!name) return;
-    const r = reports.find(x=>x.id===id); 
-    if(r){ 
-        r.status='sent'; r.driverName=name; 
-        saveLocal(); 
-        showList('new'); 
-        alert(`✅ تم توجيه المهمة لـ: ${name}`); 
-    }
-}
-
-function deleteReport(id) {
-    if(currentUserRole!=='admin'){alert("❌ الحذف للمشرف فقط");return;}
-    if(!confirm("⚠️ هل تريد حذف هذا البلاغ نهائياً؟")) return;
-    
-    const r = reports.find(x=>x.id===id);
-    if(r){ 
-        r.deleted=true; r.deletedBy=currentUser; r.deletedAt=new Date().toLocaleString('ar-DZ'); 
-        saveLocal(); 
-    }
-    if(db) db.ref('CLEAN_MEDEA_FINAL/reports').orderByChild('id').equalTo(id).once('value', s=>s.forEach(c=>c.ref.update({deleted:true, deletedBy:currentUser})));
-    showList('done');
-}
-
-// ============================================
-// 📊 تصدير الأرشيف
-// ============================================function exportData() {
-    if(!reports.length){alert("لا توجد بيانات");return;}
-    const active = reports.filter(r=>!r.deleted);
-    let csv = "\ufeffأرشيف المدية نظيفة - "+new Date().toLocaleDateString('ar-DZ')+"\nالمعرف,التاريخ,الوقت,العنوان,الإحداثيات,الحالة,السائق\n";
-    active.forEach(r=>csv+=`${r.id},${r.date},${r.time},"${r.addr}",${r.gps},${r.status},${r.driverName||'---'}\n`);
-    
-    const blob = new Blob([csv],{type:'text/csv;charset=utf-8;'});
-    const a = document.createElement('a'); 
-    a.href=URL.createObjectURL(blob);
-    a.download=`المدية_نظيفة_أرشيف_${Date.now()}.csv`; 
-    a.click();
-    alert(`✅ تم تصدير ${active.length} بلاغ`);
-}
-
-// ============================================
-// 🔄 تحديث الواجهة
-// ============================================
-function updateUI() {
-    const sl = document.getElementById('staff-list');
-    if(sl) {
-        sl.innerHTML = staff.length ? staff.map(s=>`<div style="display:flex;justify-content:space-between;padding:10px;border-bottom:1px solid #e0e0e0;"><span><b>${s.role}:</b> ${s.name}</span>${currentUserRole==='admin'?`<i class="fas fa-trash" style="color:#f44336;cursor:pointer;" onclick="deleteStaff('${s.name}')"></i>`:''}</div>`).join('') : '<p style="text-align:center;color:#757575;padding:15px;">لا يوجد موظفون</p>';
-    }
-    
-    if(currentUser && document.getElementById('driver').classList.contains('active')){
-        const tasks = reports.filter(r=>r.driverName===currentUser && r.status==='sent' && !r.deleted);
-        document.getElementById('driver-name').innerHTML = `<i class="fas fa-tasks" style="margin-left:8px;"></i>مهام: ${currentUser}`;
-        
-        document.getElementById('driver-tasks').innerHTML = tasks.length ? tasks.map(t=>`
-            <div class="card" style="margin-bottom:18px;padding:16px;">
-                <img src="${t.img}" style="width:100%;border-radius:15px;margin-bottom:14px;max-height:220px;object-fit:cover;">
-                <p style="font-weight:700;margin-bottom:10px;color:#1B5E20;"><i class="fas fa-map-marker-alt" style="color:#f44336;"></i> ${t.addr}</p>
-                <p style="color:#757575;margin-bottom:14px;"><i class="fas fa-globe" style="color:#2196F3;"></i> ${t.gps}</p>
-                <a href="https://www.google.com/maps/dir/?api=1&destination=${t.gps.split(',')[0]},${t.gps.split(',')[1]}" target="_blank" class="btn btn-blue" style="margin-bottom:10px;"><i class="fas fa-map-marked-alt icon-md"></i> الانتقال للخريطة</a>
-                <label class="btn btn-orange" style="margin-bottom:10px;"><i class="fas fa-camera icon-md"></i> تصوير بعد التنظيف<input type="file" accept="image/*" capture="environment" style="display:none;" onchange="handleDoneImage(this,${t.id})"></label>
-                <button class="btn btn-green" onclick="completeTask(${t.id})"><i class="fas fa-check-circle icon-md"></i> تأكيد الإنجاز</button>
-            </div>`).join('') : '<p style="text-align:center;padding:30px;color:#757575;">🎉 لا توجد مهام حالياً</p>';
-    }
-}
-
-function handleDoneImage(input,id){
-    if(!input.files[0]) return;
-    const r=new FileReader();
-    r.onload=e=>{
-        const img=new Image(); 
-        img.onload=()=>{
-            const c=document.createElement('canvas'); let w=img.width,h=img.height;
-            if(w>640){h=Math.round(h*640/w);w=640;} 
-            c.width=w;c.height=h;
-            c.getContext('2d').drawImage(img,0,0,w,h); 
-            tempDoneImage=c.toDataURL('image/jpeg',0.6);        }; 
-        img.src=e.target.result;
-    }; 
-    r.readAsDataURL(input.files[0]);
-}
-
-function completeTask(id){
-    if(!tempDoneImage){alert("الرجاء تصوير المكان أولاً");return;}
-    const r=reports.find(x=>x.id===id); 
-    if(r){
-        r.status='done'; r.doneImg=tempDoneImage; r.doneTime=new Date().toLocaleString('ar-DZ'); 
-        saveLocal(); updateUI(); 
-        alert("🎉 تم إنجاز المهمة!"); 
-        tempDoneImage='';
-    }
-}
-
-function openModal(){if(currentUserRole!=='admin'){alert("❌ للمشرف فقط");return;} document.getElementById('staff-modal').style.display='flex';}
-function closeModal(){document.getElementById('staff-modal').style.display='none';}
-function toggleStaffFields(){}
-
-function saveStaff(){
-    if(currentUserRole!=='admin') return;
-    const n=document.getElementById('st-name').value.trim(); if(!n){alert("الاسم مطلوب");return;}
-    staff.push({role:document.getElementById('st-role').value, name:n, phone:document.getElementById('st-phone').value.trim(), truck:document.getElementById('st-truck').value.trim()||'---'});
-    localStorage.setItem(STAFF_KEY, JSON.stringify(staff)); 
-    closeModal(); updateUI(); alert("✓ تم إضافة الموظف");
-    document.getElementById('st-name').value=''; document.getElementById('st-phone').value=''; document.getElementById('st-truck').value='';
-}
-
-function deleteStaff(name){
-    if(currentUserRole!=='admin') return; 
-    if(!confirm(`حذف ${name}؟`)) return;
-    staff=staff.filter(s=>s.name!==name); 
-    localStorage.setItem(STAFF_KEY,JSON.stringify(staff)); 
-    updateUI();
-}
-
-function saveLocal(){ 
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(reports)); 
-    if(db && firebaseReady) db.ref('CLEAN_MEDEA_FINAL').update({reports, staff}); 
-}
-
-window.onload = initApp;
-</script>
-</body>
-</html>
+<!DOCTYPE html><html lang="ar" dir="rtl"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><title>المدية نظيفة 2026</title>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<link href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Tajawal:wght@400;500;700;900&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0;font-family:'Tajawal',sans-serif}
+html,body{overflow-x:hidden;width:100%;background:linear-gradient(135deg,#f5f7fa,#e4e8f0)}
+.conn{position:fixed;top:0;left:0;right:0;background:linear-gradient(90deg,#4CAF50,#2E7D32);color:#fff;text-align:center;padding:8px;font-size:.85rem;font-weight:700;z-index:10000;box-shadow:0 2px 10px rgba(0,0,0,.2)}
+.conn.off{background:linear-gradient(90deg,#f44336,#c62828)}
+.conn i{margin-left:6px}
+.hdr{background:linear-gradient(135deg,#fff,#f8f9fa);padding:12px 8px;text-align:center;border-bottom:3px solid #D4AF37;box-shadow:0 2px 8px rgba(0,0,0,.08);margin-top:35px}
+.hdr .c{font-size:.7rem;color:#14213D;margin:3px 0;font-weight:600}
+.hdr .d{font-size:.85rem;color:#2E7D32;margin:4px 0;font-weight:700;font-family:'Amiri',serif}
+.hdr .t{font-size:1.8rem;color:#1B5E20;margin:6px 0;font-weight:900;font-family:'Amiri',serif;text-shadow:2px 2px 4px rgba(0,0,0,.1)}
+.ib{display:flex;justify-content:space-around;padding:8px;background:linear-gradient(90deg,#fff8e1,#fff3e0);border-bottom:2px solid #D4AF37;font-size:.9rem}
+.ib div{font-weight:700;color:#14213D;display:flex;align-items:center;gap:6px}
+.ib i{color:#D4AF37;font-size:.95rem}
+.pg{display:none;padding:15px;max-width:600px;margin:auto;animation:fd .3s;position:relative;z-index:1;min-height:80vh}
+.pg.a{display:block}
+.pg:not(.a){visibility:hidden;position:absolute;top:0;left:0;width:100%;height:0;overflow:hidden;opacity:0;pointer-events:none}
+@keyframes fd{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+.btn{width:100%;padding:14px;border:none;border-radius:15px;font-size:1rem;font-weight:700;cursor:pointer;margin:8px 0;color:#fff;transition:all .3s;box-shadow:0 4px 12px rgba(0,0,0,.15);display:flex;align-items:center;justify-content:center;gap:8px}
+.btn:active{transform:scale(.97)}
+.btn i{font-size:1.1rem}
+.bg{background:linear-gradient(135deg,#2E7D32,#1B5E20)}
+.bb{background:linear-gradient(135deg,#14213D,#0d1526)}
+.by{background:linear-gradient(135deg,#f39c12,#d68910)}
+.br{background:linear-gradient(135deg,#d21034,#a00d28)}
+.bx{background:linear-gradient(135deg,#757575,#616161)}
+.bo{background:linear-gradient(135deg,#FF9800,#F57C00)}
+.cd{background:#fff;border-radius:18px;padding:18px;margin:12px 0;box-shadow:0 4px 12px rgba(0,0,0,.08);border:2px dashed #14213D}
+.in{width:100%;padding:12px;border:2px solid #e0e0e0;border-radius:12px;margin:8px 0;font-size:.95rem;text-align:center}
+.in:f{outline:none;border-color:#2E7D32}
+.cb{position:relative;height:220px;border:3px dashed #bdbdbd;border-radius:18px;display:flex;align-items:center;justify-content:center;background:#fafafa;margin:12px 0;overflow:hidden}
+.cb img{width:100%;height:100%;object-fit:cover}
+.cmb{position:absolute;bottom:12px;background:#14213D;color:#fff;padding:8px 16px;border-radius:20px;cursor:pointer;display:flex;align-items:center;gap:6px;font-size:.85rem;box-shadow:0 3px 8px rgba(0,0,0,.2)}
+.cmb i{font-size:.95rem}
+.sp{border:3px solid rgba(255,255,255,.3);border-top:3px solid #fff;border-radius:50%;width:22px;height:22px;animation:sp 1s linear infinite;display:inline-block;vertical-align:middle;margin-left:8px}
+@keyframes sp{0%{transform:rotate(0)}100%{transform:rotate(360deg)}}
+.md{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.75);z-index:9999;align-items:center;justify-content:center}
+.mdc{background:#fff;padding:25px;border-radius:22px;width:90%;max-width:380px;text-align:center;box-shadow:0 10px 40px rgba(0,0,0,.3)}
+.mdc h3{color:#1B5E20;margin-bottom:18px;font-size:1.3rem}
+#to{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:linear-gradient(135deg,#2E7D32,#1B5E20);color:#fff;flex-direction:column;align-items:center;justify-content:center;z-index:10000;text-align:center;padding:20px;animation:fd .4s}
+@keyframes pl{0%,100%{transform:scale(1)}50%{transform:scale(1.1)}}
+.ft{background:#fff;padding:12px;text-align:center;border-top:3px solid #D4AF37;margin-top:15px;font-size:.8rem;color:#14213D;font-weight:700}
+.sb{display:inline-block;padding:5px 12px;border-radius:15px;font-size:.8rem;font-weight:700;margin:5px;box-shadow:0 2px 6px rgba(0,0,0,.1)}
+.sb.n{background:#ffeb3b;color:#000}
+.sb.s{background:#2196F3;color:#fff}
+.sb.d{background:#4CAF50;color:#fff}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.is{font-size:1.1rem!important}
+.im{font-size:1.3rem!important}
+.il{font-size:1.6rem!important}
+.mb{height:140px;font-size:1.4rem;flex-direction:column;gap:10px}
+.mb i{font-size:2.5rem}
+.sb2{height:60px;font-size:.95rem}
+.sb2 i{font-size:1.1rem}
+.ri{width:70px;height:70px;border-radius:12px;object-fit:cover;box-shadow:0 2px 8px rgba(0,0,0,.1)}
+@media(max-width:480px){.hdr .t{font-size:1.6rem}.mb{height:120px;font-size:1.2rem}.mb i{font-size:2.2rem}}
+</style></head><body><div id="cs" class="conn"><i class="fas fa-spinner fa-spin"></i> جاري الاتصال...</div>
+<div id="to"><i class="fas fa-heart" style="font-size:4rem;color:#FFD700;margin-bottom:20px;animation:pl 1s infinite"></i>
+<h1 style="font-size:2rem;margin:10px 0;font-family:'Amiri',serif">شكراً لكم!</h1>
+<p style="font-size:1.1rem;line-height:1.6;margin:10px 0">تم إرسال بلاغكم بنجاح<br>نحن نقدر حرصكم على نظافة مدينتنا</p>
+<div style="margin-top:25px;padding:12px 35px;border:2px solid #FFD700;border-radius:40px;font-size:1rem;font-weight:700;background:rgba(255,255,255,.1)">معاً لمدية أنظف 2026</div></div>
+<div id="sm" class="md"><div class="mdc"><h3><i class="fas fa-user-plus" style="margin-left:8px"></i>إضافة موظف</h3>
+<select id="sr" class="in" onchange="tf()"><option value="سائق">سائق</option><option value="مسؤول">مسؤول</option></select>
+<input type="text" id="sn" class="in" placeholder="الاسم"><input type="text" id="sp" class="in" placeholder="الهاتف">
+<div id="df"><input type="text" id="st" class="in" placeholder="رقم الشاحنة"></div>
+<button class="btn bg" onclick="ss()" style="margin-top:15px"><i class="fas fa-save"></i> حفظ</button>
+<button class="btn br" onclick="cm()"><i class="fas fa-times"></i> إغلاق</button></div></div>
+<div class="hdr"><div class="c">الجمهورية الجزائرية الديمقراطية الشعبية</div><div class="d">مصلحة النظافة لبلدية المدية</div><div class="t">المـديـة نظيـفة</div></div>
+<div class="ib"><div><i class="far fa-calendar-alt"></i><span id="cd">--/--/----</span></div><div><i class="far fa-clock"></i><span id="ck">00:00:00</span></div></div>
+<div id="hm" class="pg a"><button class="btn bg mb" onclick="nt('rp')"><i class="fas fa-truck-loading"></i><span>إرســـــال تبلـيـــغ</span></button>
+<div class="cd"><h3 style="text-align:center;margin-bottom:12px;color:#14213D;font-size:1.05rem"><i class="fas fa-users" style="margin-left:6px;color:#2E7D32"></i>رواق الموظفين</h3>
+<div class="g2"><button class="btn bb sb2" onclick="au('ad')"><i class="fas fa-user-shield is"></i> الإدارة</button>
+<button class="btn by sb2" onclick="au('dr')"><i class="fas fa-truck is"></i> السائقين</button></div></div></div>
+<div id="rp" class="pg"><div class="cd"><div class="cb"><i id="ci" class="fas fa-camera" style="font-size:3rem;color:#bdbdbd"></i><img id="co" style="display:none">
+<label class="cmb"><i class="fas fa-camera"></i> صورة<input type="file" accept="image/*" capture="environment" style="display:none" onchange="hi(this)"></label></div>
+<button class="btn bg" onclick="gl()"><i class="fas fa-map-marker-alt is"></i> الموقع</button>
+<input type="text" id="ad" class="in" placeholder="اسم الحي"><input type="text" id="gp" class="in" readonly placeholder="GPS">
+<button id="sb" class="btn bg" onclick="srp()" style="height:55px;font-size:1.1rem">إرسال البلاغ</button>
+<button class="btn bx" onclick="nt('hm')"><i class="fas fa-arrow-right is"></i> رجوع</button></div></div>
+<div id="ad" class="pg"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:15px">
+<h2 style="font-size:1.3rem;color:#1B5E20"><i class="fas fa-tachometer-alt" style="margin-left:8px"></i>لوحة التحكم</h2>
+<button class="btn br" onclick="location.reload()" style="width:auto;padding:8px 18px;font-size:.9rem"><i class="fas fa-sign-out-alt is"></i> خروج</button></div>
+<button class="btn bb" onclick="ed()" style="padding:16px"><i class="fas fa-file-excel im"></i> تصدير Excel</button>
+<div class="g2" style="margin:15px 0"><button class="btn by" onclick="sl('nw')" style="height:90px"><i class="fas fa-exclamation-triangle il" style="display:block;margin-bottom:8px"></i>جديدة</button>
+<button class="btn bg" onclick="sl('dn')" style="height:90px"><i class="fas fa-check-circle il" style="display:block;margin-bottom:8px"></i>منجزة</button></div>
+<div class="cd" style="border:2px solid #1976D2;background:#f0f7ff"><h4 style="color:#1976D2;margin-bottom:12px;font-size:1.05rem"><i class="fas fa-user-cog" style="margin-left:6px"></i>الموظفين</h4>
+<button class="btn bb" onclick="om()" style="padding:12px"><i class="fas fa-user-plus is"></i> + إضافة</button><div id="sl" style="margin-top:12px"></div></div><div id="rl" style="margin-top:15px"></div></div>
+<div id="dr" class="pg"><div class="cd" style="background:linear-gradient(135deg,#2E7D32,#1B5E20);color:#fff;text-align:center;padding:20px">
+<h3 id="dn" style="font-size:1.2rem;font-family:'Amiri',serif"><i class="fas fa-tasks" style="margin-left:8px"></i>المهام</h3></div><div id="dt"></div>
+<button class="btn bx" onclick="location.reload()"><i class="fas fa-sign-out-alt is"></i> خروج</button></div>
+<div class="ft"><i class="fas fa-shield-alt" style="margin-left:5px;color:#D4AF37"></i>إشراف د. رابحي فتحي - بلدية المدية 2026 ©</div><script>
+const SK="medea_clean_v2",STK="medea_staff";let R=JSON.parse(localStorage.getItem(SK)||'[]'),S=JSON.parse(localStorage.getItem(STK)||'[]'),CU='',CR='',TI='',TDI='',DB=null,FR=false,CT;
+function uc(s,m){const e=document.getElementById('cs');if(!e)return;if(s==='c'){e.className='conn';e.innerHTML='<i class="fas fa-cloud"></i> متصل ✅';e.style.background='linear-gradient(90deg,#4CAF50,#2E7D32)'}else if(s==='o'){e.className='conn off';e.innerHTML='<i class="fas fa-wifi-slash"></i> غير متصل';e.style.background='linear-gradient(90deg,#f44336,#c62828)'}else{e.className='conn';e.innerHTML=m||'<i class="fas fa-spinner fa-spin"></i> جاري...';e.style.background='linear-gradient(90deg,#FF9800,#F57C00)'}}
+function ifb(){try{const fc={databaseURL:"https://medea-clean-2026-v4-default-rtdb.firebaseio.com/"};if(!firebase.apps.length)firebase.initializeApp(fc);DB=firebase.database();DB.ref(".info/connected").on("value",sn=>{FR=sn.val()===true;console.log("FB:",FR?'✓':'✗');if(FR){uc('c');lf();clearTimeout(CT)}else uc('j','<i class="fas fa-spinner fa-spin"></i> جاري...')});CT=setTimeout(()=>{if(!FR){console.warn("FB timeout");uc('o');ia()}},1e4)}catch(e){console.error("FB Error:",e);uc('o');ia()}}
+function lf(){if(!DB)return;DB.ref('CLEAN_MEDEA_FINAL').once('value',sn=>{if(sn.exists()){const d=sn.val();if(d.reports){R=d.reports;localStorage.setItem(SK,JSON.stringify(R))}if(d.staff){S=d.staff;localStorage.setItem(STK,JSON.stringify(S))}console.log("✅ Synced")}ia()},er=>{console.error("Load error:",er);uc('o');ia()});DB.ref('CLEAN_MEDEA_FINAL').on('value',sn=>{if(sn.exists()){const d=sn.val();if(d.reports)R=d.reports;if(d.staff)S=d.staff;uu()}})}
+function ia(){ut();setInterval(ut,1e3);uu();console.log("✅ App ready")}
+function ut(){const n=new Date();const de=document.getElementById('cd'),te=document.getElementById('ck');if(de)de.textContent=n.toLocaleDateString('ar-DZ');if(te)te.textContent=n.toLocaleTimeString('fr-FR')}
+function nt(id){document.querySelectorAll('.pg').forEach(p=>p.classList.remove('a'));const t=document.getElementById(id);if(t)t.classList.add('a')}
+function hi(inp){if(!inp.files||!inp.files[0])return;const r=new FileReader();r.onload=e=>{const img=new Image();img.onload=()=>{const c=document.createElement('canvas');let w=img.width,h=img.height;if(w>640){h=Math.round(h*640/w);w=640}c.width=w;c.height=h;c.getContext('2d').drawImage(img,0,0,w,h);TI=c.toDataURL('image/jpeg',.6);const ci=document.getElementById('co'),ic=document.getElementById('ci');if(ci){ci.src=TI;ci.style.display='block'}if(ic)ic.style.display='none'};img.src=e.target.result};r.readAsDataURL(inp.files[0])}
+function gl(){const btn=event.target,orig=btn.innerHTML;btn.innerHTML='<div class="sp"></div>...';btn.disabled=true;if(navigator.geolocation){navigator.geolocation.getCurrentPosition(pos=>{const lat=pos.coords.latitude,lng=pos.coords.longitude;const ge=document.getElementById('gp'),ae=document.getElementById('ad');if(ge)ge.value=`${lat}, ${lng}`;fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&accept-language=ar`).then(r=>r.json()).then(d=>{if(d.display_name&&ae)ae.value=d.display_name.split(',').slice(0,3).join(',');btn.innerHTML=orig;btn.disabled=false}).catch(()=>fl(btn,orig))},()=>fl(btn,orig),{enableHighAccuracy:false,timeout:5e3})}else fl(btn,orig)}
+function fl(btn,orig){const a=document.getElementById('ad'),g=document.getElementById('gp');if(a){a.value="";a.placeholder="⚠️ اكتب العنوان يدوياً";a.focus()}if(g)g.value="36.2642, 2.7545";btn.innerHTML=orig;btn.disabled=false}
+async function srp(){const ae=document.getElementById('ad'),addr=ae?ae.value.trim():'';if(!addr){alert("أدخل العنوان");return}const btn=document.getElementById('sb'),orig=btn?btn.innerHTML:'';if(btn){btn.disabled=true;btn.innerHTML='<div class="sp"></div> جاري...'}const rp={id:Date.now(),img:TI||"no-image",addr,gps:document.getElementById('gp')?.value||"غير محدد",time:new Date().toLocaleTimeString('ar-DZ'),date:new Date().toLocaleDateString('ar-DZ'),status:'new',driverName:null,doneImg:null,doneTime:null,hasImage:!!TI,synced:false,deleted:false};R.push(rp);localStorage.setItem(SK,JSON.stringify(R));if(DB&&FR){try{await DB.ref('CLEAN_MEDEA_FINAL/reports').push(rp);rp.synced=true;console.log("✅ Saved")}catch(e){console.log("⚠️ Local only")}}const to=document.getElementById('to');if(to)to.style.display='flex';TI='';const ci=document.getElementById('co'),ic=document.getElementById('ci');if(ci)ci.style.display='none';if(ic)ic.style.display='block';if(ae)ae.value='';const ge=document.getElementById('gp');if(ge)ge.value='';if(btn){btn.disabled=false;btn.innerHTML=orig}setTimeout(()=>{if(to)to.style.display='none';nt('hm')},4500)}
+function au(role){const name=prompt("الاسم:");if(!name)return;const code=prompt("الرمز:");if((name==="فتحي"&&code==="1234")||(role==='ad'&&code==="1234")){CU=name;CR='ad';nt('ad');uu();alert(`مرحباً ${name} - مشرف`)}else if(role==='dr'&&code==="5678"){CU=name;CR='dr';nt('dr');uu();alert(`مرحباً ${name} - سائق`)}else alert("❌ رمز خاطئ")}
+function sl(type){const c=document.getElementById('rl');if(!c)return;const act=R.filter(r=>!r.deleted),fil=type==='nw'?act.filter(r=>r.status!=='dn'):act.filter(r=>r.status==='dn');c.innerHTML=`<h3 style="margin-bottom:15px;color:#1B5E20"><i class="fas fa-${type==='nw'?'exclamation-triangle':'check-circle'}" style="margin-left:8px"></i>${type==='nw'?'جديدة':'منجزة'} (${fil.length})</h3>`;if(!fil.length){c.innerHTML+='<p style="text-align:center;color:#666;padding:20px">لا توجد بيانات</p>';return}c.innerHTML+=fil.map(r=>`<div class="cd" style="border-right:5px solid ${type==='dn'?'#4CAF50':'#f44336'};margin-bottom:12px;padding:14px"><div style="display:flex;gap:10px;margin-bottom:10px">${r.hasImage?`<img src="${r.img}" class="ri">`:'<div style="width:70px;height:70px;background:#e0e0e0;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:.65rem">بدون صورة</div>'}${r.doneImg?`<img src="${r.doneImg}" class="ri" style="border:2px solid #4CAF50">`:''}</div><p style="font-size:.88rem;margin:8px 0;line-height:1.6;color:#424242"><i class="fas fa-map-marker-alt" style="color:#f44336"></i> ${r.addr}<br><i class="fas fa-globe" style="color:#2196F3"></i> ${r.gps}<br><i class="far fa-clock" style="color:#FF9800"></i> ${r.time}</p><span class="sb ${r.status==='nw'?'n':r.status==='st'?'s':'d'}">${r.status==='nw'?'جديد':r.status==='st'?'قيد التنفيذ':'منجز'}</span>${r.driverName?`<span style="display:block;margin-top:8px;color:#2E7D32;font-weight:700"><i class="fas fa-user"></i> ${r.driverName}</span>`:''}${type==='nw'&&r.status==='nw'?`<button class="btn bg" onclick="at(${r.id})" style="margin-top:10px;padding:10px;font-size:.9rem"><i class="fas fa-paper-plane is"></i> توجيه</button>`:''}${type==='dn'&&CR==='ad'?`<button class="btn br" onclick="drp(${r.id})" style="margin-top:10px;padding:10px;font-size:.9rem"><i class="fas fa-trash is"></i> حذف</button>`:''}${type==='dn'&&CR!=='ad'?`<span style="display:block;margin-top:10px;font-size:.8rem;color:#757575"><i class="fas fa-lock"></i> للمشرف</span>`:''}</div>`).join('')}
+function at(id){const nm=prompt("اسم السائق:");if(!nm)return;const r=R.find(x=>x.id===id);if(r){r.status='st';r.driverName=nm;slc();sl('nw');alert(`✅ تم لـ ${nm}`)}}
+function drp(id){if(CR!=='ad'){alert("❌ للمشرف");return}if(!confirm("حذف نهائي؟"))return;const r=R.find(x=>x.id===id);if(r){r.deleted=true;r.deletedBy=CU;r.deletedAt=new Date().toLocaleString('ar-DZ');slc()}if(DB)DB.ref('CLEAN_MEDEA_FINAL/reports').orderByChild('id').equalTo(id).once('value',sn=>sn.forEach(c=>c.ref.update({deleted:true,deletedBy:CU})));sl('dn')}
+function ed(){if(!R.length){alert("لا توجد بيانات");return}const act=R.filter(r=>!r.deleted);let csv="\ufeffأرشيف المدية نظيفة - "+new Date().toLocaleDateString('ar-DZ')+"\nالمعرف,التاريخ,العنوان,GPS,الحالة,السائق\n";act.forEach(r=>csv+=`${r.id},${r.date},${r.time},"${r.addr}",${r.gps},${r.status},${r.driverName||'---'}\n`);const blob=new Blob([csv],{type:'text/csv;charset=utf-8'}),a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=`المدية_نظيفة_${Date.now()}.csv`;a.click();alert(`✅ تم تصدير ${act.length} بلاغ`)}
+function uu(){const sl=document.getElementById('sl');if(sl){sl.innerHTML=S.length?S.map(s=>`<div style="display:flex;justify-content:space-between;padding:10px;border-bottom:1px solid #e0e0e0"><span><b>${s.role}:</b> ${s.name}</span>${CR==='ad'?`<i class="fas fa-trash" style="color:#f44336;cursor:pointer" onclick="dss('${s.name}')"></i>`:''}</div>`).join(''):'<p style="text-align:center;color:#757575;padding:15px">لا موظفين</p>'}if(CU&&document.getElementById('dr')?.classList.contains('a')){const ts=R.filter(r=>r.driverName===CU&&r.status==='st'&&!r.deleted);const dn=document.getElementById('dn');if(dn)dn.innerHTML=`<i class="fas fa-tasks" style="margin-left:8px"></i>مهام: ${CU}`;const tc=document.getElementById('dt');if(tc){tc.innerHTML=ts.length?ts.map(t=>`<div class="cd" style="margin-bottom:18px;padding:16px"><img src="${t.img}" style="width:100%;border-radius:15px;margin-bottom:14px;max-height:220px;object-fit:cover"><p style="font-weight:700;margin-bottom:10px;color:#1B5E20"><i class="fas fa-map-marker-alt" style="color:#f44336"></i> ${t.addr}</p><p style="color:#757575;margin-bottom:14px"><i class="fas fa-globe" style="color:#2196F3"></i> ${t.gps}</p><a href="https://www.google.com/maps/dir/?api=1&destination=${t.gps.split(',')[0]},${t.gps.split(',')[1]}" target="_blank" class="btn bb" style="margin-bottom:10px"><i class="fas fa-map-marked-alt im"></i> الخريطة</a><label class="btn bo" style="margin-bottom:10px"><i class="fas fa-camera im"></i> تصوير<input type="file" accept="image/*" capture="environment" style="display:none" onchange="hdi(this,${t.id})"></label><button class="btn bg" onclick="ct(${t.id})"><i class="fas fa-check-circle im"></i> إنجاز</button></div>`).join(''):'<p style="text-align:center;padding:30px;color:#757575">🎉 لا مهام</p>'}}}
+function hdi(inp,id){if(!inp.files[0])return;const r=new FileReader();r.onload=e=>{const img=new Image();img.onload=()=>{const c=document.createElement('canvas');let w=img.width,h=img.height;if(w>640){h=Math.round(h*640/w);w=640}c.width=w;c.height=h;c.getContext('2d').drawImage(img,0,0,w,h);TDI=c.toDataURL('image/jpeg',.6)};img.src=e.target.result};r.readAsDataURL(inp.files[0])}
+function ct(id){if(!TDI){alert("صور أولاً");return}const r=R.find(x=>x.id===id);if(r){r.status='dn';r.doneImg=TDI;r.doneTime=new Date().toLocaleString('ar-DZ');slc();uu();alert("🎉 تم!");TDI=''}}
+function om(){if(CR!=='ad'){alert("❌ للمشرف");return}document.getElementById('sm').style.display='flex'}
+function cm(){document.getElementById('sm').style.display='none'}
+function tf(){}
+function ss(){if(CR!=='ad')return;const ne=document.getElementById('sn'),nm=ne?ne.value.trim():'';if(!nm){alert("الاسم مطلوب");return}const re=document.getElementById('sr'),pe=document.getElementById('sp'),te=document.getElementById('st');S.push({role:re?re.value:'',name:nm,phone:pe?pe.value.trim():'',truck:te?te.value.trim()||'---':'---'});localStorage.setItem(STK,JSON.stringify(S));cm();uu();alert("✓ تم");if(ne)ne.value='';if(pe)pe.value='';if(te)te.value=''}
+function dss(nm){if(CR!=='ad')return;if(!confirm(`حذف ${nm}؟`))return;S=S.filter(s=>s.name!==nm);localStorage.setItem(STK,JSON.stringify(S));uu()}
+function slc(){localStorage.setItem(SK,JSON.stringify(R));if(DB&&FR)DB.ref('CLEAN_MEDEA_FINAL').update({reports:R,staff:S})}
+window.addEventListener('load',()=>{console.log("Loading...");uc('j','<i class="fas fa-spinner fa-spin"></i> جاري...');ifb()});
+</script></body></html>
