@@ -12,7 +12,28 @@
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Tajawal', sans-serif; }
         html, body { overflow-x: hidden; width: 100%; position: relative; background: linear-gradient(135deg, #f5f7fa 0%, #e4e8f0 100%); }
         
-        .header { background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%); padding: 12px 8px; text-align: center; border-bottom: 3px solid #D4AF37; box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
+        /* مؤشر حالة الاتصال */
+        .connection-status {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            background: linear-gradient(90deg, #4CAF50 0%, #2E7D32 100%);
+            color: white;
+            text-align: center;
+            padding: 8px;
+            font-size: 0.85rem;
+            font-weight: 700;
+            z-index: 10000;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+            transition: all 0.3s;
+        }
+        .connection-status.offline {
+            background: linear-gradient(90deg, #f44336 0%, #c62828 100%);
+        }
+        .connection-status i { margin-left: 6px; }
+        
+        .header { background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%); padding: 12px 8px; text-align: center; border-bottom: 3px solid #D4AF37; box-shadow: 0 2px 8px rgba(0,0,0,0.08); margin-top: 35px; }
         .header .country { font-size: 0.7rem; color: #14213D; margin: 3px 0; font-weight: 600; }
         .header .dept { font-size: 0.85rem; color: #2E7D32; margin: 4px 0; font-weight: 700; font-family: 'Amiri', serif; }
         .header .title { font-size: 1.8rem; color: #1B5E20; margin: 6px 0; font-weight: 900; font-family: 'Amiri', serif; text-shadow: 2px 2px 4px rgba(0,0,0,0.1); }
@@ -26,8 +47,7 @@
         .page:not(.active) { visibility: hidden; position: absolute; top: 0; left: 0; width: 100%; height: 0; overflow: hidden; opacity: 0; pointer-events: none; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
         
-        .btn { width: 100%; padding: 14px; border: none; border-radius: 15px; font-size: 1rem; font-weight: 700; cursor: pointer; margin: 8px 0; color: white; transition: all 0.3s; box-shadow: 0 4px 12px rgba(0,0,0,0.15); display: flex; align-items: center; justify-content: center; gap: 8px; }
-        .btn:active { transform: scale(0.97); }
+        .btn { width: 100%; padding: 14px; border: none; border-radius: 15px; font-size: 1rem; font-weight: 700; cursor: pointer; margin: 8px 0; color: white; transition: all 0.3s; box-shadow: 0 4px 12px rgba(0,0,0,0.15); display: flex; align-items: center; justify-content: center; gap: 8px; }        .btn:active { transform: scale(0.97); }
         .btn i { font-size: 1.1rem; }
         .btn-green { background: linear-gradient(135deg, #2E7D32 0%, #1B5E20 100%); }
         .btn-blue { background: linear-gradient(135deg, #14213D 0%, #0d1526 100%); }
@@ -76,10 +96,14 @@
             .header .title { font-size: 1.6rem; }
             .main-btn { height: 120px; font-size: 1.2rem; }
             .main-btn i { font-size: 2.2rem; }
-        }
-    </style>
+        }    </style>
 </head>
-<body><div id="thanks-overlay">
+<body><!-- مؤشر حالة الاتصال -->
+<div id="conn-status" class="connection-status">
+    <i class="fas fa-spinner fa-spin"></i> جاري الاتصال بالخادم...
+</div>
+
+<div id="thanks-overlay">
     <i class="fas fa-heart" style="font-size: 4rem; color: #FFD700; margin-bottom: 20px; animation: pulse 1s infinite;"></i>
     <h1 style="font-size: 2rem; margin: 10px 0; font-family: 'Amiri', serif;">شكراً لكم!</h1>
     <p style="font-size: 1.1rem; line-height: 1.6; margin: 10px 0;">تم إرسال بلاغكم بنجاح<br>نحن نقدر حرصكم على نظافة مدينتنا</p>
@@ -123,12 +147,12 @@
     <button class="btn btn-green main-btn" onclick="navTo('report')">
         <i class="fas fa-truck-loading"></i>
         <span>إرســـــال تبلـيـــغ</span>
-    </button>
-    
+    </button>    
     <div class="card">
         <h3 style="text-align: center; margin-bottom: 12px; color: #14213D; font-size: 1.05rem;">
             <i class="fas fa-users" style="margin-left: 6px; color: #2E7D32;"></i>
-            رواق الموظفين والمسؤولين        </h3>
+            رواق الموظفين والمسؤولين
+        </h3>
         <div class="grid-2">
             <button class="btn btn-blue staff-btn" onclick="auth('admin')">
                 <i class="fas fa-user-shield icon-sm"></i> الإدارة
@@ -172,12 +196,12 @@
 <!-- صفحة الإدارة -->
 <div id="admin" class="page">
     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
-        <h2 style="font-size: 1.3rem; color: #1B5E20;">
-            <i class="fas fa-tachometer-alt" style="margin-left: 8px;"></i>لوحة التحكم
+        <h2 style="font-size: 1.3rem; color: #1B5E20;">            <i class="fas fa-tachometer-alt" style="margin-left: 8px;"></i>لوحة التحكم
         </h2>
         <button class="btn btn-red" onclick="location.reload()" style="width: auto; padding: 8px 18px; font-size: 0.9rem;">
             <i class="fas fa-sign-out-alt icon-sm"></i> خروج
-        </button>    </div>
+        </button>
+    </div>
     
     <button class="btn btn-blue" onclick="exportData()" style="padding: 16px;">
         <i class="fas fa-file-excel icon-md"></i> تحميل الأرشيف (Excel)
@@ -221,50 +245,122 @@
 </div>
 
 <div class="footer">
-    <i class="fas fa-shield-alt" style="margin-left: 5px; color: #D4AF37;"></i>
-    إشراف د. رابحي فتحي - بلدية المدية 2026 ©
-    </div><script>
+    <i class="fas fa-shield-alt" style="margin-left: 5px; color: #D4AF37;"></i>    إشراف د. رابحي فتحي - بلدية المدية 2026 ©
+            </div><script>
 const APP_NAME = "المدية نظيفة";
 const STORAGE_KEY = "medea_clean_data_v2";
 const STAFF_KEY = "medea_clean_staff";
 
-let reports = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
-let staff = JSON.parse(localStorage.getItem(STAFF_KEY) || '[]');
+let reports = [];
+let staff = [];
 let currentUser = '';
 let currentUserRole = '';
 let tempImage = '';
 let tempDoneImage = '';
 let db = null;
 let firebaseReady = false;
+let isOnline = navigator.onLine;
 
-try {
+// ============================================
+// 📡 مراقبة حالة الاتصال
+// ============================================
+function updateConnectionStatus(online, firebase) {
+    const el = document.getElementById('conn-status');
+    if (!online) {
+        el.className = 'connection-status offline';
+        el.innerHTML = '<i class="fas fa-wifi-slash"></i> لا يوجد اتصال بالإنترنت - المزامنة معطلة';
+    } else if (!firebase) {
+        el.className = 'connection-status offline';
+        el.innerHTML = '<i class="fas fa-exclamation-triangle"></i> متصل بالإنترنت لكن Firebase غير متاح';
+    } else {
+        el.className = 'connection-status';
+        el.innerHTML = '<i class="fas fa-cloud"></i> متصل بالسحابة - المزامنة الفورية نشطة ✅';
+    }
+}
+
+window.addEventListener('online', () => { isOnline = true; checkFirebase(); });
+window.addEventListener('offline', () => { isOnline = false; updateConnectionStatus(false, false); });
+
+function checkFirebase() {
+    if (!isOnline) return;
+    setTimeout(() => {
+        if (db && firebaseReady) {
+            updateConnectionStatus(true, true);
+            loadFromFirebase();
+        } else {
+            updateConnectionStatus(true, false);
+        }
+    }, 2000);
+}
+
+// ============================================
+// 🔥 تهيئة Firebase
+// ============================================try {
     const firebaseConfig = { databaseURL: "https://medea-clean-2026-v4-default-rtdb.firebaseio.com/" };
     if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
     db = firebase.database();
     
-    db.ref('.info/connected').on('value', (snap) => { firebaseReady = snap.val() === true; });
+    const connectedRef = db.ref(".info/connected");
+    connectedRef.on("value", (snap) => {
+        firebaseReady = snap.val() === true;
+        console.log(`${APP_NAME}: Firebase ${firebaseReady ? 'متصل ✓' : 'غير متصل ✗'}`);
+        updateConnectionStatus(isOnline, firebaseReady);
+        if (firebaseReady) loadFromFirebase();
+    });
     
-    db.ref('CLEAN_MEDEA_FINAL').on('value', (snap) => {
+} catch (e) { 
+    console.log("Firebase غير متاح");
+    updateConnectionStatus(isOnline, false);
+}
+
+function loadFromFirebase() {
+    if (!db) return;
+    db.ref('CLEAN_MEDEA_FINAL').once('value', (snap) => {
         if (snap.exists()) {
             const data = snap.val();
             if (data.reports) { reports = data.reports; localStorage.setItem(STORAGE_KEY, JSON.stringify(reports)); }
             if (data.staff) { staff = data.staff; localStorage.setItem(STAFF_KEY, JSON.stringify(staff)); }
             updateUI();
+            console.log("✅ تم المزامنة مع السحابة");
         }
     });
-} catch (e) { console.log("LocalStorage mode active"); }
+    
+    db.ref('CLEAN_MEDEA_FINAL').on('value', (snap) => {
+        if (snap.exists()) {
+            const data = snap.val();
+            if (data.reports) reports = data.reports;
+            if (data.staff) staff = data.staff;
+            updateUI();
+        }
+    });
+}
 
-function initApp() { updateTime(); setInterval(updateTime, 1000); updateUI(); }
+// ============================================
+// 🚀 بدء التطبيق
+// ============================================
+function initApp() { 
+    updateTime(); 
+    setInterval(updateTime, 1000);
+    reports = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+    staff = JSON.parse(localStorage.getItem(STAFF_KEY) || '[]');
+    updateConnectionStatus(isOnline, firebaseReady);
+    updateUI();    console.log(`✅ ${APP_NAME} جاهز`);
+}
+
 function updateTime() {
     const now = new Date();
     document.getElementById('current-date').textContent = now.toLocaleDateString('ar-DZ');
     document.getElementById('clock').textContent = now.toLocaleTimeString('fr-FR');
 }
+
 function navTo(id) {
     document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
     document.getElementById(id).classList.add('active');
 }
 
+// ============================================
+// 📸 معالجة الصور
+// ============================================
 function handleImage(input) {
     if (!input.files || !input.files[0]) return;
     const reader = new FileReader();
@@ -272,7 +368,8 @@ function handleImage(input) {
         const img = new Image();
         img.onload = () => {
             const c = document.createElement('canvas');
-            let w = img.width, h = img.height;            if (w > 640) { h = Math.round(h * 640 / w); w = 640; }
+            let w = img.width, h = img.height;
+            if (w > 640) { h = Math.round(h * 640 / w); w = 640; }
             c.width = w; c.height = h;
             c.getContext('2d').drawImage(img, 0, 0, w, h);
             tempImage = c.toDataURL('image/jpeg', 0.6);
@@ -285,6 +382,9 @@ function handleImage(input) {
     reader.readAsDataURL(input.files[0]);
 }
 
+// ============================================
+// 📍 تحديد الموقع (مع معالجة فشل GPS في APK)
+// ============================================
 function getLocation() {
     const btn = event.target;
     const orig = btn.innerHTML;
@@ -293,11 +393,14 @@ function getLocation() {
     
     if (navigator.geolocation) {
         navigator.geolocation.getCurrentPosition(pos => {
-            const lat = pos.coords.latitude, lng = pos.coords.longitude;
-            document.getElementById('gps').value = `${lat}, ${lng}`;
+            const lat = pos.coords.latitude, lng = pos.coords.longitude;            document.getElementById('gps').value = `${lat}, ${lng}`;
+            
             fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&accept-language=ar`)
                 .then(r => r.json()).then(d => {
-                    if (d.display_name) document.getElementById('addr').value = d.display_name.split(',').slice(0,3).join(',');
+                    if (d.display_name) {
+                        document.getElementById('addr').value = d.display_name.split(',').slice(0,3).join(',');
+                        alert(`✅ تم تحديد الموقع:\n${document.getElementById('addr').value}\n\nالإحداثيات: ${lat}, ${lng}`);
+                    }
                     btn.innerHTML = orig; btn.disabled = false;
                 }).catch(() => fallbackLocation(btn, orig));
         }, () => fallbackLocation(btn, orig), { enableHighAccuracy: false, timeout: 5000 });
@@ -307,46 +410,89 @@ function getLocation() {
 function fallbackLocation(btn, orig) {
     const addr = document.getElementById('addr');
     addr.value = "";
-    addr.placeholder = "⚠️ فشل GPS.. اكتب اسم الحي يدوياً";
+    addr.placeholder = "⚠️ فشل GPS.. اكتب اسم الحي يدوياً (مثال: وزرة، المدية)";
     addr.focus();
-    document.getElementById('gps').value = "36.2642, 2.7545"; // إحداثيات المدية تقريباً
+    document.getElementById('gps').value = "36.2642, 2.7545";
     btn.innerHTML = orig; btn.disabled = false;
+    alert("⚠️ تعذر تحديد الموقع تلقائياً\n\nيرجى كتابة العنوان يدوياً في الحقل أعلاه");
 }
 
+// ============================================
+// 📤 إرسال البلاغ
+// ============================================
 async function sendReport() {
     const addr = document.getElementById('addr').value.trim();
     if (!addr) { alert("الرجاء إدخال العنوان"); return; }
+    
     const btn = document.getElementById('send-btn');
     const orig = btn.innerHTML;
     btn.disabled = true; btn.innerHTML = '<div class="spinner"></div> جاري الإرسال...';
     
-    const report = { id: Date.now(), img: tempImage || "no-image", addr, gps: document.getElementById('gps').value || "غير محدد", time: new Date().toLocaleTimeString('ar-DZ'), date: new Date().toLocaleDateString('ar-DZ'), status: 'new', driverName: null, doneImg: null, doneTime: null, hasImage: !!tempImage, synced: false, deleted: false };
-        reports.push(report);
+    const report = { 
+        id: Date.now(), 
+        img: tempImage || "no-image", 
+        addr, 
+        gps: document.getElementById('gps').value || "غير محدد", 
+        time: new Date().toLocaleTimeString('ar-DZ'), 
+        date: new Date().toLocaleDateString('ar-DZ'), 
+        status: 'new', 
+        driverName: null, 
+        doneImg: null, 
+        doneTime: null, 
+        hasImage: !!tempImage, 
+        synced: false, 
+        deleted: false 
+    };    
+    reports.push(report);
     localStorage.setItem(STORAGE_KEY, JSON.stringify(reports));
-    if (db && firebaseReady) { try { await db.ref('CLEAN_MEDEA_FINAL/reports').push(report); } catch(e){} }
+    
+    if (db && firebaseReady) { 
+        try { 
+            await db.ref('CLEAN_MEDEA_FINAL/reports').push(report); 
+            report.synced = true;
+        } catch(e){ console.log("Firebase error"); } 
+    }
     
     document.getElementById('thanks-overlay').style.display = 'flex';
-    tempImage = ''; document.getElementById('cam-img').style.display = 'none'; document.getElementById('cam-icon').style.display = 'block';
-    document.getElementById('addr').value = ''; document.getElementById('gps').value = '';
-    btn.disabled = false; btn.innerHTML = orig;
-    setTimeout(() => { document.getElementById('thanks-overlay').style.display = 'none'; navTo('home'); }, 4500);
+    tempImage = ''; 
+    document.getElementById('cam-img').style.display = 'none'; 
+    document.getElementById('cam-icon').style.display = 'block';
+    document.getElementById('addr').value = ''; 
+    document.getElementById('gps').value = '';
+    btn.disabled = false; 
+    btn.innerHTML = orig;
+    
+    setTimeout(() => { 
+        document.getElementById('thanks-overlay').style.display = 'none'; 
+        navTo('home'); 
+    }, 4500);
 }
 
+// ============================================
+// 🔐 المصادقة
+// ============================================
 function auth(role) {
     const name = prompt("الاسم الكامل:"); if (!name) return;
     const code = prompt("رمز الدخول:");
+    
     if ((name === "فتحي" && code === "1234") || (role === 'admin' && code === "1234")) {
         currentUser = name; currentUserRole = 'admin'; navTo('admin'); updateUI();
+        alert(`مرحباً ${name} - مشرف`);
     } else if (role === 'driver' && code === "5678") {
         currentUser = name; currentUserRole = 'driver'; navTo('driver'); updateUI();
+        alert(`مرحباً ${name} - سائق`);
     } else { alert("❌ رمز خاطئ"); }
 }
 
+// ============================================
+// 📋 عرض البلاغات
+// ============================================
 function showList(type) {
     const container = document.getElementById('reports-list');
     const active = reports.filter(r => !r.deleted);
     const filtered = type === 'new' ? active.filter(r => r.status !== 'done') : active.filter(r => r.status === 'done');
-    container.innerHTML = `<h3 style="margin-bottom:15px;color:#1B5E20;"><i class="fas fa-${type==='new'?'exclamation-triangle':'check-circle'}" style="margin-left:8px;"></i>${type==='new'?'جديدة':'منجزة'} (${filtered.length})</h3>`;
+        container.innerHTML = `<h3 style="margin-bottom:15px;color:#1B5E20;"><i class="fas fa-${type==='new'?'exclamation-triangle':'check-circle'}" style="margin-left:8px;"></i>${type==='new'?'البلاغات الجديدة':'المنجزة'} (${filtered.length})</h3>`;
+    
     if(!filtered.length) { container.innerHTML += '<p style="text-align:center;color:#666;padding:20px;">لا توجد بيانات</p>'; return; }
     
     container.innerHTML += filtered.map(r => `
@@ -355,54 +501,81 @@ function showList(type) {
                 ${r.hasImage ? `<img src="${r.img}" class="report-img">` : '<div style="width:70px;height:70px;background:#e0e0e0;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:0.65rem;">بدون صورة</div>'}
                 ${r.doneImg ? `<img src="${r.doneImg}" class="report-img" style="border:2px solid #4CAF50;">` : ''}
             </div>
-            <p style="font-size:0.88rem;margin:8px 0;line-height:1.6;color:#424242;">📍 ${r.addr}<br>🌍 ${r.gps}<br>🕒 ${r.time}</p>
+            <p style="font-size:0.88rem;margin:8px 0;line-height:1.6;color:#424242;">
+                <i class="fas fa-map-marker-alt" style="color:#f44336;"></i> ${r.addr}<br>
+                <i class="fas fa-globe" style="color:#2196F3;"></i> ${r.gps}<br>
+                <i class="far fa-clock" style="color:#FF9800;"></i> ${r.time} - ${r.date}
+            </p>
             <span class="status-badge status-${r.status}">${r.status==='new'?'جديد':r.status==='sent'?'قيد التنفيذ':'منجز'}</span>
-            ${r.driverName?`<span style="display:block;margin-top:8px;color:#2E7D32;font-weight:700;">👷 ${r.driverName}</span>`:''}
-            ${type==='new'&&r.status==='new'?`<button class="btn btn-green" onclick="assignTask(${r.id})" style="margin-top:10px;padding:10px;font-size:0.9rem;"><i class="fas fa-paper-plane icon-sm"></i> توجيه</button>`:''}
+            ${r.driverName?`<span style="display:block;margin-top:8px;color:#2E7D32;font-weight:700;"><i class="fas fa-user"></i> ${r.driverName}</span>`:''}
+            ${type==='new'&&r.status==='new'?`<button class="btn btn-green" onclick="assignTask(${r.id})" style="margin-top:10px;padding:10px;font-size:0.9rem;"><i class="fas fa-paper-plane icon-sm"></i> توجيه لسائق</button>`:''}
             ${type==='done'&&currentUserRole==='admin'?`<button class="btn btn-red" onclick="deleteReport(${r.id})" style="margin-top:10px;padding:10px;font-size:0.9rem;"><i class="fas fa-trash icon-sm"></i> حذف</button>`:''}
-            ${type==='done'&&currentUserRole!=='admin'?`<span style="display:block;margin-top:10px;font-size:0.8rem;color:#757575;"><i class="fas fa-lock"></i> الحذف للمشرف</span>`:''}
+            ${type==='done'&&currentUserRole!=='admin'?`<span style="display:block;margin-top:10px;font-size:0.8rem;color:#757575;"><i class="fas fa-lock"></i> الحذف للمشرف فقط</span>`:''}
         </div>`).join('');
 }
 
 function assignTask(id) {
-    const name = prompt("اسم السائق:"); if(!name) return;
-    const r = reports.find(x=>x.id===id); if(r){ r.status='sent'; r.driverName=name; saveLocal(); showList('new'); alert(`✅ تم التوجيه لـ ${name}`); }
+    const name = prompt("أدخل اسم السائق:"); if(!name) return;
+    const r = reports.find(x=>x.id===id); 
+    if(r){ 
+        r.status='sent'; r.driverName=name; 
+        saveLocal(); 
+        showList('new'); 
+        alert(`✅ تم توجيه المهمة لـ: ${name}`); 
+    }
 }
 
 function deleteReport(id) {
-    if(currentUserRole!=='admin'){alert("❌ للمشرف فقط");return;}    if(!confirm("حذف نهائي؟")) return;
+    if(currentUserRole!=='admin'){alert("❌ الحذف للمشرف فقط");return;}
+    if(!confirm("⚠️ هل تريد حذف هذا البلاغ نهائياً؟")) return;
+    
     const r = reports.find(x=>x.id===id);
-    if(r){ r.deleted=true; r.deletedBy=currentUser; r.deletedAt=new Date().toLocaleString('ar-DZ'); saveLocal(); }
+    if(r){ 
+        r.deleted=true; r.deletedBy=currentUser; r.deletedAt=new Date().toLocaleString('ar-DZ'); 
+        saveLocal(); 
+    }
     if(db) db.ref('CLEAN_MEDEA_FINAL/reports').orderByChild('id').equalTo(id).once('value', s=>s.forEach(c=>c.ref.update({deleted:true, deletedBy:currentUser})));
     showList('done');
 }
 
-function exportData() {
+// ============================================
+// 📊 تصدير الأرشيف
+// ============================================function exportData() {
     if(!reports.length){alert("لا توجد بيانات");return;}
     const active = reports.filter(r=>!r.deleted);
-    let csv = "\ufeffأرشيف المدية نظيفة - "+new Date().toLocaleDateString('ar-DZ')+"\nالمعرف,التاريخ,العنوان,GPS,الحالة,السائق\n";
-    active.forEach(r=>csv+=`${r.id},${r.date},"${r.addr}",${r.gps},${r.status},${r.driverName||'---'}\n`);
+    let csv = "\ufeffأرشيف المدية نظيفة - "+new Date().toLocaleDateString('ar-DZ')+"\nالمعرف,التاريخ,الوقت,العنوان,الإحداثيات,الحالة,السائق\n";
+    active.forEach(r=>csv+=`${r.id},${r.date},${r.time},"${r.addr}",${r.gps},${r.status},${r.driverName||'---'}\n`);
+    
     const blob = new Blob([csv],{type:'text/csv;charset=utf-8;'});
-    const a = document.createElement('a'); a.href=URL.createObjectURL(blob);
-    a.download=`المدية_نظيفة_أرشيف_${Date.now()}.csv`; a.click();
+    const a = document.createElement('a'); 
+    a.href=URL.createObjectURL(blob);
+    a.download=`المدية_نظيفة_أرشيف_${Date.now()}.csv`; 
+    a.click();
+    alert(`✅ تم تصدير ${active.length} بلاغ`);
 }
 
+// ============================================
+// 🔄 تحديث الواجهة
+// ============================================
 function updateUI() {
     const sl = document.getElementById('staff-list');
-    if(sl) sl.innerHTML = staff.length ? staff.map(s=>`<div style="display:flex;justify-content:space-between;padding:10px;border-bottom:1px solid #e0e0e0;"><span><b>${s.role}:</b> ${s.name}</span>${currentUserRole==='admin'?`<i class="fas fa-trash" style="color:#f44336;cursor:pointer;" onclick="deleteStaff('${s.name}')"></i>`:''}</div>`).join('') : '<p style="text-align:center;color:#757575;padding:15px;">لا موظفين</p>';
+    if(sl) {
+        sl.innerHTML = staff.length ? staff.map(s=>`<div style="display:flex;justify-content:space-between;padding:10px;border-bottom:1px solid #e0e0e0;"><span><b>${s.role}:</b> ${s.name}</span>${currentUserRole==='admin'?`<i class="fas fa-trash" style="color:#f44336;cursor:pointer;" onclick="deleteStaff('${s.name}')"></i>`:''}</div>`).join('') : '<p style="text-align:center;color:#757575;padding:15px;">لا يوجد موظفون</p>';
+    }
     
     if(currentUser && document.getElementById('driver').classList.contains('active')){
         const tasks = reports.filter(r=>r.driverName===currentUser && r.status==='sent' && !r.deleted);
         document.getElementById('driver-name').innerHTML = `<i class="fas fa-tasks" style="margin-left:8px;"></i>مهام: ${currentUser}`;
+        
         document.getElementById('driver-tasks').innerHTML = tasks.length ? tasks.map(t=>`
             <div class="card" style="margin-bottom:18px;padding:16px;">
                 <img src="${t.img}" style="width:100%;border-radius:15px;margin-bottom:14px;max-height:220px;object-fit:cover;">
-                <p style="font-weight:700;margin-bottom:10px;color:#1B5E20;">📍 ${t.addr}</p>
-                <p style="color:#757575;margin-bottom:14px;">🌍 ${t.gps}</p>
+                <p style="font-weight:700;margin-bottom:10px;color:#1B5E20;"><i class="fas fa-map-marker-alt" style="color:#f44336;"></i> ${t.addr}</p>
+                <p style="color:#757575;margin-bottom:14px;"><i class="fas fa-globe" style="color:#2196F3;"></i> ${t.gps}</p>
                 <a href="https://www.google.com/maps/dir/?api=1&destination=${t.gps.split(',')[0]},${t.gps.split(',')[1]}" target="_blank" class="btn btn-blue" style="margin-bottom:10px;"><i class="fas fa-map-marked-alt icon-md"></i> الانتقال للخريطة</a>
-                <label class="btn btn-orange" style="margin-bottom:10px;"><i class="fas fa-camera icon-md"></i> تصوير<input type="file" accept="image/*" capture="environment" style="display:none;" onchange="handleDoneImage(this,${t.id})"></label>
-                <button class="btn btn-green" onclick="completeTask(${t.id})"><i class="fas fa-check-circle icon-md"></i> إنجاز</button>
-            </div>`).join('') : '<p style="text-align:center;padding:30px;color:#757575;">لا مهام حالياً 🎉</p>';
+                <label class="btn btn-orange" style="margin-bottom:10px;"><i class="fas fa-camera icon-md"></i> تصوير بعد التنظيف<input type="file" accept="image/*" capture="environment" style="display:none;" onchange="handleDoneImage(this,${t.id})"></label>
+                <button class="btn btn-green" onclick="completeTask(${t.id})"><i class="fas fa-check-circle icon-md"></i> تأكيد الإنجاز</button>
+            </div>`).join('') : '<p style="text-align:center;padding:30px;color:#757575;">🎉 لا توجد مهام حالياً</p>';
     }
 }
 
@@ -410,36 +583,54 @@ function handleDoneImage(input,id){
     if(!input.files[0]) return;
     const r=new FileReader();
     r.onload=e=>{
-        const img=new Image(); img.onload=()=>{
+        const img=new Image(); 
+        img.onload=()=>{
             const c=document.createElement('canvas'); let w=img.width,h=img.height;
-            if(w>640){h=Math.round(h*640/w);w=640;} c.width=w;c.height=h;
-            c.getContext('2d').drawImage(img,0,0,w,h); tempDoneImage=c.toDataURL('image/jpeg',0.6);
-        }; img.src=e.target.result;
-    }; r.readAsDataURL(input.files[0]);
+            if(w>640){h=Math.round(h*640/w);w=640;} 
+            c.width=w;c.height=h;
+            c.getContext('2d').drawImage(img,0,0,w,h); 
+            tempDoneImage=c.toDataURL('image/jpeg',0.6);        }; 
+        img.src=e.target.result;
+    }; 
+    r.readAsDataURL(input.files[0]);
 }
 
 function completeTask(id){
-    if(!tempDoneImage){alert("صور أولاً");return;}    const r=reports.find(x=>x.id===id); if(r){
-        r.status='done'; r.doneImg=tempDoneImage; r.doneTime=new Date().toLocaleString('ar-DZ'); saveLocal(); updateUI(); alert("🎉 تم!"); tempDoneImage='';
+    if(!tempDoneImage){alert("الرجاء تصوير المكان أولاً");return;}
+    const r=reports.find(x=>x.id===id); 
+    if(r){
+        r.status='done'; r.doneImg=tempDoneImage; r.doneTime=new Date().toLocaleString('ar-DZ'); 
+        saveLocal(); updateUI(); 
+        alert("🎉 تم إنجاز المهمة!"); 
+        tempDoneImage='';
     }
 }
 
-function openModal(){if(currentUserRole!=='admin'){alert("❌ للمشرف");return;} document.getElementById('staff-modal').style.display='flex';}
+function openModal(){if(currentUserRole!=='admin'){alert("❌ للمشرف فقط");return;} document.getElementById('staff-modal').style.display='flex';}
 function closeModal(){document.getElementById('staff-modal').style.display='none';}
 function toggleStaffFields(){}
+
 function saveStaff(){
     if(currentUserRole!=='admin') return;
     const n=document.getElementById('st-name').value.trim(); if(!n){alert("الاسم مطلوب");return;}
     staff.push({role:document.getElementById('st-role').value, name:n, phone:document.getElementById('st-phone').value.trim(), truck:document.getElementById('st-truck').value.trim()||'---'});
-    localStorage.setItem(STAFF_KEY, JSON.stringify(staff)); closeModal(); updateUI(); alert("✓ تم");
+    localStorage.setItem(STAFF_KEY, JSON.stringify(staff)); 
+    closeModal(); updateUI(); alert("✓ تم إضافة الموظف");
     document.getElementById('st-name').value=''; document.getElementById('st-phone').value=''; document.getElementById('st-truck').value='';
 }
+
 function deleteStaff(name){
-    if(currentUserRole!=='admin') return; if(!confirm(`حذف ${name}؟`)) return;
-    staff=staff.filter(s=>s.name!==name); localStorage.setItem(STAFF_KEY,JSON.stringify(staff)); updateUI();
+    if(currentUserRole!=='admin') return; 
+    if(!confirm(`حذف ${name}؟`)) return;
+    staff=staff.filter(s=>s.name!==name); 
+    localStorage.setItem(STAFF_KEY,JSON.stringify(staff)); 
+    updateUI();
 }
 
-function saveLocal(){ localStorage.setItem(STORAGE_KEY, JSON.stringify(reports)); if(db) db.ref('CLEAN_MEDEA_FINAL').update({reports, staff}); }
+function saveLocal(){ 
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(reports)); 
+    if(db && firebaseReady) db.ref('CLEAN_MEDEA_FINAL').update({reports, staff}); 
+}
 
 window.onload = initApp;
 </script>
