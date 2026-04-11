@@ -8,6 +8,22 @@
 <style>
 *{box-sizing:border-box;margin:0;padding:0;font-family:'Segoe UI',Tahoma,sans-serif}
 html,body{overflow-x:hidden;width:100%;background:#f5f7fa;min-height:100vh}
+
+/* Splash Screen */
+#splash{position:fixed;top:0;left:0;width:100%;height:100%;background:linear-gradient(135deg,#1B5E20,#2E7D32);z-index:99999;display:flex;flex-direction:column;align-items:center;justify-content:center;color:#fff;transition:opacity .5s}
+#splash .logo-container{width:300px;height:300px;background:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;margin-bottom:30px;box-shadow:0 10px 40px rgba(0,0,0,.3);animation:pulse 2s infinite}
+#splash .logo-container img{width:280px;height:280px;object-fit:contain}
+@keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.05)}}
+#splash h1{font-size:2.5rem;margin-bottom:15px;text-align:center;font-weight:900;text-shadow:2px 2px 4px rgba(0,0,0,.3)}
+#splash .subtitle{font-size:1.2rem;opacity:.95;margin-bottom:40px;text-align:center}
+#splash .loader{width:60px;height:60px;border:5px solid rgba(255,255,255,.3);border-top-color:#FFD700;border-radius:50%;animation:spin 1s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* Language Buttons */
+.lang-container{display:flex;gap:15px;margin-top:30px;flex-wrap:wrap;justify-content:center}
+.lang-btn{background:#fff;border:3px solid #D4AF37;padding:12px 30px;border-radius:30px;cursor:pointer;font-size:1rem;font-weight:700;transition:.3s;color:#1B5E20}
+.lang-btn:hover,.lang-btn.active{background:#D4AF37;color:#fff;transform:scale(1.1)}
+
 .conn{position:fixed;top:0;left:0;right:0;padding:10px;text-align:center;font-size:.9rem;font-weight:700;z-index:10000;background:linear-gradient(90deg,#1B5E20,#2E7D32);color:#fff}
 .hdr{background:#fff;padding:20px 15px;text-align:center;border-bottom:4px solid #D4AF37;margin-top:40px}
 .hdr .c{font-size:.8rem;color:#14213D;margin:5px 0}
@@ -31,8 +47,7 @@ html,body{overflow-x:hidden;width:100%;background:#f5f7fa;min-height:100vh}
 #thanksOverlay{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:linear-gradient(135deg,#1B5E20,#2E7D32);color:#fff;flex-direction:column;align-items:center;justify-content:center;z-index:10001;text-align:center;animation:fadeIn .5s}
 @keyframes fadeIn{from{opacity:0}to{opacity:1}}
 .hidden{display:none!important}
-.report-card{background:#fff;border-radius:15px;padding:18px;margin-bottom:18px;box-shadow:0 4px 15px rgba(0,0,0,.1);border-right:6px solid #f44336}
-.report-card.assigned{border-right-color:#FF9800}
+.report-card{background:#fff;border-radius:15px;padding:18px;margin-bottom:18px;box-shadow:0 4px 15px rgba(0,0,0,.1);border-right:6px solid #f44336}.report-card.assigned{border-right-color:#FF9800}
 .report-card.done{border-right-color:#4CAF50}
 .img-container{margin:12px 0;border-radius:12px;overflow:hidden;border:3px solid #eee}
 .img-container img{width:100%;height:180px;object-fit:cover}
@@ -47,7 +62,8 @@ html,body{overflow-x:hidden;width:100%;background:#f5f7fa;min-height:100vh}
 .stat-box:hover{transform:translateY(-5px);box-shadow:0 6px 20px rgba(0,0,0,.15)}
 .stat-num{font-size:1.8rem;font-weight:900;color:#1B5E20;display:block}
 .stat-label{font-size:.85rem;color:#666;margin-top:6px}
-.demo-btn{background:linear-gradient(135deg,#667eea,#764ba2);margin-top:12px}.print-btn{background:#607d8b;margin-top:12px}
+.demo-btn{background:linear-gradient(135deg,#667eea,#764ba2);margin-top:12px}
+.print-btn{background:#607d8b;margin-top:12px}
 .exit-btn{background:linear-gradient(135deg,#d21034,#a00d28);margin-top:12px}
 .chart-container{height:300px;margin:20px 0;background:#fafafa;border-radius:15px;padding:20px;display:flex;align-items:center;justify-content:center}
 .chart-visual{width:200px;height:200px;border-radius:50%;margin-bottom:20px}
@@ -64,6 +80,23 @@ html,body{overflow-x:hidden;width:100%;background:#f5f7fa;min-height:100vh}
 </style>
 </head>
 <body>
+
+<!-- Splash Screen مع الشعار -->
+<div id="splash">
+  <div class="logo-container">
+    <!-- استبدل هذا الرابط بصورة الشعار التي أرسلتها -->
+    <img src="logo.png" alt="شعار المدية نظيفة" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22%3E%3Ccircle cx=%2250%22 cy=%2250%22 r=%2245%22 fill=%22%232E7D32%22/%3E%3Ctext x=%2250%22 y=%2260%22 font-size=%2240%22 text-anchor=%22middle%22%3E🗑️%3C/text%3E%3C/svg%3E'">
+  </div>
+  <h1>المدية نظيفة</h1>
+  <p class="subtitle">مصلحة النظافة والوقاية الصحية - بلدية المدية 2026</p>
+  <div class="loader"></div>
+  
+  <!-- أزرار اختيار اللغة -->
+  <div class="lang-container">
+    <button class="lang-btn active" onclick="selectLanguage('ar',this)">العربية</button>
+    <button class="lang-btn" onclick="selectLanguage('fr',this)">Français</button>
+    <button class="lang-btn" onclick="selectLanguage('en',this)">English</button>
+  </div></div>
 
 <div class="conn">✓ متصل - النظام جاهز</div>
 
@@ -84,7 +117,6 @@ html,body{overflow-x:hidden;width:100%;background:#f5f7fa;min-height:100vh}
 <div class="stat-box" onclick="filterByStatus('pending')" style="border-color:#FF9800"><span class="stat-num" id="statPending" style="color:#FF9800">0</span><span class="stat-label">قيد التنفيذ</span></div>
 </div>
 
-<!-- رسالة الشكر -->
 <div id="thanksOverlay">
 <div style="font-size:5rem;margin-bottom:20px;animation:bounce 1s infinite">❤️</div>
 <h1 style="font-size:2.5rem;margin-bottom:15px">شكراً لكم!</h1>
@@ -96,7 +128,8 @@ html,body{overflow-x:hidden;width:100%;background:#f5f7fa;min-height:100vh}
 <button class="btn bg mb" onclick="showPage('report')"><span style="font-size:3rem">🚚</span><br>إرسال تبليغ</button>
 <div class="cd" style="border-color:#667eea;background:#f8f9ff">
 <h3 style="text-align:center;margin-bottom:12px;color:#667eea">🎬 أدوات العرض</h3>
-<div class="g2"><button class="btn demo-btn" onclick="loadDemoData()">🎲 بيانات تجريبية</button>
+<div class="g2">
+<button class="btn demo-btn" onclick="loadDemoData()">🎲 بيانات تجريبية</button>
 <button class="btn print-btn" onclick="window.print()">🖨️ طباعة</button>
 </div>
 <button class="btn purple" onclick="showPage('dashboard')" style="margin-top:12px">📊 لوحة الإحصائيات</button>
@@ -112,8 +145,7 @@ html,body{overflow-x:hidden;width:100%;background:#f5f7fa;min-height:100vh}
 </div>
 
 <div id="report" class="page">
-<h2 style="margin-bottom:18px;color:#1B5E20;text-align:center">📝 بلاغ جديد</h2>
-<div class="cd">
+<h2 style="margin-bottom:18px;color:#1B5E20;text-align:center">📝 بلاغ جديد</h2><div class="cd">
 <div class="cam-box" onclick="takePhoto()"><span class="cam-icon">📷</span><img id="camImg" style="display:none"></div>
 <button class="btn bg" onclick="takePhoto()">📷 التقاط الصورة</button>
 <button class="btn bb" onclick="getLocation()" id="getLocationBtn">📍 تحديد الموقع GPS</button>
@@ -145,7 +177,8 @@ html,body{overflow-x:hidden;width:100%;background:#f5f7fa;min-height:100vh}
 
 <div id="dashboard" class="page">
 <h2 style="margin-bottom:18px;color:#1B5E20;text-align:center">📈 لوحة الإحصائيات</h2>
-<div class="cd"><h3 style="margin-bottom:15px;text-align:center">📊 توزيع حالات البلاغات</h3>
+<div class="cd">
+<h3 style="margin-bottom:15px;text-align:center">📊 توزيع حالات البلاغات</h3>
 <div class="chart-container"><div class="chart-visual" id="chartVisual"></div></div>
 <div class="chart-legend" id="chartLegend"></div>
 </div>
@@ -161,7 +194,6 @@ html,body{overflow-x:hidden;width:100%;background:#f5f7fa;min-height:100vh}
 <div id="reportsList"></div>
 <button class="btn bx" onclick="backToAdmin()">← رجوع</button>
 </div>
-
 <div id="staffPage" class="page">
 <h2 style="margin-bottom:18px;color:#1B5E20;text-align:center">👥 إدارة الموظفين</h2>
 <div class="cd">
@@ -194,7 +226,8 @@ html,body{overflow-x:hidden;width:100%;background:#f5f7fa;min-height:100vh}
 <div id="qrModal" class="qr-modal" onclick="if(event.target===this)this.style.display='none'">
 <div class="qr-content">
 <h3 style="margin-bottom:15px;color:#1B5E20">📱 كود تتبع البلاغ</h3>
-<div id="qrcode"></div><p style="margin:15px 0;color:#666">امسح الكود لفتح التفاصيل</p>
+<div id="qrcode"></div>
+<p style="margin:15px 0;color:#666">امسح الكود لفتح التفاصيل</p>
 <button class="btn bb" onclick="document.getElementById('qrModal').style.display='none'">✕ إغلاق</button>
 </div>
 </div>
@@ -204,11 +237,26 @@ html,body{overflow-x:hidden;width:100%;background:#f5f7fa;min-height:100vh}
 <script>
 let allReports=[],currentLang='ar',tempImage=null,tempAfterImage=null,currentDriver='',editingStaffIndex=null;
 
+// إخفاء Splash Screen بعد 3 ثواني
 window.addEventListener('load',function(){
+  setTimeout(function(){
+    const splash=document.getElementById('splash');
+    splash.style.opacity='0';
+    setTimeout(function(){splash.style.display='none'},500);
+  },3000);  
   updateTime();
   setInterval(updateTime,1000);
   loadReports();
 });
+
+function selectLanguage(lang,btn){
+  currentLang=lang;
+  document.querySelectorAll('.lang-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  
+  // هنا يمكنك إضافة منطق تغيير اللغة لاحقاً
+  console.log('Language changed to:',lang);
+}
 
 function loadReports(){
   allReports=JSON.parse(localStorage.getItem('medea_reports')||'[]');
@@ -243,8 +291,8 @@ function updateStats(){
   const pending=allReports.filter(r=>r.status!=='done').length;
   
   document.getElementById('statTotal').textContent=total;
-  document.getElementById('statDone').textContent=done;  document.getElementById('statPending').textContent=pending;
-  
+  document.getElementById('statDone').textContent=done;
+  document.getElementById('statPending').textContent=pending;  
   if(document.getElementById('dashboard').classList.contains('active')) renderChart();
 }
 
@@ -276,7 +324,6 @@ function getLocation(){
       
       gpsInput.value=lat.toFixed(6)+', '+lng.toFixed(6);
       
-      // Reverse Geocoding مع معالجة أفضل
       fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&accept-language=ar&zoom=18&addressdetails=1`,{
         headers:{'User-Agent':'MedeaCleanApp/1.0'}
       })
@@ -285,18 +332,16 @@ function getLocation(){
           return r.json();
         })
         .then(data=>{
-          console.log('GPS Data:',data);
           let addr='المدية، الجزائر';
           
           if(data && data.address){
             const a=data.address;
             const parts=[];
             
-            // تجميع العنوان من أجزاء مختلفة            if(a.road || a.street) parts.push(a.road || a.street);
+            if(a.road || a.street) parts.push(a.road || a.street);
             if(a.suburb || a.neighbourhood || a.quarter) parts.push(a.suburb || a.neighbourhood || a.quarter);
             if(a.city_district || a.borough) parts.push(a.city_district || a.borough);
-            if(a.city || a.town || a.village) parts.push(a.city || a.town || a.village);
-            if(a.state) parts.push(a.state);
+            if(a.city || a.town || a.village) parts.push(a.city || a.town || a.village);            if(a.state) parts.push(a.state);
             
             if(parts.length>0){
               addr=parts.join(' - ');
@@ -307,7 +352,6 @@ function getLocation(){
           btn.innerHTML='📍 تحديد الموقع GPS';
           btn.disabled=false;
           
-          // تأكيد للمستخدم
           alert(`✅ تم تحديد الموقع بنجاح!\n\n📍 العنوان: ${addr}\n🌍 GPS: ${gpsInput.value}\n📏 الدقة: ${Math.round(accuracy)} متر`);
         })
         .catch(err=>{
@@ -341,12 +385,12 @@ function manualLocation(){
   }
 }
 
-function takePhoto(){  const input=document.createElement('input');
+function takePhoto(){
+  const input=document.createElement('input');
   input.type='file';
   input.accept='image/*';
   input.capture='environment';
-  input.onchange=e=>{
-    if(e.target.files[0]){
+  input.onchange=e=>{    if(e.target.files[0]){
       const r=new FileReader();
       r.onload=ev=>{
         tempImage=ev.target.result;
@@ -384,19 +428,18 @@ function sendReport(){
   
   saveReport(report);
   
-  // إظهار رسالة الشكر
   const thanksOverlay=document.getElementById('thanksOverlay');
   thanksOverlay.style.display='flex';
   
   tempImage=null;
   document.getElementById('camImg').style.display='none';
-  document.querySelector('.cam-icon').style.display='block';  document.getElementById('addrInput').value='';
+  document.querySelector('.cam-icon').style.display='block';
+  document.getElementById('addrInput').value='';
   document.getElementById('gpsInput').value='';
   
   setTimeout(()=>{
     thanksOverlay.style.display='none';
-    showPage('home');
-    btn.innerHTML=orig;
+    showPage('home');    btn.innerHTML=orig;
     btn.disabled=false;
   },4000);
 }
@@ -439,12 +482,12 @@ function logoutDriver(){
 function downloadImage(imgData,filename){
   if(!imgData){alert('⚠️ لا توجد صورة');return;}
   const link=document.createElement('a');
-  link.href=imgData;  link.download=filename;
+  link.href=imgData;
+  link.download=filename;
   document.body.appendChild(link);
   link.click();
   document.body.removeChild(link);
 }
-
 function downloadReportText(id){
   const r=allReports.find(x=>x.id==id);
   if(!r){alert('⚠️ غير موجود');return;}
@@ -488,12 +531,12 @@ function applyFilters(){
 }
 
 function filterByStatus(s){
-  showPage('reportsPage');  if(document.getElementById('filterStatus')){
+  showPage('reportsPage');
+  if(document.getElementById('filterStatus')){
     document.getElementById('filterStatus').value=s==='pending'?'assigned':s;
     applyFilters();
   }
 }
-
 function renderReportsList(reports){
   const c=document.getElementById('reportsList');
   if(!reports.length){
@@ -521,9 +564,8 @@ function showQR(id){
   const qrContainer=document.getElementById('qrcode');
   
   modal.style.display='flex';
-  qrContainer.innerHTML=''; // مسح المحتوى القديم
+  qrContainer.innerHTML='';
   
-  // التأكد من تحميل المكتبة
   if(typeof QRCode !== 'undefined'){
     try{
       new QRCode(qrContainer,{
@@ -537,14 +579,14 @@ function showQR(id){
     }catch(e){
       console.error('QR Code Error:',e);
       qrContainer.innerHTML='<div style="color:red;padding:20px">❌ فشل إنشاء QR Code<br>'+e.message+'</div>';
-    }  }else{
+    }
+  }else{
     qrContainer.innerHTML='<div style="color:red;padding:20px">❌ مكتبة QR Code غير محملة</div>';
   }
 }
 
 function assignDriver(id){
-  const n=prompt('اسم السائق:');
-  if(!n)return;
+  const n=prompt('اسم السائق:');  if(!n)return;
   updateReport(id,{driverName:n,status:'assigned'});
   alert('✅ تم توجيه البلاغ للسائق: '+n);
 }
@@ -586,14 +628,14 @@ function addStaff(){
   if(!n||!r){alert('⚠️ الاسم والمنصب مطلوبان');return;}
   
   const s=JSON.parse(localStorage.getItem('medea_staff')||'[]');
-  s.push({name:n,role:r,phone:p});  localStorage.setItem('medea_staff',JSON.stringify(s));
+  s.push({name:n,role:r,phone:p});
+  localStorage.setItem('medea_staff',JSON.stringify(s));
   
   document.getElementById('newStaffName').value='';
   document.getElementById('newStaffRole').value='';
   document.getElementById('newStaffPhone').value='';
   
-  loadStaffList();
-  alert('✅ تم إضافة الموظف بنجاح');
+  loadStaffList();  alert('✅ تم إضافة الموظف بنجاح');
 }
 
 function editStaff(index){
@@ -635,14 +677,14 @@ function renderDriverTasks(){
   
   c.innerHTML=tasks.map(t=>{
     const img=t.image?'<div class="img-container"><img src="'+t.image+'"><div class="img-label">📷 قبل</div></div>':'';
-    return'<div class="report-card assigned" style="margin-bottom:20px;border-right-color:#FF9800"><div class="info-row"><b>📍 العنوان:</b> '+t.addr+'</div><div class="info-row"><b>🌍 GPS:</b> '+t.gps+'</div>'+img+'<button class="btn bo" onclick="driverTakePhoto('+t.id+')" style="margin-top:12px">📷 تصوير بعد التنفيذ</button>'+(t.gps?'<a href="https://www.google.com/maps/dir/?api=1&destination='+t.gps.split(',')[0]+','+t.gps.split(',')[1]+'" target="_blank" class="btn bb" style="margin-top:12px">🗺️ الخريطة</a>':'')+'<button class="btn bg" style="margin-top:12px" onclick="completeTask('+t.id+')">✅ تأكيد الإنجاز</button></div>';  }).join('');
+    return'<div class="report-card assigned" style="margin-bottom:20px;border-right-color:#FF9800"><div class="info-row"><b>📍 العنوان:</b> '+t.addr+'</div><div class="info-row"><b>🌍 GPS:</b> '+t.gps+'</div>'+img+'<button class="btn bo" onclick="driverTakePhoto('+t.id+')" style="margin-top:12px">📷 تصوير بعد التنفيذ</button>'+(t.gps?'<a href="https://www.google.com/maps/dir/?api=1&destination='+t.gps.split(',')[0]+','+t.gps.split(',')[1]+'" target="_blank" class="btn bb" style="margin-top:12px">🗺️ الخريطة</a>':'')+'<button class="btn bg" style="margin-top:12px" onclick="completeTask('+t.id+')">✅ تأكيد الإنجاز</button></div>';
+  }).join('');
 }
 
 function driverTakePhoto(id){
   const input=document.createElement('input');
   input.type='file';
-  input.accept='image/*';
-  input.capture='environment';
+  input.accept='image/*';  input.capture='environment';
   input.onchange=e=>{
     if(e.target.files[0]){
       const r=new FileReader();
@@ -684,14 +726,14 @@ function exitApp(){
 }
 
 function renderChart(){
-  const newR=allReports.filter(r=>r.status==='new').length;  const assigned=allReports.filter(r=>r.status==='assigned').length;
+  const newR=allReports.filter(r=>r.status==='new').length;
+  const assigned=allReports.filter(r=>r.status==='assigned').length;
   const done=allReports.filter(r=>r.status==='done').length;
   const total=allReports.length;
   
   const visual=document.getElementById('chartVisual');
   const legend=document.getElementById('chartLegend');
-  
-  if(!visual||!legend)return;
+    if(!visual||!legend)return;
   
   if(total===0){
     visual.innerHTML='<div style="display:flex;align-items:center;justify-content:center;height:100%;color:#999">لا توجد بيانات</div>';
