@@ -41,7 +41,7 @@ html,body{overflow-x:hidden;width:100%;background:linear-gradient(135deg,#f5f7fa
 .done-label{background:#e8f5e9;color:#2E7D32}
 .info-row{display:flex;justify-content:space-between;margin:5px 0;font-size:.9rem}
 .info-row b{color:#1B5E20}
-.download-btn{display:inline-block;width:100%;padding:10px;background:#2196F3;color:#fff;text-decoration:none;border-radius:8px;margin:5px 0;font-size:.9rem;font-weight:bold;box-shadow:0 2px 5px rgba(0,0,0,.2);text-align:center}
+.download-btn{display:inline-block;width:100%;padding:10px;background:#2196F3;color:#fff;text-decoration:none;border-radius:8px;margin:5px 0;font-size:.9rem;font-weight:bold;box-shadow:0 2px 5px rgba(0,0,0,.2);text-align:center;cursor:pointer;border:none}
 .download-btn:active{transform:scale(0.98)}
 .download-all{background:#4CAF50;margin-top:10px}
 </style>
@@ -260,39 +260,44 @@ link.click();
 document.body.removeChild(link);
 }
 
-function downloadReportText(report){
+function downloadReportText(reportId){
+const reports=JSON.parse(localStorage.getItem('medea_reports')||'[]');
+const report=reports.find(r=>r.id===reportId);
+if(!report)return alert('⚠️ البلاغ غير موجود');
+
 const t=translations[currentLang];
 const content=`
 =================================
-${t.title}
+${t.title} - تقرير بلاغ
 =================================
-${t.downloadReport}
-=================================
-
-📍 ${t.downloadBefore}:
-   ${t.addr || 'العنوان'}: ${report.addr}
-   🌍 GPS: ${report.gps}
-   📅 ${t.date || 'التاريخ'}: ${report.date}
-   🕐 ${t.time || 'الوقت'}: ${report.time}
-
-👷 ${t.driver || 'السائق'}: ${report.driverName || 'غير محدد'}
-📊 ${t.status || 'الحالة'}: ${report.status==='done'?'✅ منجز':report.status==='assigned'?'🚚 قيد التنفيذ':'🆕 جديد'}
-
-${report.doneTime ? '⏱️ '+ (t.doneTime || 'وقت الإنجاز') +': '+ report.doneTime : ''}
-
-=================================
-${t.downloadAfter}:
-${report.doneTime ? '✅ '+ (t.completed || 'تم الإنجاز') +' '+ report.doneTime : '⏳ '+ (t.pending || 'قيد التنفيذ')}
+رقم البلاغ: ${report.id}
 =================================
 
-© 2026 ${t.footer || 'بلدية المدية'}
+📍 معلومات الموقع:
+   العنوان: ${report.addr}
+   الإحداثيات GPS: ${report.gps}
+   تاريخ البلاغ: ${report.date}
+   وقت البلاغ: ${report.time}
+
+👷 معلومات التنفيذ:
+   السائق المكلف: ${report.driverName || 'غير محدد'}
+   الحالة: ${report.status==='done'?'✅ منجز':report.status==='assigned'?'🚚 قيد التنفيذ':'🆕 جديد'}
+   ${report.doneTime ? 'وقت الإنجاز: '+ report.doneTime : ''}
+
+=================================
+📸 الصور المرفقة:
+   - صورة قبل الإنجاز: ${report.image?'متوفرة':'غير متوفرة'}
+   - صورة بعد الإنجاز: ${report.doneImage?'متوفرة':'غير متوفرة'}
+=================================
+
+© 2026 بلدية المدية - نظام المدية نظيفة
 `.trim();
-
 const blob=new Blob([content],{type:'text/plain;charset=utf-8'});
 const link=document.createElement('a');
 link.href=URL.createObjectURL(blob);
-link.download=`report_${report.id}_${report.date.replace(/\//g,'-')}.txt`;
-document.body.appendChild(link);link.click();
+link.download=`تقرير_بلاغ_${report.id}_${report.date.replace(/\//g,'-')}.txt`;
+document.body.appendChild(link);
+link.click();
 document.body.removeChild(link);
 }
 
@@ -304,9 +309,9 @@ const t=translations[currentLang];
 if(!reports.length){c.innerHTML='<p style="text-align:center;color:#666;padding:30px">'+t.noReports+'</p>';return}
 
 c.innerHTML=reports.map((r,i)=>{
-const beforeBtn=r.image?`<a href="#" class="download-btn" onclick="downloadImage('${r.image}','before_${r.id}_${r.date.replace(/\//g,'-')}.jpg');return false;">${t.downloadBefore}</a>`:'';
-const afterBtn=r.doneImage?`<a href="#" class="download-btn" onclick="downloadImage('${r.doneImage}','after_${r.id}_${r.date.replace(/\//g,'-')}.jpg');return false;">${t.downloadAfter}</a>`:'';
-const reportBtn=`<a href="#" class="download-btn download-all" onclick="downloadReportText(${JSON.stringify(r).replace(/'/g,"\\'")});return false;">${t.downloadReport}</a>`;
+const beforeBtn=r.image?`<button class="download-btn" onclick="downloadImage('${r.image}','before_${r.id}.jpg')">${t.downloadBefore}</button>`:'';
+const afterBtn=r.doneImage?`<button class="download-btn" onclick="downloadImage('${r.doneImage}','after_${r.id}.jpg')">${t.downloadAfter}</button>`:'';
+const reportBtn=`<button class="download-btn download-all" onclick="downloadReportText(${r.id})">${t.downloadReport}</button>`;
 
 const beforeHtml=r.image?`<div class="img-container"><img src="${r.image}"><div class="img-label">📷 ${t.downloadBefore} (${r.date} - ${r.time})</div></div>${beforeBtn}`:'';
 const afterHtml=r.doneImage?`<div class="img-container"><img src="${r.doneImage}"><div class="img-label done-label">✅ ${t.downloadAfter} (${r.doneTime||''})</div></div>${afterBtn}`:'';
@@ -336,12 +341,12 @@ r[i].driverName=n;r[i].status='assigned';
 localStorage.setItem('medea_reports',JSON.stringify(r));
 showReportsPage();
 }
-function deleteReport(i){
-if(confirm(translations[currentLang].deleteConfirm)){
+function deleteReport(i){if(confirm(translations[currentLang].deleteConfirm)){
 const r=JSON.parse(localStorage.getItem('medea_reports')||'[]');
 r.splice(i,1);localStorage.setItem('medea_reports',JSON.stringify(r));
 showReportsPage();
-}}
+}
+}
 
 function manageStaffPage(){showPage('staffPage');loadStaffList()}
 function loadStaffList(){
@@ -385,12 +390,12 @@ ${task.gps&&task.gps!=='-'?`<a href="https://www.google.com/maps/dir/?api=1&dest
 }
 
 function driverTakePhoto(i){
-const input=document.createElement('input');input.type='file';input.accept='image/*';input.capture='environment';
-input.onchange=e=>{if(e.target.files[0]){const r=new FileReader();r.onload=ev=>{tempAfterImage=ev.target.result;alert('✓ تم التقاط الصورة. اضغط تأكيد الإنجاز.');};r.readAsDataURL(e.target.files[0])}};input.click();
+const input=document.createElement('input');input.type='file';input.accept='image/*';input.capture='environment';input.onchange=e=>{if(e.target.files[0]){const r=new FileReader();r.onload=ev=>{tempAfterImage=ev.target.result;alert('✓ تم التقاط الصورة. اضغط تأكيد الإنجاز.');};r.readAsDataURL(e.target.files[0])}};input.click();
 }
 
 function completeTask(i){
-if(!tempAfterImage&&!confirm(currentLang==='ar'?'لم يتم التصوير. متابعة؟':currentLang==='fr'?'Photo non prise. Continuer?':'No photo. Continue?'))return;const r=JSON.parse(localStorage.getItem('medea_reports')||'[]');
+if(!tempAfterImage&&!confirm(currentLang==='ar'?'لم يتم التصوير. متابعة؟':currentLang==='fr'?'Photo non prise. Continuer?':'No photo. Continue?'))return;
+const r=JSON.parse(localStorage.getItem('medea_reports')||'[]');
 if(tempAfterImage){r[i].doneImage=tempAfterImage;r[i].doneTime=new Date().toLocaleString('ar-DZ');}
 r[i].status='done';
 localStorage.setItem('medea_reports',JSON.stringify(r));
