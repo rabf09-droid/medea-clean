@@ -8,22 +8,29 @@
 <style>
 *{box-sizing:border-box;margin:0;padding:0;font-family:'Segoe UI',Tahoma,sans-serif;-webkit-tap-highlight-color:transparent}
 html,body{overflow-x:hidden;width:100%;background:#f5f7fa;min-height:100vh}
-#splash{position:fixed;top:0;left:0;width:100%;height:100%;background:#ffffff;z-index:99999;display:flex;flex-direction:column;align-items:center;justify-content:center;transition:opacity 0.5s}
-#splash .logo-box{width:80%;max-width:350px;margin-bottom:20px;animation:fadeIn 1s ease}
-#splash .logo-box img{width:100%;height:auto;display:block;margin:0 auto}
-#splash h1{font-size:2rem;color:#1B5E20;margin-bottom:10px;font-weight:800}
-#splash p{color:#666;margin-bottom:30px;font-size:1rem}
-.loader{width:40px;height:40px;border:4px solid #eee;border-top:4px solid #1B5E20;border-radius:50%;animation:spin 1s linear infinite}
+
+/* Splash Screen - الخلفية الخضراء */
+#splash{position:fixed;top:0;left:0;width:100%;height:100%;background:linear-gradient(135deg,#1B5E20,#2E7D32);z-index:99999;display:flex;flex-direction:column;align-items:center;justify-content:center;transition:opacity 0.5s}
+#splash .logo-box{width:250px;height:250px;background:#fff;border-radius:50%;margin-bottom:25px;display:flex;align-items:center;justify-content:center;box-shadow:0 10px 40px rgba(0,0,0,0.3);animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.05)}}
+#splash .logo-box span{font-size:8rem}
+#splash h1{font-size:2.2rem;color:#fff;margin-bottom:10px;font-weight:800;text-shadow:2px 2px 4px rgba(0,0,0,0.3)}
+#splash p{color:rgba(255,255,255,0.9);margin-bottom:30px;font-size:1rem;text-align:center;padding:0 20px}
+.loader{width:50px;height:50px;border:5px solid rgba(255,255,255,0.3);border-top:5px solid #FFD700;border-radius:50%;animation:spin 1s linear infinite}
 @keyframes spin{to{transform:rotate(360deg)}}
-@keyframes fadeIn{from{opacity:0;transform:scale(0.9)}to{opacity:1;transform:scale(1)}}
-.conn{position:fixed;top:0;left:0;right:0;padding:8px;text-align:center;font-size:0.85rem;font-weight:700;z-index:10000;background:#1B5E20;color:#fff}
+
+.conn{position:fixed;top:0;left:0;right:0;padding:8px;text-align:center;font-size:0.85rem;font-weight:700;z-index:10000;background:linear-gradient(90deg,#1B5E20,#2E7D32);color:#fff}
 .hdr{background:#fff;padding:15px 10px;text-align:center;border-bottom:3px solid #D4AF37;margin-top:36px}
 .hdr .c{font-size:0.75rem;color:#14213D;margin:5px 0}
 .hdr .d{font-size:0.9rem;color:#2E7D32;margin:5px 0;font-weight:700}
 .hdr .t{font-size:1.8rem;color:#1B5E20;margin:10px 0;font-weight:900}
-.lang-container{display:flex;gap:8px;justify-content:center;margin-top:10px}
-.lang-btn{background:#fff;border:1px solid #D4AF37;padding:5px 15px;border-radius:20px;cursor:pointer;font-size:0.8rem;font-weight:600;color:#1B5E20;transition:0.3s}
+
+/* أزرار اللغة */
+.lang-container{display:flex;gap:10px;justify-content:center;margin-top:15px;flex-wrap:wrap}
+.lang-btn{background:#fff;border:2px solid #D4AF37;padding:8px 20px;border-radius:25px;cursor:pointer;font-size:0.9rem;font-weight:700;color:#1B5E20;transition:all 0.3s}
+.lang-btn:hover{transform:scale(1.05)}
 .lang-btn.active{background:#D4AF37;color:#fff}
+
 .ib{display:flex;justify-content:space-around;padding:10px;background:#fff8e1;border-bottom:2px solid #D4AF37;font-size:0.9rem}
 .page{display:none;padding:20px;max-width:600px;margin:auto;min-height:80vh}
 .page.active{display:block}
@@ -40,14 +47,15 @@ html,body{overflow-x:hidden;width:100%;background:#f5f7fa;min-height:100vh}
 .mb{height:140px;font-size:1.4rem;flex-direction:column}
 .g2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
 .sb2{height:60px}
-.ft{background:#fff;padding:15px;text-align:center;border-top:3px solid #D4AF37;margin-top:20px;font-size:0.85rem;color:#666}
-.in{width:100%;padding:12px;border:2px solid #e0e0e0;border-radius:10px;margin:10px 0;text-align:center;font-size:1rem}
+.ft{background:#fff;padding:15px;text-align:center;border-top:3px solid #D4AF37;margin-top:20px;font-size:0.85rem;color:#666}.in{width:100%;padding:12px;border:2px solid #e0e0e0;border-radius:10px;margin:10px 0;text-align:center;font-size:1rem}
 .in:focus{border-color:#1B5E20;outline:none}
 .cam-box{height:200px;background:#f9f9f9;border:2px dashed #ccc;border-radius:12px;display:flex;align-items:center;justify-content:center;margin-bottom:15px;cursor:pointer;position:relative;overflow:hidden}
 .cam-box img{width:100%;height:100%;object-fit:cover;position:absolute}
 .cam-icon{font-size:3rem;color:#aaa}
 #thanksOverlay{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(27,94,32,0.95);color:#fff;flex-direction:column;align-items:center;justify-content:center;z-index:10001;text-align:center;animation:fadeIn 0.5s}
-.hidden{display:none!important}.report-card{background:#fff;border-radius:12px;padding:15px;margin-bottom:15px;box-shadow:0 2px 10px rgba(0,0,0,0.05);border-right:5px solid #f44336}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+.hidden{display:none!important}
+.report-card{background:#fff;border-radius:12px;padding:15px;margin-bottom:15px;box-shadow:0 2px 10px rgba(0,0,0,0.05);border-right:5px solid #f44336}
 .report-card.assigned{border-right-color:#FF9800}
 .report-card.done{border-right-color:#4CAF50}
 .img-container{margin:10px 0;border-radius:8px;overflow:hidden;border:1px solid #eee}
@@ -79,24 +87,27 @@ html,body{overflow-x:hidden;width:100%;background:#f5f7fa;min-height:100vh}
 </head>
 <body>
 
+<!-- الشاشة الترحيبية مع الخلفية الخضراء -->
 <div id="splash">
   <div class="logo-box">
-    <img src="logo.png" alt="شعار المدية نظيفة" onerror="this.style.display='none';this.parentElement.innerHTML='<div style=\'font-size:5rem\'>🗑️</div>'">
+    <span>🗑️</span>
   </div>
   <h1>المدية نظيفة</h1>
-  <p>مصلحة النظافة والوقاية الصحية - بلدية المدية 2026</p>
+  <p>مصلحة النظافة والوقاية الصحية<br>بلدية المدية 2026</p>
   <div class="loader"></div>
 </div>
-
 <div class="conn">✓ متصل - النظام جاهز</div>
 
 <div class="hdr">
   <div class="c">🇩🇿 الجمهورية الجزائرية الديمقراطية الشعبية</div>
   <div class="d">🧹 مصلحة النظافة والوقاية الصحية لبلدية المدية</div>
   <div class="t">المدية نظيفة</div>
+  
+  <!-- أزرار اللغة -->
   <div class="lang-container">
-    <button class="lang-btn active" onclick="selectLanguage('ar',this)">العربية</button>
-    <button class="lang-btn" onclick="selectLanguage('fr',this)">Français</button>    <button class="lang-btn" onclick="selectLanguage('en',this)">English</button>
+    <button class="lang-btn active" onclick="changeLang('ar', this)">العربية</button>
+    <button class="lang-btn" onclick="changeLang('fr', this)">Français</button>
+    <button class="lang-btn" onclick="changeLang('en', this)">English</button>
   </div>
 </div>
 
@@ -134,8 +145,7 @@ html,body{overflow-x:hidden;width:100%;background:#f5f7fa;min-height:100vh}
     <div class="g2">
       <button class="btn by sb2" onclick="showPage('driver')">🚚 السائقين</button>
       <button class="btn bb sb2" onclick="showPage('admin')">🛡️ الإدارة</button>
-    </div>
-  </div>
+    </div>  </div>
 </div>
 
 <div id="report" class="page">
@@ -145,7 +155,8 @@ html,body{overflow-x:hidden;width:100%;background:#f5f7fa;min-height:100vh}
     <button class="btn bg" onclick="takePhoto()">📷 التقاط الصورة</button>
     <button class="btn bb" onclick="getLocation()" id="getLocationBtn">📍 تحديد الموقع GPS</button>
     <button class="btn bx" onclick="manualLocation()" style="margin-top:0;margin-bottom:8px;font-size:0.9rem">📍 إدخال يدوي</button>
-    <input type="text" class="in" id="addrInput" placeholder="📍 اسم الحي أو الشارع">    <input type="text" class="in" id="gpsInput" placeholder="🌍 إحداثيات GPS" readonly style="background:#f0f0f0">
+    <input type="text" class="in" id="addrInput" placeholder="📍 اسم الحي أو الشارع">
+    <input type="text" class="in" id="gpsInput" placeholder="🌍 إحداثيات GPS" readonly style="background:#f0f0f0">
     <button class="btn bg" style="height:55px;font-size:1.1rem" onclick="sendReport()" id="sendBtn">✉️ إرسال البلاغ الآن</button>
     <button class="btn bx" onclick="showPage('home')">← رجوع</button>
   </div>
@@ -183,8 +194,7 @@ html,body{overflow-x:hidden;width:100%;background:#f5f7fa;min-height:100vh}
   <h2 style="margin-bottom:15px;color:#1B5E20;text-align:center">📋 قائمة البلاغات</h2>
   <div class="filter-bar">
     <select id="filterStatus" onchange="applyFilters()"><option value="all">جميع الحالات</option><option value="new">جديد</option><option value="assigned">قيد التنفيذ</option><option value="done">منجز</option></select>
-    <input type="text" id="searchInput" placeholder="🔍 بحث..." oninput="applyFilters()">
-  </div>
+    <input type="text" id="searchInput" placeholder="🔍 بحث..." oninput="applyFilters()">  </div>
   <div id="reportsList"></div>
   <button class="btn bx" onclick="backToAdmin()">← رجوع</button>
 </div>
@@ -194,7 +204,8 @@ html,body{overflow-x:hidden;width:100%;background:#f5f7fa;min-height:100vh}
   <div class="cd">
     <h3 style="margin-bottom:10px">➕ إضافة موظف</h3>
     <input type="text" id="newStaffName" class="in" placeholder="👤 الاسم">
-    <input type="text" id="newStaffRole" class="in" placeholder="💼 المنصب (سائق/مسؤول)">    <input type="tel" id="newStaffPhone" class="in" placeholder="📞 الهاتف">
+    <input type="text" id="newStaffRole" class="in" placeholder="💼 المنصب (سائق/مسؤول)">
+    <input type="tel" id="newStaffPhone" class="in" placeholder="📞 الهاتف">
     <button class="btn bg" onclick="addStaff()">💾 حفظ</button>
   </div>
   <div id="staffList" style="margin-top:15px"></div>
@@ -231,29 +242,34 @@ html,body{overflow-x:hidden;width:100%;background:#f5f7fa;min-height:100vh}
 <script>
 let allReports=[],currentLang='ar',tempImage=null,tempAfterImage=null,currentDriver='';
 
-window.addEventListener('load',function(){
-  setTimeout(function(){
+// إخفاء الشاشة الترحيبية
+window.addEventListener('load',function(){  setTimeout(function(){
     const splash=document.getElementById('splash');
     splash.style.opacity='0';
     setTimeout(function(){splash.style.display='none'},500);
-  },2500);
+  },3000);
   updateTime();
   setInterval(updateTime,1000);
   loadReports();
 });
 
-function selectLanguage(lang,btn){
-  currentLang=lang;  document.querySelectorAll('.lang-btn').forEach(b=>b.classList.remove('active'));
+// تغيير اللغة
+function changeLang(lang, btn) {
+  currentLang = lang;
+  document.querySelectorAll('.lang-btn').forEach(b => b.classList.remove('active'));
   btn.classList.add('active');
-  localStorage.setItem('medea_lang',lang);
+  localStorage.setItem('medea_lang', lang);
 }
 
-const savedLang=localStorage.getItem('medea_lang');
-if(savedLang){
-  currentLang=savedLang;
-  document.querySelectorAll('.lang-btn').forEach(b=>{
+// تحميل اللغة المحفوظة
+const savedLang = localStorage.getItem('medea_lang');
+if (savedLang) {
+  currentLang = savedLang;
+  document.querySelectorAll('.lang-btn').forEach(b => {
     b.classList.remove('active');
-    if(b.textContent.toLowerCase().includes(savedLang==='ar'?'العربية':savedLang==='fr'?'français':'english')){
+    if ((savedLang === 'ar' && b.textContent.includes('العربية')) ||
+        (savedLang === 'fr' && b.textContent.includes('Français')) ||
+        (savedLang === 'en' && b.textContent.includes('English'))) {
       b.classList.add('active');
     }
   });
@@ -276,8 +292,7 @@ function updateReport(id,updates){
   const idx=allReports.findIndex(x=>x.id==id);
   if(idx!==-1){
     allReports[idx]={...allReports[idx],...updates};
-    localStorage.setItem('medea_reports',JSON.stringify(allReports));
-    updateStats();
+    localStorage.setItem('medea_reports',JSON.stringify(allReports));    updateStats();
     if(document.getElementById('reportsPage').classList.contains('active')) showReportsPage();
   }
 }
@@ -292,7 +307,8 @@ function updateStats(){
   const total=allReports.length;
   const done=allReports.filter(r=>r.status==='done').length;
   const pending=allReports.filter(r=>r.status!=='done').length;
-  document.getElementById('statTotal').textContent=total;  document.getElementById('statDone').textContent=done;
+  document.getElementById('statTotal').textContent=total;
+  document.getElementById('statDone').textContent=done;
   document.getElementById('statPending').textContent=pending;
   if(document.getElementById('dashboard').classList.contains('active')) renderChart();
 }
@@ -325,8 +341,7 @@ function getLocation(){
             if(a.city_district) parts.push(a.city_district);
             if(a.city||a.town) parts.push(a.city||a.town);
             if(parts.length>0) addr=parts.join(' - ');
-          }
-          addrInput.value=addr;
+          }          addrInput.value=addr;
           btn.innerHTML='📍 تحديد الموقع GPS';btn.disabled=false;
         }).catch(()=>{addrInput.value='المدية (عنوان تقريبي)';btn.innerHTML='📍 تحديد الموقع GPS';btn.disabled=false;});
     },
@@ -341,7 +356,8 @@ function manualLocation(){
 }
 
 function takePhoto(){
-  const input=document.createElement('input');  input.type='file';input.accept='image/*';input.capture='environment';
+  const input=document.createElement('input');
+  input.type='file';input.accept='image/*';input.capture='environment';
   input.onchange=e=>{
     if(e.target.files[0]){
       const r=new FileReader();
@@ -374,8 +390,7 @@ function loginAdmin(){
   }else alert('✗ رمز خاطئ');
 }
 
-function logoutAdmin(){
-  document.getElementById('adminLogin').classList.remove('hidden');
+function logoutAdmin(){  document.getElementById('adminLogin').classList.remove('hidden');
   document.getElementById('adminPanel').classList.add('hidden');
   document.getElementById('adminName').value='';document.getElementById('adminCode').value='';
 }
@@ -390,7 +405,8 @@ function loginDriver(){
 }
 
 function logoutDriver(){
-  currentDriver='';document.getElementById('driverLogin').classList.remove('hidden');document.getElementById('driverPanel').classList.add('hidden');document.getElementById('driverName').value='';tempAfterImage=null;}
+  currentDriver='';document.getElementById('driverLogin').classList.remove('hidden');document.getElementById('driverPanel').classList.add('hidden');document.getElementById('driverName').value='';tempAfterImage=null;
+}
 
 function downloadImage(imgData,filename){
   if(!imgData){alert('⚠️ لا توجد صورة');return;}
@@ -424,7 +440,6 @@ function filterByStatus(s){
   showPage('reportsPage');
   if(document.getElementById('filterStatus')){document.getElementById('filterStatus').value=s==='pending'?'assigned':s;applyFilters();}
 }
-
 function renderReportsList(reports){
   const c=document.getElementById('reportsList');
   if(!reports.length){c.innerHTML='<p style="text-align:center;color:#666;padding:40px">لا توجد بلاغات</p>';return;}
@@ -439,20 +454,15 @@ function renderReportsList(reports){
   }).join('');
 }
 
-function showQR(id){  const r=allReports.find(x=>x.id==id);
+function showQR(id){
+  const r=allReports.find(x=>x.id==id);
   if(!r){alert('⚠️ غير موجود');return;}
   const modal=document.getElementById('qrModal'),qrContainer=document.getElementById('qrcode'),qrIdSpan=document.getElementById('qrReportId');
   modal.style.display='flex';qrContainer.innerHTML='';qrIdSpan.textContent='#'+r.id;
-  
   if(typeof QRCode !== 'undefined'){
-    try{
-      new QRCode(qrContainer,{text:String(r.id),width:180,height:180,colorDark:'#1B5E20',colorLight:'#ffffff',correctLevel:QRCode.CorrectLevel.M});
-    }catch(e){
-      qrContainer.innerHTML='<div style="color:red;padding:20px">❌ فشل إنشاء QR Code</div>';
-    }
-  }else{
-    qrContainer.innerHTML='<div style="color:red;padding:20px">❌ مكتبة QR Code غير محملة</div>';
-  }
+    try{new QRCode(qrContainer,{text:String(r.id),width:180,height:180,colorDark:'#1B5E20',colorLight:'#ffffff',correctLevel:QRCode.CorrectLevel.M});}
+    catch(e){qrContainer.innerHTML='<div style="color:red;padding:20px">❌ فشل إنشاء QR Code</div>';}
+  }else{qrContainer.innerHTML='<div style="color:red;padding:20px">❌ مكتبة QR Code غير محملة</div>';}
 }
 
 function assignDriver(id){
@@ -478,8 +488,7 @@ function loadStaffList(){
   c.innerHTML=s.map((x,i)=>'<div class="staff-item"><div><b style="color:#1B5E20">'+x.role+':</b> '+x.name+(x.phone?'<br><span style="color:#666">📞 '+x.phone+'</span>':'')+'</div><div style="display:flex;gap:10px"><button class="edit-btn" onclick="editStaff('+i+')" title="تعديل">✏️</button><button class="edit-btn" onclick="deleteStaff('+i+')" title="حذف" style="background:#d21034">✕</button></div></div>').join('');
 }
 
-function addStaff(){
-  const n=document.getElementById('newStaffName').value.trim(),r=document.getElementById('newStaffRole').value.trim(),p=document.getElementById('newStaffPhone').value.trim();
+function addStaff(){  const n=document.getElementById('newStaffName').value.trim(),r=document.getElementById('newStaffRole').value.trim(),p=document.getElementById('newStaffPhone').value.trim();
   if(!n||!r){alert('⚠️ الاسم والمنصب مطلوبان');return;}
   const s=JSON.parse(localStorage.getItem('medea_staff')||'[]');
   s.push({name:n,role:r,phone:p});
@@ -488,7 +497,8 @@ function addStaff(){
   loadStaffList();alert('✅ تم إضافة الموظف بنجاح');
 }
 
-function editStaff(index){  const s=JSON.parse(localStorage.getItem('medea_staff')||'[]'),staff=s[index];
+function editStaff(index){
+  const s=JSON.parse(localStorage.getItem('medea_staff')||'[]'),staff=s[index];
   const newName=prompt('الاسم الجديد:',staff.name);if(!newName)return;
   const newRole=prompt('المنصب الجديد:',staff.role);if(!newRole)return;
   const newPhone=prompt('الهاتف الجديد:',staff.phone||'');
@@ -527,7 +537,6 @@ function completeTask(id){
   updateReport(id,updates);tempAfterImage=null;
   alert('✅ تم الإنجاز!');renderDriverTasks();
 }
-
 function backToAdmin(){showPage('admin');}
 
 function exportExcel(){
@@ -537,7 +546,8 @@ function exportExcel(){
   const b=new Blob([c],{type:'text/csv'});const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='archive_'+Date.now()+'.csv';a.click();
 }
 
-function exitApp(){  if(confirm('الخروج من التطبيق؟')){window.close();setTimeout(()=>{window.location.href='about:blank'},1000);}
+function exitApp(){
+  if(confirm('الخروج من التطبيق؟')){window.close();setTimeout(()=>{window.location.href='about:blank'},1000);}
 }
 
 function renderChart(){
