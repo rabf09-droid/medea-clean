@@ -52,8 +52,10 @@ html,body{overflow-x:hidden;width:100%;background:linear-gradient(135deg,#f5f7fa
 .demo-btn{background:linear-gradient(135deg,#667eea,#764ba2);margin-top:10px;font-size:.9rem}
 .demo-btn:hover{opacity:.9}
 .print-btn{background:#607d8b;margin-top:10px;font-size:.9rem}
+.exit-btn{background:linear-gradient(135deg,#e53e3e,#c53030);margin-top:10px;font-size:.9rem}
+.exit-btn:hover{opacity:.9}
 @media print{
-.conn,.lang-btn,.btn,.download-btn,.footer,.cam-box,.in,.demo-btn,.print-btn{display:none!important}
+.conn,.lang-btn,.btn,.download-btn,.footer,.cam-box,.in,.demo-btn,.print-btn,.exit-btn{display:none!important}
 body{background:#fff}
 .report-card{break-inside:avoid;border:1px solid #ccc;box-shadow:none}
 .img-container img{height:auto}
@@ -94,8 +96,8 @@ body{background:#fff}
 <div id="thanksSlogan" style="padding:12px 35px;border:3px solid #FFD700;border-radius:40px;font-size:1rem;font-weight:700;background:rgba(255,255,255,.1)">معاً لمدية أنظف 2026</div>
 </div>
 
-<div id="home" class="page active">
-<button class="btn bg mb" onclick="showPage('report')"><span style="font-size:2.8rem">🚚</span><br><span id="btnSendReport">إرسال تبليغ</span></button>
+<div id="home" class="page active"><button class="btn bg mb" onclick="showPage('report')"><span style="font-size:2.8rem">🚚</span><br><span id="btnSendReport">إرسال تبليغ</span></button>
+
 <!-- ✨ أزرار التحكم للعرض -->
 <div class="cd" style="border-color:#667eea;background:#f8f9ff">
 <h3 style="text-align:center;margin-bottom:10px;color:#667eea">🎬 أدوات العرض</h3>
@@ -103,6 +105,7 @@ body{background:#fff}
 <button class="btn demo-btn" onclick="loadDemoData()">🎲 تحميل بيانات تجريبية</button>
 <button class="btn print-btn" onclick="window.print()">🖨️ طباعة / PDF</button>
 </div>
+<button class="btn exit-btn" onclick="exitApp()">🚪 الخروج من التطبيق</button>
 <p style="font-size:.8rem;color:#666;text-align:center;margin-top:8px">* البيانات التجريبية لا تحذف بياناتك الحقيقية</p>
 </div>
 
@@ -142,10 +145,10 @@ body{background:#fff}
 <div style="background:#e8f5e9;padding:12px;border-radius:10px;margin-bottom:12px;text-align:center;color:#2E7D32;font-weight:700" id="txtWelcomeAdmin">✓ وضع المشرف مفعل</div>
 <button class="btn bg" onclick="showReportsPage()"><span id="btnViewReports">📊 عرض البلاغات</span></button>
 <button class="btn by" onclick="manageStaffPage()"><span id="btnManageStaff">👥 إدارة الموظفين</span></button>
-<button class="btn bb" onclick="exportExcel()"><span id="btnExport">📥 تصدير Excel</span></button>
-<button class="btn br" onclick="logoutAdmin()"><span id="btnLogout">✕ خروج</span></button>
+<button class="btn bb" onclick="exportExcel()"><span id="btnExport">📥 تصدير Excel</span></button><button class="btn br" onclick="logoutAdmin()"><span id="btnLogout">✕ خروج</span></button>
 </div>
-<button class="btn bx" onclick="showPage('home')"><span id="btnBack2">← رجوع</span></button></div>
+<button class="btn bx" onclick="showPage('home')"><span id="btnBack2">← رجوع</span></button>
+</div>
 
 <div id="reportsPage" class="page">
 <h2 style="margin-bottom:15px;color:#1B5E20;text-align:center"><span id="txtReportsList">📊 قائمة البلاغات</span></h2>
@@ -188,12 +191,26 @@ body{background:#fff}
 
 <script>
 const translations={
-ar:{conn:"✓ متصل",republic:"🇩🇿 الجمهورية الجزائرية الديمقراطية الشعبية",service:"🧹 مصلحة النظافة والوقاية الصحية لبلدية المدية",title:"🗑️ المدية نظيفة",sendReport:"إرسال تبليغ",staffHall:"👥 رواق الموظفين والمسؤولين",drivers:"🚚 السائقين",admin:"🛡️ الإدارة",newReport:"📝 إرسال تبليغ جديد",takePhoto:"📷 التقاط الصورة",getLocation:"📍 تحديد الموقع",sendNow:"✉️ إرسال البلاغ الآن",back:"← رجوع",controlPanel:"⚙️ لوحة التحكم",supervisorLogin:"🔐 الدخول للمشرفين",login:"✓ دخول",viewReports:"📊 عرض البلاغات",manageStaff:"👥 إدارة الموظفين",export:"📥 تصدير Excel",logout:"✕ خروج",driverArea:"🚚 مساحة السائقين",driverLogin:"🔐 دخول السائق",welcomeAdmin:"✓ وضع المشرف مفعل",welcomeDriver:"✓ مرحباً - مهامك جاهزة",yourTasks:"📋 مهامك الموكلة",noTasks:"✓ لا توجد مهام جديدة",reportsList:"📊 قائمة البلاغات",noReports:"لا توجد بلاغات حالياً",staffMgmt:"👥 إدارة الموظفين",addStaff:"➕ إضافة موظف",add:"➕ إضافة",thanksTitle:"شكراً لكم!",thanksMsg:"تم إرسال بلاغكم بنجاح<br>نحن نقدر حرصكم على نظافة مدينتنا",slogan:"معاً لمدية أنظف 2026",footer:"🛡️ إعداد وإشراف د. رابحي فتحي - بلدية المدية 2026 ©",assign:"📤 توجيه لسائق",delete:"🗑️ حذف",map:"🗺️ الخريطة",complete:"✅ تأكيد الإنجاز",photoAfter:"📷 تصوير بعد التنفيذ",download:"⬇️ تحميل",downloadBefore:"⬇️ تحميل صورة قبل",downloadAfter:"⬇️ تحميل صورة بعد",downloadReport:"📄 تحميل التقرير الكامل",deleteConfirm:"حذف البلاغ؟",notRegistered:"❌ هذا الاسم غير مسجل كسائق. أضفه من الإدارة أولاً."},
-fr:{conn:"✓ Connecté",republic:"🇩 République",service:"🧹 Service Propreté",title:"🗑️ Médéa Propre",sendReport:"Signalement",staffHall:"👥 Personnel",drivers:"🚚 Chauffeurs",admin:"🛡️ Admin",newReport:"📝 Nouveau",takePhoto:"📷 Photo",getLocation:"📍 Localiser",sendNow:"✉️ Envoyer",back:"← Retour",controlPanel:"⚙️ Panneau",supervisorLogin:"🔐 Superviseur",login:"✓ OK",viewReports:"📊 Rapports",manageStaff:"👥 Personnel",export:"📥 Excel",logout:"✕ Quitter",driverArea:"🚚 Chauffeurs",driverLogin:"🔐 Chauffeur",welcomeAdmin:"✓ Mode Superviseur",welcomeDriver:"✓ Vos Tâches",yourTasks:"📋 Tâches",noTasks:"✓ Aucune tâche",reportsList:"📊 Rapports",noReports:"Aucun rapport",staffMgmt:"👥 Personnel",addStaff:"➕ Ajouter",add:"➕ OK",thanksTitle:"Merci!",thanksMsg:"Envoyé avec succès",slogan:"Médéa Propre 2026",footer:"🛡️ Dr. Rabhi 2026 ©",assign:"📤 Assigner",delete:"🗑️ Supprimer",map:"🗺️ Carte",complete:"✅ Terminer",photoAfter:"📷 Après",download:"⬇️ Télécharger",downloadBefore:"⬇️ Photo Avant",downloadAfter:"⬇️ Photo Après",downloadReport:"📄 Rapport Complet",deleteConfirm:"Supprimer?",notRegistered:"❌ Nom non enregistré."},
-en:{conn:"✓ Connected",republic:"🇩 Algeria",service:"🧹 Cleaning Service",title:"🗑️ Clean Medea",sendReport:"Report",staffHall:"👥 Staff",drivers:"🚚 Drivers",admin:"🛡️ Admin",newReport:"📝 New",takePhoto:"📷 Photo",getLocation:"📍 Location",sendNow:"✉️ Send",back:"← Back",controlPanel:"⚙️ Panel",supervisorLogin:"🔐 Supervisor",login:"✓ OK",viewReports:"📊 Reports",manageStaff:"👥 Staff",export:"📥 Excel",logout:"✕ Exit",driverArea:"🚚 Drivers",driverLogin:"🔐 Driver",welcomeAdmin:"✓ Supervisor",welcomeDriver:"✓ Your Tasks",yourTasks:"📋 Tasks",noTasks:"✓ No tasks",reportsList:"📊 Reports",noReports:"No reports",staffMgmt:"👥 Staff",addStaff:"➕ Add",add:"➕ OK",thanksTitle:"Thank You!",thanksMsg:"Report sent successfully",slogan:"Clean Medea 2026",footer:"🛡️ Dr. Rabhi 2026 ©",assign:"📤 Assign",delete:"🗑️ Delete",map:"🗺️ Map",complete:"✅ Complete",photoAfter:"📷 After",download:"⬇️ Download",downloadBefore:"⬇️ Before Photo",downloadAfter:"⬇️ After Photo",downloadReport:"📄 Full Report",deleteConfirm:"Delete?",notRegistered:"❌ Name not registered."}
+ar:{conn:"✓ متصل",republic:"🇩🇿 الجمهورية الجزائرية الديمقراطية الشعبية",service:"🧹 مصلحة النظافة والوقاية الصحية لبلدية المدية",title:"🗑️ المدية نظيفة",sendReport:"إرسال تبليغ",staffHall:"👥 رواق الموظفين والمسؤولين",drivers:"🚚 السائقين",admin:"🛡️ الإدارة",newReport:"📝 إرسال تبليغ جديد",takePhoto:"📷 التقاط الصورة",getLocation:"📍 تحديد الموقع",sendNow:"✉️ إرسال البلاغ الآن",back:"← رجوع",controlPanel:"⚙️ لوحة التحكم",supervisorLogin:"🔐 الدخول للمشرفين",login:"✓ دخول",viewReports:"📊 عرض البلاغات",manageStaff:"👥 إدارة الموظفين",export:"📥 تصدير Excel",logout:"✕ خروج",driverArea:"🚚 مساحة السائقين",driverLogin:"🔐 دخول السائق",welcomeAdmin:"✓ وضع المشرف مفعل",welcomeDriver:"✓ مرحباً - مهامك جاهزة",yourTasks:"📋 مهامك الموكلة",noTasks:"✓ لا توجد مهام جديدة",reportsList:"📊 قائمة البلاغات",noReports:"لا توجد بلاغات حالياً",staffMgmt:"👥 إدارة الموظفين",addStaff:"➕ إضافة موظف",add:"➕ إضافة",thanksTitle:"شكراً لكم!",thanksMsg:"تم إرسال بلاغكم بنجاح<br>نحن نقدر حرصكم على نظافة مدينتنا",slogan:"معاً لمدية أنظف 2026",footer:"🛡️ إعداد وإشراف د. رابحي فتحي - بلدية المدية 2026 ©",assign:"📤 توجيه لسائق",delete:"🗑️ حذف",map:"🗺️ الخريطة",complete:"✅ تأكيد الإنجاز",photoAfter:"📷 تصوير بعد التنفيذ",download:"⬇️ تحميل",downloadBefore:"⬇️ تحميل صورة قبل",downloadAfter:"⬇️ تحميل صورة بعد",downloadReport:"📄 تحميل التقرير الكامل",deleteConfirm:"حذف البلاغ؟",notRegistered:"❌ هذا الاسم غير مسجل كسائق. أضفه من الإدارة أولاً.",exitConfirm:"هل تريد الخروج من التطبيق؟",exitTitle:"الخروج من التطبيق"},
+fr:{conn:"✓ Connecté",republic:"🇩 République",service:"🧹 Service Propreté",title:"🗑️ Médéa Propre",sendReport:"Signalement",staffHall:"👥 Personnel",drivers:"🚚 Chauffeurs",admin:"🛡️ Admin",newReport:"📝 Nouveau",takePhoto:"📷 Photo",getLocation:"📍 Localiser",sendNow:"✉️ Envoyer",back:"← Retour",controlPanel:"⚙️ Panneau",supervisorLogin:"🔐 Superviseur",login:"✓ OK",viewReports:"📊 Rapports",manageStaff:"👥 Personnel",export:"📥 Excel",logout:"✕ Quitter",driverArea:"🚚 Chauffeurs",driverLogin:"🔐 Chauffeur",welcomeAdmin:"✓ Mode Superviseur",welcomeDriver:"✓ Vos Tâches",yourTasks:"📋 Tâches",noTasks:"✓ Aucune tâche",reportsList:"📊 Rapports",noReports:"Aucun rapport",staffMgmt:"👥 Personnel",addStaff:"➕ Ajouter",add:"➕ OK",thanksTitle:"Merci!",thanksMsg:"Envoyé avec succès",slogan:"Médéa Propre 2026",footer:"🛡️ Dr. Rabhi 2026 ©",assign:"📤 Assigner",delete:"🗑️ Supprimer",map:"🗺️ Carte",complete:"✅ Terminer",photoAfter:"📷 Après",download:"⬇️ Télécharger",downloadBefore:"⬇️ Photo Avant",downloadAfter:"⬇️ Photo Après",downloadReport:"📄 Rapport Complet",deleteConfirm:"Supprimer?",notRegistered:"❌ Nom non enregistré.",exitConfirm:"Voulez-vous quitter l'application?",exitTitle:"Quitter"},
+en:{conn:"✓ Connected",republic:"🇩 Algeria",service:"🧹 Cleaning Service",title:"🗑️ Clean Medea",sendReport:"Report",staffHall:"👥 Staff",drivers:"🚚 Drivers",admin:"🛡️ Admin",newReport:"📝 New",takePhoto:"📷 Photo",getLocation:"📍 Location",sendNow:"✉️ Send",back:"← Back",controlPanel:"⚙️ Panel",supervisorLogin:"🔐 Supervisor",login:"✓ OK",viewReports:"📊 Reports",manageStaff:"👥 Staff",export:"📥 Excel",logout:"✕ Exit",driverArea:"🚚 Drivers",driverLogin:"🔐 Driver",welcomeAdmin:"✓ Supervisor",welcomeDriver:"✓ Your Tasks",yourTasks:"📋 Tasks",noTasks:"✓ No tasks",reportsList:"📊 Reports",noReports:"No reports",staffMgmt:"👥 Staff",addStaff:"➕ Add",add:"➕ OK",thanksTitle:"Thank You!",thanksMsg:"Report sent successfully",slogan:"Clean Medea 2026",footer:"🛡️ Dr. Rabhi 2026 ©",assign:"📤 Assign",delete:"🗑️ Delete",map:"🗺️ Map",complete:"✅ Complete",photoAfter:"📷 After",download:"⬇️ Download",downloadBefore:"⬇️ Before Photo",downloadAfter:"⬇️ After Photo",downloadReport:"📄 Full Report",deleteConfirm:"Delete?",notRegistered:"❌ Name not registered.",exitConfirm:"Do you want to exit the application?",exitTitle:"Exit"}
 };
-
 let currentLang='ar', tempImage=null, tempAfterImage=null, currentDriver='';
+
+// ✨ دالة الخروج من التطبيق
+function exitApp(){
+const t=translations[currentLang];
+if(confirm(t.exitConfirm)){
+// محاولة إغلاق النافذة
+if(window.close()){
+// إذا نجح الإغلاق
+}else{
+// إذا فشل، نوجه لصفحة فارغة
+window.location.href='about:blank';
+}
+}
+}
+
 function changeLanguage(lang,btn){
 currentLang=lang;
 document.querySelectorAll('.lang-btn').forEach(b=>b.classList.remove('active'));
@@ -226,8 +243,7 @@ const done=reports.filter(r=>r.status==='done').length;
 const pending=reports.filter(r=>r.status==='assigned'||r.status==='new').length;
 document.getElementById('statTotal').textContent=total;
 document.getElementById('statDone').textContent=done;
-document.getElementById('statPending').textContent=pending;
-} catch(e) { console.error("Error in updateStats", e); }
+document.getElementById('statPending').textContent=pending;} catch(e) { console.error("Error in updateStats", e); }
 }
 
 function showPage(id){
@@ -243,7 +259,8 @@ input.onchange=e=>{if(e.target.files[0]){const r=new FileReader();r.onload=ev=>{
 }
 
 function getLocation(){
-const btn=event.target;const orig=btn.innerHTML;btn.innerHTML='⏳...';btn.disabled=true;if(navigator.geolocation){navigator.geolocation.getCurrentPosition(pos=>{
+const btn=event.target;const orig=btn.innerHTML;btn.innerHTML='⏳...';btn.disabled=true;
+if(navigator.geolocation){navigator.geolocation.getCurrentPosition(pos=>{
 const lat=pos.coords.latitude,lng=pos.coords.longitude;
 document.getElementById('gpsInput').value=lat+', '+lng;
 fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&accept-language=${currentLang==='fr'?'fr':currentLang==='en'?'en':'ar'}`)
@@ -275,8 +292,7 @@ updateStats();
 function logoutAdmin(){
 document.getElementById('adminLogin').classList.remove('hidden');
 document.getElementById('adminPanel').classList.add('hidden');
-document.getElementById('adminName').value='';document.getElementById('adminCode').value='';
-}
+document.getElementById('adminName').value='';document.getElementById('adminCode').value='';}
 
 function loginDriver(){
 const name=document.getElementById('driverName').value.trim();
@@ -292,7 +308,8 @@ renderDriverTasks();
 alert(translations[currentLang].notRegistered);
 }
 }
-function logoutDriver(){currentDriver='';document.getElementById('driverLogin').classList.remove('hidden');
+function logoutDriver(){
+currentDriver='';document.getElementById('driverLogin').classList.remove('hidden');
 document.getElementById('driverPanel').classList.add('hidden');
 document.getElementById('driverName').value='';tempAfterImage=null;
 }
@@ -324,8 +341,7 @@ ${t.title} - تقرير بلاغ
    تاريخ البلاغ: ${report.date}
    وقت البلاغ: ${report.time}
 👷 معلومات التنفيذ:
-   السائق المكلف: ${report.driverName || 'غير محدد'}
-   الحالة: ${report.status==='done'?'✅ منجز':report.status==='assigned'?'🚚 قيد التنفيذ':'🆕 جديد'}
+   السائق المكلف: ${report.driverName || 'غير محدد'}   الحالة: ${report.status==='done'?'✅ منجز':report.status==='assigned'?'🚚 قيد التنفيذ':'🆕 جديد'}
    ${report.doneTime ? 'وقت الإنجاز: '+ report.doneTime : ''}
 =================================
 📸 الصور المرفقة:
@@ -342,6 +358,7 @@ document.body.appendChild(link);
 link.click();
 document.body.removeChild(link);
 }
+
 // ✨ دالة تحميل البيانات التجريبية (Demo Mode)
 function loadDemoData(){
 if(!confirm('هل تريد تحميل بيانات تجريبية للعرض؟\n(لن يتم حذف بياناتك الحالية)'))return;
@@ -373,8 +390,7 @@ const afterHtml=r.doneImage?`<div class="img-container"><img src="${r.doneImage}
 const driverInfo=r.driverName?`<div class="info-row"><b>👷 ${t.driver||'السائق'}:</b> <span>${r.driverName}</span></div>`:'';
 const statusInfo=`<div class="info-row"><b>📊 ${t.status||'الحالة'}:</b> <span style="color:${r.status==='done'?'#4CAF50':'#F57C00'}">${r.status==='done'?'✅ منجز':r.status==='assigned'?'🚚 قيد التنفيذ':'🆕 جديد'}</span></div>`;
 return`<div class="report-card ${r.status}">
-<div class="info-row"><b>📍 ${t.address||'العنوان'}:</b> <span>${r.addr}</span></div>
-<div class="info-row"><b>🌍 GPS:</b> <span>${r.gps}</span></div>
+<div class="info-row"><b>📍 ${t.address||'العنوان'}:</b> <span>${r.addr}</span></div><div class="info-row"><b>🌍 GPS:</b> <span>${r.gps}</span></div>
 ${driverInfo}${statusInfo}
 ${beforeHtml}${afterHtml}
 ${reportBtn}
@@ -390,7 +406,8 @@ function assignDriver(i){
 const n=prompt(currentLang==='ar'?'اسم السائق المسجل:':currentLang==='fr'?'Nom du chauffeur:':'Driver name:');
 if(!n)return;
 const r=JSON.parse(localStorage.getItem('medea_reports')||'[]');
-r[i].driverName=n;r[i].status='assigned';localStorage.setItem('medea_reports',JSON.stringify(r));
+r[i].driverName=n;r[i].status='assigned';
+localStorage.setItem('medea_reports',JSON.stringify(r));
 showReportsPage();updateStats();
 }
 function deleteReport(i){
@@ -422,8 +439,7 @@ if(confirm('حذف؟')){const s=JSON.parse(localStorage.getItem('medea_staff')||
 }
 
 function renderDriverTasks(){
-const reports=JSON.parse(localStorage.getItem('medea_reports')||'[]');
-const tasks=reports.filter(r=>r.driverName===currentDriver&&r.status!=='done');
+const reports=JSON.parse(localStorage.getItem('medea_reports')||'[]');const tasks=reports.filter(r=>r.driverName===currentDriver&&r.status!=='done');
 const c=document.getElementById('tasksList');
 const t=translations[currentLang];
 if(!tasks.length){c.innerHTML='<p style="text-align:center;color:#4CAF50;padding:30px">✓ '+t.noTasks+'</p>';return}
@@ -439,7 +455,8 @@ ${afterHtml?afterHtml:`<button class="btn bo" onclick="driverTakePhoto(${idx})" 
 ${task.gps&&task.gps!=='-'?`<a href="https://www.google.com/maps/dir/?api=1&destination=${task.gps.split(',')[0]},${task.gps.split(',')[1]}" target="_blank" class="btn bb" style="margin-top:8px">🗺️ ${t.map}</a>`:''}
 <button class="btn bg" style="margin-top:8px" onclick="completeTask(${idx})">✅ ${t.complete}</button>
 </div>`;
-}).join('');}
+}).join('');
+}
 
 function driverTakePhoto(i){
 const input=document.createElement('input');input.type='file';input.accept='image/*';input.capture='environment';
@@ -471,8 +488,7 @@ a.href=u;a.download='archive.csv';a.click();
 window.addEventListener('load', function() {
     updateTime();
     setInterval(updateTime, 1000);
-    updateStats();
-});
+    updateStats();});
 </script>
 </body>
 </html>
