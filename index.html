@@ -8,22 +8,17 @@
 <style>
 *{box-sizing:border-box;margin:0;padding:0;font-family:'Segoe UI',Tahoma,sans-serif}
 html,body{overflow-x:hidden;width:100%;background:#f5f7fa;min-height:100vh}
-
-/* Splash Screen */
-#splash{position:fixed;top:0;left:0;width:100%;height:100%;background:linear-gradient(135deg,#1B5E20,#2E7D32);z-index:99999;display:flex;flex-direction:column;align-items:center;justify-content:center;color:#fff;transition:opacity .5s}
-#splash .logo-container{width:300px;height:300px;background:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;margin-bottom:30px;box-shadow:0 10px 40px rgba(0,0,0,.3);animation:pulse 2s infinite}
-#splash .logo-container img{width:280px;height:280px;object-fit:contain}
-@keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.05)}}
-#splash h1{font-size:2.5rem;margin-bottom:15px;text-align:center;font-weight:900;text-shadow:2px 2px 4px rgba(0,0,0,.3)}
-#splash .subtitle{font-size:1.2rem;opacity:.95;margin-bottom:40px;text-align:center}
-#splash .loader{width:60px;height:60px;border:5px solid rgba(255,255,255,.3);border-top-color:#FFD700;border-radius:50%;animation:spin 1s linear infinite}
+#splash{position:fixed;top:0;left:0;width:100%;height:100%;background:#fff;z-index:99999;display:flex;flex-direction:column;align-items:center;justify-content:center;transition:opacity .5s}
+#splash .bg-image{position:absolute;top:0;left:0;width:100%;height:100%;background-image:url('logo.png');background-size:contain;background-position:center;background-repeat:no-repeat;opacity:.15;z-index:-1}
+#splash .logo-container{width:350px;height:350px;margin-bottom:30px;position:relative;z-index:1}
+#splash .logo-container img{width:100%;height:100%;object-fit:contain}
+#splash h1{font-size:2.5rem;margin-bottom:15px;text-align:center;font-weight:900;color:#1B5E20;z-index:1}
+#splash .subtitle{font-size:1.2rem;color:#2E7D32;margin-bottom:40px;text-align:center;z-index:1}
+#splash .loader{width:60px;height:60px;border:5px solid rgba(27,94,32,.2);border-top-color:#FFD700;border-radius:50%;animation:spin 1s linear infinite;z-index:1}
 @keyframes spin{to{transform:rotate(360deg)}}
-
-/* Language Buttons */
-.lang-container{display:flex;gap:15px;margin-top:30px;flex-wrap:wrap;justify-content:center}
+.lang-container{display:flex;gap:15px;margin:15px 0;flex-wrap:wrap;justify-content:center}
 .lang-btn{background:#fff;border:3px solid #D4AF37;padding:12px 30px;border-radius:30px;cursor:pointer;font-size:1rem;font-weight:700;transition:.3s;color:#1B5E20}
 .lang-btn:hover,.lang-btn.active{background:#D4AF37;color:#fff;transform:scale(1.1)}
-
 .conn{position:fixed;top:0;left:0;right:0;padding:10px;text-align:center;font-size:.9rem;font-weight:700;z-index:10000;background:linear-gradient(90deg,#1B5E20,#2E7D32);color:#fff}
 .hdr{background:#fff;padding:20px 15px;text-align:center;border-bottom:4px solid #D4AF37;margin-top:40px}
 .hdr .c{font-size:.8rem;color:#14213D;margin:5px 0}
@@ -47,12 +42,12 @@ html,body{overflow-x:hidden;width:100%;background:#f5f7fa;min-height:100vh}
 #thanksOverlay{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:linear-gradient(135deg,#1B5E20,#2E7D32);color:#fff;flex-direction:column;align-items:center;justify-content:center;z-index:10001;text-align:center;animation:fadeIn .5s}
 @keyframes fadeIn{from{opacity:0}to{opacity:1}}
 .hidden{display:none!important}
-.report-card{background:#fff;border-radius:15px;padding:18px;margin-bottom:18px;box-shadow:0 4px 15px rgba(0,0,0,.1);border-right:6px solid #f44336}.report-card.assigned{border-right-color:#FF9800}
+.report-card{background:#fff;border-radius:15px;padding:18px;margin-bottom:18px;box-shadow:0 4px 15px rgba(0,0,0,.1);border-right:6px solid #f44336}
+.report-card.assigned{border-right-color:#FF9800}
 .report-card.done{border-right-color:#4CAF50}
 .img-container{margin:12px 0;border-radius:12px;overflow:hidden;border:3px solid #eee}
 .img-container img{width:100%;height:180px;object-fit:cover}
-.img-label{text-align:center;padding:8px;background:#f0f0f0;font-weight:bold}
-.done-label{background:#e8f5e9;color:#2E7D32}
+.img-label{text-align:center;padding:8px;background:#f0f0f0;font-weight:bold}.done-label{background:#e8f5e9;color:#2E7D32}
 .info-row{display:flex;justify-content:space-between;margin:8px 0;padding:5px 0;border-bottom:1px solid rgba(0,0,0,.05)}
 .info-row b{color:#1B5E20}
 .download-btn{display:inline-block;width:100%;padding:12px;background:#2196F3;color:#fff;text-decoration:none;border-radius:10px;margin:6px 0;font-weight:bold;text-align:center;cursor:pointer;border:none}
@@ -81,22 +76,15 @@ html,body{overflow-x:hidden;width:100%;background:#f5f7fa;min-height:100vh}
 </head>
 <body>
 
-<!-- Splash Screen مع الشعار -->
 <div id="splash">
+  <div class="bg-image"></div>
   <div class="logo-container">
-    <!-- استبدل هذا الرابط بصورة الشعار التي أرسلتها -->
-    <img src="logo.png" alt="شعار المدية نظيفة" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22%3E%3Ccircle cx=%2250%22 cy=%2250%22 r=%2245%22 fill=%22%232E7D32%22/%3E%3Ctext x=%2250%22 y=%2260%22 font-size=%2240%22 text-anchor=%22middle%22%3E🗑️%3C/text%3E%3C/svg%3E'">
+    <img src="logo.png" alt="شعار المدية نظيفة" onerror="this.style.display='none';document.querySelector('.bg-image').style.opacity='1'">
   </div>
   <h1>المدية نظيفة</h1>
   <p class="subtitle">مصلحة النظافة والوقاية الصحية - بلدية المدية 2026</p>
   <div class="loader"></div>
-  
-  <!-- أزرار اختيار اللغة -->
-  <div class="lang-container">
-    <button class="lang-btn active" onclick="selectLanguage('ar',this)">العربية</button>
-    <button class="lang-btn" onclick="selectLanguage('fr',this)">Français</button>
-    <button class="lang-btn" onclick="selectLanguage('en',this)">English</button>
-  </div></div>
+</div>
 
 <div class="conn">✓ متصل - النظام جاهز</div>
 
@@ -104,7 +92,11 @@ html,body{overflow-x:hidden;width:100%;background:#f5f7fa;min-height:100vh}
 <div class="c">🇩🇿 الجمهورية الجزائرية الديمقراطية الشعبية</div>
 <div class="d">🧹 مصلحة النظافة والوقاية الصحية لبلدية المدية</div>
 <div class="t">المدية نظيفة</div>
-</div>
+<div class="lang-container">
+  <button class="lang-btn active" onclick="selectLanguage('ar',this)">العربية</button>
+  <button class="lang-btn" onclick="selectLanguage('fr',this)">Français</button>
+  <button class="lang-btn" onclick="selectLanguage('en',this)">English</button>
+</div></div>
 
 <div class="ib">
 <div>🕐 <span id="ck">00:00:00</span></div>
@@ -118,7 +110,7 @@ html,body{overflow-x:hidden;width:100%;background:#f5f7fa;min-height:100vh}
 </div>
 
 <div id="thanksOverlay">
-<div style="font-size:5rem;margin-bottom:20px;animation:bounce 1s infinite">❤️</div>
+<div style="font-size:5rem;margin-bottom:20px">❤️</div>
 <h1 style="font-size:2.5rem;margin-bottom:15px">شكراً لكم!</h1>
 <p style="font-size:1.2rem;line-height:1.8;margin-bottom:30px">تم إرسال بلاغكم بنجاح<br>نحن نقدر حرصكم على نظافة مدينتنا</p>
 <div style="padding:15px 40px;border:3px solid #FFD700;border-radius:40px;font-size:1.1rem;font-weight:700;background:rgba(255,255,255,.2)">معاً لمدية أنظف 2026</div>
@@ -145,15 +137,15 @@ html,body{overflow-x:hidden;width:100%;background:#f5f7fa;min-height:100vh}
 </div>
 
 <div id="report" class="page">
-<h2 style="margin-bottom:18px;color:#1B5E20;text-align:center">📝 بلاغ جديد</h2><div class="cd">
+<h2 style="margin-bottom:18px;color:#1B5E20;text-align:center">📝 بلاغ جديد</h2>
+<div class="cd">
 <div class="cam-box" onclick="takePhoto()"><span class="cam-icon">📷</span><img id="camImg" style="display:none"></div>
 <button class="btn bg" onclick="takePhoto()">📷 التقاط الصورة</button>
 <button class="btn bb" onclick="getLocation()" id="getLocationBtn">📍 تحديد الموقع GPS</button>
 <button class="btn bx" onclick="manualLocation()" style="margin-top:0;margin-bottom:10px;font-size:.9rem">📍 إدخال يدوي</button>
 <input type="text" class="in" id="addrInput" placeholder="📍 اسم الحي أو الشارع">
 <input type="text" class="in" id="gpsInput" placeholder="🌍 إحداثيات GPS" readonly style="background:#f0f0f0">
-<button class="btn bg" style="height:60px;font-size:1.2rem" onclick="sendReport()" id="sendBtn">✉️ إرسال البلاغ الآن</button>
-<button class="btn bx" onclick="showPage('home')">← رجوع</button>
+<button class="btn bg" style="height:60px;font-size:1.2rem" onclick="sendReport()" id="sendBtn">✉️ إرسال البلاغ الآن</button><button class="btn bx" onclick="showPage('home')">← رجوع</button>
 </div>
 </div>
 
@@ -194,6 +186,7 @@ html,body{overflow-x:hidden;width:100%;background:#f5f7fa;min-height:100vh}
 <div id="reportsList"></div>
 <button class="btn bx" onclick="backToAdmin()">← رجوع</button>
 </div>
+
 <div id="staffPage" class="page">
 <h2 style="margin-bottom:18px;color:#1B5E20;text-align:center">👥 إدارة الموظفين</h2>
 <div class="cd">
@@ -201,8 +194,7 @@ html,body{overflow-x:hidden;width:100%;background:#f5f7fa;min-height:100vh}
 <input type="text" id="newStaffName" class="in" placeholder="👤 الاسم">
 <input type="text" id="newStaffRole" class="in" placeholder="💼 المنصب (سائق/مسؤول)">
 <input type="tel" id="newStaffPhone" class="in" placeholder="📞 الهاتف">
-<button class="btn bg" onclick="addStaff()">💾 حفظ</button>
-</div>
+<button class="btn bg" onclick="addStaff()">💾 حفظ</button></div>
 <div id="staffList" style="margin-top:18px"></div>
 <button class="btn bx" onclick="backToAdmin()">← رجوع</button>
 </div>
@@ -227,7 +219,7 @@ html,body{overflow-x:hidden;width:100%;background:#f5f7fa;min-height:100vh}
 <div class="qr-content">
 <h3 style="margin-bottom:15px;color:#1B5E20">📱 كود تتبع البلاغ</h3>
 <div id="qrcode"></div>
-<p style="margin:15px 0;color:#666">امسح الكود لفتح التفاصيل</p>
+<p style="margin:15px 0;color:#666;font-size:.9rem">بلاغ رقم: <span id="qrReportId" style="font-weight:bold;color:#1B5E20"></span></p>
 <button class="btn bb" onclick="document.getElementById('qrModal').style.display='none'">✕ إغلاق</button>
 </div>
 </div>
@@ -235,15 +227,14 @@ html,body{overflow-x:hidden;width:100%;background:#f5f7fa;min-height:100vh}
 <div class="ft">🛡️ إعداد د. رابحي فتحي - بلدية المدية 2026 ©</div>
 
 <script>
-let allReports=[],currentLang='ar',tempImage=null,tempAfterImage=null,currentDriver='',editingStaffIndex=null;
+let allReports=[],currentLang='ar',tempImage=null,tempAfterImage=null,currentDriver='';
 
-// إخفاء Splash Screen بعد 3 ثواني
 window.addEventListener('load',function(){
   setTimeout(function(){
     const splash=document.getElementById('splash');
     splash.style.opacity='0';
     setTimeout(function(){splash.style.display='none'},500);
-  },3000);  
+  },3000);
   updateTime();
   setInterval(updateTime,1000);
   loadReports();
@@ -252,15 +243,25 @@ window.addEventListener('load',function(){
 function selectLanguage(lang,btn){
   currentLang=lang;
   document.querySelectorAll('.lang-btn').forEach(b=>b.classList.remove('active'));
-  btn.classList.add('active');
-  
-  // هنا يمكنك إضافة منطق تغيير اللغة لاحقاً
-  console.log('Language changed to:',lang);
+  btn.classList.add('active');  localStorage.setItem('medea_lang',lang);
+}
+
+const savedLang=localStorage.getItem('medea_lang');
+if(savedLang){
+  currentLang=savedLang;
+  document.querySelectorAll('.lang-btn').forEach(b=>{
+    b.classList.remove('active');
+    if(b.textContent.toLowerCase().includes(savedLang==='ar'?'العربية':savedLang==='fr'?'français':'english')){
+      b.classList.add('active');
+    }
+  });
 }
 
 function loadReports(){
-  allReports=JSON.parse(localStorage.getItem('medea_reports')||'[]');
+  const saved=localStorage.getItem('medea_reports');
+  allReports=saved?JSON.parse(saved):[];
   updateStats();
+  localStorage.setItem('medea_reports',JSON.stringify(allReports));
 }
 
 function saveReport(r){
@@ -289,17 +290,16 @@ function updateStats(){
   const total=allReports.length;
   const done=allReports.filter(r=>r.status==='done').length;
   const pending=allReports.filter(r=>r.status!=='done').length;
-  
   document.getElementById('statTotal').textContent=total;
   document.getElementById('statDone').textContent=done;
-  document.getElementById('statPending').textContent=pending;  
-  if(document.getElementById('dashboard').classList.contains('active')) renderChart();
+  document.getElementById('statPending').textContent=pending;  if(document.getElementById('dashboard').classList.contains('active')) renderChart();
 }
 
 function showPage(id){
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
   document.getElementById(id).classList.add('active');
   if(id==='dashboard') setTimeout(renderChart,100);
+  if(id==='reportsPage') showReportsPage();
   window.scrollTo(0,0);
 }
 
@@ -307,97 +307,42 @@ function getLocation(){
   const btn=document.getElementById('getLocationBtn');
   const addrInput=document.getElementById('addrInput');
   const gpsInput=document.getElementById('gpsInput');
-  
-  if(!navigator.geolocation){
-    alert('⚠️ متصفحك لا يدعم GPS');
-    return;
-  }
-  
-  btn.innerHTML='⏳ جاري تحديد الموقع...';
-  btn.disabled=true;
-  
+  if(!navigator.geolocation){alert('⚠️ متصفحك لا يدعم GPS');return;}
+  btn.innerHTML='⏳ جاري...';btn.disabled=true;
   navigator.geolocation.getCurrentPosition(
     (pos)=>{
-      const lat=pos.coords.latitude;
-      const lng=pos.coords.longitude;
-      const accuracy=pos.coords.accuracy;
-      
+      const lat=pos.coords.latitude,lng=pos.coords.longitude;
       gpsInput.value=lat.toFixed(6)+', '+lng.toFixed(6);
-      
-      fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&accept-language=ar&zoom=18&addressdetails=1`,{
-        headers:{'User-Agent':'MedeaCleanApp/1.0'}
-      })
-        .then(r=>{
-          if(!r.ok) throw new Error('فشل في جلب العنوان');
-          return r.json();
-        })
-        .then(data=>{
+      fetch('https://nominatim.openstreetmap.org/reverse?format=json&lat='+lat+'&lon='+lng+'&accept-language=ar&zoom=18')
+        .then(r=>r.json()).then(data=>{
           let addr='المدية، الجزائر';
-          
           if(data && data.address){
-            const a=data.address;
-            const parts=[];
-            
-            if(a.road || a.street) parts.push(a.road || a.street);
-            if(a.suburb || a.neighbourhood || a.quarter) parts.push(a.suburb || a.neighbourhood || a.quarter);
-            if(a.city_district || a.borough) parts.push(a.city_district || a.borough);
-            if(a.city || a.town || a.village) parts.push(a.city || a.town || a.village);            if(a.state) parts.push(a.state);
-            
-            if(parts.length>0){
-              addr=parts.join(' - ');
-            }
+            const a=data.address,parts=[];
+            if(a.road) parts.push(a.road);
+            if(a.suburb||a.neighbourhood) parts.push(a.suburb||a.neighbourhood);
+            if(a.city||a.town) parts.push(a.city||a.town);
+            if(parts.length>0) addr=parts.join(' - ');
           }
-          
           addrInput.value=addr;
-          btn.innerHTML='📍 تحديد الموقع GPS';
-          btn.disabled=false;
-          
-          alert(`✅ تم تحديد الموقع بنجاح!\n\n📍 العنوان: ${addr}\n🌍 GPS: ${gpsInput.value}\n📏 الدقة: ${Math.round(accuracy)} متر`);
-        })
-        .catch(err=>{
-          console.error('Geocoding Error:',err);
-          addrInput.value='المدية (عنوان تقريبي)';
-          btn.innerHTML='📍 تحديد الموقع GPS';
-          btn.disabled=false;
-          alert(`⚠️ تم تحديد الإحداثيات لكن فشل جلب العنوان التفصيلي\nGPS: ${gpsInput.value}\nالدقة: ${Math.round(accuracy)} متر\n\nيمكنك تعديل العنوان يدوياً`);
-        });
+          btn.innerHTML='📍 تحديد الموقع GPS';btn.disabled=false;
+        }).catch(()=>{addrInput.value='المدية (عنوان تقريبي)';btn.innerHTML='📍 تحديد الموقع GPS';btn.disabled=false;});
     },
-    (err)=>{
-      btn.innerHTML='📍 تحديد الموقع GPS';
-      btn.disabled=false;
-      let msg='⚠️ فشل تحديد الموقع\n';
-      if(err.code===1) msg+='تم رفض الإذن. اسمح بالوصول للموقع من إعدادات المتصفح.';
-      else if(err.code===2) msg+='معلومات الموقع غير متاحة. تأكد من تفعيل GPS.';
-      else if(err.code===3) msg+='انتهت المهلة. حاول مرة أخرى.';
-      else msg+=err.message;
-      alert(msg);
-    },
-    {enableHighAccuracy:true,timeout:20000,maximumAge:0}
+    (err)=>{btn.innerHTML='📍 تحديد الموقع GPS';btn.disabled=false;alert('⚠️ فشل تحديد الموقع.');},
+    {enableHighAccuracy:true,timeout:15000,maximumAge:0}
   );
 }
 
 function manualLocation(){
   const addr=prompt('أدخل العنوان يدوياً:','المدية - وسط المدينة');
-  if(addr){
-    document.getElementById('addrInput').value=addr;
-    document.getElementById('gpsInput').value='36.2642, 2.7545';
-    alert('✅ تم حفظ الموقع يدوياً');
-  }
+  if(addr){document.getElementById('addrInput').value=addr;document.getElementById('gpsInput').value='36.2642, 2.7545';}
 }
 
 function takePhoto(){
   const input=document.createElement('input');
-  input.type='file';
-  input.accept='image/*';
-  input.capture='environment';
-  input.onchange=e=>{    if(e.target.files[0]){
-      const r=new FileReader();
-      r.onload=ev=>{
-        tempImage=ev.target.result;
-        document.getElementById('camImg').src=tempImage;
-        document.getElementById('camImg').style.display='block';
-        document.querySelector('.cam-icon').style.display='none';
-      };
+  input.type='file';input.accept='image/*';input.capture='environment';
+  input.onchange=e=>{
+    if(e.target.files[0]){      const r=new FileReader();
+      r.onload=ev=>{tempImage=ev.target.result;document.getElementById('camImg').src=tempImage;document.getElementById('camImg').style.display='block';document.querySelector('.cam-icon').style.display='none';};
       r.readAsDataURL(e.target.files[0]);
     }
   };
@@ -407,41 +352,15 @@ function takePhoto(){
 function sendReport(){
   const addr=document.getElementById('addrInput').value.trim();
   if(!addr){alert('⚠️ أدخل العنوان');return;}
-  
-  const btn=document.getElementById('sendBtn');
-  const orig=btn.innerHTML;
-  btn.innerHTML='⏳ جاري الإرسال...';
-  btn.disabled=true;
-  
-  const report={
-    id:Date.now(),
-    addr:addr,
-    gps:document.getElementById('gpsInput').value||'غير محدد',
-    image:tempImage,
-    doneImage:null,
-    date:new Date().toLocaleDateString('ar-DZ'),
-    time:new Date().toLocaleTimeString('ar-DZ'),
-    doneTime:null,
-    status:'new',
-    driverName:null
-  };
-  
+  const btn=document.getElementById('sendBtn'),orig=btn.innerHTML;
+  btn.innerHTML='⏳ جاري الإرسال...';btn.disabled=true;
+  const report={id:Date.now(),addr,gps:document.getElementById('gpsInput').value||'غير محدد',image:tempImage,doneImage:null,date:new Date().toLocaleDateString('ar-DZ'),time:new Date().toLocaleTimeString('ar-DZ'),doneTime:null,status:'new',driverName:null};
   saveReport(report);
-  
   const thanksOverlay=document.getElementById('thanksOverlay');
   thanksOverlay.style.display='flex';
-  
-  tempImage=null;
-  document.getElementById('camImg').style.display='none';
-  document.querySelector('.cam-icon').style.display='block';
-  document.getElementById('addrInput').value='';
-  document.getElementById('gpsInput').value='';
-  
-  setTimeout(()=>{
-    thanksOverlay.style.display='none';
-    showPage('home');    btn.innerHTML=orig;
-    btn.disabled=false;
-  },4000);
+  tempImage=null;document.getElementById('camImg').style.display='none';document.querySelector('.cam-icon').style.display='block';
+  document.getElementById('addrInput').value='';document.getElementById('gpsInput').value='';
+  setTimeout(()=>{thanksOverlay.style.display='none';showPage('home');btn.innerHTML=orig;btn.disabled=false;},4000);
 }
 
 function loginAdmin(){
@@ -455,8 +374,7 @@ function loginAdmin(){
 function logoutAdmin(){
   document.getElementById('adminLogin').classList.remove('hidden');
   document.getElementById('adminPanel').classList.add('hidden');
-  document.getElementById('adminName').value='';
-  document.getElementById('adminCode').value='';
+  document.getElementById('adminName').value='';document.getElementById('adminCode').value='';
 }
 
 function loginDriver(){
@@ -464,86 +382,49 @@ function loginDriver(){
   if(!name){alert('⚠️ أدخل الاسم');return;}
   const staff=JSON.parse(localStorage.getItem('medea_staff')||'[]');
   if(staff.some(s=>s.name===name&&s.role.includes('سائق'))){
-    currentDriver=name;
-    document.getElementById('driverLogin').classList.add('hidden');
-    document.getElementById('driverPanel').classList.remove('hidden');
-    renderDriverTasks();
+    currentDriver=name;document.getElementById('driverLogin').classList.add('hidden');document.getElementById('driverPanel').classList.remove('hidden');renderDriverTasks();
   }else alert('❌ الاسم غير مسجل');
 }
 
 function logoutDriver(){
-  currentDriver='';
-  document.getElementById('driverLogin').classList.remove('hidden');
-  document.getElementById('driverPanel').classList.add('hidden');
-  document.getElementById('driverName').value='';
-  tempAfterImage=null;
+  currentDriver='';document.getElementById('driverLogin').classList.remove('hidden');document.getElementById('driverPanel').classList.add('hidden');document.getElementById('driverName').value='';tempAfterImage=null;
 }
 
-function downloadImage(imgData,filename){
-  if(!imgData){alert('⚠️ لا توجد صورة');return;}
-  const link=document.createElement('a');
-  link.href=imgData;
-  link.download=filename;
-  document.body.appendChild(link);
-  link.click();
-  document.body.removeChild(link);
+function downloadImage(imgData,filename){  if(!imgData){alert('⚠️ لا توجد صورة');return;}
+  const link=document.createElement('a');link.href=imgData;link.download=filename;document.body.appendChild(link);link.click();document.body.removeChild(link);
 }
+
 function downloadReportText(id){
   const r=allReports.find(x=>x.id==id);
   if(!r){alert('⚠️ غير موجود');return;}
   const c='بلاغ #'+r.id+'\nالعنوان: '+r.addr+'\nGPS: '+r.gps+'\nالتاريخ: '+r.date+' '+r.time+'\nالحالة: '+r.status+'\nالسائق: '+(r.driverName||'-');
-  const b=new Blob([c],{type:'text/plain'});
-  const link=document.createElement('a');
-  link.href=URL.createObjectURL(b);
-  link.download='report_'+id+'.txt';
-  document.body.appendChild(link);
-  link.click();
-  document.body.removeChild(link);
+  const b=new Blob([c],{type:'text/plain'});const link=document.createElement('a');link.href=URL.createObjectURL(b);link.download='report_'+id+'.txt';document.body.appendChild(link);link.click();document.body.removeChild(link);
 }
 
 function loadDemoData(){
   if(!confirm('تحميل بيانات تجريبية؟'))return;
-  const demos=[
-    {id:1001,addr:'حي الزيتون - وسط المدية',gps:'36.2642, 2.7545',image:'https://via.placeholder.com/300x200/f44336/fff?text=قبل',doneImage:'https://via.placeholder.com/300x200/4CAF50/fff?text=بعد',date:'2026-04-10',time:'09:30',doneTime:'2026-04-10 11:15',status:'done',driverName:'أحمد'},
-    {id:1002,addr:'ساحة الشهداء',gps:'36.2650, 2.7550',image:'https://via.placeholder.com/300x200/f44336/fff?text=قبل',doneImage:null,date:'2026-04-11',time:'14:20',doneTime:null,status:'assigned',driverName:'محمد'},
-    {id:1003,addr:'حي الواد',gps:'36.2630, 2.7530',image:'https://via.placeholder.com/300x200/f44336/fff?text=قبل',doneImage:null,date:'2026-04-11',time:'16:45',doneTime:null,status:'new',driverName:null}
-  ];
-  demos.forEach(r=>saveReport(r));
-  alert('✅ تم التحميل');
-  if(document.getElementById('reportsPage').classList.contains('active')) showReportsPage();
-  if(document.getElementById('dashboard').classList.contains('active')) renderChart();
+  [{id:1001,addr:'حي الزيتون',gps:'36.2642, 2.7545',image:'https://via.placeholder.com/300x200/f44336/fff?text=قبل',doneImage:'https://via.placeholder.com/300x200/4CAF50/fff?text=بعد',date:'2026-04-10',time:'09:30',doneTime:'2026-04-10 11:15',status:'done',driverName:'أحمد'},{id:1002,addr:'وسط المدينة',gps:'36.2650, 2.7550',image:'https://via.placeholder.com/300x200/f44336/fff?text=قبل',doneImage:null,date:'2026-04-11',time:'14:20',doneTime:null,status:'assigned',driverName:'محمد'}].forEach(r=>saveReport(r));
+  alert('✅ تم التحميل');showReportsPage();
 }
 
 function showReportsPage(){showPage('reportsPage');applyFilters();}
 
 function applyFilters(){
-  const status=document.getElementById('filterStatus')?.value||'all';
-  const search=document.getElementById('searchInput')?.value.toLowerCase()||'';
+  const status=document.getElementById('filterStatus')?.value||'all',search=document.getElementById('searchInput')?.value.toLowerCase()||'';
   let filtered=allReports;
-  
-  if(status!=='all'){
-    filtered=filtered.filter(r=>status==='pending'?(r.status==='new'||r.status==='assigned'):r.status===status);
-  }
-  if(search){
-    filtered=filtered.filter(r=>r.addr.toLowerCase().includes(search)||(r.driverName&&r.driverName.toLowerCase().includes(search)));
-  }
+  if(status!=='all')filtered=filtered.filter(r=>status==='pending'?r.status==='new'||r.status==='assigned':r.status===status);
+  if(search)filtered=filtered.filter(r=>r.addr.toLowerCase().includes(search)||(r.driverName&&r.driverName.toLowerCase().includes(search)));
   renderReportsList(filtered);
 }
 
 function filterByStatus(s){
   showPage('reportsPage');
-  if(document.getElementById('filterStatus')){
-    document.getElementById('filterStatus').value=s==='pending'?'assigned':s;
-    applyFilters();
-  }
+  if(document.getElementById('filterStatus')){document.getElementById('filterStatus').value=s==='pending'?'assigned':s;applyFilters();}
 }
+
 function renderReportsList(reports){
   const c=document.getElementById('reportsList');
-  if(!reports.length){
-    c.innerHTML='<p style="text-align:center;color:#666;padding:40px">لا توجد بلاغات</p>';
-    return;
-  }
-  
+  if(!reports.length){c.innerHTML='<p style="text-align:center;color:#666;padding:40px">لا توجد بلاغات</p>';return;}
   c.innerHTML=reports.map(r=>{
     const b1=r.image?'<button class="download-btn" onclick="downloadImage(\''+r.image+'\','+'before_'+r.id+'.jpg\')">⬇️ صورة قبل</button>':'';
     const b2=r.doneImage?'<button class="download-btn" onclick="downloadImage(\''+r.doneImage+'\','+'after_'+r.id+'.jpg\')">⬇️ صورة بعد</button>':'';
@@ -551,7 +432,6 @@ function renderReportsList(reports){
     const b4='<button class="download-btn purple" onclick="showQR('+r.id+')">📱 QR Code</button>';
     const img1=r.image?'<div class="img-container"><img src="'+r.image+'"><div class="img-label">📷 قبل ('+r.date+')</div></div>'+b1:'';
     const img2=r.doneImage?'<div class="img-container"><img src="'+r.doneImage+'"><div class="img-label done-label">✅ بعد ('+(r.doneTime||'')+'</div></div>'+b2:'';
-    
     return'<div class="report-card '+r.status+'"><div class="info-row"><b>📍 العنوان:</b> '+r.addr+'</div><div class="info-row"><b>🌍 GPS:</b> '+r.gps+'</div><div class="info-row"><b>📅 التاريخ:</b> '+r.date+' '+r.time+'</div>'+(r.driverName?'<div class="info-row"><b>👷 السائق:</b> '+r.driverName+'</div>':'')+'<div class="info-row"><b>📊 الحالة:</b> <span style="color:'+(r.status==='done'?'#4CAF50':r.status==='assigned'?'#FF9800':'#f44336')+'">'+(r.status==='done'?'✅ منجز':r.status==='assigned'?'🚚 قيد التنفيذ':'🆕 جديد')+'</span></div>'+img1+img2+b4+b3+'<div style="display:flex;gap:10px;margin-top:15px">'+((r.status==='new'||r.status==='assigned')?'<button class="btn bg" style="flex:1;padding:12px" onclick="assignDriver('+r.id+')">📤 توجيه</button>':'')+'<button class="btn br" style="flex:1;padding:12px" onclick="deleteReport('+r.id+')">🗑️ حذف</button>'+(r.gps?'<a href="https://www.google.com/maps/dir/?api=1&destination='+r.gps.split(',')[0]+','+r.gps.split(',')[1]+'" target="_blank" class="btn bb" style="flex:1;padding:12px;text-decoration:none">🗺️ الخريطة</a>':'')+'</div></div>';
   }).join('');
 }
@@ -559,34 +439,17 @@ function renderReportsList(reports){
 function showQR(id){
   const r=allReports.find(x=>x.id==id);
   if(!r){alert('⚠️ غير موجود');return;}
-  
-  const modal=document.getElementById('qrModal');
-  const qrContainer=document.getElementById('qrcode');
-  
-  modal.style.display='flex';
-  qrContainer.innerHTML='';
-  
+  const modal=document.getElementById('qrModal'),qrContainer=document.getElementById('qrcode'),qrIdSpan=document.getElementById('qrReportId');  modal.style.display='flex';qrContainer.innerHTML='';qrIdSpan.textContent='#'+r.id;
   if(typeof QRCode !== 'undefined'){
     try{
-      new QRCode(qrContainer,{
-        text:JSON.stringify({id:r.id,addr:r.addr,gps:r.gps,status:r.status}),
-        width:200,
-        height:200,
-        colorDark:'#1B5E20',
-        colorLight:'#ffffff',
-        correctLevel:QRCode.CorrectLevel.H
-      });
-    }catch(e){
-      console.error('QR Code Error:',e);
-      qrContainer.innerHTML='<div style="color:red;padding:20px">❌ فشل إنشاء QR Code<br>'+e.message+'</div>';
-    }
-  }else{
-    qrContainer.innerHTML='<div style="color:red;padding:20px">❌ مكتبة QR Code غير محملة</div>';
-  }
+      new QRCode(qrContainer,{text:String(r.id),width:200,height:200,colorDark:'#1B5E20',colorLight:'#ffffff',correctLevel:QRCode.CorrectLevel.M});
+    }catch(e){qrContainer.innerHTML='<div style="color:red;padding:20px">❌ فشل إنشاء QR Code</div>';}
+  }else{qrContainer.innerHTML='<div style="color:red;padding:20px">❌ مكتبة QR Code غير محملة</div>';}
 }
 
 function assignDriver(id){
-  const n=prompt('اسم السائق:');  if(!n)return;
+  const n=prompt('اسم السائق:');
+  if(!n)return;
   updateReport(id,{driverName:n,status:'assigned'});
   alert('✅ تم توجيه البلاغ للسائق: '+n);
 }
@@ -595,86 +458,48 @@ function deleteReport(id){
   if(confirm('حذف البلاغ؟')){
     allReports=allReports.filter(r=>r.id!=id);
     localStorage.setItem('medea_reports',JSON.stringify(allReports));
-    showReportsPage();
-    updateStats();
+    showReportsPage();updateStats();
   }
 }
 
 function manageStaffPage(){showPage('staffPage');loadStaffList();}
 
 function loadStaffList(){
-  const s=JSON.parse(localStorage.getItem('medea_staff')||'[]');
-  const c=document.getElementById('staffList');
-  
-  if(!s.length){
-    c.innerHTML='<p style="text-align:center;color:#666;padding:30px">لا يوجد موظفون</p>';
-    return;
-  }
-  
-  c.innerHTML=s.map((x,i)=>`<div class="staff-item">
-    <div><b style="color:#1B5E20">${x.role}:</b> ${x.name}${x.phone?'<br><span style="color:#666">📞 '+x.phone+'</span>':''}</div>
-    <div style="display:flex;gap:10px">
-      <button class="edit-btn" onclick="editStaff(${i})" title="تعديل">✏️</button>
-      <button class="edit-btn" onclick="deleteStaff(${i})" title="حذف" style="background:#d21034">✕</button>
-    </div>
-  </div>`).join('');
+  const s=JSON.parse(localStorage.getItem('medea_staff')||'[]'),c=document.getElementById('staffList');
+  if(!s.length){c.innerHTML='<p style="text-align:center;color:#666;padding:30px">لا يوجد موظفون</p>';return;}
+  c.innerHTML=s.map((x,i)=>'<div class="staff-item"><div><b style="color:#1B5E20">'+x.role+':</b> '+x.name+(x.phone?'<br><span style="color:#666">📞 '+x.phone+'</span>':'')+'</div><div style="display:flex;gap:10px"><button class="edit-btn" onclick="editStaff('+i+')" title="تعديل">✏️</button><button class="edit-btn" onclick="deleteStaff('+i+')" title="حذف" style="background:#d21034">✕</button></div></div>').join('');
 }
 
 function addStaff(){
-  const n=document.getElementById('newStaffName').value.trim();
-  const r=document.getElementById('newStaffRole').value.trim();
-  const p=document.getElementById('newStaffPhone').value.trim();
-  
+  const n=document.getElementById('newStaffName').value.trim(),r=document.getElementById('newStaffRole').value.trim(),p=document.getElementById('newStaffPhone').value.trim();
   if(!n||!r){alert('⚠️ الاسم والمنصب مطلوبان');return;}
-  
   const s=JSON.parse(localStorage.getItem('medea_staff')||'[]');
   s.push({name:n,role:r,phone:p});
   localStorage.setItem('medea_staff',JSON.stringify(s));
-  
-  document.getElementById('newStaffName').value='';
-  document.getElementById('newStaffRole').value='';
-  document.getElementById('newStaffPhone').value='';
-  
-  loadStaffList();  alert('✅ تم إضافة الموظف بنجاح');
+  document.getElementById('newStaffName').value='';document.getElementById('newStaffRole').value='';document.getElementById('newStaffPhone').value='';
+  loadStaffList();alert('✅ تم إضافة الموظف بنجاح');
 }
 
 function editStaff(index){
-  const s=JSON.parse(localStorage.getItem('medea_staff')||'[]');
-  const staff=s[index];
-  
-  const newName=prompt('الاسم الجديد:',staff.name);
-  if(!newName)return;
-  
-  const newRole=prompt('المنصب الجديد:',staff.role);
-  if(!newRole)return;
-  
+  const s=JSON.parse(localStorage.getItem('medea_staff')||'[]'),staff=s[index];
+  const newName=prompt('الاسم الجديد:',staff.name);if(!newName)return;
+  const newRole=prompt('المنصب الجديد:',staff.role);if(!newRole)return;
   const newPhone=prompt('الهاتف الجديد:',staff.phone||'');
-  
   s[index]={name:newName,role:newRole,phone:newPhone};
   localStorage.setItem('medea_staff',JSON.stringify(s));
-  
-  loadStaffList();
-  alert('✅ تم التعديل بنجاح');
+  loadStaffList();alert('✅ تم التعديل بنجاح');
 }
-
 function deleteStaff(i){
   if(confirm('حذف الموظف؟')){
     const s=JSON.parse(localStorage.getItem('medea_staff')||'[]');
-    s.splice(i,1);
-    localStorage.setItem('medea_staff',JSON.stringify(s));
+    s.splice(i,1);localStorage.setItem('medea_staff',JSON.stringify(s));
     loadStaffList();
   }
 }
 
 function renderDriverTasks(){
-  const tasks=allReports.filter(r=>r.driverName===currentDriver&&r.status!=='done');
-  const c=document.getElementById('tasksList');
-  
-  if(!tasks.length){
-    c.innerHTML='<p style="text-align:center;color:#4CAF50;padding:40px">✓ لا توجد مهام</p>';
-    return;
-  }
-  
+  const tasks=allReports.filter(r=>r.driverName===currentDriver&&r.status!=='done'),c=document.getElementById('tasksList');
+  if(!tasks.length){c.innerHTML='<p style="text-align:center;color:#4CAF50;padding:40px">✓ لا توجد مهام</p>';return;}
   c.innerHTML=tasks.map(t=>{
     const img=t.image?'<div class="img-container"><img src="'+t.image+'"><div class="img-label">📷 قبل</div></div>':'';
     return'<div class="report-card assigned" style="margin-bottom:20px;border-right-color:#FF9800"><div class="info-row"><b>📍 العنوان:</b> '+t.addr+'</div><div class="info-row"><b>🌍 GPS:</b> '+t.gps+'</div>'+img+'<button class="btn bo" onclick="driverTakePhoto('+t.id+')" style="margin-top:12px">📷 تصوير بعد التنفيذ</button>'+(t.gps?'<a href="https://www.google.com/maps/dir/?api=1&destination='+t.gps.split(',')[0]+','+t.gps.split(',')[1]+'" target="_blank" class="btn bb" style="margin-top:12px">🗺️ الخريطة</a>':'')+'<button class="btn bg" style="margin-top:12px" onclick="completeTask('+t.id+')">✅ تأكيد الإنجاز</button></div>';
@@ -682,16 +507,8 @@ function renderDriverTasks(){
 }
 
 function driverTakePhoto(id){
-  const input=document.createElement('input');
-  input.type='file';
-  input.accept='image/*';  input.capture='environment';
-  input.onchange=e=>{
-    if(e.target.files[0]){
-      const r=new FileReader();
-      r.onload=ev=>{tempAfterImage=ev.target.result;alert('✓ تم التصوير. اضغط تأكيد الإنجاز.');};
-      r.readAsDataURL(e.target.files[0]);
-    }
-  };
+  const input=document.createElement('input');input.type='file';input.accept='image/*';input.capture='environment';
+  input.onchange=e=>{if(e.target.files[0]){const r=new FileReader();r.onload=ev=>{tempAfterImage=ev.target.result;alert('✓ تم التصوير.');};r.readAsDataURL(e.target.files[0]);}};
   input.click();
 }
 
@@ -699,10 +516,8 @@ function completeTask(id){
   if(!tempAfterImage&&!confirm('لم يتم التصوير. متابعة؟'))return;
   const updates={status:'done',doneTime:new Date().toLocaleString('ar-DZ')};
   if(tempAfterImage)updates.doneImage=tempAfterImage;
-  updateReport(id,updates);
-  tempAfterImage=null;
-  alert('✅ تم الإنجاز!');
-  renderDriverTasks();
+  updateReport(id,updates);tempAfterImage=null;
+  alert('✅ تم الإنجاز!');renderDriverTasks();
 }
 
 function backToAdmin(){showPage('admin');}
@@ -711,44 +526,20 @@ function exportExcel(){
   if(!allReports.length){alert('⚠️ لا بيانات');return;}
   let c='ID,التاريخ,الوقت,العنوان,GPS,الحالة,السائق\n';
   allReports.forEach(x=>c+=x.id+','+x.date+','+x.time+',"'+x.addr+'",'+x.gps+','+x.status+','+(x.driverName||'-')+'\n');
-  const b=new Blob([c],{type:'text/csv'});
-  const a=document.createElement('a');
-  a.href=URL.createObjectURL(b);
-  a.download='archive_'+Date.now()+'.csv';
-  a.click();
+  const b=new Blob([c],{type:'text/csv'});const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='archive_'+Date.now()+'.csv';a.click();
 }
 
 function exitApp(){
-  if(confirm('الخروج من التطبيق؟')){
-    window.close();
-    setTimeout(()=>{window.location.href='about:blank'},1000);
-  }
+  if(confirm('الخروج من التطبيق؟')){window.close();setTimeout(()=>{window.location.href='about:blank'},1000);}
 }
 
 function renderChart(){
-  const newR=allReports.filter(r=>r.status==='new').length;
-  const assigned=allReports.filter(r=>r.status==='assigned').length;
-  const done=allReports.filter(r=>r.status==='done').length;
-  const total=allReports.length;
-  
-  const visual=document.getElementById('chartVisual');
-  const legend=document.getElementById('chartLegend');
-    if(!visual||!legend)return;
-  
-  if(total===0){
-    visual.innerHTML='<div style="display:flex;align-items:center;justify-content:center;height:100%;color:#999">لا توجد بيانات</div>';
-    legend.innerHTML='';
-    return;
-  }
-  
-  const newPct=(newR/total)*100;
-  const assignedPct=(assigned/total)*100;
-  const donePct=(done/total)*100;
-  
+  const newR=allReports.filter(r=>r.status==='new').length,assigned=allReports.filter(r=>r.status==='assigned').length,done=allReports.filter(r=>r.status==='done').length,total=allReports.length;
+  const visual=document.getElementById('chartVisual'),legend=document.getElementById('chartLegend');
+  if(!visual||!legend)return;
+  if(total===0){visual.innerHTML='<div style="display:flex;align-items:center;justify-content:center;height:100%;color:#999">لا توجد بيانات</div>';legend.innerHTML='';return;}  const newPct=(newR/total)*100,assignedPct=(assigned/total)*100,donePct=(done/total)*100;
   visual.style.background='conic-gradient(#4CAF50 0deg '+(donePct*3.6)+'deg,#FF9800 '+(donePct*3.6)+'deg '+((donePct+assignedPct)*3.6)+'deg,#f44336 '+((donePct+assignedPct)*3.6)+'deg 360deg)';
-  visual.style.borderRadius='50%';
-  visual.style.boxShadow='0 5px 20px rgba(0,0,0,.2)';
-  
+  visual.style.borderRadius='50%';visual.style.boxShadow='0 5px 20px rgba(0,0,0,.2)';
   legend.innerHTML='<div class="legend-item"><div class="legend-color" style="background:#4CAF50"></div><span>منجز: '+done+'</span></div><div class="legend-item"><div class="legend-color" style="background:#FF9800"></div><span>قيد التنفيذ: '+assigned+'</span></div><div class="legend-item"><div class="legend-color" style="background:#f44336"></div><span>جديد: '+newR+'</span></div>';
 }
 </script>
