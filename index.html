@@ -46,8 +46,9 @@ html,body{overflow-x:hidden;width:100%;background:#f5f7fa;min-height:100vh}
 .ft{background:#fff;padding:15px;text-align:center;border-top:3px solid #D4AF37;margin-top:20px;font-size:0.85rem;color:#666}
 .in{width:100%;padding:12px;border:2px solid #e0e0e0;border-radius:10px;margin:10px 0;text-align:center;font-size:1rem}
 .in:focus{border-color:#1B5E20;outline:none}
-.cam-box{height:200px;background:#f9f9f9;border:2px dashed #ccc;border-radius:12px;display:flex;align-items:center;justify-content:center;margin-bottom:15px;cursor:pointer;position:relative;overflow:hidden}
-.cam-box img{width:100%;height:100%;object-fit:cover;position:absolute}.cam-icon{font-size:3rem;color:#aaa}
+.in:disabled{background:#f0f0f0;color:#666}
+.cam-box{height:200px;background:#f9f9f9;border:2px dashed #ccc;border-radius:12px;display:flex;align-items:center;justify-content:center;margin-bottom:15px;cursor:pointer;position:relative;overflow:hidden}.cam-box img{width:100%;height:100%;object-fit:cover;position:absolute}
+.cam-icon{font-size:3rem;color:#aaa}
 #thanksOverlay{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(27,94,32,0.95);color:#fff;flex-direction:column;align-items:center;justify-content:center;z-index:10001;text-align:center;animation:fadeIn 0.5s}
 @keyframes fadeIn{from{opacity:0}to{opacity:1}}
 .hidden{display:none!important}
@@ -95,12 +96,14 @@ html,body{overflow-x:hidden;width:100%;background:#f5f7fa;min-height:100vh}
 .points-badge{background:linear-gradient(135deg,#FFD700,#FFA500);color:#fff;padding:5px 15px;border-radius:20px;font-weight:bold;font-size:0.9rem;display:inline-flex;align-items:center;gap:5px}
 .tip-card{background:#e8f5e9;padding:12px;border-radius:10px;margin-bottom:10px;border-right:3px solid #4CAF50;font-size:0.9rem}
 .voice-wave{display:flex;align-items:center;justify-content:center;gap:3px;height:25px;margin-top:5px}
-.voice-bar{width:4px;height:10px;background:#e91e63;border-radius:2px;animation:wave 0.8s infinite alternate}
-@keyframes wave{0%{height:10px}100%{height:25px}}.schedule-table{width:100%;border-collapse:collapse;font-size:0.9rem}
+.voice-bar{width:4px;height:10px;background:#e91e63;border-radius:2px;animation:wave 0.8s infinite alternate}@keyframes wave{0%{height:10px}100%{height:25px}}
+.schedule-table{width:100%;border-collapse:collapse;font-size:0.9rem}
 .schedule-table th{background:#1B5E20;color:#fff;padding:10px;text-align:right}
 .schedule-table td{padding:10px;border-bottom:1px solid #eee}
 .tonnage-card{background:#fff3e0;padding:15px;border-radius:12px;margin:10px 0;border-right:4px solid #FF9800}
 .tonnage-info{display:flex;justify-content:space-between;margin:5px 0;padding:8px;background:#fff;border-radius:8px}
+.phone-link{color:#1B5E20;text-decoration:none;font-weight:bold;display:inline-flex;align-items:center;gap:5px}
+.phone-link:hover{text-decoration:underline}
 </style>
 </head>
 <body>
@@ -142,10 +145,10 @@ html,body{overflow-x:hidden;width:100%;background:#f5f7fa;min-height:100vh}
 
 <div id="thanksOverlay">
   <div style="font-size:4rem;margin-bottom:15px">❤️</div>
-  <h1 style="font-size:2rem;margin-bottom:10px" data-key="thanksTitle">شكراً لكم!</h1>
-  <p style="font-size:1rem;margin-bottom:20px" data-key="thanksMsg">تم إرسال بلاغكم بنجاح</p>
+  <h1 style="font-size:2rem;margin-bottom:10px" data-key="thanksTitle">شكراً لكم!</h1>  <p style="font-size:1rem;margin-bottom:20px" data-key="thanksMsg">تم إرسال بلاغكم بنجاح</p>
   <div style="padding:10px 30px;border:2px solid #FFD700;border-radius:30px;font-weight:700;background:rgba(255,255,255,0.2)" data-key="slogan">معاً لمدية أنظف 2026</div>
 </div>
+
 <div id="home" class="page active">
   <button class="btn bg mb" onclick="showPage('report')"><span style="font-size:2.5rem">🚚</span><br><span data-key="sendReport">إرسال تبليغ</span></button>
   <div class="cd" style="border-color:#667eea;background:#f8f9ff">
@@ -158,19 +161,19 @@ html,body{overflow-x:hidden;width:100%;background:#f5f7fa;min-height:100vh}
     <button class="btn exit-btn" onclick="exitApp()">🚪 <span data-key="exit">الخروج</span></button>
   </div>
   <div class="cd">
+    <h3 style="text-align:center;margin-bottom:12px" data-key="services">✨ الخدمات</h3>
+    <div class="g2">
+      <button class="btn by" onclick="showPage('schedule')">📅 جدول الجمع</button>
+      <button class="btn purple" onclick="showPage('tips')">💡 توعية</button>
+      <button class="btn bo" onclick="showPage('requests')">🛠️ طلباتي</button>
+      <button class="btn bb" onclick="showPage('publicStats')">📊 إحصائيات</button>
+    </div>
+  </div>
+  <div class="cd" style="margin-top:15px">
     <h3 style="text-align:center;margin-bottom:12px" data-key="staffHall">👥 رواق الموظفين</h3>
     <div class="g2">
       <button class="btn by sb2" onclick="showPage('driver')">🚚 <span data-key="drivers">السائقين</span></button>
       <button class="btn bb sb2" onclick="showPage('admin')">🛡️ <span data-key="admin">الإدارة</span></button>
-    </div>
-  </div>
-  <div class="cd" style="margin-top:15px">
-    <h3 style="text-align:center;margin-bottom:12px;color:#673ab7">✨ خدمات إضافية</h3>
-    <div class="g2">
-      <button class="btn by" onclick="showPage('schedule')">📅 جدول الجمع</button>
-      <button class="btn purple" onclick="showPage('tips')">💡 توعية</button>
-      <button class="btn bo" onclick="showPage('requests')">🛠️ طلبات</button>
-      <button class="btn bb" onclick="showPage('publicStats')">📊 إحصائيات عامة</button>
     </div>
   </div>
 </div>
@@ -191,9 +194,9 @@ html,body{overflow-x:hidden;width:100%;background:#f5f7fa;min-height:100vh}
       <input type="checkbox" id="recurringCheck"> 🔁 جعل هذا البلاغ متكرر أسبوعياً
     </label>
     <button class="btn bg" style="height:55px;font-size:1.1rem" onclick="sendReport()" id="sendBtn" data-key="sendNow">✉️ إرسال البلاغ الآن</button>
-    <button class="btn bx" onclick="showPage('home')">← <span data-key="back">رجوع</span></button>
-  </div>
+    <button class="btn bx" onclick="showPage('home')">← <span data-key="back">رجوع</span></button>  </div>
 </div>
+
 <div id="schedule" class="page">
   <h2 style="margin-bottom:15px;color:#1B5E20;text-align:center">📅 جدول جمع النفايات</h2>
   <div class="cd" id="scheduleDisplay"></div>
@@ -222,6 +225,10 @@ html,body{overflow-x:hidden;width:100%;background:#f5f7fa;min-height:100vh}
     <input type="text" class="in" id="reqLocation" placeholder="📍 موقع الطلب">
     <button class="btn bg" onclick="submitRequest()">📤 إرسال الطلب</button>
   </div>
+  <div class="cd" style="margin-top:15px">
+    <h3 style="margin-bottom:10px">📋 طلباتي السابقة</h3>
+    <div id="myRequestsList"></div>
+  </div>
   <button class="btn bx" onclick="showPage('home')">← <span data-key="back">رجوع</span></button>
 </div>
 
@@ -237,20 +244,21 @@ html,body{overflow-x:hidden;width:100%;background:#f5f7fa;min-height:100vh}
   </div>
   <button class="btn bx" onclick="showPage('home')">← <span data-key="back">رجوع</span></button>
 </div>
-
 <div id="admin" class="page">
   <div style="display:flex;justify-content:space-between;margin-bottom:15px"><h2 style="color:#1B5E20" data-key="controlPanel">⚙️ لوحة التحكم</h2></div>
   <div id="adminLogin" class="cd">
     <h3 style="margin-bottom:12px;text-align:center" data-key="supervisorLogin">🔐 الدخول للمشرفين</h3>
     <input type="text" id="adminName" class="in" data-ph="namePlaceholder" placeholder="👤 الاسم">
-    <input type="password" id="adminCode" class="in" data-ph="codePlaceholder" placeholder="🔑 الرمز (1234)">    <button class="btn bb" onclick="loginAdmin()" data-key="login">✓ دخول</button>
+    <input type="password" id="adminCode" class="in" data-ph="codePlaceholder" placeholder="🔑 الرمز (1234)">
+    <button class="btn bb" onclick="loginAdmin()" data-key="login">✓ دخول</button>
   </div>
   <div id="adminPanel" class="hidden">
     <div style="background:#e8f5e9;padding:12px;border-radius:10px;margin-bottom:12px;text-align:center;color:#2E7D32;font-weight:700" data-key="supervisorMode">✓ وضع المشرف مفعل</div>
     <button class="btn bg" onclick="showReportsPage()">📊 <span data-key="viewReports">عرض البلاغات</span></button>
     <button class="btn by" onclick="manageStaffPage()">👥 <span data-key="manageStaff">إدارة الموظفين</span></button>
-    <button class="btn purple" onclick="showPage('tonnageManager')">⚖️ إدارة الكميات</button>
+    <button class="btn purple" onclick="showPage('tonnageRecords')">⚖️ سجل الكميات</button>
     <button class="btn bo" onclick="showPage('scheduleManager')">📅 إدارة الجدول</button>
+    <button class="btn bb" onclick="showPage('adminRequests')">📋 طلبات المواطنين</button>
     <button class="btn bb" onclick="exportExcel()">📥 <span data-key="exportExcel">تصدير Excel</span></button>
     <button class="btn br" onclick="logoutAdmin()" data-key="logout">✕ خروج</button>
     <button class="btn bx" style="margin-top:10px;font-size:0.8rem" onclick="clearAllData()">⚠️ مسح كل البيانات (إصلاح)</button>
@@ -284,7 +292,6 @@ html,body{overflow-x:hidden;width:100%;background:#f5f7fa;min-height:100vh}
   <div id="reportsList"></div>
   <button class="btn bx" onclick="backToAdmin()">← <span data-key="back">رجوع</span></button>
 </div>
-
 <div id="staffPage" class="page">
   <h2 style="margin-bottom:15px;color:#1B5E20;text-align:center" data-key="manageStaff">👥 إدارة الموظفين</h2>
   <div class="cd">
@@ -292,7 +299,8 @@ html,body{overflow-x:hidden;width:100%;background:#f5f7fa;min-height:100vh}
     <input type="text" id="newStaffName" class="in" data-ph="namePlaceholder" placeholder="👤 الاسم">
     <input type="text" id="newStaffRole" class="in" data-ph="rolePlaceholder" placeholder="💼 المنصب (سائق/مسؤول)">
     <input type="tel" id="newStaffPhone" class="in" data-ph="phonePlaceholder" placeholder="📞 الهاتف">
-    <button class="btn bg" onclick="addStaff()" data-key="save">💾 حفظ</button>  </div>
+    <button class="btn bg" onclick="addStaff()" data-key="save">💾 حفظ</button>
+  </div>
   <div id="staffList" style="margin-top:15px"></div>
   <button class="btn bx" onclick="backToAdmin()">← <span data-key="back">رجوع</span></button>
 </div>
@@ -306,6 +314,7 @@ html,body{overflow-x:hidden;width:100%;background:#f5f7fa;min-height:100vh}
   </div>
   <div id="driverPanel" class="hidden">
     <div style="background:#fff3e0;padding:12px;border-radius:10px;margin-bottom:12px;text-align:center;color:#FF9800;font-weight:700" data-key="welcomeDriver">✓ مرحباً - مهامك جاهزة</div>
+    <button class="btn bg" onclick="showPage('driverTonnage')" style="margin-bottom:15px">➕ تسجيل نفايات جديدة</button>
     <h3 style="margin-bottom:12px;color:#1B5E20" data-key="yourTasks">📋 مهامك</h3>
     <div id="tasksList"></div>
     <button class="btn br" onclick="logoutDriver()" data-key="logout">✕ خروج</button>
@@ -313,22 +322,26 @@ html,body{overflow-x:hidden;width:100%;background:#f5f7fa;min-height:100vh}
   <button class="btn bx" onclick="showPage('home')">← <span data-key="back">رجوع</span></button>
 </div>
 
-<div id="tonnageManager" class="page">
-  <h2 style="margin-bottom:15px;color:#1B5E20;text-align:center">⚖️ إدارة الكميات المرفوعة</h2>
+<div id="driverTonnage" class="page">
+  <h2 style="margin-bottom:15px;color:#1B5E20;text-align:center">⚖️ تسجيل كمية جديدة</h2>
   <div class="cd">
-    <h3 style="margin-bottom:10px">➕ تسجيل كمية جديدة</h3>
-    <input type="text" class="in" id="tonnageDriver" placeholder="🚛 اسم السائق (خاص بالسائق)">
-    <input type="text" class="in" id="tonnageSector" placeholder="🏷️ رقم القطاع">
-    <input type="number" class="in" id="tonnageWeight" placeholder="⚖️ الوزن بالطن" step="0.01">
-    <input type="text" class="in" id="tonnageRegNum" placeholder="🔢 رقم التسجيل من مركز القدم">
-    <button class="btn bg" onclick="saveTonnage()">💾 حفظ الكمية</button>
+    <h3 style="margin-bottom:10px">📝 بيانات الرحلة</h3>
+    <input type="text" class="in" id="driverTonnageName" placeholder="🚛 اسم السائق" disabled style="background:#f0f0f0">
+    <input type="text" class="in" id="driverTonnageSector" placeholder="🏷️ رقم القطاع" disabled style="background:#f0f0f0">
+    <input type="number" class="in" id="driverTonnageWeight" placeholder="⚖️ الوزن بالطن" step="0.01">
+    <input type="text" class="in" id="driverTonnageRegNum" placeholder="🔢 رقم التسجيل من مركز القدم">
+    <button class="btn bg" onclick="saveDriverTonnage()">💾 حفظ الكمية</button>
   </div>
+  <button class="btn bx" onclick="showPage('driver')">← <span data-key="back">رجوع</span></button>
+</div>
+
+<div id="tonnageRecords" class="page">
+  <h2 style="margin-bottom:15px;color:#1B5E20;text-align:center">⚖️ سجل الكميات المرفوعة</h2>
   <div class="cd">
-    <h3 style="margin-bottom:10px">📋 السجل</h3>
+    <h3 style="margin-bottom:10px">📋 جميع السجلات</h3>
     <div id="tonnageList"></div>
     <div class="g2" style="margin-top:15px">
-      <button class="btn br" onclick="exportTonnageToExcel()">📥 تصدير Excel</button>
-      <button class="btn purple" onclick="printTonnage()">🖨️ طباعة</button>
+      <button class="btn br" onclick="exportTonnageToExcel()">📥 تصدير Excel</button>      <button class="btn purple" onclick="printTonnage()">🖨️ طباعة</button>
     </div>
   </div>
   <button class="btn bx" onclick="showPage('admin')">← <span data-key="back">رجوع</span></button>
@@ -341,7 +354,8 @@ html,body{overflow-x:hidden;width:100%;background:#f5f7fa;min-height:100vh}
     <input type="text" class="in" id="sectorNum" placeholder="🏷️ رقم القطاع">
     <select class="in" id="sectorType">
       <option value="بلدية">🏛️ خاص / بلدية</option>
-      <option value="خاص">🏠 خاص</option>    </select>
+      <option value="خاص">🏠 خاص</option>
+    </select>
     <input type="text" class="in" id="sectorName" placeholder="📍 الأحياء والشوارع">
     <input type="text" class="in" id="sectorDays" placeholder="📅 الأيام (مثال: أحد-ثلاثاء-خميس)">
     <input type="text" class="in" id="sectorTime" placeholder="🕐 وقت المرور (مثال: 07:00 - 09:00)">
@@ -357,6 +371,14 @@ html,body{overflow-x:hidden;width:100%;background:#f5f7fa;min-height:100vh}
   <button class="btn bx" onclick="showPage('admin')">← <span data-key="back">رجوع</span></button>
 </div>
 
+<div id="adminRequests" class="page">
+  <h2 style="margin-bottom:15px;color:#1B5E20;text-align:center">📋 طلبات المواطنين</h2>
+  <div class="cd">
+    <div id="adminRequestsList"></div>
+  </div>
+  <button class="btn bx" onclick="showPage('admin')">← <span data-key="back">رجوع</span></button>
+</div>
+
 <div id="qrModal" class="qr-modal" onclick="if(event.target===this)this.style.display='none'">
   <div class="qr-content">
     <h3 data-key="trackingCode">📱 كود تتبع البلاغ</h3>
@@ -368,18 +390,17 @@ html,body{overflow-x:hidden;width:100%;background:#f5f7fa;min-height:100vh}
     <button class="btn bb" onclick="document.getElementById('qrModal').style.display='none'" style="margin-top:15px" data-key="close">✕ إغلاق</button>
   </div>
 </div>
-
 <div class="ft">🛡️ <span data-key="footer">إعداد د. رابحي فتحي - بلدية المدية 2026 ©</span></div>
 
 <script>
 // === المتغيرات العامة ===
-let allReports=[],currentLang='ar',tempImage=null,tempAfterImage=null,currentDriver='',userPoints=0;
+let allReports=[],currentLang='ar',tempImage=null,tempAfterImage=null,currentDriver='',userPoints=0,currentDriverSector='';
 
 // === قاموس الترجمات ===
 const translations={
-  ar:{appName:'المدية نظيفة',appSubtitle:'مصلحة النظافة والوقاية الصحية<br>بلدية المدية 2026',connected:'✓ متصل - النظام جاهز',republic:'🇩🇿 الجمهورية الجزائرية الديمقراطية الشعبية',service:'🧹 مصلحة النظافة والوقاية الصحية لبلدية المدية',sendReport:'إرسال تبليغ',displayTools:'🎬 أدوات العرض',demoData:'بيانات تجريبية',print:'طباعة',dashboard:'لوحة الإحصائيات',exit:'الخروج',staffHall:'👥 رواق الموظفين',drivers:'السائقين',admin:'الإدارة',newReport:'📝 بلاغ جديد',takePhoto:'📷 التقاط الصورة',getGPS:'📍 تحديد الموقع GPS',manualLoc:'📍 إدخال يدوي',sendNow:'✉️ إرسال البلاغ الآن',back:'رجوع',controlPanel:'⚙️ لوحة التحكم',supervisorLogin:'🔐 الدخول للمشرفين',login:'✓ دخول',supervisorMode:'✓ وضع المشرف مفعل',viewReports:'📊 عرض البلاغات',manageStaff:'👥 إدارة الموظفين',exportExcel:'📥 تصدير Excel',logout:'✕ خروج',distribution:'📊 توزيع حالات البلاغات',reportsList:'📋 قائمة البلاغات',allStatus:'جميع الحالات',statusNew:'جديد',statusAssigned:'قيد التنفيذ',statusDone:'منجز',addStaff:'➕ إضافة موظف',save:'💾 حفظ',driverArea:'🚚 مساحة السائقين',driverLogin:'🔐 دخول السائق',welcomeDriver:'✓ مرحباً - مهامك جاهزة',yourTasks:'📋 مهامك',trackingCode:'📱 كود تتبع البلاغ',reportNumberLabel:'بلاغ رقم:',close:'✕ إغلاق',footer:'إعداد د. رابحي فتحي - بلدية المدية 2026 ©',totalReports:'إجمالي البلاغات',completed:'تم الإنجاز',pending:'قيد التنفيذ',thanksTitle:'شكراً لكم!',thanksMsg:'تم إرسال بلاغكم بنجاح',slogan:'معاً لمدية أنظف 2026',addrPlaceholder:'📍 اسم الحي أو الشارع',namePlaceholder:'👤 الاسم',codePlaceholder:'🔑 الرمز (1234)',rolePlaceholder:'💼 المنصب (سائق/مسؤول)',phonePlaceholder:'📞 الهاتف',driverNamePlaceholder:'👤 أدخل اسمك',searchPlaceholder:'🔍 بحث...'},
-  fr:{appName:'Médéa Propre',appSubtitle:'Service de Propreté et d\'Hygiène<br>Commune de Médéa 2026',connected:'✓ Connecté - Système Prêt',republic:'🇩 République Algérienne Démocratique et Populaire',service:'🧹 Service de Propreté et d\'Hygiène - Médéa',sendReport:'Envoyer Signalement',displayTools:'🎬 Outils d\'Affichage',demoData:'Données Demo',print:'Imprimer',dashboard:'Tableau de Bord',exit:'Quitter',staffHall:'👥 Personnel',drivers:'Chauffeurs',admin:'Administration',newReport:'📝 Nouveau Signalement',takePhoto:'📷 Prendre Photo',getGPS:'📍 Localisation GPS',manualLoc:'📍 Saisie Manuelle',sendNow:'✉️ Envoyer Maintenant',back:'Retour',controlPanel:'⚙️ Panneau de Contrôle',supervisorLogin:'🔐 Accès Superviseur',login:'✓ Connexion',supervisorMode:'✓ Mode Superviseur Activé',viewReports:'📊 Voir Signalements',manageStaff:'👥 Gestion Personnel',exportExcel:'📥 Exporter Excel',logout:'✕ Déconnexion',distribution:'📊 Distribution des Statuts',reportsList:'📋 Liste des Signalements',allStatus:'Tous les statuts',statusNew:'Nouveau',statusAssigned:'En Cours',statusDone:'Terminé',addStaff:'➕ Ajouter Personnel',save:'💾 Enregistrer',driverArea:'🚚 Espace Chauffeurs',driverLogin:'🔐 Connexion Chauffeur',welcomeDriver:'✓ Bienvenue - Vos tâches sont prêtes',yourTasks:'📋 Vos Tâches',trackingCode:'📱 Code de Suivi',reportNumberLabel:'Signalement N°:',close:'✕ Fermer',footer:'Dr. Rabhi Fethi - Commune de Médéa 2026 ©',totalReports:'Total Signalements',completed:'Terminé',pending:'En Cours',thanksTitle:'Merci!',thanksMsg:'Votre signalement a été envoyé',slogan:'Ensemble pour une Médéa plus propre 2026',addrPlaceholder:'📍 Nom du quartier ou rue',namePlaceholder:'👤 Nom',codePlaceholder:'🔑 Code (1234)',rolePlaceholder:'💼 Poste (Chauffeur/Responsable)',phonePlaceholder:'📞 Téléphone',driverNamePlaceholder:'👤 Entrez votre nom',searchPlaceholder:'🔍 Rechercher...'},
-  en:{appName:'Clean Medea',appSubtitle:'Sanitation & Health Department<br>Medea Municipality 2026',connected:'✓ Connected - System Ready',republic:'🇩 People\'s Democratic Republic of Algeria',service:'🧹 Sanitation & Health Department - Medea',sendReport:'Send Report',displayTools:'🎬 Display Tools',demoData:'Demo Data',print:'Print',dashboard:'Dashboard',exit:'Exit',staffHall:'👥 Staff Hall',drivers:'Drivers',admin:'Administration',newReport:'📝 New Report',takePhoto:'📷 Take Photo',getGPS:'📍 Get GPS Location',manualLoc:'📍 Manual Entry',sendNow:'✉️ Send Report Now',back:'Back',controlPanel:'⚙️ Control Panel',supervisorLogin:'🔐 Supervisor Login',login:'✓ Login',supervisorMode:'✓ Supervisor Mode Active',viewReports:'📊 View Reports',manageStaff:'👥 Manage Staff',exportExcel:'📥 Export Excel',logout:'✕ Logout',distribution:'📊 Status Distribution',reportsList:'📋 Reports List',allStatus:'All Status',statusNew:'New',statusAssigned:'In Progress',statusDone:'Completed',addStaff:'➕ Add Staff',save:'💾 Save',driverArea:'🚚 Driver Area',driverLogin:'🔐 Driver Login',welcomeDriver:'✓ Welcome - Your tasks are ready',yourTasks:'📋 Your Tasks',trackingCode:'📱 Tracking Code',reportNumberLabel:'Report #: ',close:'✕ Close',footer:'Dr. Rabhi Fethi - Medea Municipality 2026 ©',totalReports:'Total Reports',completed:'Completed',pending:'In Progress',thanksTitle:'Thank You!',thanksMsg:'Your report has been sent',slogan:'Together for a Cleaner Medea 2026',addrPlaceholder:'📍 Neighborhood or street name',namePlaceholder:'👤 Name',codePlaceholder:'🔑 Code (1234)',rolePlaceholder:'💼 Position (Driver/Supervisor)',phonePlaceholder:'📞 Phone',driverNamePlaceholder:'👤 Enter your name',searchPlaceholder:'🔍 Search...'}
+  ar:{appName:'المدية نظيفة',appSubtitle:'مصلحة النظافة والوقاية الصحية<br>بلدية المدية 2026',connected:'✓ متصل - النظام جاهز',republic:'🇩🇿 الجمهورية الجزائرية الديمقراطية الشعبية',service:'🧹 مصلحة النظافة والوقاية الصحية لبلدية المدية',sendReport:'إرسال تبليغ',displayTools:'🎬 أدوات العرض',demoData:'بيانات تجريبية',print:'طباعة',dashboard:'لوحة الإحصائيات',exit:'الخروج',staffHall:'👥 رواق الموظفين',drivers:'السائقين',admin:'الإدارة',newReport:'📝 بلاغ جديد',takePhoto:'📷 التقاط الصورة',getGPS:'📍 تحديد الموقع GPS',manualLoc:'📍 إدخال يدوي',sendNow:'✉️ إرسال البلاغ الآن',back:'رجوع',controlPanel:'⚙️ لوحة التحكم',supervisorLogin:'🔐 الدخول للمشرفين',login:'✓ دخول',supervisorMode:'✓ وضع المشرف مفعل',viewReports:'📊 عرض البلاغات',manageStaff:'👥 إدارة الموظفين',exportExcel:'📥 تصدير Excel',logout:'✕ خروج',distribution:'📊 توزيع حالات البلاغات',reportsList:'📋 قائمة البلاغات',allStatus:'جميع الحالات',statusNew:'جديد',statusAssigned:'قيد التنفيذ',statusDone:'منجز',addStaff:'➕ إضافة موظف',save:'💾 حفظ',driverArea:'🚚 مساحة السائقين',driverLogin:'🔐 دخول السائق',welcomeDriver:'✓ مرحباً - مهامك جاهزة',yourTasks:'📋 مهامك',trackingCode:'📱 كود تتبع البلاغ',reportNumberLabel:'بلاغ رقم:',close:'✕ إغلاق',footer:'إعداد د. رابحي فتحي - بلدية المدية 2026 ©',totalReports:'إجمالي البلاغات',completed:'تم الإنجاز',pending:'قيد التنفيذ',thanksTitle:'شكراً لكم!',thanksMsg:'تم إرسال بلاغكم بنجاح',slogan:'معاً لمدية أنظف 2026',addrPlaceholder:'📍 اسم الحي أو الشارع',namePlaceholder:'👤 الاسم',codePlaceholder:'🔑 الرمز (1234)',rolePlaceholder:'💼 المنصب (سائق/مسؤول)',phonePlaceholder:'📞 الهاتف',driverNamePlaceholder:'👤 أدخل اسمك',searchPlaceholder:'🔍 بحث...',services:'✨ الخدمات'},
+  fr:{appName:'Médéa Propre',appSubtitle:'Service de Propreté et d\'Hygiène<br>Commune de Médéa 2026',connected:'✓ Connecté - Système Prêt',republic:'🇩 République Algérienne Démocratique et Populaire',service:'🧹 Service de Propreté et d\'Hygiène - Médéa',sendReport:'Envoyer Signalement',displayTools:'🎬 Outils d\'Affichage',demoData:'Données Demo',print:'Imprimer',dashboard:'Tableau de Bord',exit:'Quitter',staffHall:'👥 Personnel',drivers:'Chauffeurs',admin:'Administration',newReport:'📝 Nouveau Signalement',takePhoto:'📷 Prendre Photo',getGPS:'📍 Localisation GPS',manualLoc:'📍 Saisie Manuelle',sendNow:'✉️ Envoyer Maintenant',back:'Retour',controlPanel:'⚙️ Panneau de Contrôle',supervisorLogin:'🔐 Accès Superviseur',login:'✓ Connexion',supervisorMode:'✓ Mode Superviseur Activé',viewReports:'📊 Voir Signalements',manageStaff:'👥 Gestion Personnel',exportExcel:'📥 Exporter Excel',logout:'✕ Déconnexion',distribution:'📊 Distribution des Statuts',reportsList:'📋 Liste des Signalements',allStatus:'Tous les statuts',statusNew:'Nouveau',statusAssigned:'En Cours',statusDone:'Terminé',addStaff:'➕ Ajouter Personnel',save:'💾 Enregistrer',driverArea:'🚚 Espace Chauffeurs',driverLogin:'🔐 Connexion Chauffeur',welcomeDriver:'✓ Bienvenue - Vos tâches sont prêtes',yourTasks:'📋 Vos Tâches',trackingCode:'📱 Code de Suivi',reportNumberLabel:'Signalement N°:',close:'✕ Fermer',footer:'Dr. Rabhi Fethi - Commune de Médéa 2026 ©',totalReports:'Total Signalements',completed:'Terminé',pending:'En Cours',thanksTitle:'Merci!',thanksMsg:'Votre signalement a été envoyé',slogan:'Ensemble pour une Médéa plus propre 2026',addrPlaceholder:'📍 Nom du quartier ou rue',namePlaceholder:'👤 Nom',codePlaceholder:'🔑 Code (1234)',rolePlaceholder:'💼 Poste (Chauffeur/Responsable)',phonePlaceholder:'📞 Téléphone',driverNamePlaceholder:'👤 Entrez votre nom',searchPlaceholder:'🔍 Rechercher...',services:'✨ Services'},
+  en:{appName:'Clean Medea',appSubtitle:'Sanitation & Health Department<br>Medea Municipality 2026',connected:'✓ Connected - System Ready',republic:'🇩 People\'s Democratic Republic of Algeria',service:'🧹 Sanitation & Health Department - Medea',sendReport:'Send Report',displayTools:'🎬 Display Tools',demoData:'Demo Data',print:'Print',dashboard:'Dashboard',exit:'Exit',staffHall:'👥 Staff Hall',drivers:'Drivers',admin:'Administration',newReport:'📝 New Report',takePhoto:'📷 Take Photo',getGPS:'📍 Get GPS Location',manualLoc:'📍 Manual Entry',sendNow:'✉️ Send Report Now',back:'Back',controlPanel:'⚙️ Control Panel',supervisorLogin:'🔐 Supervisor Login',login:'✓ Login',supervisorMode:'✓ Supervisor Mode Active',viewReports:'📊 View Reports',manageStaff:'👥 Manage Staff',exportExcel:'📥 Export Excel',logout:'✕ Logout',distribution:'📊 Status Distribution',reportsList:'📋 Reports List',allStatus:'All Status',statusNew:'New',statusAssigned:'In Progress',statusDone:'Completed',addStaff:'➕ Add Staff',save:'💾 Save',driverArea:'🚚 Driver Area',driverLogin:'🔐 Driver Login',welcomeDriver:'✓ Welcome - Your tasks are ready',yourTasks:'📋 Your Tasks',trackingCode:'📱 Tracking Code',reportNumberLabel:'Report #: ',close:'✕ Close',footer:'Dr. Rabhi Fethi - Medea Municipality 2026 ©',totalReports:'Total Reports',completed:'Completed',pending:'In Progress',thanksTitle:'Thank You!',thanksMsg:'Your report has been sent',slogan:'Together for a Cleaner Medea 2026',addrPlaceholder:'📍 Neighborhood or street name',namePlaceholder:'👤 Name',codePlaceholder:'🔑 Code (1234)',rolePlaceholder:'💼 Position (Driver/Supervisor)',phonePlaceholder:'📞 Phone',driverNamePlaceholder:'👤 Enter your name',searchPlaceholder:'🔍 Search...',services:'✨ Services'}
 };
 
 // === دالة إخفاء شاشة التحميل ===
@@ -390,7 +411,8 @@ function hideSplash(){
       splash.style.opacity='0';
       setTimeout(()=>{splash.style.display='none';console.log('Splash hidden');},500);
     }
-  }catch(e){console.error('Hide splash error:',e);try{document.getElementById('splash').style.display='none';}catch(err){}}}
+  }catch(e){console.error('Hide splash error:',e);try{document.getElementById('splash').style.display='none';}catch(err){}}
+}
 
 // === تحميل التطبيق ===
 window.addEventListener('load', function(){
@@ -404,6 +426,7 @@ window.addEventListener('load', function(){
       loadUserPoints();
       loadSchedule();
       loadTonnageRecords();
+      loadRequests();
       try{
         const savedLang=localStorage.getItem('medea_lang');
         if(savedLang && translations[savedLang]){
@@ -416,8 +439,7 @@ window.addEventListener('load', function(){
         }
         applyTranslations();
       }catch(e){console.log('Lang load error:',e);}
-      updatePublicStats();
-      console.log('App loaded OK');
+      updatePublicStats();      console.log('App loaded OK');
     }catch(e){
       console.error('Init error:',e);
       try{document.getElementById('splash').style.display='none';}catch(err){}
@@ -439,7 +461,8 @@ function showToast(msg, type='success'){
     if(!container) return;
     const toast=document.createElement('div');
     toast.className='toast';
-    toast.innerHTML=`<span>${type==='success'?'✅':'ℹ️'}</span><span>${msg}</span>`;    container.appendChild(toast);
+    toast.innerHTML=`<span>${type==='success'?'✅':'ℹ️'}</span><span>${msg}</span>`;
+    container.appendChild(toast);
     setTimeout(()=>{toast.style.opacity='0';setTimeout(()=>toast.remove(),300);},3000);
   }catch(e){console.log('Toast error:',e);}
 }
@@ -465,8 +488,7 @@ function applyTranslations(){
     const t=translations[currentLang];
     if(!t) return;
     document.querySelectorAll('[data-key]').forEach(el=>{const key=el.getAttribute('data-key');if(t[key]) el.innerHTML=t[key];});
-    document.querySelectorAll('[data-ph]').forEach(el=>{const key=el.getAttribute('data-ph');if(t[key]) el.placeholder=t[key];});
-    document.documentElement.dir = currentLang==='ar' ? 'rtl' : 'ltr';
+    document.querySelectorAll('[data-ph]').forEach(el=>{const key=el.getAttribute('data-ph');if(t[key]) el.placeholder=t[key];});    document.documentElement.dir = currentLang==='ar' ? 'rtl' : 'ltr';
   }catch(e){console.log('Translation error:',e);}
 }
 
@@ -483,12 +505,13 @@ function updateTime(){
   }catch(e){console.log('Time update error:',e);}
 }
 
-// === تحميل وحفظ البيانات (إصلاح التعليق) ===
+// === تحميل وحفظ البيانات ===
 function loadReports(){
   try{
     const data = localStorage.getItem('medea_reports');
     if(data) {
-      allReports = JSON.parse(data);      if(!Array.isArray(allReports)) allReports = [];
+      allReports = JSON.parse(data);
+      if(!Array.isArray(allReports)) allReports = [];
     } else {
       allReports = [];
     }
@@ -514,9 +537,11 @@ function showPage(id){
     if(id==='dashboard') setTimeout(renderChart,100);
     if(id==='reportsPage') showReportsPage();
     if(id==='publicStats') updatePublicStats();
-    if(id==='schedule') displaySchedule();
-    if(id==='tonnageManager') loadTonnageRecords();
+    if(id==='schedule') displaySchedule();    if(id==='tonnageRecords') loadTonnageRecords();
     if(id==='scheduleManager') loadScheduleSectors();
+    if(id==='adminRequests') loadAdminRequests();
+    if(id==='requests') loadMyRequests();
+    if(id==='driverTonnage') prepareDriverTonnage();
     window.scrollTo(0,0);
   }catch(e){console.log('Page nav error:',e);}
 }
@@ -534,10 +559,11 @@ function startVoiceInput(){
   }catch(e){showToast('⚠️ خطأ في الصوت','error');}
 }
 
-// === تحديد الموقع (إصلاح دقة العنوان) ===
+// === تحديد الموقع (محسّن) ===
 function getLocation(){
   try{
-    const btn=document.getElementById('getLocationBtn');    const addr=document.getElementById('addrInput');
+    const btn=document.getElementById('getLocationBtn');
+    const addr=document.getElementById('addrInput');
     const gps=document.getElementById('gpsInput');
     if(!navigator.geolocation){showToast('⚠️ GPS غير مدعوم','error');return;}
     btn.innerHTML='⏳ جاري...';btn.disabled=true;
@@ -549,7 +575,6 @@ function getLocation(){
           let full='المدية، الجزائر';
           if(d.address){
             const parts=[];
-            // جمع كل الأجزاء المتاحة للحصول على أدق عنوان
             if(d.address.road||d.address.street) parts.push(d.address.road||d.address.street);
             if(d.address.pedestrian) parts.push(d.address.pedestrian);
             if(d.address.neighbourhood||d.address.suburb) parts.push(d.address.neighbourhood||d.address.suburb);
@@ -561,8 +586,7 @@ function getLocation(){
           addr.value=full;btn.innerHTML='📍 تحديد الموقع GPS';btn.disabled=false;
           showToast('✅ '+full);
         }).catch(()=>{addr.value='المدية (تقريبي)';btn.innerHTML='📍 تحديد الموقع GPS';btn.disabled=false;showToast('⚠️ عنوان تقريبي');});
-    },()=>{btn.innerHTML='📍 تحديد الموقع GPS';btn.disabled=false;showToast('⚠️ فشل تحديد الموقع','error');},{enableHighAccuracy:true,timeout:20000});
-  }catch(e){showToast('⚠️ خطأ في الموقع','error');}
+    },()=>{btn.innerHTML='📍 تحديد الموقع GPS';btn.disabled=false;showToast('⚠️ فشل تحديد الموقع','error');},{enableHighAccuracy:true,timeout:20000});  }catch(e){showToast('⚠️ خطأ في الموقع','error');}
 }
 
 function manualLocation(){const a=prompt('أدخل العنوان:','حي الزيتون - المدية');if(a){document.getElementById('addrInput').value=a;document.getElementById('gpsInput').value='36.2642, 2.7545';}}
@@ -586,7 +610,8 @@ function sendReport(){
     const isRecurring=document.getElementById('recurringCheck').checked;
     saveReport({id:Date.now(),addr:a,gps:document.getElementById('gpsInput').value||'غير محدد',image:tempImage,doneImage:null,date:new Date().toLocaleDateString('ar-DZ'),time:new Date().toLocaleTimeString('ar-DZ'),doneTime:null,status:'new',driverName:null,recurring:isRecurring});
     addPoints(10);
-    showToast('✅ تم الإرسال! +10 نقاط 🎉');    document.getElementById('thanksOverlay').style.display='flex';
+    showToast('✅ تم الإرسال! +10 نقاط 🎉');
+    document.getElementById('thanksOverlay').style.display='flex';
     tempImage=null;document.getElementById('camImg').style.display='none';document.querySelector('.cam-icon').style.display='block';
     document.getElementById('addrInput').value='';document.getElementById('gpsInput').value='';document.getElementById('recurringCheck').checked=false;
     setTimeout(()=>{document.getElementById('thanksOverlay').style.display='none';showPage('home');btn.innerHTML=orig;btn.disabled=false;},3000);
@@ -599,8 +624,56 @@ function logoutAdmin(){document.getElementById('adminLogin').classList.remove('h
 function clearAllData(){if(confirm('⚠️ هل أنت متأكد؟ سيتم مسح كل البيانات لإصلاح المشاكل.')){localStorage.clear();location.reload();}}
 
 // === السائقين ===
-function loginDriver(){const n=document.getElementById('driverName').value.trim();if(!n){showToast('⚠️ أدخل الاسم','error');return;}const st=JSON.parse(localStorage.getItem('medea_staff')||'[]');if(st.some(s=>s.name===n&&s.role.includes('سائق'))){currentDriver=n;document.getElementById('driverLogin').classList.add('hidden');document.getElementById('driverPanel').classList.remove('hidden');renderDriverTasks();showToast('✓ مرحباً '+n);}else showToast('❌ غير مسجل','error');}
-function logoutDriver(){currentDriver='';document.getElementById('driverLogin').classList.remove('hidden');document.getElementById('driverPanel').classList.add('hidden');document.getElementById('driverName').value='';tempAfterImage=null;showToast('✓ خروج');}
+function loginDriver(){
+  const n=document.getElementById('driverName').value.trim();
+  if(!n){showToast('⚠️ أدخل الاسم','error');return;}
+  const st=JSON.parse(localStorage.getItem('medea_staff')||'[]');
+  const driver=st.find(s=>s.name===n&&s.role.includes('سائق'));
+  if(driver){
+    currentDriver=n;
+    // البحث عن قطاع السائق
+    const sectors=JSON.parse(localStorage.getItem('medea_schedule')||'[]');
+    const sector=sectors.find(s=>s.driver===n);
+    currentDriverSector=sector?sector.num:'غير محدد';
+    document.getElementById('driverLogin').classList.add('hidden');    document.getElementById('driverPanel').classList.remove('hidden');
+    renderDriverTasks();
+    showToast('✓ مرحباً '+n);
+  }else showToast('❌ غير مسجل','error');
+}
+function logoutDriver(){currentDriver='';currentDriverSector='';document.getElementById('driverLogin').classList.remove('hidden');document.getElementById('driverPanel').classList.add('hidden');document.getElementById('driverName').value='';tempAfterImage=null;showToast('✓ خروج');}
+
+// === تحضير صفحة تسجيل الكمية للسائق ===
+function prepareDriverTonnage(){
+  document.getElementById('driverTonnageName').value=currentDriver;
+  document.getElementById('driverTonnageSector').value=currentDriverSector;
+  document.getElementById('driverTonnageWeight').value='';
+  document.getElementById('driverTonnageRegNum').value='';
+}
+
+// === حفظ كمية النفايات من السائق ===
+function saveDriverTonnage(){
+  try{
+    const weight=document.getElementById('driverTonnageWeight').value;
+    const regNum=document.getElementById('driverTonnageRegNum').value.trim();
+    if(!weight||!regNum){showToast('⚠️ أدخل الوزن ورقم التسجيل','error');return;}
+    const records=JSON.parse(localStorage.getItem('medea_tonnage')||'[]');
+    const now=new Date();
+    records.push({
+      id:Date.now(),
+      driver:currentDriver,
+      sector:currentDriverSector,
+      weight:parseFloat(weight),
+      regNum:regNum,
+      date:now.toLocaleDateString('ar-DZ'),
+      time:now.toLocaleTimeString('ar-DZ')
+    });
+    localStorage.setItem('medea_tonnage',JSON.stringify(records));
+    showToast('✅ تم حفظ الكمية: '+weight+' طن');
+    document.getElementById('driverTonnageWeight').value='';
+    document.getElementById('driverTonnageRegNum').value='';
+    showPage('driver');
+  }catch(e){showToast('⚠️ خطأ في الحفظ','error');}
+}
 
 // === التحميل ===
 function downloadImage(d,f){if(!d){showToast('⚠️ لا صورة','error');return;}const l=document.createElement('a');l.href=d;l.download=f;document.body.appendChild(l);l.click();document.body.removeChild(l);showToast('✅ تم التحميل');}
@@ -609,10 +682,9 @@ function downloadReportText(id){const r=allReports.find(x=>x.id==id);if(!r){show
 // === بيانات تجريبية ===
 function loadDemoData(){if(!confirm('تحميل بيانات تجريبية؟'))return;[{id:1001,addr:'حي الزيتون - شارع الشهداء - المدية',gps:'36.2642, 2.7545',image:'https://via.placeholder.com/300x200/f44336/fff?text=قبل',doneImage:'https://via.placeholder.com/300x200/4CAF50/fff?text=بعد',date:'2026-04-10',time:'09:30',doneTime:'2026-04-10 11:15',status:'done',driverName:'أحمد'},{id:1002,addr:'وسط المدينة - شارع الاستقلال - المدية',gps:'36.2650, 2.7550',image:'https://via.placeholder.com/300x200/f44336/fff?text=قبل',doneImage:null,date:'2026-04-11',time:'14:20',doneTime:null,status:'assigned',driverName:'محمد'}].forEach(r=>saveReport(r));showToast('✅ تم التحميل');showReportsPage();}
 
-// === عرض البلاغات (مُصلح لمنع التعليق نهائياً) ===
+// === عرض البلاغات ===
 function showReportsPage(){
-  try{
-    showPage('reportsPage');
+  try{    showPage('reportsPage');
     applyFilters();
   }catch(e){
     console.error('Show reports error:',e);
@@ -635,7 +707,8 @@ function filterByStatus(s){showPage('reportsPage');if(document.getElementById('f
 
 function renderReportsList(reps){
   try{
-    const c=document.getElementById('reportsList');    if(!reps || reps.length===0){c.innerHTML='<p style="text-align:center;color:#666;padding:40px">لا توجد بلاغات</p>';return;}
+    const c=document.getElementById('reportsList');
+    if(!reps || reps.length===0){c.innerHTML='<p style="text-align:center;color:#666;padding:40px">لا توجد بلاغات</p>';return;}
     c.innerHTML=reps.map(r=>{
       if(!r) return '';
       const d1=r.image?`<button class="download-btn" onclick="downloadImage('${r.image}','before_${r.id}.jpg')">⬇️ تحميل صورة قبل</button>`:'';
@@ -660,8 +733,7 @@ function showQR(id){
     const r=allReports.find(x=>x.id==id);
     if(!r){showToast('⚠️ غير موجود','error');return;}
     document.getElementById('qrModal').style.display='flex';
-    document.getElementById('qrReportId').textContent=r.id;
-    const qc=document.getElementById('qrcode');qc.innerHTML='';
+    document.getElementById('qrReportId').textContent=r.id;    const qc=document.getElementById('qrcode');qc.innerHTML='';
     if(typeof QRCode!=='undefined'){try{new QRCode(qc,{text:String(r.id),width:200,height:200,colorDark:'#1B5E20',colorLight:'#ffffff',correctLevel:QRCode.CorrectLevel.M});}catch(e){qc.innerHTML='<div style="color:red;padding:20px">⚠️ فشل QR</div>';}}
     else{qc.innerHTML='<div style="color:red;padding:20px">⚠️ المكتبة غير محملة</div>';}
   }catch(e){showToast('⚠️ خطأ في QR','error');}
@@ -684,8 +756,23 @@ function assignDriver(id){
 }
 
 function deleteReport(id){if(!confirm('حذف البلاغ؟'))return;allReports=allReports.filter(r=>r.id!=id);try{localStorage.setItem('medea_reports',JSON.stringify(allReports));}catch(e){}showReportsPage();updateStats();updatePublicStats();showToast('✅ تم الحذف');}
-// === الموظفين ===
-function loadStaffList(){try{let s=[];try{s=JSON.parse(localStorage.getItem('medea_staff')||'[]');}catch(e){}const c=document.getElementById('staffList');if(!s.length){c.innerHTML='<p style="text-align:center;color:#666;padding:30px">لا يوجد موظفون</p>';return;}c.innerHTML=s.map((x,i)=>`<div class="staff-item"><div><b style="color:#1B5E20">${x.role}:</b> ${x.name}${x.phone?'<br><span style="color:#666">📞 '+x.phone+'</span>':''}</div><div class="action-btns"><button class="edit-btn" onclick="editStaff(${i})">✏️</button><button class="delete-btn" onclick="deleteStaff(${i})">✕</button></div></div>`).join('');}catch(e){}}
+
+// === الموظفين (مع رابط اتصال) ===
+function loadStaffList(){
+  try{
+    let s=[];
+    try{s=JSON.parse(localStorage.getItem('medea_staff')||'[]');}catch(e){}
+    const c=document.getElementById('staffList');
+    if(!s.length){c.innerHTML='<p style="text-align:center;color:#666;padding:30px">لا يوجد موظفون</p>';return;}
+    c.innerHTML=s.map((x,i)=>`<div class="staff-item">
+      <div><b style="color:#1B5E20">${x.role}:</b> ${x.name}${x.phone?`<br><a href="tel:${x.phone}" class="phone-link">📞 ${x.phone}</a>`:''}</div>
+      <div class="action-btns">
+        <button class="edit-btn" onclick="editStaff(${i})">✏️</button>
+        <button class="delete-btn" onclick="deleteStaff(${i})">✕</button>
+      </div>
+    </div>`).join('');
+  }catch(e){}
+}
 function addStaff(){const n=document.getElementById('newStaffName').value.trim();const r=document.getElementById('newStaffRole').value.trim();const p=document.getElementById('newStaffPhone').value.trim();if(!n||!r){showToast('⚠️ الاسم والمنصب مطلوبان','error');return;}let s=[];try{s=JSON.parse(localStorage.getItem('medea_staff')||'[]');}catch(e){}s.push({name:n,role:r,phone:p});try{localStorage.setItem('medea_staff',JSON.stringify(s));}catch(e){}document.getElementById('newStaffName').value='';document.getElementById('newStaffRole').value='';document.getElementById('newStaffPhone').value='';loadStaffList();showToast('✅ تم الإضافة');}
 function editStaff(i){let s=[];try{s=JSON.parse(localStorage.getItem('medea_staff')||'[]');}catch(e){}const st=s[i];const nn=prompt('الاسم الجديد:',st.name);if(!nn)return;const nr=prompt('المنصب الجديد:',st.role);if(!nr)return;const np=prompt('الهاتف الجديد:',st.phone||'');s[i]={name:nn,role:nr,phone:np};try{localStorage.setItem('medea_staff',JSON.stringify(s));}catch(e){}loadStaffList();showToast('✅ تم التعديل');}
 function deleteStaff(i){if(!confirm('حذف الموظف؟'))return;let s=[];try{s=JSON.parse(localStorage.getItem('medea_staff')||'[]');}catch(e){}s.splice(i,1);try{localStorage.setItem('medea_staff',JSON.stringify(s));}catch(e){}loadStaffList();}
@@ -695,11 +782,78 @@ function backToAdmin(){showPage('admin');}
 // === مهام السائق والتقييم ===
 function renderDriverTasks(){try{const t=allReports.filter(r=>r.driverName===currentDriver&&r.status!=='done');const c=document.getElementById('tasksList');if(!t.length){c.innerHTML='<p style="text-align:center;color:#4CAF50;padding:40px">✓ لا توجد مهام</p>';return;}c.innerHTML=t.map(x=>{const img=x.image?`<div class="img-container"><img src="${x.image}"><div class="img-label">📷 صورة البلاغ (${x.date} ${x.time})</div></div>`:'';const map=x.gps?`<a href="https://www.google.com/maps/dir/?api=1&destination=${x.gps.split(',')[0]},${x.gps.split(',')[1]}" target="_blank" class="btn map-btn">🗺️ الدخول للخريطة</a>`:'';const stars=`<div class="star-rating" id="stars-${x.id}"><span class="star" onclick="rateTask(${x.id},1)">★</span><span class="star" onclick="rateTask(${x.id},2)">★</span><span class="star" onclick="rateTask(${x.id},3)">★</span><span class="star" onclick="rateTask(${x.id},4)">★</span><span class="star" onclick="rateTask(${x.id},5)">★</span></div>`;return`<div class="report-card assigned"><div class="info-row"><b>📍 العنوان:</b> ${x.addr}</div><div class="info-row"><b>🌍 GPS:</b> ${x.gps}</div>${img}<p style="font-size:0.8rem;color:#666;margin:5px 0">قيم جودة الإنجاز:</p>${stars}<button class="btn bo" onclick="driverTakePhoto(${x.id})" style="margin:10px 0">📷 أخذ صورة بعد التنفيذ</button>${map}<button class="btn bg" onclick="completeTask(${x.id})" style="margin-top:10px">✅ تأكيد الإنجاز</button></div>`;}).join('');}catch(e){console.log('Driver tasks error:',e);}}
 function rateTask(id,stars){try{const i=allReports.findIndex(r=>r.id==id);if(i!==-1){allReports[i].rating=stars;try{localStorage.setItem('medea_reports',JSON.stringify(allReports));}catch(e){}document.querySelectorAll(`#stars-${id} .star`).forEach((s,idx)=>{s.classList.toggle('active',idx<stars);});showToast(`⭐ تقييم: ${stars}/5`);}}catch(e){}}
-function driverTakePhoto(id){try{const i=document.createElement('input');i.type='file';i.accept='image/*';i.capture='environment';i.onchange=e=>{if(e.target.files[0]){const r=new FileReader();r.onload=ev=>{tempAfterImage=ev.target.result;showToast('✓ تم حفظ الصورة');};r.readAsDataURL(e.target.files[0]);}};i.click();}catch(e){showToast('⚠️ خطأ في الكاميرا','error');}}
-function completeTask(id){try{if(!tempAfterImage&&!confirm('لم يتم التصوير. متابعة؟'))return;const u={status:'done',doneTime:new Date().toLocaleString('ar-DZ')};if(tempAfterImage)u.doneImage=tempAfterImage;updateReport(id,u);tempAfterImage=null;showToast('✅ تم الإنجاز!');renderDriverTasks();updateStats();updatePublicStats();}catch(e){showToast('⚠️ خطأ في الإنجاز','error');}}
+function driverTakePhoto(id){try{const i=document.createElement('input');i.type='file';i.accept='image/*';i.capture='environment';i.onchange=e=>{if(e.target.files[0]){const r=new FileReader();r.onload=ev=>{tempAfterImage=ev.target.result;showToast('✓ تم حفظ الصورة');};r.readAsDataURL(e.target.files[0]);}};i.click();}catch(e){showToast('⚠️ خطأ في الكاميرا','error');}}function completeTask(id){try{if(!tempAfterImage&&!confirm('لم يتم التصوير. متابعة؟'))return;const u={status:'done',doneTime:new Date().toLocaleString('ar-DZ')};if(tempAfterImage)u.doneImage=tempAfterImage;updateReport(id,u);tempAfterImage=null;showToast('✅ تم الإنجاز!');renderDriverTasks();updateStats();updatePublicStats();}catch(e){showToast('⚠️ خطأ في الإنجاز','error');}}
 
 // === طلبات الخدمات ===
-function submitRequest(){try{const type=document.getElementById('reqType').value;const desc=document.getElementById('reqDesc').value.trim();const location=document.getElementById('reqLocation').value.trim();if(!desc||!location){showToast('⚠️ أكمل جميع الحقول','error');return;}const requests=JSON.parse(localStorage.getItem('medea_requests')||'[]');requests.push({id:Date.now(),type,desc,location,date:new Date().toLocaleDateString('ar-DZ'),status:'pending'});localStorage.setItem('medea_requests',JSON.stringify(requests));showToast('✅ تم إرسال طلبك');document.getElementById('reqDesc').value='';document.getElementById('reqLocation').value='';}catch(e){showToast('⚠️ خطأ في الطلب','error');}}
+function submitRequest(){
+  try{
+    const type=document.getElementById('reqType').value;
+    const desc=document.getElementById('reqDesc').value.trim();
+    const location=document.getElementById('reqLocation').value.trim();
+    if(!desc||!location){showToast('⚠️ أكمل جميع الحقول','error');return;}
+    const requests=JSON.parse(localStorage.getItem('medea_requests')||'[]');
+    requests.push({id:Date.now(),type,desc,location,date:new Date().toLocaleDateString('ar-DZ'),time:new Date().toLocaleTimeString('ar-DZ'),status:'pending'});
+    localStorage.setItem('medea_requests',JSON.stringify(requests));
+    showToast('✅ تم إرسال طلبك');
+    document.getElementById('reqDesc').value='';
+    document.getElementById('reqLocation').value='';
+    loadMyRequests();
+  }catch(e){showToast('⚠️ خطأ في الطلب','error');}
+}
+
+function loadMyRequests(){
+  try{
+    const requests=JSON.parse(localStorage.getItem('medea_requests')||'[]');
+    const list=document.getElementById('myRequestsList');
+    if(!requests.length){
+      list.innerHTML='<p style="text-align:center;color:#666;padding:20px">لا توجد طلبات سابقة</p>';
+      return;
+    }
+    list.innerHTML=requests.slice().reverse().map(r=>`
+      <div class="tonnage-card">
+        <div class="tonnage-info"><b>📝 النوع:</b> ${r.type==='bin'?'حاوية جديدة':r.type==='repair'?'صيانة':r.type==='clean'?'تنظيف':'أخر'}</div>
+        <div class="tonnage-info"><b>📍 الموقع:</b> ${r.location}</div>
+        <div class="tonnage-info"><b>📅 التاريخ:</b> ${r.date} ${r.time}</div>
+        <div class="tonnage-info"><b>📊 الحالة:</b> <span style="color:${r.status==='pending'?'#FF9800':'#4CAF50'}">${r.status==='pending'?'قيد المراجعة':'تمت المعالجة'}</span></div>
+      </div>
+    `).join('');
+  }catch(e){console.log('Load requests error:',e);}
+}
+
+function loadAdminRequests(){
+  try{
+    const requests=JSON.parse(localStorage.getItem('medea_requests')||'[]');
+    const list=document.getElementById('adminRequestsList');
+    if(!requests.length){
+      list.innerHTML='<p style="text-align:center;color:#666;padding:20px">لا توجد طلبات</p>';
+      return;
+    }
+    list.innerHTML=requests.slice().reverse().map(r=>`
+      <div class="tonnage-card">
+        <div class="tonnage-info"><b>📝 النوع:</b> ${r.type==='bin'?'حاوية جديدة':r.type==='repair'?'صيانة':r.type==='clean'?'تنظيف':'أخر'}</div>
+        <div class="tonnage-info"><b>📍 الموقع:</b> ${r.location}</div>        <div class="tonnage-info"><b>📝 التفاصيل:</b> ${r.desc}</div>
+        <div class="tonnage-info"><b>📅 التاريخ:</b> ${r.date} ${r.time}</div>
+        <div class="tonnage-info"><b>📊 الحالة:</b> <span style="color:${r.status==='pending'?'#FF9800':'#4CAF50'}">${r.status==='pending'?'قيد المراجعة':'تمت المعالجة'}</span></div>
+        ${r.status==='pending'?`<button class="btn bg" style="margin-top:10px;padding:8px" onclick="processRequest(${r.id})">✅ معالجة الطلب</button>`:''}
+      </div>
+    `).join('');
+  }catch(e){console.log('Load admin requests error:',e);}
+}
+
+function processRequest(id){
+  try{
+    let requests=JSON.parse(localStorage.getItem('medea_requests')||'[]');
+    const i=requests.findIndex(r=>r.id==id);
+    if(i!==-1){
+      requests[i].status='done';
+      localStorage.setItem('medea_requests',JSON.stringify(requests));
+      showToast('✅ تمت معالجة الطلب');
+      loadAdminRequests();
+    }
+  }catch(e){showToast('⚠️ خطأ في المعالجة','error');}
+}
+
+function loadRequests(){loadMyRequests();}
 
 // === إحصائيات عامة ===
 function updatePublicStats(){try{const total=allReports.length;const done=allReports.filter(r=>r.status==='done').length;const rate=total>0?Math.round((done/total)*100):0;const drivers=JSON.parse(localStorage.getItem('medea_staff')||'[]').filter(s=>s.role.includes('سائق')).length;document.getElementById('publicTotal').textContent=total;document.getElementById('publicRate').textContent=rate+'%';document.getElementById('activeDrivers').textContent=drivers;const chart=document.getElementById('publicChart');if(chart){const donePct=(done/total)*100||0;chart.style.background=`conic-gradient(#4CAF50 0deg ${donePct*3.6}deg,#eee ${donePct*3.6}deg 360deg)`;}}catch(e){}}
@@ -713,34 +867,7 @@ function exitApp(){if(confirm('الخروج؟')){window.close();setTimeout(()=>{
 // === رسم المخطط ===
 function renderChart(){try{const done=allReports.filter(r=>r.status==='done').length;const assigned=allReports.filter(r=>r.status==='assigned').length;const newR=allReports.filter(r=>r.status==='new').length;const total=allReports.length;const visual=document.getElementById('chartVisual');const legend=document.getElementById('chartLegend');if(!visual||!legend) return;if(total===0){visual.innerHTML='<div style="display:flex;align-items:center;justify-content:center;height:100%;color:#999;font-size:1.1rem">لا توجد بيانات</div>';legend.innerHTML='';return;}const donePct=(done/total)*100;const assignedPct=(assigned/total)*100;visual.style.background=`conic-gradient(#4CAF50 0deg ${donePct*3.6}deg,#FF9800 ${donePct*3.6}deg ${(donePct+assignedPct)*3.6}deg,#f44336 ${(donePct+assignedPct)*3.6}deg 360deg)`;visual.style.borderRadius='50%';visual.style.boxShadow='0 5px 20px rgba(0,0,0,0.2)';legend.innerHTML=`<div class="legend-item"><div class="legend-color" style="background:#4CAF50"></div><span>منجز: ${done}</span></div><div class="legend-item"><div class="legend-color" style="background:#FF9800"></div><span>قيد التنفيذ: ${assigned}</span></div><div class="legend-item"><div class="legend-color" style="background:#f44336"></div><span>جديد: ${newR}</span></div>`;}catch(e){console.log('Chart error:',e);}}
 
-// === نظام إدارة الكميات المرفوعة (بالطن) ===
-function saveTonnage(){
-  try{
-    const driver=document.getElementById('tonnageDriver').value.trim();
-    const sector=document.getElementById('tonnageSector').value.trim();
-    const weight=document.getElementById('tonnageWeight').value;
-    const regNum=document.getElementById('tonnageRegNum').value.trim();
-    if(!weight||!regNum){showToast('⚠️ أدخل الوزن ورقم التسجيل','error');return;}
-    const records=JSON.parse(localStorage.getItem('medea_tonnage')||'[]');
-    const now=new Date();
-    records.push({
-      id:Date.now(),
-      driver:driver,
-      sector:sector,
-      weight:parseFloat(weight),
-      regNum:regNum,
-      date:now.toLocaleDateString('ar-DZ'),
-      time:now.toLocaleTimeString('ar-DZ')
-    });
-    localStorage.setItem('medea_tonnage',JSON.stringify(records));
-    showToast('✅ تم حفظ الكمية: '+weight+' طن');    document.getElementById('tonnageWeight').value='';
-    document.getElementById('tonnageRegNum').value='';
-    document.getElementById('tonnageDriver').value='';
-    document.getElementById('tonnageSector').value='';
-    loadTonnageRecords();
-  }catch(e){showToast('⚠️ خطأ في الحفظ','error');}
-}
-
+// === نظام إدارة الكميات المرفوعة ===
 function loadTonnageRecords(){
   try{
     const records=JSON.parse(localStorage.getItem('medea_tonnage')||'[]');
@@ -753,43 +880,28 @@ function loadTonnageRecords(){
     list.innerHTML=records.slice().reverse().map(r=>`
       <div class="tonnage-card">
         <div class="tonnage-info"><b>🚛 السائق:</b> ${r.driver||'غير محدد'}</div>
-        <div class="tonnage-info"><b>🏷️ القطاع:</b> ${r.sector||'-'}</div>
-        <div class="tonnage-info"><b>⚖️ الوزن:</b> <span style="color:#FF9800;font-weight:bold">${r.weight} طن</span></div>
+        <div class="tonnage-info"><b>🏷️ القطاع:</b> ${r.sector||'-'}</div>        <div class="tonnage-info"><b>⚖️ الوزن:</b> <span style="color:#FF9800;font-weight:bold">${r.weight} طن</span></div>
         <div class="tonnage-info"><b>🔢 رقم التسجيل:</b> ${r.regNum}</div>
         <div class="tonnage-info"><b>📅 التاريخ:</b> ${r.date}</div>
         <div class="tonnage-info"><b>🕐 الوقت:</b> ${r.time}</div>
-        <button class="btn br" style="margin-top:10px;padding:8px" onclick="deleteTonnage(${r.id})">🗑️ حذف</button>
       </div>
     `).join('');
     list.innerHTML+=`<div class="cd" style="margin-top:15px;text-align:center;background:#e8f5e9"><b>📊 المجموع الكلي:</b> <span style="color:#1B5E20;font-size:1.2rem;font-weight:bold">${totalWeight.toFixed(2)} طن</span></div>`;
   }catch(e){console.log('Load tonnage error:',e);}
 }
 
-function deleteTonnage(id){
-  if(!confirm('حذف السجل؟'))return;
-  try{
-    let records=JSON.parse(localStorage.getItem('medea_tonnage')||'[]');
-    records=records.filter(r=>r.id!=id);
-    localStorage.setItem('medea_tonnage',JSON.stringify(records));
-    showToast('✅ تم الحذف');
-    loadTonnageRecords();
-  }catch(e){showToast('⚠️ خطأ في الحذف','error');}
-}
-
-// === تصدير وطباعة الكميات ===
 function exportTonnageToExcel(){
   try{
     const records=JSON.parse(localStorage.getItem('medea_tonnage')||'[]');
     if(!records.length){showToast('⚠️ لا توجد سجلات','error');return;}
     let c='السائق,القطاع,الوزن(طن),رقم التسجيل,التاريخ,الوقت\n';
-    records.forEach(r=>c+=`${r.driver},${r.sector},${r.weight},${r.regNum},${r.date},${r.time}\n`);    const b=new Blob([c],{type:'text/csv'});const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='tonnage_'+Date.now()+'.csv';a.click();
+    records.forEach(r=>c+=`${r.driver},${r.sector},${r.weight},${r.regNum},${r.date},${r.time}\n`);
+    const b=new Blob([c],{type:'text/csv'});const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='tonnage_'+Date.now()+'.csv';a.click();
     showToast('✅ تم التصدير');
   }catch(e){showToast('⚠️ خطأ في التصدير','error');}
 }
 
-function printTonnage(){
-  window.print();
-}
+function printTonnage(){window.print();}
 
 // === نظام إدارة جدول جمع النفايات ===
 function addScheduleSector(){
@@ -817,7 +929,6 @@ function addScheduleSector(){
     loadScheduleSectors();
   }catch(e){showToast('⚠️ خطأ في الإضافة','error');}
 }
-
 function loadScheduleSectors(){
   try{
     const sectors=JSON.parse(localStorage.getItem('medea_schedule')||'[]');
@@ -831,9 +942,10 @@ function loadScheduleSectors(){
         <div class="tonnage-info"><b>🏷️ رقم القطاع:</b> ${s.num||'-'}</div>
         <div class="tonnage-info"><b>🏛️ النوع:</b> ${s.type}</div>
         <div class="tonnage-info"><b>📍 الأحياء:</b> ${s.name}</div>
-        <div class="tonnage-info"><b>📅 الأيام:</b> ${s.days}</div>        <div class="tonnage-info"><b>🕐 وقت المرور:</b> ${s.time}</div>
+        <div class="tonnage-info"><b>📅 الأيام:</b> ${s.days}</div>
+        <div class="tonnage-info"><b>🕐 وقت المرور:</b> ${s.time}</div>
         <div class="tonnage-info"><b>⏳ الاستدراك:</b> ${s.catchup||'-'}</div>
-        <div class="tonnage-info"><b>👤 السائق:</b> ${s.driver||'-'} ${s.phone?'('+s.phone+')':''}</div>
+        <div class="tonnage-info"><b>👤 السائق:</b> ${s.driver||'-'} ${s.phone?`<a href="tel:${s.phone}" class="phone-link">📞 ${s.phone}</a>`:''}</div>
         <button class="btn br" style="margin-top:10px;padding:8px" onclick="deleteScheduleSector(${s.id})">🗑️ حذف</button>
       </div>
     `).join('');
@@ -867,10 +979,7 @@ function loadSchedule(){
     display.innerHTML=html;
   }catch(e){console.log('Load schedule error:',e);}
 }
-
-function displaySchedule(){
-  loadSchedule();
-}
+function displaySchedule(){loadSchedule();}
 </script>
 </body>
 </html>
