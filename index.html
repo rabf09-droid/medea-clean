@@ -254,14 +254,14 @@ html,body{overflow-x:hidden;width:100%;background:#f5f7fa;min-height:100vh}
   </div>
   <div id="adminPanel" class="hidden">
     <div style="background:#e8f5e9;padding:12px;border-radius:10px;margin-bottom:12px;text-align:center;color:#2E7D32;font-weight:700" data-key="supervisorMode">✓ وضع المشرف مفعل</div>
-    <button class="btn bg" onclick="showReportsPage()">📊 <span data-key="viewReports">عرض البلاغات</span></button>
+    <button class="btn bg" onclick="safeShowReports()">📊 <span data-key="viewReports">عرض البلاغات</span></button>
     <button class="btn by" onclick="manageStaffPage()">👥 <span data-key="manageStaff">إدارة الموظفين</span></button>
     <button class="btn purple" onclick="showPage('tonnageRecords')">⚖️ سجل الكميات</button>
     <button class="btn bo" onclick="showPage('scheduleManager')">📅 إدارة الجدول</button>
     <button class="btn bb" onclick="showPage('adminRequests')">📋 طلبات المواطنين</button>
     <button class="btn bb" onclick="exportExcel()">📥 <span data-key="exportExcel">تصدير Excel</span></button>
     <button class="btn br" onclick="logoutAdmin()" data-key="logout">✕ خروج</button>
-    <button class="btn bx" style="margin-top:10px;font-size:0.8rem" onclick="clearAllData()">⚠️ مسح كل البيانات (إصلاح)</button>
+    <button class="btn bx" style="margin-top:10px;font-size:0.8rem;background:#ff5722" onclick="emergencyClearData()">🚨 طوارئ: مسح البيانات التالفة</button>
   </div>
   <button class="btn bx" onclick="showPage('home')">← <span data-key="back">رجوع</span></button>
 </div>
@@ -505,13 +505,16 @@ function updateTime(){
   }catch(e){console.log('Time update error:',e);}
 }
 
-// === تحميل وحفظ البيانات ===
+// === تحميل وحفظ البيانات (مُحسّن لمنع التعليق) ===
 function loadReports(){
   try{
     const data = localStorage.getItem('medea_reports');
     if(data) {
       allReports = JSON.parse(data);
-      if(!Array.isArray(allReports)) allReports = [];
+      if(!Array.isArray(allReports)) {
+        console.error('Reports data is not an array');
+        allReports = [];
+      }
     } else {
       allReports = [];
     }
@@ -522,11 +525,40 @@ function loadReports(){
   }
 }
 
-function saveReport(r){allReports.push(r);try{localStorage.setItem('medea_reports',JSON.stringify(allReports));}catch(e){}updateStats();updatePublicStats();}
-function updateReport(id,upd){const i=allReports.findIndex(x=>x.id==id);if(i!==-1){allReports[i]={...allReports[i],...upd};try{localStorage.setItem('medea_reports',JSON.stringify(allReports));}catch(e){}updateStats();if(document.getElementById('reportsPage').classList.contains('active')) showReportsPage();}}
+function saveReport(r){
+  try{
+    allReports.push(r);
+    localStorage.setItem('medea_reports',JSON.stringify(allReports));
+    updateStats();
+    updatePublicStats();
+  }catch(e){
+    console.error('Save report error:',e);
+    showToast('⚠️ خطأ في الحفظ','error');
+  }
+}
+
+function updateReport(id,upd){  try{
+    const i=allReports.findIndex(x=>x.id==id);
+    if(i!==-1){
+      allReports[i]={...allReports[i],...upd};
+      localStorage.setItem('medea_reports',JSON.stringify(allReports));
+      updateStats();
+      if(document.getElementById('reportsPage').classList.contains('active')) showReportsPage();
+    }
+  }catch(e){
+    console.error('Update report error:',e);
+  }
+}
 
 // === الإحصائيات ===
-function updateStats(){try{document.getElementById('statTotal').textContent=allReports.length;document.getElementById('statDone').textContent=allReports.filter(r=>r.status==='done').length;document.getElementById('statPending').textContent=allReports.filter(r=>r.status!=='done').length;if(document.getElementById('dashboard').classList.contains('active')) renderChart();}catch(e){}}
+function updateStats(){
+  try{
+    document.getElementById('statTotal').textContent=allReports.length;
+    document.getElementById('statDone').textContent=allReports.filter(r=>r.status==='done').length;
+    document.getElementById('statPending').textContent=allReports.filter(r=>r.status!=='done').length;
+    if(document.getElementById('dashboard').classList.contains('active')) renderChart();
+  }catch(e){console.log('Update stats error:',e);}
+}
 
 // === التنقل بين الصفحات ===
 function showPage(id){
@@ -537,7 +569,8 @@ function showPage(id){
     if(id==='dashboard') setTimeout(renderChart,100);
     if(id==='reportsPage') showReportsPage();
     if(id==='publicStats') updatePublicStats();
-    if(id==='schedule') displaySchedule();    if(id==='tonnageRecords') loadTonnageRecords();
+    if(id==='schedule') displaySchedule();
+    if(id==='tonnageRecords') loadTonnageRecords();
     if(id==='scheduleManager') loadScheduleSectors();
     if(id==='adminRequests') loadAdminRequests();
     if(id==='requests') loadMyRequests();
@@ -553,8 +586,7 @@ function startVoiceInput(){
     const recognition=new webkitSpeechRecognition();
     recognition.lang=currentLang==='ar'?'ar-DZ':currentLang==='fr'?'fr-FR':'en-US';
     recognition.onstart=()=>showToast('🎤 جاري الاستماع...');
-    recognition.onresult=(event)=>{document.getElementById('addrInput').value=event.results[0][0].transcript;showToast('✅ تم الإملاء');};
-    recognition.onerror=()=>showToast('⚠️ خطأ في الصوت','error');
+    recognition.onresult=(event)=>{document.getElementById('addrInput').value=event.results[0][0].transcript;showToast('✅ تم الإملاء');};    recognition.onerror=()=>showToast('⚠️ خطأ في الصوت','error');
     recognition.start();
   }catch(e){showToast('⚠️ خطأ في الصوت','error');}
 }
@@ -586,7 +618,8 @@ function getLocation(){
           addr.value=full;btn.innerHTML='📍 تحديد الموقع GPS';btn.disabled=false;
           showToast('✅ '+full);
         }).catch(()=>{addr.value='المدية (تقريبي)';btn.innerHTML='📍 تحديد الموقع GPS';btn.disabled=false;showToast('⚠️ عنوان تقريبي');});
-    },()=>{btn.innerHTML='📍 تحديد الموقع GPS';btn.disabled=false;showToast('⚠️ فشل تحديد الموقع','error');},{enableHighAccuracy:true,timeout:20000});  }catch(e){showToast('⚠️ خطأ في الموقع','error');}
+    },()=>{btn.innerHTML='📍 تحديد الموقع GPS';btn.disabled=false;showToast('⚠️ فشل تحديد الموقع','error');},{enableHighAccuracy:true,timeout:20000});
+  }catch(e){showToast('⚠️ خطأ في الموقع','error');}
 }
 
 function manualLocation(){const a=prompt('أدخل العنوان:','حي الزيتون - المدية');if(a){document.getElementById('addrInput').value=a;document.getElementById('gpsInput').value='36.2642, 2.7545';}}
@@ -602,8 +635,7 @@ function takePhoto(){
 
 // === إرسال البلاغ ===
 function sendReport(){
-  try{
-    const a=document.getElementById('addrInput').value.trim();
+  try{    const a=document.getElementById('addrInput').value.trim();
     if(!a){showToast('⚠️ أدخل العنوان','error');return;}
     const btn=document.getElementById('sendBtn'),orig=btn.innerHTML;
     btn.innerHTML='⏳ جاري...';btn.disabled=true;
@@ -621,7 +653,45 @@ function sendReport(){
 // === الإدارة ===
 function loginAdmin(){if(document.getElementById('adminCode').value==='1234'){document.getElementById('adminLogin').classList.add('hidden');document.getElementById('adminPanel').classList.remove('hidden');updateStats();showToast('✓ دخول ناجح');}else showToast('✗ رمز خاطئ','error');}
 function logoutAdmin(){document.getElementById('adminLogin').classList.remove('hidden');document.getElementById('adminPanel').classList.add('hidden');document.getElementById('adminName').value='';document.getElementById('adminCode').value='';showToast('✓ خروج');}
-function clearAllData(){if(confirm('⚠️ هل أنت متأكد؟ سيتم مسح كل البيانات لإصلاح المشاكل.')){localStorage.clear();location.reload();}}
+
+// === دالة آمنة لعرض البلاغات (الحل النهائي) ===
+function safeShowReports(){
+  try{
+    // فحص البيانات أولاً
+    if(!allReports || allReports.length===0){
+      showToast('لا توجد بلاغات لعرضها');
+      showPage('reportsPage');
+      document.getElementById('reportsList').innerHTML='<p style="text-align:center;color:#666;padding:40px">لا توجد بلاغات</p>';
+      return;
+    }
+    
+    // عرض البلاغات بشكل آمن
+    showPage('reportsPage');
+    applyFilters();
+    showToast('✅ تم تحميل البلاغات');
+  }catch(e){
+    console.error('Safe show reports error:',e);
+    showToast('⚠️ حدث خطأ. جرب مسح البيانات التالفة','error');
+    document.getElementById('reportsList').innerHTML='<div style="padding:20px;background:#ffebee;color:#c62828;border-radius:10px;text-align:center">⚠️ حدث خطأ في عرض البلاغات<br><button class="btn br" style="margin-top:10px" onclick="emergencyClearData()">🚨 مسح البيانات التالفة</button></div>';
+  }
+}
+
+// === طوارئ: مسح البيانات التالفة ===
+function emergencyClearData(){
+  if(confirm('⚠️ تحذير: سيتم مسح جميع البلاغات والبيانات!\nهل أنت متأكد؟')){
+    try{
+      localStorage.removeItem('medea_reports');
+      localStorage.removeItem('medea_tonnage');
+      localStorage.removeItem('medea_requests');
+      localStorage.removeItem('medea_schedule');
+      allReports=[];      updateStats();
+      showToast('✅ تم مسح البيانات التالفة');
+      setTimeout(()=>location.reload(),1000);
+    }catch(e){
+      showToast('⚠️ خطأ في المسح','error');
+    }
+  }
+}
 
 // === السائقين ===
 function loginDriver(){
@@ -635,7 +705,8 @@ function loginDriver(){
     const sectors=JSON.parse(localStorage.getItem('medea_schedule')||'[]');
     const sector=sectors.find(s=>s.driver===n);
     currentDriverSector=sector?sector.num:'غير محدد';
-    document.getElementById('driverLogin').classList.add('hidden');    document.getElementById('driverPanel').classList.remove('hidden');
+    document.getElementById('driverLogin').classList.add('hidden');
+    document.getElementById('driverPanel').classList.remove('hidden');
     renderDriverTasks();
     showToast('✓ مرحباً '+n);
   }else showToast('❌ غير مسجل','error');
@@ -662,8 +733,7 @@ function saveDriverTonnage(){
       id:Date.now(),
       driver:currentDriver,
       sector:currentDriverSector,
-      weight:parseFloat(weight),
-      regNum:regNum,
+      weight:parseFloat(weight),      regNum:regNum,
       date:now.toLocaleDateString('ar-DZ'),
       time:now.toLocaleTimeString('ar-DZ')
     });
@@ -682,13 +752,13 @@ function downloadReportText(id){const r=allReports.find(x=>x.id==id);if(!r){show
 // === بيانات تجريبية ===
 function loadDemoData(){if(!confirm('تحميل بيانات تجريبية؟'))return;[{id:1001,addr:'حي الزيتون - شارع الشهداء - المدية',gps:'36.2642, 2.7545',image:'https://via.placeholder.com/300x200/f44336/fff?text=قبل',doneImage:'https://via.placeholder.com/300x200/4CAF50/fff?text=بعد',date:'2026-04-10',time:'09:30',doneTime:'2026-04-10 11:15',status:'done',driverName:'أحمد'},{id:1002,addr:'وسط المدينة - شارع الاستقلال - المدية',gps:'36.2650, 2.7550',image:'https://via.placeholder.com/300x200/f44336/fff?text=قبل',doneImage:null,date:'2026-04-11',time:'14:20',doneTime:null,status:'assigned',driverName:'محمد'}].forEach(r=>saveReport(r));showToast('✅ تم التحميل');showReportsPage();}
 
-// === عرض البلاغات ===
+// === عرض البلاغات (مُحسّن) ===
 function showReportsPage(){
-  try{    showPage('reportsPage');
+  try{
     applyFilters();
   }catch(e){
     console.error('Show reports error:',e);
-    document.getElementById('reportsList').innerHTML='<div style="padding:20px;background:#ffebee;color:#c62828;border-radius:10px;text-align:center">⚠️ حدث خطأ أثناء عرض البلاغات. جرب تحديث الصفحة.</div>';
+    document.getElementById('reportsList').innerHTML='<div style="padding:20px;background:#ffebee;color:#c62828;border-radius:10px;text-align:center">⚠️ حدث خطأ أثناء عرض البلاغات.<br><button class="btn br" style="margin-top:10px" onclick="emergencyClearData()">🚨 مسح البيانات التالفة</button></div>';
   }
 }
 
@@ -709,7 +779,15 @@ function renderReportsList(reps){
   try{
     const c=document.getElementById('reportsList');
     if(!reps || reps.length===0){c.innerHTML='<p style="text-align:center;color:#666;padding:40px">لا توجد بلاغات</p>';return;}
-    c.innerHTML=reps.map(r=>{
+    
+    // عرض أول 50 بلاغ فقط لمنع التعليق
+    const displayReports=reps.slice(0,50);
+    if(reps.length>50){      c.innerHTML=`<div style="background:#fff3cd;padding:10px;border-radius:8px;margin-bottom:10px;text-align:center;color:#856404">يتم عرض أول 50 بلاغ فقط من أصل ${reps.length}</div>`;
+    }else{
+      c.innerHTML='';
+    }
+    
+    c.innerHTML+=displayReports.map(r=>{
       if(!r) return '';
       const d1=r.image?`<button class="download-btn" onclick="downloadImage('${r.image}','before_${r.id}.jpg')">⬇️ تحميل صورة قبل</button>`:'';
       const d2=r.doneImage?`<button class="download-btn" onclick="downloadImage('${r.doneImage}','after_${r.id}.jpg')">⬇️ تحميل صورة بعد</button>`:'';
@@ -723,7 +801,7 @@ function renderReportsList(reps){
     }).join('');
   }catch(e){
     console.error('Render list error:',e);
-    document.getElementById('reportsList').innerHTML='<div style="padding:20px;background:#ffebee;color:#c62828;border-radius:10px;text-align:center">⚠️ خطأ في عرض البيانات. جرب مسح البيانات من لوحة التحكم.</div>';
+    document.getElementById('reportsList').innerHTML='<div style="padding:20px;background:#ffebee;color:#c62828;border-radius:10px;text-align:center">⚠️ خطأ في عرض البيانات.<br><button class="btn br" style="margin-top:10px" onclick="emergencyClearData()">🚨 مسح البيانات التالفة</button></div>';
   }
 }
 
@@ -733,7 +811,8 @@ function showQR(id){
     const r=allReports.find(x=>x.id==id);
     if(!r){showToast('⚠️ غير موجود','error');return;}
     document.getElementById('qrModal').style.display='flex';
-    document.getElementById('qrReportId').textContent=r.id;    const qc=document.getElementById('qrcode');qc.innerHTML='';
+    document.getElementById('qrReportId').textContent=r.id;
+    const qc=document.getElementById('qrcode');qc.innerHTML='';
     if(typeof QRCode!=='undefined'){try{new QRCode(qc,{text:String(r.id),width:200,height:200,colorDark:'#1B5E20',colorLight:'#ffffff',correctLevel:QRCode.CorrectLevel.M});}catch(e){qc.innerHTML='<div style="color:red;padding:20px">⚠️ فشل QR</div>';}}
     else{qc.innerHTML='<div style="color:red;padding:20px">⚠️ المكتبة غير محملة</div>';}
   }catch(e){showToast('⚠️ خطأ في QR','error');}
@@ -752,8 +831,7 @@ function assignDriver(id){
     updateReport(id,{driverName:f.name,status:'assigned'});
     showToast('✅ تم التوجيه لـ '+f.name);
     showReportsPage();
-  }catch(e){showToast('⚠️ خطأ في التوجيه','error');}
-}
+  }catch(e){showToast('⚠️ خطأ في التوجيه','error');}}
 
 function deleteReport(id){if(!confirm('حذف البلاغ؟'))return;allReports=allReports.filter(r=>r.id!=id);try{localStorage.setItem('medea_reports',JSON.stringify(allReports));}catch(e){}showReportsPage();updateStats();updatePublicStats();showToast('✅ تم الحذف');}
 
@@ -782,7 +860,8 @@ function backToAdmin(){showPage('admin');}
 // === مهام السائق والتقييم ===
 function renderDriverTasks(){try{const t=allReports.filter(r=>r.driverName===currentDriver&&r.status!=='done');const c=document.getElementById('tasksList');if(!t.length){c.innerHTML='<p style="text-align:center;color:#4CAF50;padding:40px">✓ لا توجد مهام</p>';return;}c.innerHTML=t.map(x=>{const img=x.image?`<div class="img-container"><img src="${x.image}"><div class="img-label">📷 صورة البلاغ (${x.date} ${x.time})</div></div>`:'';const map=x.gps?`<a href="https://www.google.com/maps/dir/?api=1&destination=${x.gps.split(',')[0]},${x.gps.split(',')[1]}" target="_blank" class="btn map-btn">🗺️ الدخول للخريطة</a>`:'';const stars=`<div class="star-rating" id="stars-${x.id}"><span class="star" onclick="rateTask(${x.id},1)">★</span><span class="star" onclick="rateTask(${x.id},2)">★</span><span class="star" onclick="rateTask(${x.id},3)">★</span><span class="star" onclick="rateTask(${x.id},4)">★</span><span class="star" onclick="rateTask(${x.id},5)">★</span></div>`;return`<div class="report-card assigned"><div class="info-row"><b>📍 العنوان:</b> ${x.addr}</div><div class="info-row"><b>🌍 GPS:</b> ${x.gps}</div>${img}<p style="font-size:0.8rem;color:#666;margin:5px 0">قيم جودة الإنجاز:</p>${stars}<button class="btn bo" onclick="driverTakePhoto(${x.id})" style="margin:10px 0">📷 أخذ صورة بعد التنفيذ</button>${map}<button class="btn bg" onclick="completeTask(${x.id})" style="margin-top:10px">✅ تأكيد الإنجاز</button></div>`;}).join('');}catch(e){console.log('Driver tasks error:',e);}}
 function rateTask(id,stars){try{const i=allReports.findIndex(r=>r.id==id);if(i!==-1){allReports[i].rating=stars;try{localStorage.setItem('medea_reports',JSON.stringify(allReports));}catch(e){}document.querySelectorAll(`#stars-${id} .star`).forEach((s,idx)=>{s.classList.toggle('active',idx<stars);});showToast(`⭐ تقييم: ${stars}/5`);}}catch(e){}}
-function driverTakePhoto(id){try{const i=document.createElement('input');i.type='file';i.accept='image/*';i.capture='environment';i.onchange=e=>{if(e.target.files[0]){const r=new FileReader();r.onload=ev=>{tempAfterImage=ev.target.result;showToast('✓ تم حفظ الصورة');};r.readAsDataURL(e.target.files[0]);}};i.click();}catch(e){showToast('⚠️ خطأ في الكاميرا','error');}}function completeTask(id){try{if(!tempAfterImage&&!confirm('لم يتم التصوير. متابعة؟'))return;const u={status:'done',doneTime:new Date().toLocaleString('ar-DZ')};if(tempAfterImage)u.doneImage=tempAfterImage;updateReport(id,u);tempAfterImage=null;showToast('✅ تم الإنجاز!');renderDriverTasks();updateStats();updatePublicStats();}catch(e){showToast('⚠️ خطأ في الإنجاز','error');}}
+function driverTakePhoto(id){try{const i=document.createElement('input');i.type='file';i.accept='image/*';i.capture='environment';i.onchange=e=>{if(e.target.files[0]){const r=new FileReader();r.onload=ev=>{tempAfterImage=ev.target.result;showToast('✓ تم حفظ الصورة');};r.readAsDataURL(e.target.files[0]);}};i.click();}catch(e){showToast('⚠️ خطأ في الكاميرا','error');}}
+function completeTask(id){try{if(!tempAfterImage&&!confirm('لم يتم التصوير. متابعة؟'))return;const u={status:'done',doneTime:new Date().toLocaleString('ar-DZ')};if(tempAfterImage)u.doneImage=tempAfterImage;updateReport(id,u);tempAfterImage=null;showToast('✅ تم الإنجاز!');renderDriverTasks();updateStats();updatePublicStats();}catch(e){showToast('⚠️ خطأ في الإنجاز','error');}}
 
 // === طلبات الخدمات ===
 function submitRequest(){
@@ -801,8 +880,7 @@ function submitRequest(){
   }catch(e){showToast('⚠️ خطأ في الطلب','error');}
 }
 
-function loadMyRequests(){
-  try{
+function loadMyRequests(){  try{
     const requests=JSON.parse(localStorage.getItem('medea_requests')||'[]');
     const list=document.getElementById('myRequestsList');
     if(!requests.length){
@@ -831,7 +909,8 @@ function loadAdminRequests(){
     list.innerHTML=requests.slice().reverse().map(r=>`
       <div class="tonnage-card">
         <div class="tonnage-info"><b>📝 النوع:</b> ${r.type==='bin'?'حاوية جديدة':r.type==='repair'?'صيانة':r.type==='clean'?'تنظيف':'أخر'}</div>
-        <div class="tonnage-info"><b>📍 الموقع:</b> ${r.location}</div>        <div class="tonnage-info"><b>📝 التفاصيل:</b> ${r.desc}</div>
+        <div class="tonnage-info"><b>📍 الموقع:</b> ${r.location}</div>
+        <div class="tonnage-info"><b>📝 التفاصيل:</b> ${r.desc}</div>
         <div class="tonnage-info"><b>📅 التاريخ:</b> ${r.date} ${r.time}</div>
         <div class="tonnage-info"><b>📊 الحالة:</b> <span style="color:${r.status==='pending'?'#FF9800':'#4CAF50'}">${r.status==='pending'?'قيد المراجعة':'تمت المعالجة'}</span></div>
         ${r.status==='pending'?`<button class="btn bg" style="margin-top:10px;padding:8px" onclick="processRequest(${r.id})">✅ معالجة الطلب</button>`:''}
@@ -850,8 +929,7 @@ function processRequest(id){
       showToast('✅ تمت معالجة الطلب');
       loadAdminRequests();
     }
-  }catch(e){showToast('⚠️ خطأ في المعالجة','error');}
-}
+  }catch(e){showToast('⚠️ خطأ في المعالجة','error');}}
 
 function loadRequests(){loadMyRequests();}
 
@@ -880,7 +958,8 @@ function loadTonnageRecords(){
     list.innerHTML=records.slice().reverse().map(r=>`
       <div class="tonnage-card">
         <div class="tonnage-info"><b>🚛 السائق:</b> ${r.driver||'غير محدد'}</div>
-        <div class="tonnage-info"><b>🏷️ القطاع:</b> ${r.sector||'-'}</div>        <div class="tonnage-info"><b>⚖️ الوزن:</b> <span style="color:#FF9800;font-weight:bold">${r.weight} طن</span></div>
+        <div class="tonnage-info"><b>🏷️ القطاع:</b> ${r.sector||'-'}</div>
+        <div class="tonnage-info"><b>⚖️ الوزن:</b> <span style="color:#FF9800;font-weight:bold">${r.weight} طن</span></div>
         <div class="tonnage-info"><b>🔢 رقم التسجيل:</b> ${r.regNum}</div>
         <div class="tonnage-info"><b>📅 التاريخ:</b> ${r.date}</div>
         <div class="tonnage-info"><b>🕐 الوقت:</b> ${r.time}</div>
@@ -900,7 +979,6 @@ function exportTonnageToExcel(){
     showToast('✅ تم التصدير');
   }catch(e){showToast('⚠️ خطأ في التصدير','error');}
 }
-
 function printTonnage(){window.print();}
 
 // === نظام إدارة جدول جمع النفايات ===
@@ -929,6 +1007,7 @@ function addScheduleSector(){
     loadScheduleSectors();
   }catch(e){showToast('⚠️ خطأ في الإضافة','error');}
 }
+
 function loadScheduleSectors(){
   try{
     const sectors=JSON.parse(localStorage.getItem('medea_schedule')||'[]');
@@ -948,8 +1027,7 @@ function loadScheduleSectors(){
         <div class="tonnage-info"><b>👤 السائق:</b> ${s.driver||'-'} ${s.phone?`<a href="tel:${s.phone}" class="phone-link">📞 ${s.phone}</a>`:''}</div>
         <button class="btn br" style="margin-top:10px;padding:8px" onclick="deleteScheduleSector(${s.id})">🗑️ حذف</button>
       </div>
-    `).join('');
-  }catch(e){console.log('Load schedule error:',e);}
+    `).join('');  }catch(e){console.log('Load schedule error:',e);}
 }
 
 function deleteScheduleSector(id){
@@ -979,6 +1057,7 @@ function loadSchedule(){
     display.innerHTML=html;
   }catch(e){console.log('Load schedule error:',e);}
 }
+
 function displaySchedule(){loadSchedule();}
 </script>
 </body>
