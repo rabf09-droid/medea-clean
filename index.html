@@ -3,7 +3,10 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>المدية نظيفة 2026 - منصة التدوير الذكية</title>
+<title>المدية نظيفة 2026 - تتبع ذكي</title>
+<!-- Leaflet CSS للخرائط -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 <style>
@@ -44,10 +47,10 @@ html,body{overflow-x:hidden;width:100%;background:#f5f7fa;min-height:100vh}
 .map-btn{background:#14213D;margin-bottom:8px}
 .voice-btn{background:#e91e63}
 .cd{background:#fff;border-radius:15px;padding:15px;margin:15px 0;box-shadow:0 4px 15px rgba(0,0,0,0.08);border:1px solid #eee}
-.mb{height:140px;font-size:1.4rem;flex-direction:column}
-.g2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.mb{height:140px;font-size:1.4rem;flex-direction:column}.g2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
 .g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
-.sb2{height:60px}.ft{background:#fff;padding:15px;text-align:center;border-top:3px solid #D4AF37;margin-top:20px;font-size:0.85rem;color:#666}
+.sb2{height:60px}
+.ft{background:#fff;padding:15px;text-align:center;border-top:3px solid #D4AF37;margin-top:20px;font-size:0.85rem;color:#666}
 .in{width:100%;padding:12px;border:2px solid #e0e0e0;border-radius:10px;margin:10px 0;text-align:center;font-size:1rem}
 .in:focus{border-color:#1B5E20;outline:none}.in:disabled{background:#f0f0f0;color:#666}
 .cam-box{height:200px;background:#f9f9f9;border:2px dashed #ccc;border-radius:12px;display:flex;align-items:center;justify-content:center;margin-bottom:15px;cursor:pointer;position:relative;overflow:hidden}
@@ -93,10 +96,10 @@ html,body{overflow-x:hidden;width:100%;background:#f5f7fa;min-height:100vh}
 .staff-item{background:#f8f9fa;padding:12px;border-radius:10px;margin-bottom:10px;display:flex;justify-content:space-between;align-items:center}
 .action-btns{display:flex;gap:8px}
 .edit-btn{background:#f39c12;color:#fff;border:none;width:30px;height:30px;border-radius:50%;cursor:pointer;font-size:1rem;display:flex;align-items:center;justify-content:center}
-.delete-btn{background:#d21034;color:#fff;border:none;width:30px;height:30px;border-radius:50%;cursor:pointer;font-size:1rem;display:flex;align-items:center;justify-content:center}
-#toast-container{position:fixed;top:40px;left:10px;right:10px;z-index:10001;display:flex;flex-direction:column;gap:5px;pointer-events:none}
+.delete-btn{background:#d21034;color:#fff;border:none;width:30px;height:30px;border-radius:50%;cursor:pointer;font-size:1rem;display:flex;align-items:center;justify-content:center}#toast-container{position:fixed;top:40px;left:10px;right:10px;z-index:10001;display:flex;flex-direction:column;gap:5px;pointer-events:none}
 .toast{background:rgba(255,255,255,0.95);padding:12px 15px;border-radius:10px;box-shadow:0 4px 15px rgba(0,0,0,0.2);border-right:4px solid #1B5E20;animation:slideIn 0.3s;font-size:0.9rem;color:#333;display:flex;align-items:center;gap:10px}
-@keyframes slideIn{from{transform:translateY(-20px);opacity:0}to{transform:translateY(0);opacity:1}}.star-rating{display:flex;justify-content:center;gap:5px;font-size:1.5rem;color:#ddd;cursor:pointer;margin:10px 0}
+@keyframes slideIn{from{transform:translateY(-20px);opacity:0}to{transform:translateY(0);opacity:1}}
+.star-rating{display:flex;justify-content:center;gap:5px;font-size:1.5rem;color:#ddd;cursor:pointer;margin:10px 0}
 .star-rating .star.active{color:#FFD700}
 .points-badge{background:linear-gradient(135deg,#FFD700,#FFA500);color:#fff;padding:5px 15px;border-radius:20px;font-weight:bold;font-size:0.9rem;display:inline-flex;align-items:center;gap:5px}
 .tip-card{background:#e8f5e9;padding:12px;border-radius:10px;margin-bottom:10px;border-right:3px solid #4CAF50;font-size:0.9rem}
@@ -142,10 +145,17 @@ html,body{overflow-x:hidden;width:100%;background:#f5f7fa;min-height:100vh}
 .track-timeline{position:relative;padding-left:30px;margin:15px 0}
 .track-timeline::before{content:'';position:absolute;left:8px;top:0;bottom:0;width:2px;background:#ddd}
 .track-step{position:relative;padding:10px 0;padding-left:25px}
-.track-step::before{content:'';position:absolute;left:-4px;top:15px;width:12px;height:12px;border-radius:50%;background:#1B5E20;border:3px solid #fff;box-shadow:0 0 0 2px #1B5E20}
-.track-step.done::before{background:#4CAF50}
+.track-step::before{content:'';position:absolute;left:-4px;top:15px;width:12px;height:12px;border-radius:50%;background:#1B5E20;border:3px solid #fff;box-shadow:0 0 0 2px #1B5E20}.track-step.done::before{background:#4CAF50}
 .track-step.pending::before{background:#FF9800}
-</style></head>
+
+/* === أنماط جديدة للخرائط والتتبع === */
+#map{height:400px;width:100%;border-radius:12px;margin:15px 0;z-index:1}
+.truck-marker{background:#1B5E20;color:#fff;padding:5px 10px;border-radius:8px;font-weight:bold;box-shadow:0 2px 8px rgba(0,0,0,0.3)}
+.bin-collected{background:#4CAF50;color:#fff;padding:8px 15px;border-radius:20px;margin:5px 0;text-align:center;font-weight:bold}
+.live-tracking{background:#ff5722;color:#fff;padding:10px;border-radius:10px;text-align:center;margin:10px 0;animation:pulse 2s infinite}
+.notification-badge{position:fixed;top:80px;right:10px;background:#ff5722;color:#fff;padding:10px 15px;border-radius:20px;box-shadow:0 4px 15px rgba(0,0,0,0.3);z-index:1000;cursor:pointer;animation:slideIn 0.3s}
+</style>
+</head>
 <body>
 
 <div id="splash">
@@ -184,8 +194,7 @@ html,body{overflow-x:hidden;width:100%;background:#f5f7fa;min-height:100vh}
 </div>
 
 <div id="thanksOverlay">
-  <div style="font-size:4rem;margin-bottom:15px">❤️</div>
-  <h1 style="font-size:2rem;margin-bottom:10px" data-key="thanksTitle">شكراً لكم!</h1>
+  <div style="font-size:4rem;margin-bottom:15px">❤️</div>  <h1 style="font-size:2rem;margin-bottom:10px" data-key="thanksTitle">شكراً لكم!</h1>
   <p style="font-size:1rem;margin-bottom:20px" data-key="thanksMsg">تم إرسال بلاغكم بنجاح</p>
   <div style="padding:10px 30px;border:2px solid #FFD700;border-radius:30px;font-weight:700;background:rgba(255,255,255,0.2)" data-key="slogan">♻️ معاً لمدية خضراء 2026</div>
 </div>
@@ -194,7 +203,8 @@ html,body{overflow-x:hidden;width:100%;background:#f5f7fa;min-height:100vh}
   <button class="btn bg mb" onclick="showPage('report')"><span style="font-size:2.5rem">🚚</span><br><span data-key="sendReport">إرسال تبليغ</span></button>
   <div class="cd" style="border-color:#667eea;background:#f8f9ff">
     <h3 style="text-align:center;margin-bottom:10px;color:#667eea" data-key="displayTools">🎬 أدوات العرض</h3>
-    <div class="g2">      <button class="btn demo-btn" onclick="loadDemoData()">🎲 <span data-key="demoData">بيانات تجريبية</span></button>
+    <div class="g2">
+      <button class="btn demo-btn" onclick="loadDemoData()">🎲 <span data-key="demoData">بيانات تجريبية</span></button>
       <button class="btn print-btn" onclick="openPrintDialog()">🖨️ <span data-key="print">طباعة PDF</span></button>
     </div>
     <button class="btn purple" onclick="showPage('dashboard')" style="margin-top:10px">📊 <span data-key="dashboard">لوحة الإحصائيات</span></button>
@@ -225,6 +235,33 @@ html,body{overflow-x:hidden;width:100%;background:#f5f7fa;min-height:100vh}
   </div>
 </div>
 
+<!-- صفحة جديدة: تتبع الشاحنة المباشر -->
+<div id="truckTracking" class="page">
+  <h2 style="margin-bottom:15px;color:#1B5E20;text-align:center">🚚 تتبع مسار الشاحنة</h2>
+  
+  <div class="cd">
+    <h3 style="margin-bottom:10px">📍 المعلومات الحالية</h3>
+    <div class="info-row"><b>👤 السائق:</b> <span id="trackingDriverName">-</span></div>
+    <div class="info-row"><b>🏷️ رقم القطاع:</b> <span id="trackingSector">-</span></div>
+    <div class="info-row"><b>📅 التاريخ:</b> <span id="trackingDate">-</span></div>    <div class="info-row"><b>🕐 الوقت:</b> <span id="trackingTime">-</span></div>
+    <div class="info-row"><b>🗑️ الحاويات المجمعة:</b> <span id="collectedBinsCount" style="color:#4CAF50;font-weight:bold">0</span></div>
+  </div>
+
+  <div class="live-tracking" id="liveTrackingStatus">
+    🔴 التتبع المباشر نشط
+  </div>
+
+  <div id="map"></div>
+
+  <div class="cd">
+    <h3 style="margin-bottom:10px">🎯 سجل الحاويات المجمعة</h3>
+    <div id="collectedBinsList"></div>
+  </div>
+
+  <button class="btn bx" onclick="showPage('home')">← رجوع</button>
+</div>
+
+<!-- باقي الصفحات كما هي... -->
 <div id="report" class="page">
   <h2 style="margin-bottom:15px;color:#1B5E20;text-align:center" data-key="newReport">📝 بلاغ جديد</h2>
   <div class="cd">
@@ -243,7 +280,8 @@ html,body{overflow-x:hidden;width:100%;background:#f5f7fa;min-height:100vh}
       <option value="plastic" data-key="wastePlastic">🧴 بلاستيك</option>
       <option value="metal" data-key="wasteMetal">⚙️ معادن</option>
       <option value="paper" data-key="wastePaper">📄 ورق/كرتون</option>
-      <option value="glass" data-key="wasteGlass">🥃 زجاج</option>    </select>
+      <option value="glass" data-key="wasteGlass">🥃 زجاج</option>
+    </select>
     <label style="display:flex;align-items:center;gap:8px;margin:10px 0;font-size:0.9rem;color:#555">
       <input type="checkbox" id="recurringCheck"> <span data-key="recurring">🔁 بلاغ متكرر أسبوعياً</span>
     </label>
@@ -254,8 +292,7 @@ html,body{overflow-x:hidden;width:100%;background:#f5f7fa;min-height:100vh}
 
 <div id="sortingCenter" class="page">
   <h2 style="margin-bottom:15px;color:#2E7D32;text-align:center" data-key="sortingCenter">🏭 مركز الفرز التقني</h2>
-  <div class="cd">
-    <h3 style="margin-bottom:10px" data-key="valueChain">🔗 تتبع سلسلة القيمة</h3>
+  <div class="cd">    <h3 style="margin-bottom:10px" data-key="valueChain">🔗 تتبع سلسلة القيمة</h3>
     <div class="track-timeline">
       <div class="track-step done" data-key="stepPickup">📍 نقطة الرفع</div>
       <div class="track-step done" data-key="stepTransport">🚚 النقل</div>
@@ -292,7 +329,8 @@ html,body{overflow-x:hidden;width:100%;background:#f5f7fa;min-height:100vh}
     <h3 style="margin-bottom:10px" data-key="sortedMaterials">📦 المواد المصنفة المتاحة</h3>
     <div id="sortedMaterialsList"></div>
     <button class="btn purple" onclick="publishToMarket()" style="margin-top:10px" data-key="publishToMarket">🚀 نشر في سوق التدوير</button>
-  </div>  <button class="btn bx" onclick="showPage('home')">← <span data-key="back">رجوع</span></button>
+  </div>
+  <button class="btn bx" onclick="showPage('home')">← <span data-key="back">رجوع</span></button>
 </div>
 
 <div id="recyclingMarket" class="page">
@@ -303,8 +341,7 @@ html,body{overflow-x:hidden;width:100%;background:#f5f7fa;min-height:100vh}
         <option value="all" data-key="allTypes">📦 جميع الأنواع</option>
         <option value="plastic" data-key="wastePlastic">🧴 بلاستيك</option>
         <option value="metal" data-key="wasteMetal">⚙️ معادن</option>
-        <option value="paper" data-key="wastePaper">📄 ورق</option>
-        <option value="glass" data-key="wasteGlass">🥃 زجاج</option>
+        <option value="paper" data-key="wastePaper">📄 ورق</option>        <option value="glass" data-key="wasteGlass">🥃 زجاج</option>
         <option value="organic" data-key="wasteOrganic">🍂 عضوي</option>
       </select>
       <select class="in" id="marketFilterQuality" onchange="filterMarket()">
@@ -342,6 +379,7 @@ html,body{overflow-x:hidden;width:100%;background:#f5f7fa;min-height:100vh}
   <div class="tip-card">🗑️ <b data-key="tip4Title">استخدام الحاويات:</b> <span data-key="tip4Desc">ارمِ النفايات في الأماكن المخصصة فقط.</span></div>
   <button class="btn bx" onclick="showPage('home')">← <span data-key="back">رجوع</span></button>
 </div>
+
 <div id="requests" class="page">
   <h2 style="margin-bottom:15px;color:#1B5E20;text-align:center" data-key="myRequestsTitle">🛠️ طلباتي</h2>
   <div class="cd">
@@ -352,8 +390,7 @@ html,body{overflow-x:hidden;width:100%;background:#f5f7fa;min-height:100vh}
       <option value="other" data-key="reqOther">❓ طلب آخر</option>
     </select>
     <input type="text" class="in" id="reqDesc" data-ph="reqDetailsPlaceholder" placeholder="📝 تفاصيل الطلب">
-    <input type="text" class="in" id="reqLocation" data-ph="reqLocationPlaceholder" placeholder="📍 موقع الطلب">
-    <button class="btn bg" onclick="submitRequest()" data-key="submitRequestBtn">📤 إرسال الطلب</button>
+    <input type="text" class="in" id="reqLocation" data-ph="reqLocationPlaceholder" placeholder="📍 موقع الطلب">    <button class="btn bg" onclick="submitRequest()" data-key="submitRequestBtn">📤 إرسال الطلب</button>
   </div>
   <div class="cd" style="margin-top:15px">
     <h3 style="margin-bottom:10px" data-key="myPastRequestsTitle">📋 طلباتي السابقة</h3>
@@ -390,7 +427,8 @@ html,body{overflow-x:hidden;width:100%;background:#f5f7fa;min-height:100vh}
     <button class="btn by" onclick="manageStaffPage()">👥 <span data-key="manageStaff">إدارة الموظفين</span></button>
     <button class="btn purple" onclick="showPage('tonnageRecords')">⚖️ <span data-key="tonnageRecords">سجل الكميات</span></button>
     <button class="btn bo" onclick="showPage('scheduleManager')">📅 <span data-key="scheduleManager">إدارة الجدول</span></button>
-    <button class="btn green-recycle" onclick="showPage('sortingCenter')">🏭 <span data-key="sortingCenter">مركز الفرز</span></button>    <button class="btn market-btn" onclick="showPage('recyclingMarket')">♻️ <span data-key="recyclingMarket">سوق التدوير</span></button>
+    <button class="btn green-recycle" onclick="showPage('sortingCenter')">🏭 <span data-key="sortingCenter">مركز الفرز</span></button>
+    <button class="btn market-btn" onclick="showPage('recyclingMarket')">♻️ <span data-key="recyclingMarket">سوق التدوير</span></button>
     <button class="btn bb" onclick="exportExcel()">📥 <span data-key="exportExcel">تصدير Excel</span></button>
     <button class="btn print-btn" onclick="openPrintDialog()" style="margin-top:10px">🖨️ <span data-key="printPDF">طباعة PDF</span></button>
     <button class="btn br" onclick="logoutAdmin()" data-key="logout">✕ خروج</button>
@@ -401,8 +439,7 @@ html,body{overflow-x:hidden;width:100%;background:#f5f7fa;min-height:100vh}
 
 <div id="dashboard" class="page">
   <h2 style="margin-bottom:15px;color:#1B5E20;text-align:center" data-key="dashboard">📈 لوحة الإحصائيات</h2>
-  <div class="cd">
-    <h3 style="margin-bottom:12px;text-align:center" data-key="distribution">📊 توزيع حالات البلاغات</h3>
+  <div class="cd">    <h3 style="margin-bottom:12px;text-align:center" data-key="distribution">📊 توزيع حالات البلاغات</h3>
     <div class="chart-container">
       <div class="chart-visual" id="chartVisual"></div>
     </div>
@@ -439,7 +476,8 @@ html,body{overflow-x:hidden;width:100%;background:#f5f7fa;min-height:100vh}
   <button class="btn bx" onclick="backToAdmin()">← <span data-key="back">رجوع</span></button>
 </div>
 
-<div id="driver" class="page">  <div style="display:flex;justify-content:space-between;margin-bottom:15px"><h2 style="color:#1B5E20" data-key="driverArea">🚚 مساحة السائقين</h2></div>
+<div id="driver" class="page">
+  <div style="display:flex;justify-content:space-between;margin-bottom:15px"><h2 style="color:#1B5E20" data-key="driverArea">🚚 مساحة السائقين</h2></div>
   <div id="driverLogin" class="cd">
     <h3 style="margin-bottom:12px;text-align:center" data-key="driverLogin">🔐 دخول السائق</h3>
     <input type="text" id="driverName" class="in" data-ph="driverNamePlaceholder" placeholder="👤 أدخل اسمك">
@@ -447,6 +485,11 @@ html,body{overflow-x:hidden;width:100%;background:#f5f7fa;min-height:100vh}
   </div>
   <div id="driverPanel" class="hidden">
     <div style="background:#fff3e0;padding:12px;border-radius:10px;margin-bottom:12px;text-align:center;color:#FF9800" data-key="welcomeDriver">✓ مرحباً - مهامك جاهزة</div>
+    
+    <!-- زر جديد: تتبع المسار -->
+    <button class="btn bg" onclick="startTruckTracking()" style="margin-bottom:15px;background:linear-gradient(135deg,#ff5722,#f44336)">
+      📍 <span>بدء تتبع المسار</span>    </button>
+    
     <button class="btn bg" onclick="showPage('driverTonnage')" style="margin-bottom:15px">➕ <span data-key="registerWaste">تسجيل نفايات جديدة</span></button>
     <h3 style="margin-bottom:12px;color:#1B5E20" data-key="yourTasks">📋 مهامك</h3>
     <div id="tasksList"></div>
@@ -488,13 +531,13 @@ html,body{overflow-x:hidden;width:100%;background:#f5f7fa;min-height:100vh}
 </div>
 
 <div id="scheduleManager" class="page">
-  <h2 style="margin-bottom:15px;color:#1B5E20;text-align:center" data-key="scheduleManagerTitle">📅 إدارة جدول الجمع</h2>  <div class="cd">
+  <h2 style="margin-bottom:15px;color:#1B5E20;text-align:center" data-key="scheduleManagerTitle">📅 إدارة جدول الجمع</h2>
+  <div class="cd">
     <h3 style="margin-bottom:10px" data-key="addSector">➕ إضافة قطاع</h3>
     <input type="text" class="in" id="sectorNum" data-ph="sectorNumber" placeholder="🏷️ رقم القطاع">
     <select class="in" id="sectorType">
       <option value="بلدية" data-key="municipal">🏛️ خاص / بلدية</option>
-      <option value="خاص" data-key="private">🏠 خاص</option>
-    </select>
+      <option value="خاص" data-key="private">🏠 خاص</option>    </select>
     <input type="text" class="in" id="sectorName" data-ph="neighborhoods" placeholder="📍 الأحياء والشوارع">
     <input type="text" class="in" id="sectorDays" data-ph="days" placeholder="📅 الأيام (مثال: أحد-ثلاثاء-خميس)">
     <input type="text" class="in" id="sectorTime" data-ph="time" placeholder="🕐 وقت المرور (مثال: 07:00 - 09:00)">
@@ -537,13 +580,13 @@ html,body{overflow-x:hidden;width:100%;background:#f5f7fa;min-height:100vh}
         <div class="cd" style="background:#e8f5e9;text-align:center">
           <div style="font-size:1.8rem;font-weight:900;color:#2E7D32" id="resEnergy">0</div>
           <div style="font-size:0.8rem;color:#555" data-key="resEnergyUnit">كيلوواط ساعة طاقة</div>
-        </div>        <div class="cd" style="background:#fff3e0;text-align:center">
+        </div>
+        <div class="cd" style="background:#fff3e0;text-align:center">
           <div style="font-size:1.8rem;font-weight:900;color:#FF9800" id="resOil">0</div>
           <div style="font-size:0.8rem;color:#555" data-key="resOilUnit">لتر وقود حيوي/زيت</div>
         </div>
       </div>
-      <div class="cd" style="background:#e3f2fd;text-align:center;margin-top:10px">
-        <div style="font-size:1.5rem;font-weight:900;color:#1976D2" id="resCO2">0</div>
+      <div class="cd" style="background:#e3f2fd;text-align:center;margin-top:10px">        <div style="font-size:1.5rem;font-weight:900;color:#1976D2" id="resCO2">0</div>
         <div style="font-size:0.8rem;color:#555" data-key="resCO2Unit">طن CO₂ مُوفرة</div>
       </div>
     </div>
@@ -586,498 +629,17 @@ html,body{overflow-x:hidden;width:100%;background:#f5f7fa;min-height:100vh}
         <button class="btn back-btn" onclick="backToPrintOptions()" data-key="backOptions">↩️ رجوع</button>
       </div>
     </div>
-    <div class="print-actions" id="printDialogActions"><button class="btn bx" onclick="closePrintDialog()" data-key="close">✕ إغلاق</button></div>  </div>
+    <div class="print-actions" id="printDialogActions"><button class="btn bx" onclick="closePrintDialog()" data-key="close">✕ إغلاق</button></div>
+  </div>
 </div>
 
 <div class="ft">🛡️ <span data-key="footer">إعداد د. رابحي فتحي - مصلحة النظافة والوقاية الصحية - بلدية المدية 2026 ©</span></div>
 
-<script>
-// === قاموس الترجمات الشامل ===
-const translations = {
-  ar: {
-    appName: 'المدية نظيفة',
-    appSubtitle: 'مصلحة النظافة والوقاية الصحية<br>بلدية المدية 2026',
-    connected: '✓ متصل - النظام جاهز',
-    republic: '🇩🇿 الجمهورية الجزائرية الديمقراطية الشعبية',
-    service: '🧹 مصلحة النظافة والوقاية الصحية لبلدية المدية',
-    totalReports: 'إجمالي البلاغات',
-    completed: 'تم الإنجاز',
-    sorted: 'تم الفرز',
-    thanksTitle: 'شكراً لكم!',
-    thanksMsg: 'تم إرسال بلاغكم بنجاح',
-    slogan: '♻️ معاً لمدية خضراء 2026',
-    sendReport: 'إرسال تبليغ',
-    displayTools: '🎬 أدوات العرض',
-    demoData: 'بيانات تجريبية',
-    print: 'طباعة PDF',
-    dashboard: 'لوحة الإحصائيات',
-    exit: 'الخروج',
-    services: '✨ الخدمات',
-    scheduleTitle: 'جدول الجمع',
-    tipsTitle: '💡 توعية',
-    myRequestsTitle: '🛠️ طلباتي',
-    recyclingCalc: '♻️ حاسبة التدوير',
-    circularEconomy: '🔄 الاقتصاد الدائري',
-    sortingCenter: '🏭 مركز الفرز',
-    recyclingMarket: '🛒 سوق التدوير',
-    staffHall: '👥 الرواق',
-    drivers: 'السائقين',
-    admin: 'الإدارة',
-    newReport: '📝 بلاغ جديد',
-    takePhoto: '📷 التقاط الصورة',
-    getGPS: '📍 تحديد الموقع GPS',
-    manualLoc: '📍 إدخال يدوي',
-    addrPlaceholder: '📍 اسم الحي أو الشارع',
-    recurring: '🔁 بلاغ متكرر أسبوعياً',
-    sendNow: '✉️ إرسال البلاغ الآن',
-    back: 'رجوع',
-    wasteMixed: '🗑️ نفايات عامة',
-    wasteOrganic: '🍂 نفايات عضوية',
-    wastePlastic: '🧴 بلاستيك',
-    wasteMetal: '⚙️ معادن',
-    wastePaper: '📄 ورق/كرتون',    wasteGlass: '🥃 زجاج',
-    valueChain: '🔗 تتبع سلسلة القيمة',
-    stepPickup: '📍 نقطة الرفع',
-    stepTransport: '🚚 النقل',
-    stepSorting: '🏭 مركز الفرز',
-    stepRecycling: '♻️ إعادة التدوير',
-    stepMarket: '🏢 السوق',
-    registerWaste: '📥 تسجيل وارد جديد',
-    wasteSourcePlaceholder: '📍 مصدر النفايات (حي/منطقة)',
-    wasteQtyPlaceholder: '⚖️ الكمية بالطن',
-    truckNumberPlaceholder: '🚚 رقم الشاحنة',
-    qualityExcellent: '⭐ جودة عالية - تدوير مباشر',
-    qualityGood: '👍 جودة جيدة - معالجة بسيطة',
-    qualityFair: '⚠️ جودة متوسطة - فرز إضافي',
-    qualityPoor: '❌ غير قابلة للتدوير',
-    wasteNotesPlaceholder: '📝 ملاحظات (نوع البلاستيك، درجة التلوث...)',
-    registerBtn: '✅ تسجيل الوارد',
-    sortedMaterials: '📦 المواد المصنفة المتاحة',
-    publishToMarket: '🚀 نشر في سوق التدوير',
-    allTypes: '📦 جميع الأنواع',
-    allQualities: '⭐ جميع الجودات',
-    requestFormTitle: '📝 طلب الاستفادة من المادة',
-    companyNamePlaceholder: '🏢 اسم المؤسسة/الشركة',
-    companyLicensePlaceholder: '📄 رقم السجل التجاري',
-    companyPhonePlaceholder: '📞 رقم التواصل',
-    requestQtyPlaceholder: '⚖️ الكمية المطلوبة (طن)',
-    requestPurposePlaceholder: '🎯 غرض الاستخدام (إعادة تدوير، تصنيع...)',
-    submitRequest: '📤 إرسال الطلب',
-    cancel: '✕ إلغاء',
-    tip1Title: 'الفرز من المصدر:',
-    tip1Desc: 'افصل البلاستيك عن الورق لتسهيل إعادة التدوير.',
-    tip2Title: 'لا للرمي العشوائي:',
-    tip2Desc: 'حافظ على نظافة شوارعك، النظافة من الإيمان.',
-    tip3Title: 'تقليل الأكياس:',
-    tip3Desc: 'استخدم أكياس قماشية قابلة لإعادة الاستخدام.',
-    tip4Title: 'استخدام الحاويات:',
-    tip4Desc: 'ارمِ النفايات في الأماكن المخصصة فقط.',
-    reqBin: '🗑️ طلب حاوية جديدة',
-    reqRepair: '🔧 صيانة حاوية تالفة',
-    reqClean: '🧹 طلب تنظيف استثنائي',
-    reqOther: '❓ طلب آخر',
-    reqDetailsPlaceholder: '📝 تفاصيل الطلب',
-    reqLocationPlaceholder: '📍 موقع الطلب',
-    submitRequestBtn: '📤 إرسال الطلب',
-    myPastRequestsTitle: '📋 طلباتي السابقة',
-    publicStatsTitle: '📊 إحصائيات عامة',
-    totalReportsLabel: 'إجمالي البلاغات في البلدية:',
-    completionRateLabel: 'نسبة الإنجاز:',
-    activeDriversLabel: 'عدد السائقين النشطين:',
-    recycledTotalLabel: 'إجمالي المواد المعاد تدويرها:',    tons: 'طن',
-    controlPanel: '⚙️ لوحة التحكم',
-    supervisorLogin: '🔐 الدخول للمشرفين',
-    namePlaceholder: '👤 الاسم',
-    codePlaceholder: '🔑 الرمز (1234)',
-    login: '✓ دخول',
-    supervisorMode: '✓ وضع المشرف مفعل',
-    viewReports: '📊 عرض البلاغات',
-    manageStaff: '👥 إدارة الموظفين',
-    tonnageRecords: '⚖️ سجل الكميات',
-    scheduleManager: '📅 إدارة الجدول',
-    exportExcel: '📥 تصدير Excel',
-    printPDF: '🖨️ طباعة PDF',
-    logout: '✕ خروج',
-    clearData: '🚨 مسح البيانات',
-    distribution: '📊 توزيع حالات البلاغات',
-    reportsList: '📋 قائمة البلاغات',
-    allStatus: 'جميع الحالات',
-    statusNew: 'جديد',
-    statusAssigned: 'قيد التنفيذ',
-    statusDone: 'منجز',
-    searchPlaceholder: '🔍 بحث...',
-    addStaff: '➕ إضافة موظف',
-    rolePlaceholder: '💼 المنصب (سائق/مسؤول)',
-    phonePlaceholder: '📞 الهاتف',
-    save: '💾 حفظ',
-    driverArea: '🚚 مساحة السائقين',
-    driverLogin: '🔐 دخول السائق',
-    driverNamePlaceholder: '👤 أدخل اسمك',
-    welcomeDriver: '✓ مرحباً - مهامك جاهزة',
-    yourTasks: '📋 مهامك',
-    registerNewTonnageTitle: '⚖️ تسجيل كمية جديدة',
-    tripDataTitle: '📝 بيانات الرحلة',
-    driverName: '🚛 اسم السائق',
-    sectorNumber: '🏷️ رقم القطاع',
-    weightTons: '⚖️ الوزن بالطن',
-    registrationNumber: '🔢 رقم التسجيل من مركز القدم',
-    saveQuantity: '💾 حفظ الكمية',
-    allRecords: '📋 جميع السجلات',
-    addSector: '➕ إضافة قطاع',
-    neighborhoods: '📍 الأحياء والشوارع',
-    days: '📅 الأيام (مثال: أحد-ثلاثاء-خميس)',
-    time: '🕐 وقت المرور (مثال: 07:00 - 09:00)',
-    catchup: '⏳ أوقات الاستدراك (اختياري)',
-    saveSector: '💾 حفظ القطاع',
-    registeredSectors: '📋 القطاعات المسجلة',
-    citizenRequestsTitle: '📋 طلبات المواطنين',
-    recyclingCalcTitle: '♻️ حاسبة التدوير وإنتاج الطاقة',
-    calcTitle: '🔋 حاسبة التحويل التقديرية',
-    calcBtn: '⚡ حساب التحويل',    resEnergyUnit: 'كيلوواط ساعة طاقة',
-    resOilUnit: 'لتر وقود حيوي/زيت',
-    resCO2Unit: 'طن CO₂ مُوفرة',
-    whyRecycle: '📚 لماذا التدوير؟',
-    trackingCode: '📱 كود تتبع البلاغ',
-    reportNumberLabel: 'بلاغ رقم:',
-    close: '✕ إغلاق',
-    printTitle: '🖨️ طباعة / تصدير PDF',
-    selectPrint: 'اختر ما تريد طباعته:',
-    reports: '📊 البلاغات',
-    tonnage: '⚖️ سجل الكميات',
-    sorting: '🏭 مركز الفرز',
-    market: '♻️ سوق التدوير',
-    stats: '📈 الإحصائيات',
-    printNow: '🖨️ طباعة الآن',
-    downloadPDF: '📥 تحميل PDF',
-    backOptions: '↩️ رجوع',
-    footer: 'إعداد د. رابحي فتحي - مصلحة النظافة والوقاية الصحية - بلدية المدية 2026 ©',
-    municipal: '🏛️ خاص / بلدية',
-    private: '🏠 خاص'
-  },
-  fr: {
-    appName: 'Médéa Propre',
-    appSubtitle: 'Service de Propreté et d\'Hygiène<br>Commune de Médéa 2026',
-    connected: '✓ Connecté - Système Prêt',
-    republic: '🇩🇿 République Algérienne Démocratique et Populaire',
-    service: '🧹 Service de Propreté et d\'Hygiène - Commune de Médéa',
-    totalReports: 'Total Signalements',
-    completed: 'Terminé',
-    sorted: 'Trié',
-    thanksTitle: 'Merci!',
-    thanksMsg: 'Votre signalement a été envoyé',
-    slogan: '♻️ Ensemble pour une Médéa verte 2026',
-    sendReport: 'Envoyer Signalement',
-    displayTools: '🎬 Outils d\'Affichage',
-    demoData: 'Données Demo',
-    print: 'Imprimer PDF',
-    dashboard: 'Tableau de Bord',
-    exit: 'Quitter',
-    services: '✨ Services',
-    scheduleTitle: 'Calendrier de collecte',
-    tipsTitle: '💡 Conseils',
-    myRequestsTitle: '🛠️ Mes Demandes',
-    recyclingCalc: '♻️ Calculateur Recyclage',
-    circularEconomy: '🔄 Économie Circulaire',
-    sortingCenter: '🏭 Centre de Tri',
-    recyclingMarket: '🛒 Marché Recyclage',
-    staffHall: '👥 Personnel',
-    drivers: 'Chauffeurs',
-    admin: 'Administration',    newReport: '📝 Nouveau Signalement',
-    takePhoto: '📷 Prendre Photo',
-    getGPS: '📍 Localisation GPS',
-    manualLoc: '📍 Saisie Manuelle',
-    addrPlaceholder: '📍 Nom du quartier ou rue',
-    recurring: '🔁 Signalement récurrent hebdomadaire',
-    sendNow: '✉️ Envoyer Maintenant',
-    back: 'Retour',
-    wasteMixed: '🗑️ Déchets généraux',
-    wasteOrganic: '🍂 Déchets organiques',
-    wastePlastic: '🧴 Plastique',
-    wasteMetal: '⚙️ Métaux',
-    wastePaper: '📄 Papier/Carton',
-    wasteGlass: '🥃 Verre',
-    valueChain: '🔗 Chaîne de valeur',
-    stepPickup: '📍 Point de collecte',
-    stepTransport: '🚚 Transport',
-    stepSorting: '🏭 Centre de tri',
-    stepRecycling: '♻️ Recyclage',
-    stepMarket: '🏢 Marché',
-    registerWaste: '📥 Enregistrer un arrivage',
-    wasteSourcePlaceholder: '📍 Source des déchets (quartier/zone)',
-    wasteQtyPlaceholder: '⚖️ Quantité en tonnes',
-    truckNumberPlaceholder: '🚚 Numéro du camion',
-    qualityExcellent: '⭐ Qualité excellente - Recyclage direct',
-    qualityGood: '👍 Bonne qualité - Traitement simple',
-    qualityFair: '⚠️ Qualité moyenne - Tri supplémentaire',
-    qualityPoor: '❌ Non recyclable',
-    wasteNotesPlaceholder: '📝 Notes (type de plastique, niveau de contamination...)',
-    registerBtn: '✅ Enregistrer',
-    sortedMaterials: '📦 Matières triées disponibles',
-    publishToMarket: '🚀 Publier sur le marché',
-    allTypes: '📦 Tous les types',
-    allQualities: '⭐ Toutes qualités',
-    requestFormTitle: '📝 Demande d\'utilisation de matière',
-    companyNamePlaceholder: '🏢 Nom de l\'entreprise',
-    companyLicensePlaceholder: '📄 Numéro de registre commercial',
-    companyPhonePlaceholder: '📞 Numéro de contact',
-    requestQtyPlaceholder: '⚖️ Quantité demandée (tonnes)',
-    requestPurposePlaceholder: '🎯 Usage prévu (recyclage, fabrication...)',
-    submitRequest: '📤 Envoyer la demande',
-    cancel: '✕ Annuler',
-    tip1Title: 'Tri à la source:',
-    tip1Desc: 'Séparez le plastique du papier pour faciliter le recyclage.',
-    tip2Title: 'Non aux dépôts sauvages:',
-    tip2Desc: 'Gardez vos rues propres, la propreté fait partie de la foi.',
-    tip3Title: 'Réduire les sacs:',
-    tip3Desc: 'Utilisez des sacs en tissu réutilisables.',
-    tip4Title: 'Utiliser les conteneurs:',
-    tip4Desc: 'Jetez les déchets uniquement aux endroits prévus.',    reqBin: '🗑️ Demande de nouvelle poubelle',
-    reqRepair: '🔧 Réparation de poubelle',
-    reqClean: '🧹 Nettoyage exceptionnel',
-    reqOther: '❓ Autre demande',
-    reqDetailsPlaceholder: '📝 Détails de la demande',
-    reqLocationPlaceholder: '📍 Lieu de la demande',
-    submitRequestBtn: '📤 Envoyer',
-    myPastRequestsTitle: '📋 Mes demandes précédentes',
-    publicStatsTitle: '📊 Statistiques générales',
-    totalReportsLabel: 'Total des signalements:',
-    completionRateLabel: 'Taux de réalisation:',
-    activeDriversLabel: 'Chauffeurs actifs:',
-    recycledTotalLabel: 'Total matières recyclées:',
-    tons: 'tonnes',
-    controlPanel: '⚙️ Panneau de contrôle',
-    supervisorLogin: '🔐 Accès Superviseur',
-    namePlaceholder: '👤 Nom',
-    codePlaceholder: '🔑 Code (1234)',
-    login: '✓ Connexion',
-    supervisorMode: '✓ Mode Superviseur activé',
-    viewReports: '📊 Voir signalements',
-    manageStaff: '👥 Gestion du personnel',
-    tonnageRecords: '⚖️ Registre des tonnages',
-    scheduleManager: '📅 Gestion du calendrier',
-    exportExcel: '📥 Exporter Excel',
-    printPDF: '🖨️ Imprimer PDF',
-    logout: '✕ Déconnexion',
-    clearData: '🚨 Effacer données',
-    distribution: '📊 Distribution des statuts',
-    reportsList: '📋 Liste des signalements',
-    allStatus: 'Tous statuts',
-    statusNew: 'Nouveau',
-    statusAssigned: 'En cours',
-    statusDone: 'Terminé',
-    searchPlaceholder: '🔍 Rechercher...',
-    addStaff: '➕ Ajouter personnel',
-    rolePlaceholder: '💼 Poste (Chauffeur/Responsable)',
-    phonePlaceholder: '📞 Téléphone',
-    save: '💾 Enregistrer',
-    driverArea: '🚚 Espace Chauffeurs',
-    driverLogin: '🔐 Connexion Chauffeur',
-    driverNamePlaceholder: '👤 Entrez votre nom',
-    welcomeDriver: '✓ Bienvenue - Vos tâches sont prêtes',
-    yourTasks: '📋 Vos tâches',
-    registerNewTonnageTitle: '⚖️ Enregistrer nouvelle quantité',
-    tripDataTitle: '📝 Données du voyage',
-    driverName: '🚛 Nom du chauffeur',
-    sectorNumber: '🏷️ Numéro de secteur',
-    weightTons: '⚖️ Poids en tonnes',
-    registrationNumber: '🔢 Numéro d\'enregistrement',    saveQuantity: '💾 Enregistrer',
-    allRecords: '📋 Tous les enregistrements',
-    addSector: '➕ Ajouter secteur',
-    neighborhoods: '📍 Quartiers et rues',
-    days: '📅 Jours (ex: Dimanche-Mardi-Jeudi)',
-    time: '🕐 Heure de passage (ex: 07:00 - 09:00)',
-    catchup: '⏳ Heures de rattrapage (optionnel)',
-    saveSector: '💾 Enregistrer secteur',
-    registeredSectors: '📋 Secteurs enregistrés',
-    citizenRequestsTitle: '📋 Demandes des citoyens',
-    recyclingCalcTitle: '♻️ Calculateur recyclage et énergie',
-    calcTitle: '🔋 Calculateur de conversion',
-    calcBtn: '⚡ Calculer',
-    resEnergyUnit: 'kWh d\'énergie',
-    resOilUnit: 'Litres de biocarburant',
-    resCO2Unit: 'Tonnes de CO₂ économisées',
-    whyRecycle: '📚 Pourquoi recycler?',
-    trackingCode: '📱 Code de suivi',
-    reportNumberLabel: 'Signalement N°:',
-    close: '✕ Fermer',
-    printTitle: '🖨️ Imprimer / Exporter PDF',
-    selectPrint: 'Sélectionnez ce que vous voulez imprimer:',
-    reports: '📊 Signalements',
-    tonnage: '⚖️ Registre tonnages',
-    sorting: '🏭 Centre de tri',
-    market: '♻️ Marché recyclage',
-    stats: '📈 Statistiques',
-    printNow: '🖨️ Imprimer',
-    downloadPDF: '📥 Télécharger PDF',
-    backOptions: '↩️ Retour',
-    footer: 'Dr. Rabhi Fethi - Service de Propreté - Commune de Médéa 2026 ©',
-    municipal: '🏛️ Municipal',
-    private: '🏠 Privé'
-  },
-  en: {
-    appName: 'Clean Medea',
-    appSubtitle: 'Sanitation & Health Department<br>Medea Municipality 2026',
-    connected: '✓ Connected - System Ready',
-    republic: '🇩 People\'s Democratic Republic of Algeria',
-    service: '🧹 Sanitation & Health Department - Medea',
-    totalReports: 'Total Reports',
-    completed: 'Completed',
-    sorted: 'Sorted',
-    thanksTitle: 'Thank You!',
-    thanksMsg: 'Your report has been sent',
-    slogan: '♻️ Together for a Green Medea 2026',
-    sendReport: 'Send Report',
-    displayTools: '🎬 Display Tools',
-    demoData: 'Demo Data',
-    print: 'Print PDF',    dashboard: 'Dashboard',
-    exit: 'Exit',
-    services: '✨ Services',
-    scheduleTitle: 'Collection Schedule',
-    tipsTitle: '💡 Tips',
-    myRequestsTitle: '🛠️ My Requests',
-    recyclingCalc: '♻️ Recycling Calculator',
-    circularEconomy: '🔄 Circular Economy',
-    sortingCenter: '🏭 Sorting Center',
-    recyclingMarket: '🛒 Recycling Market',
-    staffHall: '👥 Staff',
-    drivers: 'Drivers',
-    admin: 'Administration',
-    newReport: '📝 New Report',
-    takePhoto: '📷 Take Photo',
-    getGPS: '📍 Get GPS Location',
-    manualLoc: '📍 Manual Entry',
-    addrPlaceholder: '📍 Neighborhood or street name',
-    recurring: '🔁 Weekly recurring report',
-    sendNow: '✉️ Send Report Now',
-    back: 'Back',
-    wasteMixed: '🗑️ General waste',
-    wasteOrganic: '🍂 Organic waste',
-    wastePlastic: '🧴 Plastic',
-    wasteMetal: '⚙️ Metals',
-    wastePaper: '📄 Paper/Cardboard',
-    wasteGlass: '🥃 Glass',
-    valueChain: '🔗 Value Chain',
-    stepPickup: '📍 Pickup point',
-    stepTransport: '🚚 Transport',
-    stepSorting: '🏭 Sorting center',
-    stepRecycling: '♻️ Recycling',
-    stepMarket: '🏢 Market',
-    registerWaste: '📥 Register new waste',
-    wasteSourcePlaceholder: '📍 Waste source (neighborhood/area)',
-    wasteQtyPlaceholder: '⚖️ Quantity in tons',
-    truckNumberPlaceholder: '🚚 Truck number',
-    qualityExcellent: '⭐ Excellent quality - Direct recycling',
-    qualityGood: '👍 Good quality - Simple treatment',
-    qualityFair: '⚠️ Fair quality - Additional sorting',
-    qualityPoor: '❌ Non-recyclable',
-    wasteNotesPlaceholder: '📝 Notes (plastic type, contamination level...)',
-    registerBtn: '✅ Register',
-    sortedMaterials: '📦 Sorted materials available',
-    publishToMarket: '🚀 Publish to market',
-    allTypes: '📦 All types',
-    allQualities: '⭐ All qualities',
-    requestFormTitle: '📝 Material usage request',
-    companyNamePlaceholder: '🏢 Company name',
-    companyLicensePlaceholder: '📄 Commercial register number',    companyPhonePlaceholder: '📞 Contact number',
-    requestQtyPlaceholder: '⚖️ Requested quantity (tons)',
-    requestPurposePlaceholder: '🎯 Intended use (recycling, manufacturing...)',
-    submitRequest: '📤 Submit request',
-    cancel: '✕ Cancel',
-    tip1Title: 'Source separation:',
-    tip1Desc: 'Separate plastic from paper to facilitate recycling.',
-    tip2Title: 'No illegal dumping:',
-    tip2Desc: 'Keep your streets clean, cleanliness is part of faith.',
-    tip3Title: 'Reduce bags:',
-    tip3Desc: 'Use reusable cloth bags.',
-    tip4Title: 'Use containers:',
-    tip4Desc: 'Dispose of waste only in designated areas.',
-    reqBin: '🗑️ Request new bin',
-    reqRepair: '🔧 Bin repair',
-    reqClean: '🧹 Special cleaning',
-    reqOther: '❓ Other request',
-    reqDetailsPlaceholder: '📝 Request details',
-    reqLocationPlaceholder: '📍 Request location',
-    submitRequestBtn: '📤 Submit',
-    myPastRequestsTitle: '📋 My past requests',
-    publicStatsTitle: '📊 General Statistics',
-    totalReportsLabel: 'Total reports:',
-    completionRateLabel: 'Completion rate:',
-    activeDriversLabel: 'Active drivers:',
-    recycledTotalLabel: 'Total recycled materials:',
-    tons: 'tons',
-    controlPanel: '⚙️ Control Panel',
-    supervisorLogin: '🔐 Supervisor Login',
-    namePlaceholder: '👤 Name',
-    codePlaceholder: '🔑 Code (1234)',
-    login: '✓ Login',
-    supervisorMode: '✓ Supervisor Mode Active',
-    viewReports: '📊 View reports',
-    manageStaff: '👥 Manage staff',
-    tonnageRecords: '⚖️ Tonnage records',
-    scheduleManager: '📅 Schedule management',
-    exportExcel: '📥 Export Excel',
-    printPDF: '🖨️ Print PDF',
-    logout: '✕ Logout',
-    clearData: '🚨 Clear data',
-    distribution: '📊 Status distribution',
-    reportsList: '📋 Reports list',
-    allStatus: 'All status',
-    statusNew: 'New',
-    statusAssigned: 'In progress',
-    statusDone: 'Completed',
-    searchPlaceholder: '🔍 Search...',
-    addStaff: '➕ Add staff',
-    rolePlaceholder: '💼 Position (Driver/Supervisor)',    phonePlaceholder: '📞 Phone',
-    save: '💾 Save',
-    driverArea: '🚚 Driver Area',
-    driverLogin: '🔐 Driver Login',
-    driverNamePlaceholder: '👤 Enter your name',
-    welcomeDriver: '✓ Welcome - Your tasks are ready',
-    yourTasks: '📋 Your tasks',
-    registerNewTonnageTitle: '⚖️ Register new quantity',
-    tripDataTitle: '📝 Trip data',
-    driverName: '🚛 Driver name',
-    sectorNumber: '🏷️ Sector number',
-    weightTons: '⚖️ Weight in tons',
-    registrationNumber: '🔢 Registration number',
-    saveQuantity: '💾 Save',
-    allRecords: '📋 All records',
-    addSector: '➕ Add sector',
-    neighborhoods: '📍 Neighborhoods and streets',
-    days: '📅 Days (e.g., Sun-Tue-Thu)',
-    time: '🕐 Passage time (e.g., 07:00 - 09:00)',
-    catchup: '⏳ Catchup times (optional)',
-    saveSector: '💾 Save sector',
-    registeredSectors: '📋 Registered sectors',
-    citizenRequestsTitle: '📋 Citizen requests',
-    recyclingCalcTitle: '♻️ Recycling & Energy Calculator',
-    calcTitle: '🔋 Conversion calculator',
-    calcBtn: '⚡ Calculate',
-    resEnergyUnit: 'kWh energy',
-    resOilUnit: 'Liters biofuel',
-    resCO2Unit: 'Tons CO₂ saved',
-    whyRecycle: '📚 Why recycle?',
-    trackingCode: '📱 Tracking code',
-    reportNumberLabel: 'Report #:',
-    close: '✕ Close',
-    printTitle: '🖨️ Print / Export PDF',
-    selectPrint: 'Select what you want to print:',
-    reports: '📊 Reports',
-    tonnage: '⚖️ Tonnage records',
-    sorting: '🏭 Sorting center',
-    market: '♻️ Recycling market',
-    stats: '📈 Statistics',
-    printNow: '🖨️ Print now',
-    downloadPDF: '📥 Download PDF',
-    backOptions: '↩️ Back',
-    footer: 'Dr. Rabhi Fethi - Sanitation Department - Medea Municipality 2026 ©',
-    municipal: '🏛️ Municipal',
-    private: '🏠 Private'
-  }
-};
-
-// === المتغيرات العامة ===let allReports=[],currentLang='ar',tempImage=null,tempAfterImage=null,currentDriver='',userPoints=0,currentDriverSector='';
+<script>// === المتغيرات العامة ===
+let allReports=[],currentLang='ar',tempImage=null,tempAfterImage=null,currentDriver='',userPoints=0,currentDriverSector='';
 let wasteTracking=[],marketMaterials=[],marketRequests=[];
+let truckTrackingData={active:false,driver:'',sector:'',startTime:null,positions:[],collectedBins:[]};
+let map=null,trackingMarker=null,trackingPath=null;
 
 // === تحميل التطبيق ===
 window.addEventListener('load', function(){
@@ -1094,6 +656,7 @@ window.addEventListener('load', function(){
       try{loadRequests();}catch(e){}
       try{loadWasteTracking();}catch(e){wasteTracking=[];}
       try{loadMarketMaterials();}catch(e){marketMaterials=[];}
+      try{loadTruckTrackingData();}catch(e){}
       try{updatePublicStats();}catch(e){}
       forceHideSplash();
       applyTranslations();
@@ -1102,7 +665,7 @@ window.addEventListener('load', function(){
   },500);
 });
 
-// === 🔧 إصلاح شاشة التحميل - شبكة الأمان ===
+// === 🔧 إصلاح شاشة التحميل ===
 function forceHideSplash(){
   try{
     const splash=document.getElementById('splash');
@@ -1121,10 +684,10 @@ function showToast(msg,type='success'){
     const toast=document.createElement('div');
     toast.className='toast';
     toast.innerHTML=`<span>${type==='success'?'✅':'ℹ️'}</span><span>${msg}</span>`;
-    container.appendChild(toast);
-    setTimeout(()=>{toast.style.opacity='0';setTimeout(()=>toast.remove(),300);},3000);
+    container.appendChild(toast);    setTimeout(()=>{toast.style.opacity='0';setTimeout(()=>toast.remove(),300);},3000);
   }catch(e){}
 }
+
 // === نظام النقاط ===
 function loadUserPoints(){try{userPoints=parseInt(localStorage.getItem('medea_points')||'0');}catch(e){userPoints=0;}updatePointsDisplay();}
 function updatePointsDisplay(){try{document.getElementById('userPoints').textContent=userPoints;}catch(e){}}
@@ -1148,23 +711,16 @@ function applyTranslations(){
   try{
     const t=translations[currentLang];
     if(!t)return;
-    
-    // تطبيق النصوص
     document.querySelectorAll('[data-key]').forEach(el=>{
       const key=el.getAttribute('data-key');
       if(t[key])el.innerHTML=t[key];
     });
-    
-    // تطبيق placeholders
     document.querySelectorAll('[data-ph]').forEach(el=>{
       const key=el.getAttribute('data-ph');
       if(t[key])el.placeholder=t[key];
     });
-    
-    // تغيير اتجاه الصفحة
     document.documentElement.dir=currentLang==='ar'?'rtl':'ltr';
     document.documentElement.lang=currentLang;
-    
   }catch(e){console.error('Translation error:',e);}
 }
 
@@ -1174,10 +730,10 @@ function updateTime(){
     const n=new Date();
     const locale=currentLang==='ar'?'ar-DZ':currentLang==='fr'?'fr-FR':'en-US';
     const ck=document.getElementById('ck');
-    const cd=document.getElementById('cd');    if(ck)ck.textContent=n.toLocaleTimeString(locale);
+    const cd=document.getElementById('cd');
+    if(ck)ck.textContent=n.toLocaleTimeString(locale);
     if(cd)cd.textContent=n.toLocaleDateString(locale);
-  }catch(e){}
-}
+  }catch(e){}}
 
 // === تحميل وحفظ البيانات ===
 function loadReports(){
@@ -1208,7 +764,7 @@ function updateReport(id,upd){
   }catch(e){}
 }
 
-// === تتبع النفايات - جديد ===
+// === تتبع النفايات ===
 function loadWasteTracking(){
   try{
     const data=localStorage.getItem('medea_waste_tracking');
@@ -1223,10 +779,10 @@ function saveWasteTracking(w){
     updateStats();
     updatePublicStats();
   }catch(e){showToast('⚠️ خطأ في الحفظ','error');}
-}function updateWasteTracking(id,upd){
+}
+function updateWasteTracking(id,upd){
   try{
-    const i=wasteTracking.findIndex(x=>x.id==id);
-    if(i!==-1){
+    const i=wasteTracking.findIndex(x=>x.id==id);    if(i!==-1){
       wasteTracking[i]={...wasteTracking[i],...upd};
       localStorage.setItem('medea_waste_tracking',JSON.stringify(wasteTracking));
       updateStats();
@@ -1236,7 +792,7 @@ function saveWasteTracking(w){
   }catch(e){}
 }
 
-// === سوق التدوير - جديد ===
+// === سوق التدوير ===
 function loadMarketMaterials(){
   try{
     const data=localStorage.getItem('medea_market_materials');
@@ -1272,21 +828,206 @@ function showPage(id){
     if(el)el.classList.add('active');
     if(id==='dashboard')setTimeout(renderChart,100);
     if(id==='reportsPage')showReportsPage();
-    if(id==='publicStats')updatePublicStats();    if(id==='schedule')displaySchedule();
+    if(id==='publicStats')updatePublicStats();
+    if(id==='schedule')displaySchedule();
     if(id==='tonnageRecords')loadTonnageRecords();
-    if(id==='scheduleManager')loadScheduleSectors();
-    if(id==='adminRequests')loadAdminRequests();
+    if(id==='scheduleManager')loadScheduleSectors();    if(id==='adminRequests')loadAdminRequests();
     if(id==='requests')loadMyRequests();
     if(id==='driverTonnage')prepareDriverTonnage();
     if(id==='sortingCenter')loadSortedMaterials();
     if(id==='recyclingMarket')loadMarketMaterials();
+    if(id==='truckTracking')initTruckTrackingMap();
     window.scrollTo(0,0);
   }catch(e){}
 }
 
-// === الإدخال الصوتي ===
-function startVoiceInput(){
+// === 🚚 نظام تتبع الشاحنة الجديد ===
+function startTruckTracking(){
+  if(!currentDriver){
+    showToast('⚠️ يجب تسجيل الدخول أولاً','error');
+    return;
+  }
+  
+  truckTrackingData={
+    active:true,
+    driver:currentDriver,
+    sector:currentDriverSector,
+    startTime:new Date().toISOString(),
+    positions:[],
+    collectedBins:[]
+  };
+  
+  saveTruckTrackingData();
+  showPage('truckTracking');
+  updateTruckTrackingUI();
+  startGPSMonitoring();
+  showToast('✅ تم بدء التتبع المباشر');
+}
+
+function startGPSMonitoring(){
+  if(!navigator.geolocation){
+    showToast('⚠️ GPS غير مدعوم','error');
+    return;
+  }
+  
+  // تتبع مستمر للموقع كل 10 ثواني
+  window.trackingInterval=setInterval(()=>{
+    navigator.geolocation.getCurrentPosition(pos=>{
+      const position={
+        lat:pos.coords.latitude,
+        lng:pos.coords.longitude,
+        timestamp:new Date().toISOString(),
+        accuracy:pos.coords.accuracy
+      };
+      truckTrackingData.positions.push(position);
+      saveTruckTrackingData();      updateTruckTrackingMap(position);
+    },err=>{
+      console.error('GPS Error:',err);
+    },{enableHighAccuracy:true,timeout:10000,maximumAge:0});
+  },10000);
+}
+
+function recordBinCollection(){
+  if(!truckTrackingData.active){
+    showToast('⚠️ التتبع غير نشط','error');
+    return;
+  }
+  
+  navigator.geolocation.getCurrentPosition(pos=>{
+    const bin={
+      id:Date.now(),
+      lat:pos.coords.latitude,
+      lng:pos.coords.longitude,
+      timestamp:new Date().toISOString(),
+      sector:currentDriverSector,
+      driver:currentDriver
+    };
+    truckTrackingData.collectedBins.push(bin);
+    saveTruckTrackingData();
+    updateTruckTrackingUI();
+    showToast('✅ تم تسجيل الحاوية #' + truckTrackingData.collectedBins.length);
+    addBinMarkerToMap(bin);
+  },err=>{
+    showToast('⚠️ فشل في تحديد الموقع','error');
+  },{enableHighAccuracy:true,timeout:10000});
+}
+
+function stopTruckTracking(){
+  if(window.trackingInterval){
+    clearInterval(window.trackingInterval);
+  }
+  truckTrackingData.active=false;
+  saveTruckTrackingData();
+  showToast('✅ تم إيقاف التتبع');
+  showPage('driver');
+}
+
+function saveTruckTrackingData(){
   try{
+    localStorage.setItem('medea_truck_tracking',JSON.stringify(truckTrackingData));
+  }catch(e){console.error('Save tracking error:',e);}
+}
+
+function loadTruckTrackingData(){
+  try{    const data=localStorage.getItem('medea_truck_tracking');
+    if(data){
+      truckTrackingData=JSON.parse(data);
+    }
+  }catch(e){truckTrackingData={active:false,driver:'',sector:'',startTime:null,positions:[],collectedBins:[]};}
+}
+
+function updateTruckTrackingUI(){
+  if(!truckTrackingData.active){
+    document.getElementById('liveTrackingStatus').innerHTML='🔴 التتبع متوقف';
+    document.getElementById('liveTrackingStatus').style.background='#757575';
+  }else{
+    document.getElementById('liveTrackingStatus').innerHTML='🟢 التتبع المباشر نشط';
+    document.getElementById('liveTrackingStatus').style.background='#4CAF50';
+  }
+  
+  document.getElementById('trackingDriverName').textContent=truckTrackingData.driver||'-';
+  document.getElementById('trackingSector').textContent=truckTrackingData.sector||'-';
+  document.getElementById('trackingDate').textContent=truckTrackingData.startTime?new Date(truckTrackingData.startTime).toLocaleDateString('ar-DZ'):'-';
+  document.getElementById('trackingTime').textContent=truckTrackingData.startTime?new Date(truckTrackingData.startTime).toLocaleTimeString('ar-DZ'):'-';
+  document.getElementById('collectedBinsCount').textContent=truckTrackingData.collectedBins.length;
+  
+  const binsList=document.getElementById('collectedBinsList');
+  if(truckTrackingData.collectedBins.length===0){
+    binsList.innerHTML='<p style="text-align:center;color:#666;padding:20px">لم يتم جمع أي حاويات بعد</p>';
+  }else{
+    binsList.innerHTML=truckTrackingData.collectedBins.map((bin,idx)=>`
+      <div class="bin-collected">
+        🗑️ حاوية #${idx+1}<br>
+        <small> ${bin.lat.toFixed(6)}, ${bin.lng.toFixed(6)}</small><br>
+        <small>🕐 ${new Date(bin.timestamp).toLocaleTimeString('ar-DZ')}</small>
+      </div>
+    `).join('');
+  }
+}
+
+function initTruckTrackingMap(){
+  if(map){
+    map.remove();
+  }
+  
+  map=L.map('map').setView([36.2642,2.7545],13);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{
+    attribution:'© OpenStreetMap contributors'
+  }).addTo(map);
+  
+  if(truckTrackingData.positions.length>0){
+    const lastPos=truckTrackingData.positions[truckTrackingData.positions.length-1];
+    map.setView([lastPos.lat,lastPos.lng],15);
+        trackingMarker=L.marker([lastPos.lat,lastPos.lng]).addTo(map)
+      .bindPopup(`<b>🚚 ${truckTrackingData.driver}</b><br>القطاع: ${truckTrackingData.sector}`);
+    
+    const latlngs=truckTrackingData.positions.map(p=>[p.lat,p.lng]);
+    trackingPath=L.polyline(latlngs,{color:'#1B5E20',weight:4}).addTo(map);
+    
+    truckTrackingData.collectedBins.forEach(bin=>{
+      addBinMarkerToMap(bin);
+    });
+  }
+}
+
+function updateTruckTrackingMap(position){
+  if(!map)return;
+  
+  if(trackingMarker){
+    trackingMarker.setLatLng([position.lat,position.lng]);
+    trackingMarker.bindPopup(`<b>🚚 ${truckTrackingData.driver}</b><br>القطاع: ${truckTrackingData.sector}<br>🕐 ${new Date(position.timestamp).toLocaleTimeString('ar-DZ')}`);
+  }else{
+    trackingMarker=L.marker([position.lat,position.lng]).addTo(map)
+      .bindPopup(`<b>🚚 ${truckTrackingData.driver}</b><br>القطاع: ${truckTrackingData.sector}`);
+  }
+  
+  const latlngs=truckTrackingData.positions.map(p=>[p.lat,p.lng]);
+  if(trackingPath){
+    trackingPath.setLatLngs(latlngs);
+  }else{
+    trackingPath=L.polyline(latlngs,{color:'#1B5E20',weight:4}).addTo(map);
+  }
+  
+  map.fitBounds(trackingPath.getBounds());
+}
+
+function addBinMarkerToMap(bin){
+  if(!map)return;
+  L.circleMarker([bin.lat,bin.lng],{
+    radius:8,
+    fillColor:'#4CAF50',
+    color:'#fff',
+    weight:2,
+    opacity:1,
+    fillOpacity:0.8
+  }).addTo(map).bindPopup(`🗑️ حاوية #${truckTrackingData.collectedBins.indexOf(bin)+1}<br>🕐 ${new Date(bin.timestamp).toLocaleTimeString('ar-DZ')}`);
+}
+
+// === باقي الدوال الأصلية... ===
+function getWasteTypeName(t){return{organic:'🍂 عضوي',plastic:'🧴 بلاستيك',metal:'⚙️ معدن',paper:'📄 ورق',glass:'🥃 زجاج',mixed:'🗑️ مختلط'}[t]||'🗑️ عام';}
+
+// === الإدخال الصوتي ===
+function startVoiceInput(){  try{
     if(!('webkitSpeechRecognition' in window)){showToast('⚠️ متصفحك لا يدعم الصوت','error');return;}
     const recognition=new webkitSpeechRecognition();
     recognition.lang=currentLang==='ar'?'ar-DZ':currentLang==='fr'?'fr-FR':'en-US';
@@ -1321,7 +1062,8 @@ function takePhoto(){
     const i=document.createElement('input');i.type='file';i.accept='image/*';i.capture='environment';
     i.onchange=e=>{if(e.target.files[0]){const r=new FileReader();r.onload=ev=>{tempImage=ev.target.result;document.getElementById('camImg').src=tempImage;document.getElementById('camImg').style.display='block';document.querySelector('.cam-icon').style.display='none';};r.readAsDataURL(e.target.files[0]);}};
     i.click();
-  }catch(e){showToast('⚠️ خطأ في الكاميرا','error');}}
+  }catch(e){showToast('⚠️ خطأ في الكاميرا','error');}
+}
 
 // === إرسال البلاغ ===
 function sendReport(){
@@ -1334,8 +1076,7 @@ function sendReport(){
     const wasteType=document.getElementById('wasteTypeSelect').value;
     saveReport({id:Date.now(),addr:a,gps:document.getElementById('gpsInput').value||'غير محدد',image:tempImage,doneImage:null,date:new Date().toLocaleDateString('ar-DZ'),time:new Date().toLocaleTimeString('ar-DZ'),doneTime:null,status:'new',driverName:null,recurring:isRecurring,wasteType:wasteType});
     addPoints(10);
-    showToast('✅ تم الإرسال! +10 نقاط 🎉');
-    document.getElementById('thanksOverlay').style.display='flex';
+    showToast('✅ تم الإرسال! +10 نقاط 🎉');    document.getElementById('thanksOverlay').style.display='flex';
     tempImage=null;document.getElementById('camImg').style.display='none';document.querySelector('.cam-icon').style.display='block';
     document.getElementById('addrInput').value='';document.getElementById('gpsInput').value='';document.getElementById('recurringCheck').checked=false;
     setTimeout(()=>{document.getElementById('thanksOverlay').style.display='none';showPage('home');btn.innerHTML=orig;btn.disabled=false;},3000);
@@ -1370,7 +1111,9 @@ function emergencyClearData(){
       localStorage.removeItem('medea_schedule');
       localStorage.removeItem('medea_waste_tracking');
       localStorage.removeItem('medea_market_materials');
-      allReports=[];wasteTracking=[];marketMaterials=[];      updateStats();
+      localStorage.removeItem('medea_truck_tracking');
+      allReports=[];wasteTracking=[];marketMaterials=[];
+      updateStats();
       showToast('✅ تم مسح البيانات التالفة');
       setTimeout(()=>location.reload(),1000);
     }catch(e){showToast('⚠️ خطأ في المسح','error');}
@@ -1382,8 +1125,7 @@ function loginDriver(){
   const n=document.getElementById('driverName').value.trim();
   if(!n){showToast('⚠️ أدخل الاسم','error');return;}
   const st=JSON.parse(localStorage.getItem('medea_staff')||'[]');
-  const driver=st.find(s=>s.name===n&&s.role.includes('سائق'));
-  if(driver){
+  const driver=st.find(s=>s.name===n&&s.role.includes('سائق'));  if(driver){
     currentDriver=n;
     const sectors=JSON.parse(localStorage.getItem('medea_schedule')||'[]');
     const sector=sectors.find(s=>s.driver===n);
@@ -1394,7 +1136,17 @@ function loginDriver(){
     showToast('✓ مرحباً '+n);
   }else showToast('❌ غير مسجل','error');
 }
-function logoutDriver(){currentDriver='';currentDriverSector='';document.getElementById('driverLogin').classList.remove('hidden');document.getElementById('driverPanel').classList.add('hidden');document.getElementById('driverName').value='';tempAfterImage=null;showToast('✓ خروج');}
+function logoutDriver(){
+  if(window.trackingInterval){
+    clearInterval(window.trackingInterval);
+  }
+  currentDriver='';currentDriverSector='';
+  document.getElementById('driverLogin').classList.remove('hidden');
+  document.getElementById('driverPanel').classList.add('hidden');
+  document.getElementById('driverName').value='';
+  tempAfterImage=null;
+  showToast('✓ خروج');
+}
 function prepareDriverTonnage(){
   document.getElementById('driverTonnageName').value=currentDriver;
   document.getElementById('driverTonnageSector').value=currentDriverSector;
@@ -1419,9 +1171,9 @@ function saveDriverTonnage(){
 }
 
 // === تحميل وحفظ أخرى ===
-function downloadImage(d,f){if(!d){showToast('⚠️ لا صورة','error');return;}const l=document.createElement('a');l.href=d;l.download=f;document.body.appendChild(l);l.click();document.body.removeChild(l);showToast('✅ تم التحميل');}function downloadReportText(id){const r=allReports.find(x=>x.id==id);if(!r){showToast('⚠️ غير موجود','error');return;}const c=`بلاغ #${r.id}\nالعنوان: ${r.addr}\nGPS: ${r.gps}\nالتاريخ: ${r.date} ${r.time}\nالحالة: ${r.status}\nالسائق: ${r.driverName||'-'}`;const b=new Blob([c],{type:'text/plain'});const l=document.createElement('a');l.href=URL.createObjectURL(b);l.download='report_'+id+'.txt';document.body.appendChild(l);l.click();document.body.removeChild(l);showToast('✅ تم التحميل');}
+function downloadImage(d,f){if(!d){showToast('⚠️ لا صورة','error');return;}const l=document.createElement('a');l.href=d;l.download=f;document.body.appendChild(l);l.click();document.body.removeChild(l);showToast('✅ تم التحميل');}
+function downloadReportText(id){const r=allReports.find(x=>x.id==id);if(!r){showToast('⚠️ غير موجود','error');return;}const c=`بلاغ #${r.id}\nالعنوان: ${r.addr}\nGPS: ${r.gps}\nالتاريخ: ${r.date} ${r.time}\nالحالة: ${r.status}\nالسائق: ${r.driverName||'-'}`;const b=new Blob([c],{type:'text/plain'});const l=document.createElement('a');l.href=URL.createObjectURL(b);l.download='report_'+id+'.txt';document.body.appendChild(l);l.click();document.body.removeChild(l);showToast('✅ تم التحميل');}
 function loadDemoData(){if(!confirm('تحميل بيانات تجريبية؟'))return;[{id:1001,addr:'حي الزيتون - شارع الشهداء - المدية',gps:'36.2642, 2.7545',image:'https://via.placeholder.com/300x200/f44336/fff?text=قبل',doneImage:'https://via.placeholder.com/300x200/4CAF50/fff?text=بعد',date:'2026-04-10',time:'09:30',doneTime:'2026-04-10 11:15',status:'done',driverName:'أحمد',wasteType:'plastic'},{id:1002,addr:'وسط المدينة - شارع الاستقلال - المدية',gps:'36.2650, 2.7550',image:'https://via.placeholder.com/300x200/f44336/fff?text=قبل',doneImage:null,date:'2026-04-11',time:'14:20',doneTime:null,status:'assigned',driverName:'محمد',wasteType:'organic'}].forEach(r=>saveReport(r));showToast('✅ تم التحميل');showReportsPage();}
-
 // === عرض البلاغات ===
 function showReportsPage(){try{applyFilters();}catch(e){document.getElementById('reportsList').innerHTML='<div style="padding:20px;background:#ffebee;color:#c62828;border-radius:10px;text-align:center">⚠️ حدث خطأ</div>';}}
 function applyFilters(){
@@ -1457,7 +1209,6 @@ function renderReportsList(reps){
     }).join('');
   }catch(e){document.getElementById('reportsList').innerHTML='<div style="padding:20px;background:#ffebee;color:#c62828;border-radius:10px;text-align:center">⚠️ خطأ في العرض</div>';}
 }
-function getWasteTypeName(t){return{organic:'🍂 عضوي',plastic:'🧴 بلاستيك',metal:'⚙️ معدن',paper:'📄 ورق',glass:'🥃 زجاج',mixed:'🗑️ مختلط'}[t]||'🗑️ عام';}
 
 // === QR Code ===
 function showQR(id){
@@ -1468,11 +1219,11 @@ function showQR(id){
     document.getElementById('qrReportId').textContent=r.id;
     const qc=document.getElementById('qrcode');qc.innerHTML='';
     if(typeof QRCode!=='undefined'){try{new QRCode(qc,{text:String(r.id),width:200,height:200,colorDark:'#1B5E20',colorLight:'#ffffff',correctLevel:QRCode.CorrectLevel.M});}catch(e){qc.innerHTML='<div style="color:red;padding:20px">⚠️ فشل QR</div>';}}
-    else{qc.innerHTML='<div style="color:red;padding:20px">⚠️ المكتبة غير محملة</div>';}  }catch(e){showToast('⚠️ خطأ في QR','error');}
+    else{qc.innerHTML='<div style="color:red;padding:20px">⚠️ المكتبة غير محملة</div>';}
+  }catch(e){showToast('⚠️ خطأ في QR','error');}
 }
 function assignDriver(id){
-  try{
-    const st=JSON.parse(localStorage.getItem('medea_staff')||'[]');
+  try{    const st=JSON.parse(localStorage.getItem('medea_staff')||'[]');
     const dr=st.filter(s=>s.role.includes('سائق'));
     if(!dr.length){showToast('⚠️ لا يوجد سائقون','error');return;}
     const n=prompt('اسم السائق:\n'+dr.map(d=>d.name).join('\n'));
@@ -1517,11 +1268,11 @@ function submitRequest(){
     if(!desc||!location){showToast('⚠️ أكمل جميع الحقول','error');return;}
     const requests=JSON.parse(localStorage.getItem('medea_requests')||'[]');
     requests.push({id:Date.now(),type,desc,location,date:new Date().toLocaleDateString('ar-DZ'),time:new Date().toLocaleTimeString('ar-DZ'),status:'pending'});
-    localStorage.setItem('medea_requests',JSON.stringify(requests));    showToast('✅ تم إرسال طلبك');
+    localStorage.setItem('medea_requests',JSON.stringify(requests));
+    showToast('✅ تم إرسال طلبك');
     document.getElementById('reqDesc').value='';
     document.getElementById('reqLocation').value='';
-    loadMyRequests();
-  }catch(e){showToast('⚠️ خطأ في الطلب','error');}
+    loadMyRequests();  }catch(e){showToast('⚠️ خطأ في الطلب','error');}
 }
 function loadMyRequests(){
   try{
@@ -1567,9 +1318,9 @@ function updatePublicStats(){
 
 // === تصدير Excel ===
 function exportExcel(){try{if(!allReports.length){showToast('⚠️ لا بيانات','error');return;}let c='ID,التاريخ,الوقت,العنوان,GPS,الحالة,السائق,النوع,متكرر\n';allReports.forEach(x=>c+=x.id+','+x.date+','+x.time+',"'+x.addr+'",'+x.gps+','+x.status+','+(x.driverName||'-')+','+x.wasteType+','+(x.recurring?'نعم':'لا')+'\n');const b=new Blob([c],{type:'text/csv'});const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='archive_'+Date.now()+'.csv';a.click();showToast('✅ تم التصدير');}catch(e){showToast('⚠️ خطأ في التصدير','error');}}
+
 // === الخروج ===
 function exitApp(){if(confirm('الخروج؟')){window.close();setTimeout(()=>{window.location.href='about:blank';},1000);}}
-
 // === رسم المخطط ===
 function renderChart(){try{const done=allReports.filter(r=>r.status==='done').length;const assigned=allReports.filter(r=>r.status==='assigned').length;const newR=allReports.filter(r=>r.status==='new').length;const total=allReports.length;const visual=document.getElementById('chartVisual');const legend=document.getElementById('chartLegend');if(!visual||!legend)return;if(total===0){visual.innerHTML='<div style="display:flex;align-items:center;justify-content:center;height:100%;color:#999;font-size:1.1rem">لا توجد بيانات</div>';legend.innerHTML='';return;}const donePct=(done/total)*100;const assignedPct=(assigned/total)*100;visual.style.background=`conic-gradient(#4CAF50 0deg ${donePct*3.6}deg,#FF9800 ${donePct*3.6}deg ${(donePct+assignedPct)*3.6}deg,#f44336 ${(donePct+assignedPct)*3.6}deg 360deg)`;visual.style.borderRadius='50%';visual.style.boxShadow='0 5px 20px rgba(0,0,0,0.2)';legend.innerHTML=`<div class="legend-item"><div class="legend-color" style="background:#4CAF50"></div><span>منجز: ${done}</span></div><div class="legend-item"><div class="legend-color" style="background:#FF9800"></div><span>قيد التنفيذ: ${assigned}</span></div><div class="legend-item"><div class="legend-color" style="background:#f44336"></div><span>جديد: ${newR}</span></div>`;}catch(e){}}
 
@@ -1615,11 +1366,11 @@ function addScheduleSector(){
     document.getElementById('sectorNum').value='';document.getElementById('sectorName').value='';document.getElementById('sectorDays').value='';document.getElementById('sectorTime').value='';document.getElementById('sectorCatchup').value='';document.getElementById('sectorDriver').value='';document.getElementById('sectorPhone').value='';
     loadScheduleSectors();
   }catch(e){showToast('⚠️ خطأ في الإضافة','error');}
-}function loadScheduleSectors(){
+}
+function loadScheduleSectors(){
   try{
     const sectors=JSON.parse(localStorage.getItem('medea_schedule')||'[]');
-    const list=document.getElementById('scheduleList');
-    if(!sectors.length){list.innerHTML='<p style="text-align:center;color:#666;padding:20px">لا توجد قطاعات مسجلة</p>';return;}
+    const list=document.getElementById('scheduleList');    if(!sectors.length){list.innerHTML='<p style="text-align:center;color:#666;padding:20px">لا توجد قطاعات مسجلة</p>';return;}
     list.innerHTML=sectors.map(s=>`<div class="tonnage-card"><div class="tonnage-info"><b>🏷️ رقم القطاع:</b> ${s.num||'-'}</div><div class="tonnage-info"><b>🏛️ النوع:</b> ${s.type}</div><div class="tonnage-info"><b>📍 الأحياء:</b> ${s.name}</div><div class="tonnage-info"><b>📅 الأيام:</b> ${s.days}</div><div class="tonnage-info"><b>🕐 وقت المرور:</b> ${s.time}</div><div class="tonnage-info"><b>⏳ الاستدراك:</b> ${s.catchup||'-'}</div><div class="tonnage-info"><b>👤 السائق:</b> ${s.driver||'-'} ${s.phone?`<a href="tel:${s.phone}" class="phone-link">📞 ${s.phone}</a>`:''}</div><button class="btn br" style="margin-top:10px;padding:8px" onclick="deleteScheduleSector(${s.id})">🗑️ حذف</button></div>`).join('');
   }catch(e){}
 }
@@ -1646,7 +1397,7 @@ function loadSchedule(){
 }
 function displaySchedule(){loadSchedule();}
 
-// === 🏭 مركز الفرز التقني - جديد ===
+// === 🏭 مركز الفرز التقني ===
 function registerWasteIn(){
   try{
     const source=document.getElementById('wasteSource').value.trim();
@@ -1664,11 +1415,11 @@ function registerWasteIn(){
       qty:qty,
       quality:quality,
       truck:truck,
-      notes:notes,      date:now.toLocaleDateString('ar-DZ'),
+      notes:notes,
+      date:now.toLocaleDateString('ar-DZ'),
       time:now.toLocaleTimeString('ar-DZ'),
       status:'sorted',
-      marketPublished:false,
-      requests:[]
+      marketPublished:false,      requests:[]
     };
     saveWasteTracking(waste);
     showToast('✅ تم تسجيل الوارد بنجاح');
@@ -1713,11 +1464,11 @@ function publishToMarket(){
         wasteId:m.id,
         category:m.category,
         qty:m.qty,
-        quality:m.quality,        source:m.source,
+        quality:m.quality,
+        source:m.source,
         date:new Date().toLocaleDateString('ar-DZ'),
         status:'available',
-        requests:[]
-      });
+        requests:[]      });
     });
     showToast('✅ تم نشر '+unpublished.length+' مادة في السوق');
     loadSortedMaterials();
@@ -1747,7 +1498,7 @@ function publishMaterial(id){
   }catch(e){showToast('⚠️ خطأ','error');}
 }
 
-// === ♻️ سوق التدوير - جديد ===
+// === ♻️ سوق التدوير ===
 function filterMarket(){
   try{
     loadMarketMaterials();
@@ -1762,11 +1513,11 @@ function loadMarketMaterials(){
     let materials=marketMaterials.filter(m=>m.status==='available');
     if(filterType!=='all')materials=materials.filter(m=>m.category===filterType);
     if(filterQuality!=='all')materials=materials.filter(m=>m.quality===filterQuality);
-    if(!materials.length){list.innerHTML='<p style="text-align:center;color:#666;padding:20px">لا توجد مواد متاحة حالياً</p>';return;}    list.innerHTML=materials.map(m=>`
+    if(!materials.length){list.innerHTML='<p style="text-align:center;color:#666;padding:20px">لا توجد مواد متاحة حالياً</p>';return;}
+    list.innerHTML=materials.map(m=>`
       <div class="material-card available">
         <div class="info-row"><b>🗑️ النوع:</b> <span class="waste-badge waste-${m.category}">${getWasteTypeName(m.category)}</span></div>
-        <div class="info-row"><b>⚖️ الكمية:</b> <span style="font-weight:bold">${m.qty} طن</span></div>
-        <div class="info-row"><b>⭐ الجودة:</b> <span class="quality-${m.quality}">${getQualityName(m.quality)}</span></div>
+        <div class="info-row"><b>⚖️ الكمية:</b> <span style="font-weight:bold">${m.qty} طن</span></div>        <div class="info-row"><b>⭐ الجودة:</b> <span class="quality-${m.quality}">${getQualityName(m.quality)}</span></div>
         <div class="info-row"><b>📍 المصدر:</b> ${m.source}</div>
         <div class="info-row"><b>📅 التاريخ:</b> ${m.date}</div>
         <button class="btn market-btn" style="margin-top:10px" onclick="openRequestForm(${m.id})">📝 طلب الاستفادة</button>
@@ -1811,11 +1562,11 @@ function submitMarketRequest(){
     document.getElementById('companyPhone').value='';
     document.getElementById('requestQty').value='';
     document.getElementById('requestPurpose').value='';
-    document.getElementById('requestForm').style.display='none';  }catch(e){showToast('⚠️ خطأ في الإرسال','error');}
+    document.getElementById('requestForm').style.display='none';
+  }catch(e){showToast('⚠️ خطأ في الإرسال','error');}
 }
 
-// === نظام الطباعة ===
-let currentPrintType=null;
+// === نظام الطباعة ===let currentPrintType=null;
 function openPrintDialog(){
   document.getElementById('printModal').classList.add('active');
   document.getElementById('printPreviewContainer').style.display='none';
@@ -1860,11 +1611,11 @@ function generateTonnageTable(){
   records.forEach((r,i)=>{html+=`<tr><td>${i+1}</td><td>${r.driver||'-'}</td><td>${getWasteTypeName(r.wasteType)}</td><td><b>${r.weight}</b></td><td>${r.date}</td></tr>`;});
   html+='</tbody></table><div style="margin-top:15px;padding:10px;background:#e8f5e9;border-radius:8px;text-align:center"><b>📊 المجموع: '+totalWeight.toFixed(2)+' طن</b></div>';
   return html;
-}function generateSortingTable(){
+}
+function generateSortingTable(){
   if(!wasteTracking||wasteTracking.length===0)return'<p style="text-align:center;padding:20px;color:#666">لا توجد سجلات فرز</p>';
   let totalQty=wasteTracking.reduce((sum,w)=>sum+parseFloat(w.qty||0),0);
-  let html='<table><thead><tr><th>#</th><th>المصدر</th><th>النوع</th><th>الكمية (طن)</th><th>الجودة</th><th>الحالة</th></tr></thead><tbody>';
-  wasteTracking.forEach((w,i)=>{html+=`<tr><td>${i+1}</td><td>${w.source}</td><td>${getWasteTypeName(w.category)}</td><td><b>${w.qty}</b></td><td>${getQualityName(w.quality)}</td><td>${w.marketPublished?'✅ منشور':'⏳ قيد الفرز'}</td></tr>`;});
+  let html='<table><thead><tr><th>#</th><th>المصدر</th><th>النوع</th><th>الكمية (طن)</th><th>الجودة</th><th>الحالة</th></tr></thead><tbody>';  wasteTracking.forEach((w,i)=>{html+=`<tr><td>${i+1}</td><td>${w.source}</td><td>${getWasteTypeName(w.category)}</td><td><b>${w.qty}</b></td><td>${getQualityName(w.quality)}</td><td>${w.marketPublished?'✅ منشور':'⏳ قيد الفرز'}</td></tr>`;});
   html+='</tbody></table><div style="margin-top:15px;padding:10px;background:#e8f5e9;border-radius:8px;text-align:center"><b>📊 إجمالي المواد المصنفة: '+totalQty.toFixed(2)+' طن</b></div>';
   return html;
 }
@@ -1909,5 +1660,12 @@ function calculateConversion(){
   document.getElementById('conversionResult').style.display='block';
   showToast('✅ تم الحساب');
 }
-</script></body>
+
+// === قاموس الترجمات ===
+const translations={
+  ar:{appName:'المدية نظيفة',appSubtitle:'مصلحة النظافة والوقاية الصحية<br>بلدية المدية 2026',connected:'✓ متصل - النظام جاهز',republic:'🇩🇿 الجمهورية الجزائرية الديمقراطية الشعبية',service:'🧹 مصلحة النظافة والوقاية الصحية لبلدية المدية',totalReports:'إجمالي البلاغات',completed:'تم الإنجاز',sorted:'تم الفرز',thanksTitle:'شكراً لكم!',thanksMsg:'تم إرسال بلاغكم بنجاح',slogan:'♻️ معاً لمدية خضراء 2026',sendReport:'إرسال تبليغ',displayTools:'🎬 أدوات العرض',demoData:'بيانات تجريبية',print:'طباعة PDF',dashboard:'لوحة الإحصائيات',exit:'الخروج',services:'✨ الخدمات',scheduleTitle:'جدول الجمع',tipsTitle:'💡 توعية',myRequestsTitle:'🛠️ طلباتي',recyclingCalc:'♻️ حاسبة التدوير',circularEconomy:'🔄 الاقتصاد الدائري',sortingCenter:'🏭 مركز الفرز',recyclingMarket:'🛒 سوق التدوير',staffHall:'👥 الرواق',drivers:'السائقين',admin:'الإدارة',newReport:'📝 بلاغ جديد',takePhoto:'📷 التقاط الصورة',getGPS:'📍 تحديد الموقع GPS',manualLoc:'📍 إدخال يدوي',addrPlaceholder:'📍 اسم الحي أو الشارع',recurring:'🔁 بلاغ متكرر أسبوعياً',sendNow:'✉️ إرسال البلاغ الآن',back:'رجوع',wasteMixed:'🗑️ نفايات عامة',wasteOrganic:'🍂 نفايات عضوية',wastePlastic:'🧴 بلاستيك',wasteMetal:'⚙️ معادن',wastePaper:'📄 ورق/كرتون',wasteGlass:'🥃 زجاج',valueChain:'🔗 تتبع سلسلة القيمة',stepPickup:'📍 نقطة الرفع',stepTransport:'🚚 النقل',stepSorting:'🏭 مركز الفرز',stepRecycling:'♻️ إعادة التدوير',stepMarket:'🏢 السوق',registerWaste:'📥 تسجيل وارد جديد',wasteSourcePlaceholder:'📍 مصدر النفايات (حي/منطقة)',wasteQtyPlaceholder:'⚖️ الكمية بالطن',truckNumberPlaceholder:'🚚 رقم الشاحنة',qualityExcellent:'⭐ جودة عالية - تدوير مباشر',qualityGood:'👍 جودة جيدة - معالجة بسيطة',qualityFair:'⚠️ جودة متوسطة - فرز إضافي',qualityPoor:'❌ غير قابلة للتدوير',wasteNotesPlaceholder:'📝 ملاحظات (نوع البلاستيك، درجة التلوث...)',registerBtn:'✅ تسجيل الوارد',sortedMaterials:'📦 المواد المصنفة المتاحة',publishToMarket:'🚀 نشر في سوق التدوير',allTypes:'📦 جميع الأنواع',allQualities:'⭐ جميع الجودات',requestFormTitle:'📝 طلب الاستفادة من المادة',companyNamePlaceholder:'🏢 اسم المؤسسة/الشركة',companyLicensePlaceholder:'📄 رقم السجل التجاري',companyPhonePlaceholder:'📞 رقم التواصل',requestQtyPlaceholder:'⚖️ الكمية المطلوبة (طن)',requestPurposePlaceholder:'🎯 غرض الاستخدام (إعادة تدوير، تصنيع...)',submitRequest:'📤 إرسال الطلب',cancel:'✕ إلغاء',tip1Title:'الفرز من المصدر:',tip1Desc:'افصل البلاستيك عن الورق لتسهيل إعادة التدوير.',tip2Title:'لا للرمي العشوائي:',tip2Desc:'حافظ على نظافة شوارعك، النظافة من الإيمان.',tip3Title:'تقليل الأكياس:',tip3Desc:'استخدم أكياس قماشية قابلة لإعادة الاستخدام.',tip4Title:'استخدام الحاويات:',tip4Desc:'ارمِ النفايات في الأماكن المخصصة فقط.',reqBin:'🗑️ طلب حاوية جديدة',reqRepair:'🔧 صيانة حاوية تالفة',reqClean:'🧹 طلب تنظيف استثنائي',reqOther:'❓ طلب آخر',reqDetailsPlaceholder:'📝 تفاصيل الطلب',reqLocationPlaceholder:'📍 موقع الطلب',submitRequestBtn:'📤 إرسال الطلب',myPastRequestsTitle:'📋 طلباتي السابقة',publicStatsTitle:'📊 إحصائيات عامة',totalReportsLabel:'إجمالي البلاغات في البلدية:',completionRateLabel:'نسبة الإنجاز:',activeDriversLabel:'عدد السائقين النشطين:',recycledTotalLabel:'إجمالي المواد المعاد تدويرها:',tons:'طن',controlPanel:'⚙️ لوحة التحكم',supervisorLogin:'🔐 الدخول للمشرفين',namePlaceholder:'👤 الاسم',codePlaceholder:'🔑 الرمز (1234)',login:'✓ دخول',supervisorMode:'✓ وضع المشرف مفعل',viewReports:'📊 عرض البلاغات',manageStaff:'👥 إدارة الموظفين',tonnageRecords:'⚖️ سجل الكميات',scheduleManager:'📅 إدارة الجدول',exportExcel:'📥 تصدير Excel',printPDF:'🖨️ طباعة PDF',logout:'✕ خروج',clearData:'🚨 مسح البيانات',distribution:'📊 توزيع حالات البلاغات',reportsList:'📋 قائمة البلاغات',allStatus:'جميع الحالات',statusNew:'جديد',statusAssigned:'قيد التنفيذ',statusDone:'منجز',searchPlaceholder:'🔍 بحث...',addStaff:'➕ إضافة موظف',rolePlaceholder:'💼 المنصب (سائق/مسؤول)',phonePlaceholder:'📞 الهاتف',save:'💾 حفظ',driverArea:'🚚 مساحة السائقين',driverLogin:'🔐 دخول السائق',driverNamePlaceholder:'👤 أدخل اسمك',welcomeDriver:'✓ مرحباً - مهامك جاهزة',yourTasks:'📋 مهامك',registerNewTonnageTitle:'⚖️ تسجيل كمية جديدة',tripDataTitle:'📝 بيانات الرحلة',driverName:'🚛 اسم السائق',sectorNumber:'🏷️ رقم القطاع',weightTons:'⚖️ الوزن بالطن',registrationNumber:'🔢 رقم التسجيل من مركز القدم',saveQuantity:'💾 حفظ الكمية',allRecords:'📋 جميع السجلات',addSector:'➕ إضافة قطاع',neighborhoods:'📍 الأحياء والشوارع',days:'📅 الأيام (مثال: أحد-ثلاثاء-خميس)',time:'🕐 وقت المرور (مثال: 07:00 - 09:00)',catchup:'⏳ أوقات الاستدراك (اختياري)',saveSector:'💾 حفظ القطاع',registeredSectors:'📋 القطاعات المسجلة',citizenRequestsTitle:'📋 طلبات المواطنين',recyclingCalcTitle:'♻️ حاسبة التدوير وإنتاج الطاقة',calcTitle:'🔋 حاسبة التحويل التقديرية',calcBtn:'⚡ حساب التحويل',resEnergyUnit:'كيلوواط ساعة طاقة',resOilUnit:'لتر وقود حيوي/زيت',resCO2Unit:'طن CO₂ مُوفرة',whyRecycle:'📚 لماذا التدوير؟',trackingCode:'📱 كود تتبع البلاغ',reportNumberLabel:'بلاغ رقم:',close:'✕ إغلاق',printTitle:'🖨️ طباعة / تصدير PDF',selectPrint:'اختر ما تريد طباعته:',reports:'📊 البلاغات',tonnage:'⚖️ سجل الكميات',sorting:'🏭 مركز الفرز',market:'♻️ سوق التدوير',stats:'📈 الإحصائيات',printNow:'🖨️ طباعة الآن',downloadPDF:'📥 تحميل PDF',backOptions:'↩️ رجوع',footer:'إعداد د. رابحي فتحي - مصلحة النظافة والوقاية الصحية - بلدية المدية 2026 ©',municipal:'🏛️ خاص / بلدية',private:'🏠 خاص'},
+  fr:{appName:'Médéa Propre',appSubtitle:'Service de Propreté et d\'Hygiène<br>Commune de Médéa 2026',connected:'✓ Connecté - Système Prêt',republic:'🇩🇿 République Algérienne Démocratique et Populaire',service:'🧹 Service de Propreté et d\'Hygiène - Commune de Médéa',totalReports:'Total Signalements',completed:'Terminé',sorted:'Trié',thanksTitle:'Merci!',thanksMsg:'Votre signalement a été envoyé',slogan:'♻️ Ensemble pour une Médéa verte 2026',sendReport:'Envoyer Signalement',displayTools:'🎬 Outils d\'Affichage',demoData:'Données Demo',print:'Imprimer PDF',dashboard:'Tableau de Bord',exit:'Quitter',services:'✨ Services',scheduleTitle:'Calendrier de collecte',tipsTitle:'💡 Conseils',myRequestsTitle:'🛠️ Mes Demandes',recyclingCalc:'♻️ Calculateur Recyclage',circularEconomy:'🔄 Économie Circulaire',sortingCenter:'🏭 Centre de Tri',recyclingMarket:'🛒 Marché Recyclage',staffHall:'👥 Personnel',drivers:'Chauffeurs',admin:'Administration',newReport:'📝 Nouveau Signalement',takePhoto:'📷 Prendre Photo',getGPS:'📍 Localisation GPS',manualLoc:'📍 Saisie Manuelle',addrPlaceholder:'📍 Nom du quartier ou rue',recurring:'🔁 Signalement récurrent hebdomadaire',sendNow:'✉️ Envoyer Maintenant',back:'Retour',wasteMixed:'🗑️ Déchets généraux',wasteOrganic:'🍂 Déchets organiques',wastePlastic:'🧴 Plastique',wasteMetal:'⚙️ Métaux',wastePaper:'📄 Papier/Carton',wasteGlass:'🥃 Verre',valueChain:'🔗 Chaîne de valeur',stepPickup:'📍 Point de collecte',stepTransport:'🚚 Transport',stepSorting:'🏭 Centre de tri',stepRecycling:'♻️ Recyclage',stepMarket:'🏢 Marché',registerWaste:'📥 Enregistrer un arrivage',wasteSourcePlaceholder:'📍 Source des déchets (quartier/zone)',wasteQtyPlaceholder:'⚖️ Quantité en tonnes',truckNumberPlaceholder:'🚚 Numéro du camion',qualityExcellent:'⭐ Qualité excellente - Recyclage direct',qualityGood:'👍 Bonne qualité - Traitement simple',qualityFair:'⚠️ Qualité moyenne - Tri supplémentaire',qualityPoor:'❌ Non recyclable',wasteNotesPlaceholder:'📝 Notes (type de plastique, niveau de contamination...)',registerBtn:'✅ Enregistrer',sortedMaterials:'📦 Matières triées disponibles',publishToMarket:'🚀 Publier sur le marché',allTypes:'📦 Tous les types',allQualities:'⭐ Toutes qualités',requestFormTitle:'📝 Demande d\'utilisation de matière',companyNamePlaceholder:'🏢 Nom de l\'entreprise',companyLicensePlaceholder:'📄 Numéro de registre commercial',companyPhonePlaceholder:'📞 Numéro de contact',requestQtyPlaceholder:'⚖️ Quantité demandée (tonnes)',requestPurposePlaceholder:'🎯 Usage prévu (recyclage, fabrication...)',submitRequest:'📤 Envoyer la demande',cancel:'✕ Annuler',tip1Title:'Tri à la source:',tip1Desc:'Séparez le plastique du papier pour faciliter le recyclage.',tip2Title:'Non aux dépôts sauvages:',tip2Desc:'Gardez vos rues propres, la propreté fait partie de la foi.',tip3Title:'Réduire les sacs:',tip3Desc:'Utilisez des sacs en tissu réutilisables.',tip4Title:'Utiliser les conteneurs:',tip4Desc:'Jetez les déchets uniquement aux endroits prévus.',reqBin:'🗑️ Demande de nouvelle poubelle',reqRepair:'🔧 Réparation de poubelle',reqClean:'🧹 Nettoyage exceptionnel',reqOther:'❓ Autre demande',reqDetailsPlaceholder:'📝 Détails de la demande',reqLocationPlaceholder:'📍 Lieu de la demande',submitRequestBtn:'📤 Envoyer',myPastRequestsTitle:'📋 Mes demandes précédentes',publicStatsTitle:'📊 Statistiques générales',totalReportsLabel:'Total des signalements:',completionRateLabel:'Taux de réalisation:',activeDriversLabel:'Chauffeurs actifs:',recycledTotalLabel:'Total matières recyclées:',tons:'tonnes',controlPanel:'⚙️ Panneau de contrôle',supervisorLogin:'🔐 Accès Superviseur',namePlaceholder:'👤 Nom',codePlaceholder:'🔑 Code (1234)',login:'✓ Connexion',supervisorMode:'✓ Mode Superviseur activé',viewReports:'📊 Voir signalements',manageStaff:'👥 Gestion du personnel',tonnageRecords:'⚖️ Registre des tonnages',scheduleManager:'📅 Gestion du calendrier',exportExcel:'📥 Exporter Excel',printPDF:'🖨️ Imprimer PDF',logout:'✕ Déconnexion',clearData:'🚨 Effacer données',distribution:'📊 Distribution des statuts',reportsList:'📋 Liste des signalements',allStatus:'Tous statuts',statusNew:'Nouveau',statusAssigned:'En cours',statusDone:'Terminé',searchPlaceholder:'🔍 Rechercher...',addStaff:'➕ Ajouter personnel',rolePlaceholder:'💼 Poste (Chauffeur/Responsable)',phonePlaceholder:'📞 Téléphone',save:'💾 Enregistrer',driverArea:'🚚 Espace Chauffeurs',driverLogin:'🔐 Connexion Chauffeur',driverNamePlaceholder:'👤 Entrez votre nom',welcomeDriver:'✓ Bienvenue - Vos tâches sont prêtes',yourTasks:'📋 Vos tâches',registerNewTonnageTitle:'⚖️ Enregistrer nouvelle quantité',tripDataTitle:'📝 Données du voyage',driverName:'🚛 Nom du chauffeur',sectorNumber:'🏷️ Numéro de secteur',weightTons:'⚖️ Poids en tonnes',registrationNumber:'🔢 Numéro d\'enregistrement',saveQuantity:'💾 Enregistrer',allRecords:'📋 Tous les enregistrements',addSector:'➕ Ajouter secteur',neighborhoods:'📍 Quartiers et rues',days:'📅 Jours (ex: Dimanche-Mardi-Jeudi)',time:'🕐 Heure de passage (ex: 07:00 - 09:00)',catchup:'⏳ Heures de rattrapage (optionnel)',saveSector:'💾 Enregistrer secteur',registeredSectors:'📋 Secteurs enregistrés',citizenRequestsTitle:'📋 Demandes des citoyens',recyclingCalcTitle:'♻️ Calculateur recyclage et énergie',calcTitle:'🔋 Calculateur de conversion',calcBtn:'⚡ Calculer',resEnergyUnit:'kWh d\'énergie',resOilUnit:'Litres de biocarburant',resCO2Unit:'Tonnes de CO₂ économisées',whyRecycle:'📚 Pourquoi recycler?',trackingCode:'📱 Code de suivi',reportNumberLabel:'Signalement N°:',close:'✕ Fermer',printTitle:'🖨️ Imprimer / Exporter PDF',selectPrint:'Sélectionnez ce que vous voulez imprimer:',reports:'📊 Signalements',tonnage:'⚖️ Registre tonnages',sorting:'🏭 Centre de tri',market:'♻️ Marché recyclage',stats:'📈 Statistiques',printNow:'🖨️ Imprimer',downloadPDF:'📥 Télécharger PDF',backOptions:'↩️ Retour',footer:'Dr. Rabhi Fethi - Service de Propreté - Commune de Médéa 2026 ©',municipal:'🏛️ Municipal',private:'🏠 Privé'},  en:{appName:'Clean Medea',appSubtitle:'Sanitation & Health Department<br>Medea Municipality 2026',connected:'✓ Connected - System Ready',republic:'🇩 People\'s Democratic Republic of Algeria',service:'🧹 Sanitation & Health Department - Medea',totalReports:'Total Reports',completed:'Completed',sorted:'Sorted',thanksTitle:'Thank You!',thanksMsg:'Your report has been sent',slogan:'♻️ Together for a Green Medea 2026',sendReport:'Send Report',displayTools:'🎬 Display Tools',demoData:'Demo Data',print:'Print PDF',dashboard:'Dashboard',exit:'Exit',services:'✨ Services',scheduleTitle:'Collection Schedule',tipsTitle:'💡 Tips',myRequestsTitle:'🛠️ My Requests',recyclingCalc:'♻️ Recycling Calculator',circularEconomy:'🔄 Circular Economy',sortingCenter:'🏭 Sorting Center',recyclingMarket:'🛒 Recycling Market',staffHall:'👥 Staff',drivers:'Drivers',admin:'Administration',newReport:'📝 New Report',takePhoto:'📷 Take Photo',getGPS:'📍 Get GPS Location',manualLoc:'📍 Manual Entry',addrPlaceholder:'📍 Neighborhood or street name',recurring:'🔁 Weekly recurring report',sendNow:'✉️ Send Report Now',back:'Back',wasteMixed:'🗑️ General waste',wasteOrganic:'🍂 Organic waste',wastePlastic:'🧴 Plastic',wasteMetal:'⚙️ Metals',wastePaper:'📄 Paper/Cardboard',wasteGlass:'🥃 Glass',valueChain:'🔗 Value Chain',stepPickup:'📍 Pickup point',stepTransport:'🚚 Transport',stepSorting:'🏭 Sorting center',stepRecycling:'♻️ Recycling',stepMarket:'🏢 Market',registerWaste:'📥 Register new waste',wasteSourcePlaceholder:'📍 Waste source (neighborhood/area)',wasteQtyPlaceholder:'⚖️ Quantity in tons',truckNumberPlaceholder:'🚚 Truck number',qualityExcellent:'⭐ Excellent quality - Direct recycling',qualityGood:'👍 Good quality - Simple treatment',qualityFair:'⚠️ Fair quality - Additional sorting',qualityPoor:'❌ Non-recyclable',wasteNotesPlaceholder:'📝 Notes (plastic type, contamination level...)',registerBtn:'✅ Register',sortedMaterials:'📦 Sorted materials available',publishToMarket:'🚀 Publish to market',allTypes:'📦 All types',allQualities:'⭐ All qualities',requestFormTitle:'📝 Material usage request',companyNamePlaceholder:'🏢 Company name',companyLicensePlaceholder:'📄 Commercial register number',companyPhonePlaceholder:'📞 Contact number',requestQtyPlaceholder:'⚖️ Requested quantity (tons)',requestPurposePlaceholder:'🎯 Intended use (recycling, manufacturing...)',submitRequest:'📤 Submit request',cancel:'✕ Cancel',tip1Title:'Source separation:',tip1Desc:'Separate plastic from paper to facilitate recycling.',tip2Title:'No illegal dumping:',tip2Desc:'Keep your streets clean, cleanliness is part of faith.',tip3Title:'Reduce bags:',tip3Desc:'Use reusable cloth bags.',tip4Title:'Use containers:',tip4Desc:'Dispose of waste only in designated areas.',reqBin:'🗑️ Request new bin',reqRepair:'🔧 Bin repair',reqClean:'🧹 Special cleaning',reqOther:'❓ Other request',reqDetailsPlaceholder:'📝 Request details',reqLocationPlaceholder:'📍 Request location',submitRequestBtn:'📤 Submit',myPastRequestsTitle:'📋 My past requests',publicStatsTitle:'📊 General Statistics',totalReportsLabel:'Total reports:',completionRateLabel:'Completion rate:',activeDriversLabel:'Active drivers:',recycledTotalLabel:'Total recycled materials:',tons:'tons',controlPanel:'⚙️ Control Panel',supervisorLogin:'🔐 Supervisor Login',namePlaceholder:'👤 Name',codePlaceholder:'🔑 Code (1234)',login:'✓ Login',supervisorMode:'✓ Supervisor Mode Active',viewReports:'📊 View reports',manageStaff:'👥 Manage staff',tonnageRecords:'⚖️ Tonnage records',scheduleManager:'📅 Schedule management',exportExcel:'📥 Export Excel',printPDF:'🖨️ Print PDF',logout:'✕ Logout',clearData:'🚨 Clear data',distribution:'📊 Status distribution',reportsList:'📋 Reports list',allStatus:'All status',statusNew:'New',statusAssigned:'In progress',statusDone:'Completed',searchPlaceholder:'🔍 Search...',addStaff:'➕ Add staff',rolePlaceholder:'💼 Position (Driver/Supervisor)',phonePlaceholder:'📞 Phone',save:'💾 Save',driverArea:'🚚 Driver Area',driverLogin:'🔐 Driver Login',driverNamePlaceholder:'👤 Enter your name',welcomeDriver:'✓ Welcome - Your tasks are ready',yourTasks:'📋 Your tasks',registerNewTonnageTitle:'⚖️ Register new quantity',tripDataTitle:'📝 Trip data',driverName:'🚛 Driver name',sectorNumber:'🏷️ Sector number',weightTons:'⚖️ Weight in tons',registrationNumber:'🔢 Registration number',saveQuantity:'💾 Save',allRecords:'📋 All records',addSector:'➕ Add sector',neighborhoods:'📍 Neighborhoods and streets',days:'📅 Days (e.g., Sun-Tue-Thu)',time:'🕐 Passage time (e.g., 07:00 - 09:00)',catchup:'⏳ Catchup times (optional)',saveSector:'💾 Save sector',registeredSectors:'📋 Registered sectors',citizenRequestsTitle:'📋 Citizen requests',recyclingCalcTitle:'♻️ Recycling & Energy Calculator',calcTitle:'🔋 Conversion calculator',calcBtn:'⚡ Calculate',resEnergyUnit:'kWh energy',resOilUnit:'Liters biofuel',resCO2Unit:'Tons CO₂ saved',whyRecycle:'📚 Why recycle?',trackingCode:'📱 Tracking code',reportNumberLabel:'Report #:',close:'✕ Close',printTitle:'🖨️ Print / Export PDF',selectPrint:'Select what you want to print:',reports:'📊 Reports',tonnage:'⚖️ Tonnage records',sorting:'🏭 Sorting center',market:'♻️ Recycling market',stats:'📈 Statistics',printNow:'🖨️ Print now',downloadPDF:'📥 Download PDF',backOptions:'↩️ Back',footer:'Dr. Rabhi Fethi - Sanitation Department - Medea Municipality 2026 ©',municipal:'🏛️ Municipal',private:'🏠 Private'}
+};
+</script>
+</body>
 </html>
