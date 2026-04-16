@@ -2,7 +2,7 @@
 <html lang="ar" dir="rtl">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>المدية نظيفة 2026 - نظام متكامل متزامن</title>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
@@ -11,7 +11,7 @@
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
 <style>
-*{box-sizing:border-box;margin:0;padding:0;font-family:'Segoe UI',Tahoma,sans-serif}
+*{box-sizing:border-box;margin:0;padding:0;font-family:'Segoe UI',Tahoma,sans-serif;-webkit-tap-highlight-color:transparent}
 html,body{overflow-x:hidden;width:100%;background:#f5f7fa;min-height:100vh}
 #splash{position:fixed;top:0;left:0;width:100%;height:100%;background:linear-gradient(135deg,#1B5E20,#2E7D32);z-index:99999;display:flex;flex-direction:column;align-items:center;justify-content:center;transition:opacity 0.5s}
 #splash .logo-box{width:250px;height:250px;background:#fff;border-radius:50%;margin-bottom:25px;display:flex;align-items:center;justify-content:center;box-shadow:0 10px 40px rgba(0,0,0,0.3);animation:pulse 2s infinite}
@@ -239,74 +239,7 @@ html,body{overflow-x:hidden;width:100%;background:#f5f7fa;min-height:100vh}
     </div>
   </div>
 </div>
-// === تحميل التطبيق ===
-window.addEventListener('load', function(){
-  console.log('🚀 App starting...');
-  
-  // إخفاء شاشة التحميل بعد 2 ثانية كحد أقصى
-  setTimeout(() => {
-    forceHideSplash();
-  }, 2000);
-  
-  // إعداد المزامنة
-  try {
-    setupSync();
-  } catch(e) {
-    console.error('❌ Sync setup error:', e);
-    // حتى لو فشلت المزامنة، نخفي شاشة التحميل
-    setTimeout(() => {
-      forceHideSplash();
-    }, 3000);
-  }
-  
-  // تحميل البيانات من السحابة أو المحلي
-  loadFromCloud('reports', 'reports', (data) => {
-    allReports = data ? Object.values(data) : [];
-    console.log('📊 Initial reports loaded:', allReports.length);
-    updateStats();
-  });
-  
-  loadFromCloud('wasteTracking', 'wasteTracking', (data) => {
-    wasteTracking = data ? Object.values(data) : [];
-  });
-  
-  loadFromCloud('marketMaterials', 'marketMaterials', (data) => {
-    marketMaterials = data ? Object.values(data) : [];
-  });
-  
-  loadFromCloud('truckTracking', 'truckTracking', (data) => {
-    if(data) truckTrackingData = data;
-  });
-});
 
-// === 🔧 إصلاح شاشة التحميل - دالة مضمونة ===
-function forceHideSplash(){
-  try{
-    const splash=document.getElementById('splash');
-    if(splash){
-      console.log('👋 Hiding splash screen');
-      splash.style.opacity='0';
-      setTimeout(()=>{
-        splash.style.display='none';
-        console.log('✅ Splash screen hidden');
-      }, 500);
-    }
-  }catch(e){
-    console.error('❌ Error hiding splash:', e);
-    // محاولة بديلة
-    try{
-      document.getElementById('splash').style.display='none';
-    }catch(err){
-      console.error('❌ Alternative hide failed:', err);
-    }
-  }
-}
-
-// شبكة أمان: إخفاء الشاشة بعد 5 ثوانٍ بغض النظر عن الحالة
-setTimeout(() => {
-  console.log('⏰ Safety timeout - forcing splash hide');
-  forceHideSplash();
-}, 5000);
 <div id="truckTracking" class="page">
   <h2 style="margin-bottom:15px;color:#1B5E20;text-align:center">🚚 تتبع مسار الشاحنة</h2>
   <div class="cd">
@@ -732,7 +665,32 @@ setTimeout(() => {
 
 <script>
 // ============================================================
-// ⚙️ إعداد Firebase - الإعدادات الصحيحة من مشروعك
+// 🔧 إصلاح شاشة التحميل - شبكة أمان مضمونة
+// ============================================================
+function forceHideSplash(){
+  try{
+    const splash=document.getElementById('splash');
+    if(splash){
+      console.log('👋 Hiding splash screen');
+      splash.style.opacity='0';
+      setTimeout(()=>{
+        splash.style.display='none';
+        console.log('✅ Splash screen hidden');
+      }, 500);
+    }
+  }catch(e){
+    console.error('❌ Error hiding splash:', e);
+    try{document.getElementById('splash').style.display='none';}catch(err){}
+  }
+}
+
+// شبكة أمان: إخفاء الشاشة بعد 3 ثوانٍ بغض النظر عن أي خطأsetTimeout(() => {
+  console.log('⏰ Safety timeout - forcing splash hide');
+  forceHideSplash();
+}, 3000);
+
+// ============================================================
+// ⚙️ إعداد Firebase
 // ============================================================
 const firebaseConfig = {
   apiKey: "AIzaSyBMao4dJL_2YQjibDvcTIMw1vHHytpVqs0",
@@ -745,13 +703,16 @@ const firebaseConfig = {
   measurementId: "G-W10RQWLJ54"
 };
 
-// تهيئة Firebase
+let db;
 try {
   firebase.initializeApp(firebaseConfig);
+  db = firebase.database();
   console.log('✅ Firebase initialized successfully');
 } catch(e) {
-  console.error('❌ Firebase initialization error:', e);
-}const db = firebase.database();
+  console.warn('⚠️ Firebase init skipped/error:', e);
+  // إنشاء قاعدة بيانات وهمية لمنع توقف الكود
+  db = { ref: () => ({ on: ()=>{}, once: ()=>Promise.resolve({val:()=>null}), set: ()=>Promise.resolve(), remove: ()=>Promise.resolve() }) };
+}
 
 // === المتغيرات العامة ===
 let allReports=[], currentLang='ar', tempImage=null, tempAfterImage=null, currentDriver='', userPoints=0, currentDriverSector='';
@@ -768,13 +729,11 @@ const sectorRoutesData = {
 };
 
 // ============================================================
-// 🔄 نظام المزامنة السحابية - ✅ مُصحح نهائياً
+// 🔄 نظام المزامنة السحابية
 // ============================================================
 function setupSync() {
   console.log('🔄 Setting up Firebase sync...');
-  
-  // مراقبة حالة الاتصال
-  const connectedRef = db.ref('.info/connected');
+    const connectedRef = db.ref('.info/connected');
   connectedRef.on('value', (snap) => {
     const syncEl = document.getElementById('syncIndicator');
     if(snap.val() === true) {
@@ -788,22 +747,17 @@ function setupSync() {
     }
   });
 
-  // ✅ مزامنة البلاغات - قراءة من المسار الصحيح
-  console.log('📡 Listening to reports...');
   db.ref('reports').on('value', (snapshot) => {
     console.log('📥 Reports snapshot received');
     const data = snapshot.val();
-    console.log('📦 Data:', data);
     allReports = data ? Object.values(data) : [];
     console.log('📊 Total reports:', allReports.length);
     updateStats();
     if(document.getElementById('reportsPage')?.classList.contains('active')) {
       showReportsPage();
     }
-  }, (error) => {    console.error('❌ Error reading reports:', error);
   });
 
-  // مزامنة تتبع النفايات
   db.ref('wasteTracking').on('value', (snapshot) => {
     const data = snapshot.val();
     wasteTracking = data ? Object.values(data) : [];
@@ -811,14 +765,12 @@ function setupSync() {
     if(document.getElementById('recyclingMarket')?.classList.contains('active')) loadMarketMaterials();
   });
 
-  // مزامنة سوق التدوير
   db.ref('marketMaterials').on('value', (snapshot) => {
     const data = snapshot.val();
     marketMaterials = data ? Object.values(data) : [];
     if(document.getElementById('recyclingMarket')?.classList.contains('active')) loadMarketMaterials();
   });
 
-  // مزامنة تتبع الشاحنات
   db.ref('truckTracking').on('value', (snapshot) => {
     const data = snapshot.val();
     if(data) {
@@ -830,107 +782,67 @@ function setupSync() {
     }
   });
   
-  console.log('✅ Sync setup complete');
-}
+  console.log('✅ Sync setup complete');}
 
-// ✅ دالة الحفظ في السحابة - استخدام .set() مباشرة
 function saveToCloud(path, data) {
   console.log('💾 Saving to cloud:', path);
-  db.ref(path).set(data)
-    .then(() => {
-      console.log('✅ Saved successfully to:', path);
-    })
-    .catch(err => {
-      console.error('❌ Save error:', err);
-    });
+  db.ref(path).set(data).catch(err => console.log('Cloud save error, saving locally'));
   localStorage.setItem('medea_' + path, JSON.stringify(data));
 }
 
-// تحميل البيانات مع إمكانية العمل دون اتصال
 function loadFromCloud(path, localKey, callback) {
   console.log('📥 Loading from cloud:', path);
-  db.ref(path).once('value').then(snapshot => {    const data = snapshot.val();
-    console.log('📦 Loaded data:', data);
+  db.ref(path).once('value').then(snapshot => {
+    const data = snapshot.val();
     if(data) {
       callback(data);
       localStorage.setItem('medea_' + localKey, JSON.stringify(data));
     } else {
       const localData = localStorage.getItem('medea_' + localKey);
-      if(localData) {
-        console.log('📂 Loaded from local storage');
-        callback(JSON.parse(localData));
-      }
+      if(localData) callback(JSON.parse(localData));
     }
-  }).catch((err) => {
-    console.error('❌ Load error:', err);
+  }).catch(() => {
     const localData = localStorage.getItem('medea_' + localKey);
     if(localData) callback(JSON.parse(localData));
   });
 }
 
-// ✅ تحديث جزئي في Firebase
 function updateCloudItem(path, itemId, updates) {
   console.log('🔄 Updating item:', path + '/' + itemId);
-  db.ref(path + '/' + itemId).set(updates)
-    .then(() => console.log('✅ Updated successfully'))
-    .catch(err => console.error('❌ Update error:', err));
+  db.ref(path + '/' + itemId).set(updates).catch(err => console.log('Update error'));
 }
 
-// ✅ إضافة عنصر جديد - استخدام .set() مع المسار الكامل
 function addToCloud(path, item) {
   console.log('➕ Adding to cloud:', path);
   return db.ref(path).set(item)
-    .then(() => {
-      console.log('✅ Added successfully');
-      showToast('✅ تم الحفظ والمزامنة');
-    })
-    .catch(err => {
-      console.error('❌ Add error:', err);
-      showToast('⚠️ خطأ في المزامنة');
-    });
+    .then(() => console.log('✅ Added successfully'))
+    .catch(err => console.error('❌ Add error:', err));
 }
 
-// حذف من Firebase
 function deleteFromCloud(path, itemId) {
   console.log('🗑️ Deleting:', path + '/' + itemId);
-  return db.ref(path + '/' + itemId).remove()
-    .then(() => console.log('✅ Deleted successfully'))
-    .catch(err => console.error('❌ Delete error:', err));
+  return db.ref(path + '/' + itemId).remove().catch(err => console.log('Delete error'));
 }
 
-// === تحميل التطبيق ===window.addEventListener('load', function(){
+// === تحميل التطبيق ===
+window.addEventListener('load', function(){
   console.log('🚀 App starting...');
-  console.log('🔧 Firebase Config:', firebaseConfig);
   
-  // إعداد المزامنة
-  setupSync();
+  // إخفاء شاشة التحميل بشكل مضمون
+  setTimeout(() => { forceHideSplash(); }, 2000);
   
-  // تحميل البيانات من السحابة أو المحلي
+  try { setupSync(); } catch(e) { console.error('Sync error:', e); }  
   loadFromCloud('reports', 'reports', (data) => {
     allReports = data ? Object.values(data) : [];
-    console.log('📊 Initial reports loaded:', allReports.length);
     updateStats();
   });
   
-  loadFromCloud('wasteTracking', 'wasteTracking', (data) => {
-    wasteTracking = data ? Object.values(data) : [];
-  });
-  
-  loadFromCloud('marketMaterials', 'marketMaterials', (data) => {
-    marketMaterials = data ? Object.values(data) : [];
-  });
-  
-  loadFromCloud('truckTracking', 'truckTracking', (data) => {
-    if(data) truckTrackingData = data;
-  });
-  
-  // إخفاء شاشة التحميل
-  setTimeout(() => {
-    forceHideSplash();
-  }, 2000);
+  loadFromCloud('wasteTracking', 'wasteTracking', (data) => { wasteTracking = data ? Object.values(data) : []; });
+  loadFromCloud('marketMaterials', 'marketMaterials', (data) => { marketMaterials = data ? Object.values(data) : []; });
+  loadFromCloud('truckTracking', 'truckTracking', (data) => { if(data) truckTrackingData = data; });
 });
 
-// === 🔧 إصلاح شاشة التحميل ===
+// === 🔧 دالة إخفاء شاشة التحميل ===
 function forceHideSplash(){
   try{
     const splash=document.getElementById('splash');
@@ -947,7 +859,8 @@ function showToast(msg,type='success'){
   try{
     const container=document.getElementById('toast-container');
     if(!container)return;
-    const toast=document.createElement('div');    toast.className='toast';
+    const toast=document.createElement('div');
+    toast.className='toast';
     toast.innerHTML=`<span>${type==='success'?'✅':'ℹ️'}</span><span>${msg}</span>`;
     container.appendChild(toast);
     setTimeout(()=>{toast.style.opacity='0';setTimeout(()=>toast.remove(),300);},3000);
@@ -967,8 +880,7 @@ function changeLang(l,btn){
     if(btn)btn.classList.add('active');
     localStorage.setItem('medea_lang',l);
     updateTime();
-    showToast(currentLang==='ar'?'تم تغيير اللغة':currentLang==='fr'?'Langue changée':'Language changed');
-  }catch(e){}
+    showToast(currentLang==='ar'?'تم تغيير اللغة':currentLang==='fr'?'Langue changée':'Language changed');  }catch(e){}
 }
 
 // === الوقت والتاريخ ===
@@ -992,13 +904,11 @@ function loadReports(){
     updateStats();
   }catch(e){allReports=[];}
 }
-
-// ✅ دالة حفظ البلاغ - مُصححة
 function saveReport(r){
   console.log('📝 Saving report:', r);
-  addToCloud('reports/' + r.id, r);  updateStats();
+  addToCloud('reports/' + r.id, r);
+  updateStats();
 }
-
 function updateReport(id,upd){
   updateCloudItem('reports', id, upd);
   const index=allReports.findIndex(x=>x.id==id);
@@ -1019,8 +929,7 @@ function loadWasteTracking(){
 }
 function saveWasteTracking(w){
   addToCloud('wasteTracking/' + w.id, w);
-  updateStats();
-}
+  updateStats();}
 function updateWasteTracking(id,upd){
   updateCloudItem('wasteTracking', id, upd);
   const i=wasteTracking.findIndex(x=>x.id==id);
@@ -1045,7 +954,8 @@ function saveMarketMaterial(m){
 }
 
 // === الإحصائيات ===
-function updateStats(){  try{
+function updateStats(){
+  try{
     document.getElementById('statTotal').textContent=allReports.length;
     document.getElementById('statDone').textContent=allReports.filter(r=>r.status==='done').length;
     document.getElementById('statPending').textContent=allReports.filter(r=>r.status!=='done').length;
@@ -1068,8 +978,7 @@ function showPage(id){
     if(id==='schedule')displaySchedule();
     if(id==='tonnageRecords')loadTonnageRecords();
     if(id==='scheduleManager')loadScheduleSectors();
-    if(id==='adminRequests')loadAdminRequests();
-    if(id==='requests')loadMyRequests();
+    if(id==='adminRequests')loadAdminRequests();    if(id==='requests')loadMyRequests();
     if(id==='driverTonnage')prepareDriverTonnage();
     if(id==='sortingCenter')loadSortedMaterials();
     if(id==='recyclingMarket')loadMarketMaterials();
@@ -1094,7 +1003,8 @@ function startTruckTracking(){
 function startGPSMonitoring(){
   if(!navigator.geolocation){showToast('⚠️ GPS غير مدعوم','error');return;}
   window.trackingInterval=setInterval(()=>{
-    navigator.geolocation.getCurrentPosition(pos=>{      const position={lat:pos.coords.latitude,lng:pos.coords.longitude,timestamp:new Date().toISOString(),accuracy:pos.coords.accuracy};
+    navigator.geolocation.getCurrentPosition(pos=>{
+      const position={lat:pos.coords.latitude,lng:pos.coords.longitude,timestamp:new Date().toISOString(),accuracy:pos.coords.accuracy};
       truckTrackingData.positions.push(position);
       saveToCloud('truckTracking', truckTrackingData);
       updateTruckTrackingMap(position);
@@ -1117,8 +1027,7 @@ function recordBinCollection(){
 
 function stopTruckTracking(){
   if(window.trackingInterval)clearInterval(window.trackingInterval);
-  truckTrackingData.active=false;
-  saveToCloud('truckTracking', truckTrackingData);
+  truckTrackingData.active=false;  saveToCloud('truckTracking', truckTrackingData);
   showToast('✅ تم إيقاف التتبع');
   showPage('driver');
 }
@@ -1143,7 +1052,8 @@ function updateTruckTrackingUI(){
     if(truckTrackingData.collectedBins.length===0){
       binsList.innerHTML='<p style="text-align:center;color:#666;padding:20px">لم يتم جمع أي حاويات بعد</p>';
     }else{
-      binsList.innerHTML=truckTrackingData.collectedBins.map((bin,idx)=>`<div class="bin-collected">🗑️ حاوية #${idx+1}<br><small>${bin.lat.toFixed(6)}, ${bin.lng.toFixed(6)}</small><br><small>🕐 ${new Date(bin.timestamp).toLocaleTimeString('ar-DZ')}</small></div>`).join('');    }
+      binsList.innerHTML=truckTrackingData.collectedBins.map((bin,idx)=>`<div class="bin-collected">🗑️ حاوية #${idx+1}<br><small>${bin.lat.toFixed(6)}, ${bin.lng.toFixed(6)}</small><br><small>🕐 ${new Date(bin.timestamp).toLocaleTimeString('ar-DZ')}</small></div>`).join('');
+    }
   }catch(e){}
 }
 
@@ -1166,8 +1076,7 @@ function initTruckTrackingMap(){
       const latlngs=truckTrackingData.positions.map(p=>[p.lat,p.lng]);
       trackingPath=L.polyline(latlngs,{color:'#1B5E20',weight:4}).addTo(map);
       truckTrackingData.collectedBins.forEach(bin=>addBinMarkerToMap(bin));
-    }
-  }catch(e){}
+    }  }catch(e){}
 }
 
 function updateTruckTrackingMap(position){
@@ -1192,7 +1101,8 @@ function addBinMarkerToMap(bin){
   }catch(e){}
 }
 
-// === 🚚 تتبع مسار الشاحنات حسب القطاع ===function loadSectorRoute(){
+// === 🚚 تتبع مسار الشاحنات حسب القطاع ===
+function loadSectorRoute(){
   const sectorId=document.getElementById('sectorSelect').value;
   if(sectorId && sectorRoutesData[sectorId]){
     currentSectorData=sectorRoutesData[sectorId];
@@ -1215,8 +1125,7 @@ function showRouteOnMap(){
     const color=index===0?'#4CAF50':index===currentSectorData.path.length-1?'#f44336':'#2196F3';
     const label=index===0?'🚚 البداية':index===currentSectorData.path.length-1?'🏁 النهاية':`📍 نقطة ${index}`;
     L.circleMarker(point,{radius:8,fillColor:color,color:'#fff',weight:2,opacity:1,fillOpacity:0.9}).addTo(routeMap).bindPopup(label);
-  });
-  if(binsLayer)routeMap.removeLayer(binsLayer);
+  });  if(binsLayer)routeMap.removeLayer(binsLayer);
   binsLayer=L.layerGroup().addTo(routeMap);
   currentSectorData.bins.forEach(bin=>{
     L.circleMarker([bin.lat,bin.lng],{radius:10,fillColor:'#FF9800',color:'#fff',weight:2,opacity:1,fillOpacity:0.9}).addTo(binsLayer).bindPopup(`🗑️ حاوية #${bin.id}<br>🕐 ${bin.time}`);
@@ -1241,7 +1150,8 @@ function exportRouteToPDF(){
   showToast('✅ تم فتح نافذة الطباعة');
 }
 
-// === باقي الدوال ===function getWasteTypeName(t){return{organic:'🍂 عضوي',plastic:'🧴 بلاستيك',metal:'⚙️ معدن',paper:'📄 ورق',glass:'🥃 زجاج',mixed:'🗑️ مختلط'}[t]||'🗑️ عام';}
+// === باقي الدوال ===
+function getWasteTypeName(t){return{organic:'🍂 عضوي',plastic:'🧴 بلاستيك',metal:'⚙️ معدن',paper:'📄 ورق',glass:'🥃 زجاج',mixed:'🗑️ مختلط'}[t]||'🗑️ عام';}
 function startVoiceInput(){try{if(!('webkitSpeechRecognition' in window)){showToast('⚠️ متصفحك لا يدعم الصوت','error');return;}const recognition=new webkitSpeechRecognition();recognition.lang=currentLang==='ar'?'ar-DZ':currentLang==='fr'?'fr-FR':'en-US';recognition.onstart=()=>showToast('🎤 جاري الاستماع...');recognition.onresult=(event)=>{document.getElementById('addrInput').value=event.results[0][0].transcript;showToast('✅ تم الإملاء');};recognition.onerror=()=>showToast('⚠️ خطأ في الصوت','error');recognition.start();}catch(e){showToast('⚠️ خطأ في الصوت','error');}}
 function getLocation(){try{const btn=document.getElementById('getLocationBtn');const addr=document.getElementById('addrInput');const gps=document.getElementById('gpsInput');if(!navigator.geolocation){showToast('⚠️ GPS غير مدعوم','error');return;}btn.innerHTML='⏳ جاري...';btn.disabled=true;navigator.geolocation.getCurrentPosition(pos=>{const lat=pos.coords.latitude,lng=pos.coords.longitude;gps.value=lat.toFixed(6)+', '+lng.toFixed(6);addr.value='المدية، الجزائر';btn.innerHTML='📍 تحديد الموقع GPS';btn.disabled=false;showToast('✅ '+addr.value);},()=>{btn.innerHTML='📍 تحديد الموقع GPS';btn.disabled=false;showToast('⚠️ فشل تحديد الموقع','error');},{enableHighAccuracy:true,timeout:20000});}catch(e){showToast('⚠️ خطأ في الموقع','error');}}
 function manualLocation(){const a=prompt('أدخل العنوان:','حي الزيتون - المدية');if(a){document.getElementById('addrInput').value=a;document.getElementById('gpsInput').value='36.2642, 2.7545';}}
@@ -1264,8 +1174,7 @@ function filterByStatus(s){showPage('reportsPage');if(document.getElementById('f
 function renderReportsList(reps){try{const c=document.getElementById('reportsList');if(!reps||reps.length===0){c.innerHTML='<p style="text-align:center;color:#666;padding:40px">لا توجد بلاغات</p>';return;}c.innerHTML='';c.innerHTML+=reps.slice(0,50).map(r=>{if(!r)return'';const d1=r.image?`<button class="download-btn" onclick="downloadImage('${r.image}','before_${r.id}.jpg')">⬇️ تحميل صورة قبل</button>`:'';const d2=r.doneImage?`<button class="download-btn" onclick="downloadImage('${r.doneImage}','after_${r.id}.jpg')">⬇️ تحميل صورة بعد</button>`:'';const d3=`<button class="download-btn download-all" onclick="downloadReportText(${r.id})">📄 التقرير الكامل</button>`;const q=`<button class="download-btn purple" onclick="showQR(${r.id})">📱 QR Code</button>`;const img1=r.image?`<div class="img-container"><img src="${r.image}"><div class="img-label">📷 قبل (${r.date})</div></div>${d1}`:'';const img2=r.doneImage?`<div class="img-container"><img src="${r.doneImage}"><div class="img-label done-label">✅ بعد (${r.doneTime||''})</div></div>${d2}`:'';let act='';if(r.status==='new'||r.status==='assigned')act+=`<button class="btn bo" onclick="assignDriver(${r.id})" style="margin-bottom:8px">📤 توجيه للسائق</button>`;act+=`<button class="btn br" onclick="deleteReport(${r.id})">🗑️ حذف</button>`;const recurringBadge=r.recurring?'<span style="background:#FF9800;color:#fff;padding:2px 8px;border-radius:10px;font-size:0.7rem;margin-right:5px">🔄 متكرر</span>':'';const wasteBadge=r.wasteType?`<span class="waste-badge waste-${r.wasteType}">${getWasteTypeName(r.wasteType)}</span>`:'';return`<div class="report-card ${r.status}"><div class="info-row"><b>📍 العنوان:</b> ${recurringBadge}${wasteBadge} ${r.addr}</div><div class="info-row"><b>🌍 GPS:</b> ${r.gps}</div><div class="info-row"><b>📅 التاريخ:</b> ${r.date} ${r.time}</div>${r.driverName?`<div class="info-row"><b>👷 السائق:</b> ${r.driverName}</div>`:''}<div class="info-row"><b>📊 الحالة:</b> <span style="color:${r.status==='done'?'#4CAF50':r.status==='assigned'?'#FF9800':'#f44336'}">${r.status==='done'?'✅ منجز':r.status==='assigned'?'🚚 قيد التنفيذ':'🆕 جديد'}</span></div>${img1}${img2}<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px">${q}${d3}</div><div style="margin-top:10px">${act}</div></div>`;}).join('');}catch(e){}}
 function showQR(id){try{const r=allReports.find(x=>x.id==id);if(!r){showToast('⚠️ غير موجود','error');return;}document.getElementById('qrModal').style.display='flex';document.getElementById('qrReportId').textContent=r.id;const qc=document.getElementById('qrcode');qc.innerHTML='';if(typeof QRCode!=='undefined'){try{new QRCode(qc,{text:String(r.id),width:200,height:200,colorDark:'#1B5E20',colorLight:'#ffffff',correctLevel:QRCode.CorrectLevel.M});}catch(e){qc.innerHTML='<div style="color:red;padding:20px">⚠️ فشل QR</div>';}}else{qc.innerHTML='<div style="color:red;padding:20px">⚠️ المكتبة غير محملة</div>';}}catch(e){showToast('⚠️ خطأ في QR','error');}}
 function assignDriver(id){try{const n=prompt('اسم السائق:');if(!n)return;updateReport(id,{driverName:n,status:'assigned'});showToast('✅ تم التوجيه لـ '+n);showReportsPage();}catch(e){showToast('⚠️ خطأ في التوجيه','error');}}
-function deleteReport(id){if(!confirm('حذف البلاغ؟'))return;deleteFromCloud('reports',id);allReports=allReports.filter(r=>r.id!=id);showReportsPage();updateStats();showToast('✅ تم الحذف');}
-function loadStaffList(){try{let s=[];try{s=JSON.parse(localStorage.getItem('medea_staff')||'[]');}catch(e){}const c=document.getElementById('staffList');if(!s.length){c.innerHTML='<p style="text-align:center;color:#666;padding:30px">لا يوجد موظفون</p>';return;}c.innerHTML=s.map((x,i)=>`<div class="staff-item"><div><b style="color:#1B5E20">${x.role}:</b> ${x.name}${x.phone?`<br><a href="tel:${x.phone}" class="phone-link">📞 ${x.phone}</a>`:''}</div><div class="action-btns"><button class="edit-btn" onclick="editStaff(${i})">✏️</button><button class="delete-btn" onclick="deleteStaff(${i})">✕</button></div></div>`).join('');}catch(e){}}
+function deleteReport(id){if(!confirm('حذف البلاغ؟'))return;deleteFromCloud('reports',id);allReports=allReports.filter(r=>r.id!=id);showReportsPage();updateStats();showToast('✅ تم الحذف');}function loadStaffList(){try{let s=[];try{s=JSON.parse(localStorage.getItem('medea_staff')||'[]');}catch(e){}const c=document.getElementById('staffList');if(!s.length){c.innerHTML='<p style="text-align:center;color:#666;padding:30px">لا يوجد موظفون</p>';return;}c.innerHTML=s.map((x,i)=>`<div class="staff-item"><div><b style="color:#1B5E20">${x.role}:</b> ${x.name}${x.phone?`<br><a href="tel:${x.phone}" class="phone-link">📞 ${x.phone}</a>`:''}</div><div class="action-btns"><button class="edit-btn" onclick="editStaff(${i})">✏️</button><button class="delete-btn" onclick="deleteStaff(${i})">✕</button></div></div>`).join('');}catch(e){}}
 function addStaff(){const n=document.getElementById('newStaffName').value.trim();const r=document.getElementById('newStaffRole').value.trim();const p=document.getElementById('newStaffPhone').value.trim();if(!n||!r){showToast('⚠️ الاسم والمنصب مطلوبان','error');return;}let s=[];try{s=JSON.parse(localStorage.getItem('medea_staff')||'[]');}catch(e){}s.push({name:n,role:r,phone:p});try{localStorage.setItem('medea_staff',JSON.stringify(s));}catch(e){}document.getElementById('newStaffName').value='';document.getElementById('newStaffRole').value='';document.getElementById('newStaffPhone').value='';loadStaffList();showToast('✅ تم الإضافة');}
 function editStaff(i){let s=[];try{s=JSON.parse(localStorage.getItem('medea_staff')||'[]');}catch(e){}const st=s[i];const nn=prompt('الاسم الجديد:',st.name);if(!nn)return;const nr=prompt('المنصب الجديد:',st.role);if(!nr)return;const np=prompt('الهاتف الجديد:',st.phone||'');s[i]={name:nn,role:nr,phone:np};try{localStorage.setItem('medea_staff',JSON.stringify(s));}catch(e){}loadStaffList();showToast('✅ تم التعديل');}
 function deleteStaff(i){if(!confirm('حذف الموظف؟'))return;let s=[];try{s=JSON.parse(localStorage.getItem('medea_staff')||'[]');}catch(e){}s.splice(i,1);try{localStorage.setItem('medea_staff',JSON.stringify(s));}catch(e){}loadStaffList();}
@@ -1290,7 +1199,8 @@ function addScheduleSector(){try{const num=document.getElementById('sectorNum').
 function loadScheduleSectors(){try{const sectors=JSON.parse(localStorage.getItem('medea_schedule')||'[]');const list=document.getElementById('scheduleList');if(!sectors.length){list.innerHTML='<p style="text-align:center;color:#666;padding:20px">لا توجد قطاعات مسجلة</p>';return;}list.innerHTML=sectors.map(s=>`<div class="tonnage-card"><div class="tonnage-info"><b>🏷️ رقم القطاع:</b> ${s.num||'-'}</div><div class="tonnage-info"><b>🏛️ النوع:</b> ${s.type}</div><div class="tonnage-info"><b>📍 الأحياء:</b> ${s.name}</div><div class="tonnage-info"><b>📅 الأيام:</b> ${s.days}</div><div class="tonnage-info"><b>🕐 وقت المرور:</b> ${s.time}</div><div class="tonnage-info"><b>⏳ الاستدراك:</b> ${s.catchup||'-'}</div><div class="tonnage-info"><b>👤 السائق:</b> ${s.driver||'-'} ${s.phone?`<a href="tel:${s.phone}" class="phone-link">📞 ${s.phone}</a>`:''}</div><button class="btn br" style="margin-top:10px;padding:8px" onclick="deleteScheduleSector(${s.id})">🗑️ حذف</button></div>`).join('');}catch(e){}}
 function deleteScheduleSector(id){if(!confirm('حذف القطاع؟'))return;try{let sectors=JSON.parse(localStorage.getItem('medea_schedule')||'[]');sectors=sectors.filter(s=>s.id!=id);localStorage.setItem('medea_schedule',JSON.stringify(sectors));showToast('✅ تم الحذف');loadScheduleSectors();}catch(e){showToast('⚠️ خطأ في الحذف','error');}}
 function loadSchedule(){try{const sectors=JSON.parse(localStorage.getItem('medea_schedule')||'[]');const display=document.getElementById('scheduleDisplay');if(!sectors.length){display.innerHTML='<p style="text-align:center;color:#666;padding:20px">لم يتم إضافة جدول بعد</p>';return;}let html='<table class="schedule-table"><tr><th>الحي / المنطقة</th><th>الأيام</th><th>الوقت</th></tr>';sectors.forEach(s=>{html+=`<tr><td>${s.name}</td><td>${s.days}</td><td>${s.time}</td></tr>`;});html+='</table>';display.innerHTML=html;}catch(e){}}
-function displaySchedule(){loadSchedule();}function registerWasteIn(){try{const source=document.getElementById('wasteSource').value.trim();const qty=parseFloat(document.getElementById('wasteQty').value);const category=document.getElementById('wasteCategory').value;const quality=document.getElementById('wasteQuality').value;const truck=document.getElementById('truckNumber').value.trim();const notes=document.getElementById('wasteNotes').value.trim();if(!source||!qty){showToast('⚠️ أكمل الحقول الأساسية','error');return;}const now=new Date();const waste={id:Date.now(),source:source,category:category,qty:qty,quality:quality,truck:truck,notes:notes,date:now.toLocaleDateString('ar-DZ'),time:now.toLocaleTimeString('ar-DZ'),status:'sorted',marketPublished:false,requests:[]};saveWasteTracking(waste);showToast('✅ تم تسجيل الوارد بنجاح');document.getElementById('wasteSource').value='';document.getElementById('wasteQty').value='';document.getElementById('truckNumber').value='';document.getElementById('wasteNotes').value='';loadSortedMaterials();}catch(e){showToast('⚠️ خطأ في التسجيل','error');}}
+function displaySchedule(){loadSchedule();}
+function registerWasteIn(){try{const source=document.getElementById('wasteSource').value.trim();const qty=parseFloat(document.getElementById('wasteQty').value);const category=document.getElementById('wasteCategory').value;const quality=document.getElementById('wasteQuality').value;const truck=document.getElementById('truckNumber').value.trim();const notes=document.getElementById('wasteNotes').value.trim();if(!source||!qty){showToast('⚠️ أكمل الحقول الأساسية','error');return;}const now=new Date();const waste={id:Date.now(),source:source,category:category,qty:qty,quality:quality,truck:truck,notes:notes,date:now.toLocaleDateString('ar-DZ'),time:now.toLocaleTimeString('ar-DZ'),status:'sorted',marketPublished:false,requests:[]};saveWasteTracking(waste);showToast('✅ تم تسجيل الوارد بنجاح');document.getElementById('wasteSource').value='';document.getElementById('wasteQty').value='';document.getElementById('truckNumber').value='';document.getElementById('wasteNotes').value='';loadSortedMaterials();}catch(e){showToast('⚠️ خطأ في التسجيل','error');}}
 function loadSortedMaterials(){try{const list=document.getElementById('sortedMaterialsList');const materials=wasteTracking.filter(w=>w.status==='sorted');if(!materials.length){list.innerHTML='<p style="text-align:center;color:#666;padding:20px">لا توجد مواد مصنفة</p>';return;}list.innerHTML=materials.map(m=>`<div class="material-card ${m.marketPublished?'reserved':'available'}"><div class="info-row"><b>📍 المصدر:</b> ${m.source}</div><div class="info-row"><b>🗑️ النوع:</b> <span class="waste-badge waste-${m.category}">${getWasteTypeName(m.category)}</span></div><div class="info-row"><b>⚖️ الكمية:</b> <span style="font-weight:bold">${m.qty} طن</span></div><div class="info-row"><b>⭐ الجودة:</b> <span class="quality-${m.quality}">${getQualityName(m.quality)}</span></div><div class="info-row"><b>🚚 الشاحنة:</b> ${m.truck||'-'}</div><div class="info-row"><b>📅 التاريخ:</b> ${m.date} ${m.time}</div>${m.notes?`<div class="info-row"><b>📝 ملاحظات:</b> ${m.notes}</div>`:''}${!m.marketPublished?`<button class="btn purple" style="margin-top:10px" onclick="publishMaterial(${m.id})">🚀 نشر في السوق</button>`:`<div style="margin-top:10px;padding:10px;background:#e8f5e9;border-radius:8px;text-align:center;color:#2E7D32">✓ منشور في السوق</div>`}</div>`).join('');}catch(e){}}
 function getQualityName(q){return{excellent:'⭐ عالية الجودة',good:'👍 جيدة',fair:'⚠️ متوسطة',poor:'❌ غير قابلة'}[q]||q;}
 function publishToMarket(){try{const unpublished=wasteTracking.filter(w=>w.status==='sorted'&&!w.marketPublished);if(!unpublished.length){showToast('⚠️ لا توجد مواد غير منشورة','error');return;}unpublished.forEach(m=>{updateWasteTracking(m.id,{marketPublished:true});saveMarketMaterial({id:Date.now()+Math.random(),wasteId:m.id,category:m.category,qty:m.qty,quality:m.quality,source:m.source,date:new Date().toLocaleDateString('ar-DZ'),status:'available',requests:[]});});showToast('✅ تم نشر '+unpublished.length+' مادة في السوق');loadSortedMaterials();loadMarketMaterials();}catch(e){showToast('⚠️ خطأ في النشر','error');}}
@@ -1312,74 +1222,5 @@ function generateStatsTable(){const total=allReports.length;const done=allReport
 function printNow(){const content=document.getElementById('printContent').innerHTML;const win=window.open('','_blank','width=900,height=700');win.document.write(`<html dir="rtl"><head><meta charset="UTF-8"><title>طباعة</title><style>body{font-family:sans-serif;padding:20px}table{width:100%;border-collapse:collapse}th{background:#1B5E20;color:#fff;padding:8px}td{padding:8px;border:1px solid #ddd}@media print{.no-print{display:none}}</style></head><body>${content}<script>window.print()<\/script></body></html>`);win.document.close();}
 function downloadPDF(){const element=document.getElementById('printContent');if(typeof html2pdf!=='undefined'){showToast('📥 جاري إنشاء PDF...');html2pdf().from(element).set({margin:10,filename:`تقرير_${Date.now()}.pdf`,html2canvas:{scale:2},jsPDF:{format:'a4'}}).save().then(()=>{showToast('✅ تم التحميل');closePrintDialog();});}else{printNow();}}
 function calculateConversion(){const type=document.getElementById('wasteType').value;const weight=parseFloat(document.getElementById('wasteWeight').value);if(!weight||weight<=0){showToast('⚠️ أدخل الوزن');return;}const factors={organic:{energy:2500,oil:0,co2:0.8},plastic:{energy:12000,oil:750,co2:1.5},metal:{energy:8000,oil:0,co2:2.0},mixed:{energy:800,oil:50,co2:0.4}};const f=factors[type];document.getElementById('resEnergy').textContent=(weight*f.energy).toLocaleString('ar-DZ');document.getElementById('resOil').textContent=(weight*f.oil).toLocaleString('ar-DZ');document.getElementById('resCO2').textContent=(weight*f.co2).toFixed(2);document.getElementById('conversionResult').style.display='block';showToast('✅ تم الحساب');}
-// === تحميل التطبيق ===
-window.addEventListener('load', function(){
-  console.log('🚀 App starting...');
-  
-  // إخفاء شاشة التحميل بعد 2 ثانية كحد أقصى
-  setTimeout(() => {
-    forceHideSplash();
-  }, 2000);
-  
-  // إعداد المزامنة
-  try {
-    setupSync();
-  } catch(e) {
-    console.error('❌ Sync setup error:', e);
-    // حتى لو فشلت المزامنة، نخفي شاشة التحميل
-    setTimeout(() => {
-      forceHideSplash();
-    }, 3000);
-  }
-  
-  // تحميل البيانات من السحابة أو المحلي
-  loadFromCloud('reports', 'reports', (data) => {
-    allReports = data ? Object.values(data) : [];
-    console.log('📊 Initial reports loaded:', allReports.length);
-    updateStats();
-  });
-  
-  loadFromCloud('wasteTracking', 'wasteTracking', (data) => {
-    wasteTracking = data ? Object.values(data) : [];
-  });
-  
-  loadFromCloud('marketMaterials', 'marketMaterials', (data) => {
-    marketMaterials = data ? Object.values(data) : [];
-  });
-  
-  loadFromCloud('truckTracking', 'truckTracking', (data) => {
-    if(data) truckTrackingData = data;
-  });
-});
-
-// === 🔧 إصلاح شاشة التحميل - دالة مضمونة ===
-function forceHideSplash(){
-  try{
-    const splash=document.getElementById('splash');
-    if(splash){
-      console.log('👋 Hiding splash screen');
-      splash.style.opacity='0';
-      setTimeout(()=>{
-        splash.style.display='none';
-        console.log('✅ Splash screen hidden');
-      }, 500);
-    }
-  }catch(e){
-    console.error('❌ Error hiding splash:', e);
-    // محاولة بديلة
-    try{
-      document.getElementById('splash').style.display='none';
-    }catch(err){
-      console.error('❌ Alternative hide failed:', err);
-    }
-  }
-}
-
-// شبكة أمان: إخفاء الشاشة بعد 5 ثوانٍ بغض النظر عن الحالة
-setTimeout(() => {
-  console.log('⏰ Safety timeout - forcing splash hide');
-  forceHideSplash();
-}, 5000);
 </script>
-</body>
-</html>
+</body></html>
