@@ -1245,6 +1245,74 @@ function generateStatsTable(){const total=allReports.length;const done=allReport
 function printNow(){const content=document.getElementById('printContent').innerHTML;const win=window.open('','_blank','width=900,height=700');win.document.write(`<html dir="rtl"><head><meta charset="UTF-8"><title>طباعة</title><style>body{font-family:sans-serif;padding:20px}table{width:100%;border-collapse:collapse}th{background:#1B5E20;color:#fff;padding:8px}td{padding:8px;border:1px solid #ddd}@media print{.no-print{display:none}}</style></head><body>${content}<script>window.print()<\/script></body></html>`);win.document.close();}
 function downloadPDF(){const element=document.getElementById('printContent');if(typeof html2pdf!=='undefined'){showToast('📥 جاري إنشاء PDF...');html2pdf().from(element).set({margin:10,filename:`تقرير_${Date.now()}.pdf`,html2canvas:{scale:2},jsPDF:{format:'a4'}}).save().then(()=>{showToast('✅ تم التحميل');closePrintDialog();});}else{printNow();}}
 function calculateConversion(){const type=document.getElementById('wasteType').value;const weight=parseFloat(document.getElementById('wasteWeight').value);if(!weight||weight<=0){showToast('⚠️ أدخل الوزن');return;}const factors={organic:{energy:2500,oil:0,co2:0.8},plastic:{energy:12000,oil:750,co2:1.5},metal:{energy:8000,oil:0,co2:2.0},mixed:{energy:800,oil:50,co2:0.4}};const f=factors[type];document.getElementById('resEnergy').textContent=(weight*f.energy).toLocaleString('ar-DZ');document.getElementById('resOil').textContent=(weight*f.oil).toLocaleString('ar-DZ');document.getElementById('resCO2').textContent=(weight*f.co2).toFixed(2);document.getElementById('conversionResult').style.display='block';showToast('✅ تم الحساب');}
+// === تحميل التطبيق ===
+window.addEventListener('load', function(){
+  console.log('🚀 App starting...');
+  
+  // إخفاء شاشة التحميل بعد 2 ثانية كحد أقصى
+  setTimeout(() => {
+    forceHideSplash();
+  }, 2000);
+  
+  // إعداد المزامنة
+  try {
+    setupSync();
+  } catch(e) {
+    console.error('❌ Sync setup error:', e);
+    // حتى لو فشلت المزامنة، نخفي شاشة التحميل
+    setTimeout(() => {
+      forceHideSplash();
+    }, 3000);
+  }
+  
+  // تحميل البيانات من السحابة أو المحلي
+  loadFromCloud('reports', 'reports', (data) => {
+    allReports = data ? Object.values(data) : [];
+    console.log('📊 Initial reports loaded:', allReports.length);
+    updateStats();
+  });
+  
+  loadFromCloud('wasteTracking', 'wasteTracking', (data) => {
+    wasteTracking = data ? Object.values(data) : [];
+  });
+  
+  loadFromCloud('marketMaterials', 'marketMaterials', (data) => {
+    marketMaterials = data ? Object.values(data) : [];
+  });
+  
+  loadFromCloud('truckTracking', 'truckTracking', (data) => {
+    if(data) truckTrackingData = data;
+  });
+});
+
+// === 🔧 إصلاح شاشة التحميل - دالة مضمونة ===
+function forceHideSplash(){
+  try{
+    const splash=document.getElementById('splash');
+    if(splash){
+      console.log('👋 Hiding splash screen');
+      splash.style.opacity='0';
+      setTimeout(()=>{
+        splash.style.display='none';
+        console.log('✅ Splash screen hidden');
+      }, 500);
+    }
+  }catch(e){
+    console.error('❌ Error hiding splash:', e);
+    // محاولة بديلة
+    try{
+      document.getElementById('splash').style.display='none';
+    }catch(err){
+      console.error('❌ Alternative hide failed:', err);
+    }
+  }
+}
+
+// شبكة أمان: إخفاء الشاشة بعد 5 ثوانٍ بغض النظر عن الحالة
+setTimeout(() => {
+  console.log('⏰ Safety timeout - forcing splash hide');
+  forceHideSplash();
+}, 5000);
 </script>
 </body>
 </html>
