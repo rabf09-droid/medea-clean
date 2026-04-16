@@ -239,7 +239,74 @@ html,body{overflow-x:hidden;width:100%;background:#f5f7fa;min-height:100vh}
     </div>
   </div>
 </div>
+// === تحميل التطبيق ===
+window.addEventListener('load', function(){
+  console.log('🚀 App starting...');
+  
+  // إخفاء شاشة التحميل بعد 2 ثانية كحد أقصى
+  setTimeout(() => {
+    forceHideSplash();
+  }, 2000);
+  
+  // إعداد المزامنة
+  try {
+    setupSync();
+  } catch(e) {
+    console.error('❌ Sync setup error:', e);
+    // حتى لو فشلت المزامنة، نخفي شاشة التحميل
+    setTimeout(() => {
+      forceHideSplash();
+    }, 3000);
+  }
+  
+  // تحميل البيانات من السحابة أو المحلي
+  loadFromCloud('reports', 'reports', (data) => {
+    allReports = data ? Object.values(data) : [];
+    console.log('📊 Initial reports loaded:', allReports.length);
+    updateStats();
+  });
+  
+  loadFromCloud('wasteTracking', 'wasteTracking', (data) => {
+    wasteTracking = data ? Object.values(data) : [];
+  });
+  
+  loadFromCloud('marketMaterials', 'marketMaterials', (data) => {
+    marketMaterials = data ? Object.values(data) : [];
+  });
+  
+  loadFromCloud('truckTracking', 'truckTracking', (data) => {
+    if(data) truckTrackingData = data;
+  });
+});
 
+// === 🔧 إصلاح شاشة التحميل - دالة مضمونة ===
+function forceHideSplash(){
+  try{
+    const splash=document.getElementById('splash');
+    if(splash){
+      console.log('👋 Hiding splash screen');
+      splash.style.opacity='0';
+      setTimeout(()=>{
+        splash.style.display='none';
+        console.log('✅ Splash screen hidden');
+      }, 500);
+    }
+  }catch(e){
+    console.error('❌ Error hiding splash:', e);
+    // محاولة بديلة
+    try{
+      document.getElementById('splash').style.display='none';
+    }catch(err){
+      console.error('❌ Alternative hide failed:', err);
+    }
+  }
+}
+
+// شبكة أمان: إخفاء الشاشة بعد 5 ثوانٍ بغض النظر عن الحالة
+setTimeout(() => {
+  console.log('⏰ Safety timeout - forcing splash hide');
+  forceHideSplash();
+}, 5000);
 <div id="truckTracking" class="page">
   <h2 style="margin-bottom:15px;color:#1B5E20;text-align:center">🚚 تتبع مسار الشاحنة</h2>
   <div class="cd">
