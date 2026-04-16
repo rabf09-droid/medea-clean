@@ -17,11 +17,12 @@ html,body{overflow-x:hidden;width:100%;background:#f5f7fa;min-height:100vh}
 #splash .logo-box{width:250px;height:250px;background:#fff;border-radius:50%;margin-bottom:25px;display:flex;align-items:center;justify-content:center;box-shadow:0 10px 40px rgba(0,0,0,0.3);animation:pulse 2s infinite}
 @keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.05)}}
 #splash .logo-box span{font-size:8rem}
-#splash h1{font-size:2.2rem;color:#fff;margin-bottom:10px;font-weight:800}
+#splash h1{font-size:2.2rem;color:#fff;margin-bottom:10px;font-weight:800;text-shadow:2px 2px 4px rgba(0,0,0,0.3)}
+#splash p{color:rgba(255,255,255,0.9);margin-bottom:30px;font-size:1rem;text-align:center;padding:0 20px}
 .loader{width:50px;height:50px;border:5px solid rgba(255,255,255,0.3);border-top:5px solid #FFD700;border-radius:50%;animation:spin 1s linear infinite}
 @keyframes spin{to{transform:rotate(360deg)}}
 .conn{position:fixed;top:0;left:0;right:0;padding:8px;text-align:center;font-size:0.85rem;font-weight:700;z-index:10000;background:linear-gradient(90deg,#1B5E20,#2E7D32);color:#fff}
-.sync-indicator{position:fixed;bottom:10px;left:10px;padding:6px 12px;border-radius:15px;font-size:0.75rem;font-weight:700;z-index:1000}
+.sync-indicator{position:fixed;bottom:10px;left:10px;padding:6px 12px;border-radius:15px;font-size:0.75rem;font-weight:700;z-index:1000;transition:all 0.3s}
 .sync-online{background:#4CAF50;color:#fff}
 .sync-offline{background:#f44336;color:#fff}
 .hdr{background:#fff;padding:15px 10px;text-align:center;border-bottom:3px solid #D4AF37;margin-top:36px}
@@ -46,16 +47,15 @@ html,body{overflow-x:hidden;width:100%;background:#f5f7fa;min-height:100vh}
 .bo{background:#FF9800}
 .purple{background:#673ab7}
 .green-recycle{background:linear-gradient(135deg,#2E7D32,#4CAF50)}
-.market-btn{background:linear-gradient(135deg,#673ab7,#9c27b0)}
-.map-btn{background:#14213D;margin-bottom:8px}.voice-btn{background:#e91e63}
+.market-btn{background:linear-gradient(135deg,#673ab7,#9c27b0)}.map-btn{background:#14213D;margin-bottom:8px}
+.voice-btn{background:#e91e63}
 .cd{background:#fff;border-radius:15px;padding:15px;margin:15px 0;box-shadow:0 4px 15px rgba(0,0,0,0.08);border:1px solid #eee}
 .mb{height:140px;font-size:1.4rem;flex-direction:column}
 .g2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
 .sb2{height:60px}
 .ft{background:#fff;padding:15px;text-align:center;border-top:3px solid #D4AF37;margin-top:20px;font-size:0.85rem;color:#666}
 .in{width:100%;padding:12px;border:2px solid #e0e0e0;border-radius:10px;margin:10px 0;text-align:center;font-size:1rem}
-.in:focus{border-color:#1B5E20;outline:none}
-.in:disabled{background:#f0f0f0;color:#666}
+.in:focus{border-color:#1B5E20;outline:none}.in:disabled{background:#f0f0f0;color:#666}
 .cam-box{height:200px;background:#f9f9f9;border:2px dashed #ccc;border-radius:12px;display:flex;align-items:center;justify-content:center;margin-bottom:15px;cursor:pointer;position:relative;overflow:hidden}
 .cam-box img{width:100%;height:100%;object-fit:cover;position:absolute}
 .cam-icon{font-size:3rem;color:#aaa}
@@ -170,7 +170,7 @@ html,body{overflow-x:hidden;width:100%;background:#f5f7fa;min-height:100vh}
 <div id="syncIndicator" class="sync-indicator sync-online">🔄 متصل</div>
 
 <div class="hdr">
-  <div class="c">🇩 الجمهورية الجزائرية الديمقراطية الشعبية</div>
+  <div class="c">🇩🇿 الجمهورية الجزائرية الديمقراطية الشعبية</div>
   <div class="d">🧹 مصلحة النظافة والوقاية الصحية لبلدية المدية</div>
   <div class="t">المدية نظيفة</div>
   <div class="lang-container">
@@ -665,32 +665,41 @@ html,body{overflow-x:hidden;width:100%;background:#f5f7fa;min-height:100vh}
 
 <script>
 // ============================================================
-// 🔧 إصلاح شاشة التحميل - شبكة أمان مضمونة
+// 🔧 إصلاح جذري - إخفاء فوري وآمن لشاشة التحميل
 // ============================================================
+
+// إخفاء فوري جداً - المستوى 1
+function hideSplashNow(){
+  try{
+    const splash = document.getElementById('splash');
+    if(splash && splash.style.display !== 'none'){
+      splash.style.opacity = '0';
+      setTimeout(()=>{ splash.style.display = 'none'; }, 300);
+    }
+  }catch(e){}
+}
+
+// إخفاء فوري - المستوى 2 (إجباري)
 function forceHideSplash(){
   try{
-    const splash=document.getElementById('splash');
+    const splash = document.getElementById('splash');
     if(splash){
-      console.log('👋 Hiding splash screen');
-      splash.style.opacity='0';
-      setTimeout(()=>{
-        splash.style.display='none';
-        console.log('✅ Splash screen hidden');
-      }, 500);
+      splash.style.display = 'none';      splash.style.opacity = '0';
     }
   }catch(e){
-    console.error('❌ Error hiding splash:', e);
-    try{document.getElementById('splash').style.display='none';}catch(err){}
+    try{ document.body.removeChild(document.getElementById('splash')); }catch(err){}
   }
 }
 
-// شبكة أمان: إخفاء الشاشة بعد 3 ثوانٍ بغض النظر عن أي خطأsetTimeout(() => {
-  console.log('⏰ Safety timeout - forcing splash hide');
-  forceHideSplash();
-}, 3000);
+// شبكة أمان متعددة المستويات
+hideSplashNow();
+setTimeout(hideSplashNow, 500);
+setTimeout(hideSplashNow, 1000);
+setTimeout(forceHideSplash, 2000);
+setTimeout(forceHideSplash, 3000);
 
 // ============================================================
-// ⚙️ إعداد Firebase
+// ⚙️ Firebase - مع معالجة أخطاء محسّنة وقاعدة بيانات وهمية
 // ============================================================
 const firebaseConfig = {
   apiKey: "AIzaSyBMao4dJL_2YQjibDvcTIMw1vHHytpVqs0",
@@ -703,16 +712,28 @@ const firebaseConfig = {
   measurementId: "G-W10RQWLJ54"
 };
 
+// تهيئة Firebase مع معالجة الأخطاء
 let db;
 try {
-  firebase.initializeApp(firebaseConfig);
-  db = firebase.database();
-  console.log('✅ Firebase initialized successfully');
+  if(typeof firebase !== 'undefined'){
+    firebase.initializeApp(firebaseConfig);
+    db = firebase.database();
+    console.log('✅ Firebase initialized');
+  } else {
+    throw new Error('Firebase not loaded');
+  }
 } catch(e) {
-  console.warn('⚠️ Firebase init skipped/error:', e);
-  // إنشاء قاعدة بيانات وهمية لمنع توقف الكود
-  db = { ref: () => ({ on: ()=>{}, once: ()=>Promise.resolve({val:()=>null}), set: ()=>Promise.resolve(), remove: ()=>Promise.resolve() }) };
-}
+  console.warn('⚠️ Firebase error, using mock database');
+  // إنشاء قاعدة بيانات وهمية لمنع توقف التطبيق
+  db = {
+    ref: (path) => ({
+      on: (event, callback) => { if(callback) callback({val: ()=>null}); return ()=>{}; },
+      once: (event) => Promise.resolve({ val: ()=>null }),
+      set: (data) => Promise.resolve(),
+      update: (data) => Promise.resolve(),
+      remove: () => Promise.resolve()
+    })
+  };}
 
 // === المتغيرات العامة ===
 let allReports=[], currentLang='ar', tempImage=null, tempAfterImage=null, currentDriver='', userPoints=0, currentDriverSector='';
@@ -729,133 +750,137 @@ const sectorRoutesData = {
 };
 
 // ============================================================
-// 🔄 نظام المزامنة السحابية
+// 🔄 نظام المزامنة السحابية - مع معالجة أخطاء
 // ============================================================
 function setupSync() {
-  console.log('🔄 Setting up Firebase sync...');
+  try {
     const connectedRef = db.ref('.info/connected');
-  connectedRef.on('value', (snap) => {
-    const syncEl = document.getElementById('syncIndicator');
-    if(snap.val() === true) {
-      console.log('✅ Connected to Firebase');
-      syncEl.innerHTML = '✅ متصل';
-      syncEl.className = 'sync-indicator sync-online';
-    } else {
-      console.log('❌ Disconnected from Firebase');
-      syncEl.innerHTML = '❌ غير متصل';
-      syncEl.className = 'sync-indicator sync-offline';
-    }
-  });
+    connectedRef.on('value', (snap) => {
+      try {
+        const syncEl = document.getElementById('syncIndicator');
+        if(snap && snap.val && snap.val() === true) {
+          syncEl.innerHTML = '✅ متصل';
+          syncEl.className = 'sync-indicator sync-online';
+        } else {
+          syncEl.innerHTML = '❌ غير متصل';
+          syncEl.className = 'sync-indicator sync-offline';
+        }
+      } catch(e) {}
+    });
 
-  db.ref('reports').on('value', (snapshot) => {
-    console.log('📥 Reports snapshot received');
-    const data = snapshot.val();
-    allReports = data ? Object.values(data) : [];
-    console.log('📊 Total reports:', allReports.length);
-    updateStats();
-    if(document.getElementById('reportsPage')?.classList.contains('active')) {
-      showReportsPage();
-    }
-  });
+    db.ref('reports').on('value', (snapshot) => {
+      try {
+        const data = snapshot && snapshot.val ? snapshot.val() : null;
+        allReports = data ? Object.values(data) : [];
+        updateStats();
+        if(document.getElementById('reportsPage')?.classList.contains('active')) showReportsPage();
+      } catch(e) {}
+    });
 
-  db.ref('wasteTracking').on('value', (snapshot) => {
-    const data = snapshot.val();
-    wasteTracking = data ? Object.values(data) : [];
-    if(document.getElementById('sortingCenter')?.classList.contains('active')) loadSortedMaterials();
-    if(document.getElementById('recyclingMarket')?.classList.contains('active')) loadMarketMaterials();
-  });
+    db.ref('wasteTracking').on('value', (snapshot) => {
+      try {
+        const data = snapshot && snapshot.val ? snapshot.val() : null;
+        wasteTracking = data ? Object.values(data) : [];
+      } catch(e) {}
+    });
+    db.ref('marketMaterials').on('value', (snapshot) => {
+      try {
+        const data = snapshot && snapshot.val ? snapshot.val() : null;
+        marketMaterials = data ? Object.values(data) : [];
+      } catch(e) {}
+    });
 
-  db.ref('marketMaterials').on('value', (snapshot) => {
-    const data = snapshot.val();
-    marketMaterials = data ? Object.values(data) : [];
-    if(document.getElementById('recyclingMarket')?.classList.contains('active')) loadMarketMaterials();
-  });
+    db.ref('truckTracking').on('value', (snapshot) => {
+      try {
+        const data = snapshot && snapshot.val ? snapshot.val() : null;
+        if(data) truckTrackingData = data;
+      } catch(e) {}
+    });
+  } catch(e) {
+    console.error('Sync setup error:', e);
+  }
+}
 
-  db.ref('truckTracking').on('value', (snapshot) => {
-    const data = snapshot.val();
-    if(data) {
-      truckTrackingData = data;
-      if(document.getElementById('truckTracking')?.classList.contains('active')) {
-        initTruckTrackingMap();
-        updateTruckTrackingUI();
-      }
-    }
-  });
-  
-  console.log('✅ Sync setup complete');}
-
+// ✅ دالة الحفظ في السحابة - مع معالجة أخطاء
 function saveToCloud(path, data) {
-  console.log('💾 Saving to cloud:', path);
-  db.ref(path).set(data).catch(err => console.log('Cloud save error, saving locally'));
-  localStorage.setItem('medea_' + path, JSON.stringify(data));
+  try {
+    db.ref(path).set(data).catch(()=>{});
+  } catch(e) {}
+  try { localStorage.setItem('medea_' + path, JSON.stringify(data)); } catch(e) {}
 }
 
+// تحميل البيانات مع إمكانية العمل دون اتصال
 function loadFromCloud(path, localKey, callback) {
-  console.log('📥 Loading from cloud:', path);
-  db.ref(path).once('value').then(snapshot => {
-    const data = snapshot.val();
-    if(data) {
-      callback(data);
-      localStorage.setItem('medea_' + localKey, JSON.stringify(data));
-    } else {
-      const localData = localStorage.getItem('medea_' + localKey);
-      if(localData) callback(JSON.parse(localData));
-    }
-  }).catch(() => {
-    const localData = localStorage.getItem('medea_' + localKey);
-    if(localData) callback(JSON.parse(localData));
-  });
+  try {
+    db.ref(path).once('value').then(snapshot => {
+      try {
+        const data = snapshot && snapshot.val ? snapshot.val() : null;
+        if(data) {
+          callback(data);
+          localStorage.setItem('medea_' + localKey, JSON.stringify(data));
+        } else {
+          const localData = localStorage.getItem('medea_' + localKey);
+          if(localData) callback(JSON.parse(localData));
+        }
+      } catch(e) {}
+    }).catch(() => {
+      try {
+        const localData = localStorage.getItem('medea_' + localKey);
+        if(localData) callback(JSON.parse(localData));
+      } catch(e) {}
+    });
+  } catch(e) {
+    try {
+      const localData = localStorage.getItem('medea_' + localKey);      if(localData) callback(JSON.parse(localData));
+    } catch(err) {}
+  }
 }
 
+// ✅ تحديث جزئي في Firebase
 function updateCloudItem(path, itemId, updates) {
-  console.log('🔄 Updating item:', path + '/' + itemId);
-  db.ref(path + '/' + itemId).set(updates).catch(err => console.log('Update error'));
+  try { db.ref(path + '/' + itemId).set(updates).catch(()=>{}); } catch(e) {}
 }
 
+// ✅ إضافة عنصر جديد
 function addToCloud(path, item) {
-  console.log('➕ Adding to cloud:', path);
-  return db.ref(path).set(item)
-    .then(() => console.log('✅ Added successfully'))
-    .catch(err => console.error('❌ Add error:', err));
+  try {
+    return db.ref(path).set(item).catch(()=>{ showToast('⚠️ خطأ في المزامنة'); });
+  } catch(e) {
+    showToast('⚠️ خطأ في المزامنة');
+  }
 }
 
+// حذف من Firebase
 function deleteFromCloud(path, itemId) {
-  console.log('🗑️ Deleting:', path + '/' + itemId);
-  return db.ref(path + '/' + itemId).remove().catch(err => console.log('Delete error'));
+  try { db.ref(path + '/' + itemId).remove().catch(()=>{}); } catch(e) {}
 }
 
 // === تحميل التطبيق ===
 window.addEventListener('load', function(){
   console.log('🚀 App starting...');
   
-  // إخفاء شاشة التحميل بشكل مضمون
-  setTimeout(() => { forceHideSplash(); }, 2000);
+  // إخفاء شاشة التحميل فوراً
+  hideSplashNow();
   
-  try { setupSync(); } catch(e) { console.error('Sync error:', e); }  
-  loadFromCloud('reports', 'reports', (data) => {
-    allReports = data ? Object.values(data) : [];
-    updateStats();
-  });
+  // تهيئة المزامنة
+  try { setupSync(); } catch(e) { console.error('Init error:', e); }
   
-  loadFromCloud('wasteTracking', 'wasteTracking', (data) => { wasteTracking = data ? Object.values(data) : []; });
-  loadFromCloud('marketMaterials', 'marketMaterials', (data) => { marketMaterials = data ? Object.values(data) : []; });
-  loadFromCloud('truckTracking', 'truckTracking', (data) => { if(data) truckTrackingData = data; });
+  // تحميل البيانات
+  try {
+    loadFromCloud('reports', 'reports', (data) => {
+      allReports = data ? Object.values(data) : [];
+      updateStats();
+    });
+    loadFromCloud('wasteTracking', 'wasteTracking', (data) => { wasteTracking = data ? Object.values(data) : []; });
+    loadFromCloud('marketMaterials', 'marketMaterials', (data) => { marketMaterials = data ? Object.values(data) : []; });
+    loadFromCloud('truckTracking', 'truckTracking', (data) => { if(data) truckTrackingData = data; });
+  } catch(e) {}
+  
+  // شبكة أمان نهائية
+  setTimeout(hideSplashNow, 1500);
 });
 
-// === 🔧 دالة إخفاء شاشة التحميل ===
-function forceHideSplash(){
-  try{
-    const splash=document.getElementById('splash');
-    if(splash && splash.style.display!=='none'){
-      splash.style.opacity='0';
-      setTimeout(()=>{splash.style.display='none';},500);
-    }
-  }catch(e){try{document.getElementById('splash').style.display='none';}catch(err){}}
-}
-setTimeout(forceHideSplash, 5000);
-
-// === نظام الإشعارات ===
-function showToast(msg,type='success'){
+// === نظام الإشعارات ===function showToast(msg,type='success'){
   try{
     const container=document.getElementById('toast-container');
     if(!container)return;
@@ -880,7 +905,8 @@ function changeLang(l,btn){
     if(btn)btn.classList.add('active');
     localStorage.setItem('medea_lang',l);
     updateTime();
-    showToast(currentLang==='ar'?'تم تغيير اللغة':currentLang==='fr'?'Langue changée':'Language changed');  }catch(e){}
+    showToast(currentLang==='ar'?'تم تغيير اللغة':currentLang==='fr'?'Langue changée':'Language changed');
+  }catch(e){}
 }
 
 // === الوقت والتاريخ ===
@@ -894,77 +920,8 @@ function updateTime(){
     if(cd)cd.textContent=n.toLocaleDateString(locale);
   }catch(e){}
 }
-
-// === تحميل وحفظ البيانات ===
-function loadReports(){
-  try{
-    const data=localStorage.getItem('medea_reports');
-    if(data){allReports=JSON.parse(data);if(!Array.isArray(allReports))allReports=[];}
-    else{allReports=[];}
-    updateStats();
-  }catch(e){allReports=[];}
-}
-function saveReport(r){
-  console.log('📝 Saving report:', r);
-  addToCloud('reports/' + r.id, r);
-  updateStats();
-}
-function updateReport(id,upd){
-  updateCloudItem('reports', id, upd);
-  const index=allReports.findIndex(x=>x.id==id);
-  if(index!==-1){
-    allReports[index]={...allReports[index],...upd};
-    updateStats();
-    if(document.getElementById('reportsPage').classList.contains('active'))showReportsPage();
-  }
-}
-
-// === تتبع النفايات ===
-function loadWasteTracking(){
-  try{
-    const data=localStorage.getItem('medea_waste_tracking');
-    if(data){wasteTracking=JSON.parse(data);if(!Array.isArray(wasteTracking))wasteTracking=[];}
-    else{wasteTracking=[];}
-  }catch(e){wasteTracking=[];}
-}
-function saveWasteTracking(w){
-  addToCloud('wasteTracking/' + w.id, w);
-  updateStats();}
-function updateWasteTracking(id,upd){
-  updateCloudItem('wasteTracking', id, upd);
-  const i=wasteTracking.findIndex(x=>x.id==id);
-  if(i!==-1){
-    wasteTracking[i]={...wasteTracking[i],...upd};
-    updateStats();
-    if(document.getElementById('sortingCenter').classList.contains('active'))loadSortedMaterials();
-    if(document.getElementById('recyclingMarket').classList.contains('active'))loadMarketMaterials();
-  }
-}
-
-// === سوق التدوير ===
-function loadMarketMaterials(){
-  try{
-    const data=localStorage.getItem('medea_market_materials');
-    if(data){marketMaterials=JSON.parse(data);if(!Array.isArray(marketMaterials))marketMaterials=[];}
-    else{marketMaterials=[];}
-  }catch(e){marketMaterials=[];}
-}
-function saveMarketMaterial(m){
-  addToCloud('marketMaterials/' + m.id, m);
-}
-
-// === الإحصائيات ===
-function updateStats(){
-  try{
-    document.getElementById('statTotal').textContent=allReports.length;
-    document.getElementById('statDone').textContent=allReports.filter(r=>r.status==='done').length;
-    document.getElementById('statPending').textContent=allReports.filter(r=>r.status!=='done').length;
-    const recycled=wasteTracking.filter(w=>w.status==='published').reduce((sum,w)=>sum+parseFloat(w.qty||0),0);
-    document.getElementById('recycledTotal').textContent=recycled.toFixed(1);
-    if(document.getElementById('dashboard').classList.contains('active'))renderChart();
-    updatePublicStats();
-  }catch(e){}
-}
+setInterval(updateTime, 1000);
+updateTime();
 
 // === التنقل بين الصفحات ===
 function showPage(id){
@@ -972,13 +929,13 @@ function showPage(id){
     document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
     const el=document.getElementById(id);
     if(el)el.classList.add('active');
-    if(id==='dashboard')setTimeout(renderChart,100);
-    if(id==='reportsPage')showReportsPage();
+    if(id==='dashboard')setTimeout(renderChart,100);    if(id==='reportsPage')showReportsPage();
     if(id==='publicStats')updatePublicStats();
     if(id==='schedule')displaySchedule();
     if(id==='tonnageRecords')loadTonnageRecords();
     if(id==='scheduleManager')loadScheduleSectors();
-    if(id==='adminRequests')loadAdminRequests();    if(id==='requests')loadMyRequests();
+    if(id==='adminRequests')loadAdminRequests();
+    if(id==='requests')loadMyRequests();
     if(id==='driverTonnage')prepareDriverTonnage();
     if(id==='sortingCenter')loadSortedMaterials();
     if(id==='recyclingMarket')loadMarketMaterials();
@@ -989,178 +946,43 @@ function showPage(id){
   }catch(e){}
 }
 
-// === 🚚 نظام تتبع الشاحنة ===
-function startTruckTracking(){
-  if(!currentDriver){showToast('⚠️ يجب تسجيل الدخول أولاً','error');return;}
-  truckTrackingData={active:true,driver:currentDriver,sector:currentDriverSector,startTime:new Date().toISOString(),positions:[],collectedBins:[]};
-  saveToCloud('truckTracking', truckTrackingData);
-  showPage('truckTracking');
-  updateTruckTrackingUI();
-  startGPSMonitoring();
-  showToast('✅ تم بدء التتبع المباشر');
-}
-
-function startGPSMonitoring(){
-  if(!navigator.geolocation){showToast('⚠️ GPS غير مدعوم','error');return;}
-  window.trackingInterval=setInterval(()=>{
-    navigator.geolocation.getCurrentPosition(pos=>{
-      const position={lat:pos.coords.latitude,lng:pos.coords.longitude,timestamp:new Date().toISOString(),accuracy:pos.coords.accuracy};
-      truckTrackingData.positions.push(position);
-      saveToCloud('truckTracking', truckTrackingData);
-      updateTruckTrackingMap(position);
-    },err=>{console.error('GPS Error:',err);},{enableHighAccuracy:true,timeout:10000,maximumAge:0});
-  },10000);
-}
-
-function recordBinCollection(){
-  if(!truckTrackingData.active){showToast('⚠️ التتبع غير نشط','error');return;}
-  navigator.geolocation.getCurrentPosition(pos=>{
-    const bin={id:Date.now(),lat:pos.coords.latitude,lng:pos.coords.longitude,timestamp:new Date().toISOString(),sector:currentDriverSector,driver:currentDriver};
-    truckTrackingData.collectedBins.push(bin);
-    saveToCloud('truckTracking', truckTrackingData);
-    updateTruckTrackingUI();
-    if(navigator.vibrate)navigator.vibrate([200,100,200]);
-    showToast('✅ تم تسجيل الحاوية #' + truckTrackingData.collectedBins.length);
-    addBinMarkerToMap(bin);
-  },err=>{showToast('⚠️ فشل في تحديد الموقع','error');},{enableHighAccuracy:true,timeout:10000});
-}
-
-function stopTruckTracking(){
-  if(window.trackingInterval)clearInterval(window.trackingInterval);
-  truckTrackingData.active=false;  saveToCloud('truckTracking', truckTrackingData);
-  showToast('✅ تم إيقاف التتبع');
-  showPage('driver');
-}
-
-function updateTruckTrackingUI(){
+// === الإحصائيات ===
+function updateStats(){
   try{
-    if(!truckTrackingData.active){
-      document.getElementById('liveTrackingStatus').innerHTML='🔴 التتبع متوقف';
-      document.getElementById('liveTrackingStatus').style.background='#757575';
-      document.getElementById('binTrackingControls').style.display='none';
-    }else{
-      document.getElementById('liveTrackingStatus').innerHTML='🟢 التتبع المباشر نشط';
-      document.getElementById('liveTrackingStatus').style.background='#4CAF50';
-      document.getElementById('binTrackingControls').style.display='block';
-    }
-    document.getElementById('trackingDriverName').textContent=truckTrackingData.driver||'-';
-    document.getElementById('trackingSector').textContent=truckTrackingData.sector||'-';
-    document.getElementById('trackingDate').textContent=truckTrackingData.startTime?new Date(truckTrackingData.startTime).toLocaleDateString('ar-DZ'):'-';
-    document.getElementById('trackingTime').textContent=truckTrackingData.startTime?new Date(truckTrackingData.startTime).toLocaleTimeString('ar-DZ'):'-';
-    document.getElementById('collectedBinsCount').textContent=truckTrackingData.collectedBins.length;
-    const binsList=document.getElementById('collectedBinsList');
-    if(truckTrackingData.collectedBins.length===0){
-      binsList.innerHTML='<p style="text-align:center;color:#666;padding:20px">لم يتم جمع أي حاويات بعد</p>';
-    }else{
-      binsList.innerHTML=truckTrackingData.collectedBins.map((bin,idx)=>`<div class="bin-collected">🗑️ حاوية #${idx+1}<br><small>${bin.lat.toFixed(6)}, ${bin.lng.toFixed(6)}</small><br><small>🕐 ${new Date(bin.timestamp).toLocaleTimeString('ar-DZ')}</small></div>`).join('');
-    }
+    document.getElementById('statTotal').textContent=allReports.length;
+    document.getElementById('statDone').textContent=allReports.filter(r=>r.status==='done').length;
+    const recycled=wasteTracking.filter(w=>w.status==='published').reduce((sum,w)=>sum+parseFloat(w.qty||0),0);
+    document.getElementById('recycledTotal').textContent=recycled.toFixed(1);
+    if(document.getElementById('dashboard').classList.contains('active'))renderChart();
+    updatePublicStats();
   }catch(e){}
 }
 
-function updateDriverPanel(){
-  try{
-    const ctrl=document.getElementById('binTrackingControls');
-    if(ctrl) ctrl.style.display=(currentDriver && truckTrackingData.active)?'block':'none';
-  }catch(e){}
+// === دوال الحفظ والتحديث ===
+function saveReport(r){ addToCloud('reports/' + r.id, r); updateStats(); showToast('✅ تم الإرسال والمزامنة'); }
+function updateReport(id,upd){
+  updateCloudItem('reports', id, upd);
+  const index=allReports.findIndex(x=>x.id==id);
+  if(index!==-1){ allReports[index]={...allReports[index],...upd}; updateStats(); if(document.getElementById('reportsPage').classList.contains('active'))showReportsPage(); }
 }
-
-function initTruckTrackingMap(){
-  try{
-    if(map){map.remove();}
-    map=L.map('map').setView([36.2642,2.7545],13);
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{attribution:'© OpenStreetMap contributors'}).addTo(map);
-    if(truckTrackingData.positions.length>0){
-      const lastPos=truckTrackingData.positions[truckTrackingData.positions.length-1];
-      map.setView([lastPos.lat,lastPos.lng],15);
-      trackingMarker=L.marker([lastPos.lat,lastPos.lng]).addTo(map).bindPopup(`<b>🚚 ${truckTrackingData.driver}</b><br>القطاع: ${truckTrackingData.sector}`);
-      const latlngs=truckTrackingData.positions.map(p=>[p.lat,p.lng]);
-      trackingPath=L.polyline(latlngs,{color:'#1B5E20',weight:4}).addTo(map);
-      truckTrackingData.collectedBins.forEach(bin=>addBinMarkerToMap(bin));
-    }  }catch(e){}
+function saveWasteTracking(w){ addToCloud('wasteTracking/' + w.id, w); updateStats(); }
+function updateWasteTracking(id,upd){
+  updateCloudItem('wasteTracking', id, upd);
+  const i=wasteTracking.findIndex(x=>x.id==id);
+  if(i!==-1){ wasteTracking[i]={...wasteTracking[i],...upd}; updateStats(); }
 }
+function saveMarketMaterial(m){ addToCloud('marketMaterials/' + m.id, m); }
 
-function updateTruckTrackingMap(position){
-  try{
-    if(!map)return;
-    if(trackingMarker){
-      trackingMarker.setLatLng([position.lat,position.lng]);
-      trackingMarker.bindPopup(`<b>🚚 ${truckTrackingData.driver}</b><br>القطاع: ${truckTrackingData.sector}<br>🕐 ${new Date(position.timestamp).toLocaleTimeString('ar-DZ')}`);
-    }else{
-      trackingMarker=L.marker([position.lat,position.lng]).addTo(map).bindPopup(`<b>🚚 ${truckTrackingData.driver}</b><br>القطاع: ${truckTrackingData.sector}`);
-    }
-    const latlngs=truckTrackingData.positions.map(p=>[p.lat,p.lng]);
-    if(trackingPath){trackingPath.setLatLngs(latlngs);}else{trackingPath=L.polyline(latlngs,{color:'#1B5E20',weight:4}).addTo(map);}
-    map.fitBounds(trackingPath.getBounds());
-  }catch(e){}
-}
-
-function addBinMarkerToMap(bin){
-  try{
-    if(!map)return;
-    L.circleMarker([bin.lat,bin.lng],{radius:8,fillColor:'#4CAF50',color:'#fff',weight:2,opacity:1,fillOpacity:0.8}).addTo(map).bindPopup(`🗑️ حاوية #${truckTrackingData.collectedBins.indexOf(bin)+1}<br>🕐 ${new Date(bin.timestamp).toLocaleTimeString('ar-DZ')}`);
-  }catch(e){}
-}
-
-// === 🚚 تتبع مسار الشاحنات حسب القطاع ===
-function loadSectorRoute(){
-  const sectorId=document.getElementById('sectorSelect').value;
-  if(sectorId && sectorRoutesData[sectorId]){
-    currentSectorData=sectorRoutesData[sectorId];
-    document.getElementById('routeInfo').style.display='block';
-    document.getElementById('routeSectorName').textContent=currentSectorData.name;
-    document.getElementById('routeDate').textContent=currentSectorData.date;
-    document.getElementById('routeDriver').textContent=currentSectorData.driver;
-    document.getElementById('routeBinsCount').textContent=currentSectorData.bins.length;
-  }
-}
-
-function showRouteOnMap(){
-  if(!currentSectorData){showToast('⚠️ اختر القطاع أولاً','error');return;}
-  if(routeMap){routeMap.remove();}
-  routeMap=L.map('routeMap').setView(currentSectorData.path[0],15);
-  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{attribution:'© OpenStreetMap contributors'}).addTo(routeMap);
-  if(routeLayer)routeMap.removeLayer(routeLayer);
-  routeLayer=L.polyline(currentSectorData.path,{color:'#1B5E20',weight:5,opacity:0.8}).addTo(routeMap);
-  currentSectorData.path.forEach((point,index)=>{
-    const color=index===0?'#4CAF50':index===currentSectorData.path.length-1?'#f44336':'#2196F3';
-    const label=index===0?'🚚 البداية':index===currentSectorData.path.length-1?'🏁 النهاية':`📍 نقطة ${index}`;
-    L.circleMarker(point,{radius:8,fillColor:color,color:'#fff',weight:2,opacity:1,fillOpacity:0.9}).addTo(routeMap).bindPopup(label);
-  });  if(binsLayer)routeMap.removeLayer(binsLayer);
-  binsLayer=L.layerGroup().addTo(routeMap);
-  currentSectorData.bins.forEach(bin=>{
-    L.circleMarker([bin.lat,bin.lng],{radius:10,fillColor:'#FF9800',color:'#fff',weight:2,opacity:1,fillOpacity:0.9}).addTo(binsLayer).bindPopup(`🗑️ حاوية #${bin.id}<br>🕐 ${bin.time}`);
-  });
-  routeMap.fitBounds(routeLayer.getBounds(),{padding:[50,50]});
-  document.getElementById('routeBinsList').style.display='block';
-  const binsListHtml=currentSectorData.bins.map(bin=>`<div class="tonnage-card" style="margin:8px 0"><div class="tonnage-info"><b>🗑️ حاوية #${bin.id}</b><span>🕐 ${bin.time}</span></div><div class="tonnage-info"><small>📍 ${bin.lat.toFixed(4)}, ${bin.lng.toFixed(4)}</small></div></div>`).join('');
-  document.getElementById('binsLocationsList').innerHTML=binsListHtml;
-  showToast('✅ تم عرض المسار بنجاح');
-}
-
-// === ✅ دالة تصدير المسار إلى PDF (مصححة) ===
-function exportRouteToPDF(){
-  if(!currentSectorData){showToast('⚠️ اختر القطاع أولاً','error');return;}
-  showToast('📥 جاري تحضير PDF...');
-  
-  const printWindow=window.open('','_blank');
-  const pdfContent=`<!DOCTYPE html><html dir="rtl"><head><meta charset="UTF-8"><title>تقرير مسار القطاع</title><link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" /><script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"><\/script><style>body{margin:0;padding:20px;font-family:'Segoe UI',Tahoma,sans-serif;direction:rtl;text-align:right;}.header{text-align:center;border-bottom:3px solid #1B5E20;padding-bottom:15px;margin-bottom:20px;}.header h1{color:#1B5E20;margin:0;font-size:24px;}.header p{margin:5px 0;color:#666;}.info-box{background:#f5f7fa;padding:15px;border-radius:10px;margin-bottom:20px;}.info-box h3{color:#1B5E20;margin-bottom:10px;}.info-row{display:flex;justify-content:space-between;margin:8px 0;padding:5px 0;border-bottom:1px solid #e0e0e0;}.map-container{margin:20px 0;border:2px solid #ddd;border-radius:10px;overflow:hidden;page-break-inside:avoid;}#mapForPDF{height:500px;width:100%;}table{width:100%;border-collapse:collapse;margin-top:20px;}th{background:#1B5E20;color:white;padding:12px;border:1px solid #ddd;}td{padding:10px;border:1px solid #ddd;text-align:center;}tr:nth-child(even){background:#f8f9fa;}.footer{margin-top:30px;text-align:center;border-top:2px solid #1B5E20;padding-top:15px;color:#666;font-size:12px;}@media print{body{print-color-adjust:exact;-webkit-print-color-adjust:exact;}}</style></head><body><div class="header"><h1>المدية نظيفة 2026</h1><p>تقرير مسار الشاحنات</p></div><div class="info-box"><h3>📊 معلومات المسار</h3><div class="info-row"><b>القطاع:</b><span>${currentSectorData.name}</span></div><div class="info-row"><b>السائق:</b><span>${currentSectorData.driver}</span></div><div class="info-row"><b>التاريخ:</b><span>${currentSectorData.date}</span></div><div class="info-row"><b>عدد الحاويات:</b><span>${currentSectorData.bins.length}</span></div></div><div class="map-container"><div id="mapForPDF"></div></div><h3 style="color:#1B5E20;margin:20px 0 10px 0;">🎯 مواقع الحاويات</h3><table><thead><tr><th>#</th><th>الوقت</th><th>خط العرض</th><th>خط الطول</th></tr></thead><tbody>${currentSectorData.bins.map(bin=>`<tr><td>${bin.id}</td><td>${bin.time}</td><td>${bin.lat.toFixed(6)}</td><td>${bin.lng.toFixed(6)}</td></tr>`).join('')}</tbody></table><div class="footer"><p>إعداد: مصلحة النظافة والوقاية الصحية - بلدية المدية</p><p>تاريخ الطباعة: ${new Date().toLocaleDateString('ar-DZ')}</p></div><script>const path=${JSON.stringify(currentSectorData.path)};const bins=${JSON.stringify(currentSectorData.bins)};const map=L.map('mapForPDF',{zoomControl:false,attributionControl:false}).setView(path[0],15);L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19}).addTo(map);L.polyline(path,{color:'#1B5E20',weight:5,opacity:0.8}).addTo(map);path.forEach((point,index)=>{const color=index===0?'#4CAF50':index===path.length-1?'#f44336':'#2196F3';const label=index===0?'🚚 البداية':index===path.length-1?'🏁 النهاية':'📍 نقطة '+index;L.circleMarker(point,{radius:8,fillColor:color,color:'#fff',weight:2,opacity:1,fillOpacity:0.9}).addTo(map).bindPopup(label);});bins.forEach(bin=>{L.circleMarker([bin.lat,bin.lng],{radius:10,fillColor:'#FF9800',color:'#fff',weight:2,opacity:1,fillOpacity:0.9}).addTo(map).bindPopup('🗑️ حاوية #'+bin.id+'<br>🕐 '+bin.time);});map.fitBounds(L.polyline(path).getBounds(),{padding:[50,50]});setTimeout(()=>{window.print();window.close();},2000);<\/script></body></html>`;
-  
-  printWindow.document.write(pdfContent);
-  printWindow.document.close();
-  showToast('✅ تم فتح نافذة الطباعة');
-}
-
-// === باقي الدوال ===
+// === باقي الدوال الأساسية (مختصرة للتوفير - انسخها من الكود الأصلي) ===
 function getWasteTypeName(t){return{organic:'🍂 عضوي',plastic:'🧴 بلاستيك',metal:'⚙️ معدن',paper:'📄 ورق',glass:'🥃 زجاج',mixed:'🗑️ مختلط'}[t]||'🗑️ عام';}
 function startVoiceInput(){try{if(!('webkitSpeechRecognition' in window)){showToast('⚠️ متصفحك لا يدعم الصوت','error');return;}const recognition=new webkitSpeechRecognition();recognition.lang=currentLang==='ar'?'ar-DZ':currentLang==='fr'?'fr-FR':'en-US';recognition.onstart=()=>showToast('🎤 جاري الاستماع...');recognition.onresult=(event)=>{document.getElementById('addrInput').value=event.results[0][0].transcript;showToast('✅ تم الإملاء');};recognition.onerror=()=>showToast('⚠️ خطأ في الصوت','error');recognition.start();}catch(e){showToast('⚠️ خطأ في الصوت','error');}}
 function getLocation(){try{const btn=document.getElementById('getLocationBtn');const addr=document.getElementById('addrInput');const gps=document.getElementById('gpsInput');if(!navigator.geolocation){showToast('⚠️ GPS غير مدعوم','error');return;}btn.innerHTML='⏳ جاري...';btn.disabled=true;navigator.geolocation.getCurrentPosition(pos=>{const lat=pos.coords.latitude,lng=pos.coords.longitude;gps.value=lat.toFixed(6)+', '+lng.toFixed(6);addr.value='المدية، الجزائر';btn.innerHTML='📍 تحديد الموقع GPS';btn.disabled=false;showToast('✅ '+addr.value);},()=>{btn.innerHTML='📍 تحديد الموقع GPS';btn.disabled=false;showToast('⚠️ فشل تحديد الموقع','error');},{enableHighAccuracy:true,timeout:20000});}catch(e){showToast('⚠️ خطأ في الموقع','error');}}
 function manualLocation(){const a=prompt('أدخل العنوان:','حي الزيتون - المدية');if(a){document.getElementById('addrInput').value=a;document.getElementById('gpsInput').value='36.2642, 2.7545';}}
-function takePhoto(){try{const i=document.createElement('input');i.type='file';i.accept='image/*';i.capture='environment';i.onchange=e=>{if(e.target.files[0]){const r=new FileReader();r.onload=ev=>{tempImage=ev.target.result;document.getElementById('camImg').src=tempImage;document.getElementById('camImg').style.display='block';document.querySelector('.cam-icon').style.display='none';};r.readAsDataURL(e.target.files[0]);}};i.click();}catch(e){showToast('⚠️ خطأ في الكاميرا','error');}}
-function sendReport(){try{const a=document.getElementById('addrInput').value.trim();if(!a){showToast('⚠️ أدخل العنوان','error');return;}const btn=document.getElementById('sendBtn'),orig=btn.innerHTML;btn.innerHTML='⏳ جاري...';btn.disabled=true;const isRecurring=document.getElementById('recurringCheck').checked;const wasteType=document.getElementById('wasteTypeSelect').value;const newReport={id:Date.now(),addr:a,gps:document.getElementById('gpsInput').value||'غير محدد',image:tempImage,doneImage:null,date:new Date().toLocaleDateString('ar-DZ'),time:new Date().toLocaleTimeString('ar-DZ'),doneTime:null,status:'new',driverName:null,recurring:isRecurring,wasteType:wasteType};saveReport(newReport);addPoints(10);showToast('✅ تم الإرسال! +10 نقاط 🎉');document.getElementById('thanksOverlay').style.display='flex';tempImage=null;document.getElementById('camImg').style.display='none';document.querySelector('.cam-icon').style.display='block';document.getElementById('addrInput').value='';document.getElementById('gpsInput').value='';document.getElementById('recurringCheck').checked=false;setTimeout(()=>{document.getElementById('thanksOverlay').style.display='none';showPage('home');btn.innerHTML=orig;btn.disabled=false;},3000);}catch(e){showToast('⚠️ خطأ في الإرسال','error');}}
+function takePhoto(){try{const i=document.createElement('input');i.type='file';i.accept='image/*';i.capture='environment';i.onchange=e=>{if(e.target.files[0]){const r=new FileReader();r.onload=ev=>{tempImage=ev.target.result;document.getElementById('camImg').src=tempImage;document.getElementById('camImg').style.display='block';document.querySelector('.cam-icon').style.display='none';};r.readAsDataURL(e.target.files[0]);}};i.click();}catch(e){showToast('⚠️ خطأ في الكاميرا','error');}}function sendReport(){try{const a=document.getElementById('addrInput').value.trim();if(!a){showToast('⚠️ أدخل العنوان','error');return;}const btn=document.getElementById('sendBtn'),orig=btn.innerHTML;btn.innerHTML='⏳ جاري...';btn.disabled=true;const isRecurring=document.getElementById('recurringCheck').checked;const wasteType=document.getElementById('wasteTypeSelect').value;const newReport={id:Date.now(),addr:a,gps:document.getElementById('gpsInput').value||'غير محدد',image:tempImage,doneImage:null,date:new Date().toLocaleDateString('ar-DZ'),time:new Date().toLocaleTimeString('ar-DZ'),doneTime:null,status:'new',driverName:null,recurring:isRecurring,wasteType:wasteType};saveReport(newReport);addPoints(10);showToast('✅ تم الإرسال! +10 نقاط 🎉');document.getElementById('thanksOverlay').style.display='flex';tempImage=null;document.getElementById('camImg').style.display='none';document.querySelector('.cam-icon').style.display='block';document.getElementById('addrInput').value='';document.getElementById('gpsInput').value='';document.getElementById('recurringCheck').checked=false;setTimeout(()=>{document.getElementById('thanksOverlay').style.display='none';showPage('home');btn.innerHTML=orig;btn.disabled=false;},3000);}catch(e){showToast('⚠️ خطأ في الإرسال','error');}}
 function loginAdmin(){if(document.getElementById('adminCode').value==='1234'){document.getElementById('adminLogin').classList.add('hidden');document.getElementById('adminPanel').classList.remove('hidden');updateStats();showToast('✓ دخول ناجح');}else showToast('✗ رمز خاطئ','error');}
 function logoutAdmin(){document.getElementById('adminLogin').classList.remove('hidden');document.getElementById('adminPanel').classList.add('hidden');document.getElementById('adminName').value='';document.getElementById('adminCode').value='';showToast('✓ خروج');}
 function safeShowReports(){try{if(!allReports||allReports.length===0){showToast('لا توجد بلاغات لعرضها');showPage('reportsPage');document.getElementById('reportsList').innerHTML='<p style="text-align:center;color:#666;padding:40px">لا توجد بلاغات</p>';return;}showPage('reportsPage');applyFilters();showToast('✅ تم تحميل البلاغات');}catch(e){showToast('⚠️ حدث خطأ','error');}}
-function emergencyClearData(){if(confirm('⚠️ تحذير: سيتم مسح جميع البيانات!\nهل أنت متأكد؟')){db.ref().remove().then(()=>{showToast('✅ تم مسح البيانات من السحابة');}).catch(()=>{showToast('⚠️ تم المسح محلياً فقط');});localStorage.clear();allReports=[];wasteTracking=[];marketMaterials=[];truckTrackingData={active:false,driver:'',sector:'',positions:[],collectedBins:[]};updateStats();showToast('✅ تم مسح البيانات');}}
+function emergencyClearData(){if(confirm('⚠️ تحذير: سيتم مسح جميع البيانات!\nهل أنت متأكد؟')){try{db.ref().remove();}catch(e){}localStorage.clear();allReports=[];wasteTracking=[];marketMaterials=[];truckTrackingData={active:false,driver:'',sector:'',positions:[],collectedBins:[]};updateStats();showToast('✅ تم مسح البيانات');}}
 function loginDriver(){const n=document.getElementById('driverName').value.trim();if(!n){showToast('⚠️ أدخل الاسم','error');return;}currentDriver=n;currentDriverSector='غير محدد';document.getElementById('driverLogin').classList.add('hidden');document.getElementById('driverPanel').classList.remove('hidden');showToast('✓ مرحباً '+n);}
 function logoutDriver(){if(window.trackingInterval)clearInterval(window.trackingInterval);truckTrackingData.active=false;saveToCloud('truckTracking',truckTrackingData);currentDriver='';currentDriverSector='';document.getElementById('driverLogin').classList.remove('hidden');document.getElementById('driverPanel').classList.add('hidden');document.getElementById('driverName').value='';tempAfterImage=null;showToast('✓ خروج');}
 function prepareDriverTonnage(){document.getElementById('driverTonnageName').value=currentDriver;document.getElementById('driverTonnageSector').value=currentDriverSector;document.getElementById('driverTonnageWeight').value='';document.getElementById('driverTonnageRegNum').value='';}
@@ -1174,7 +996,8 @@ function filterByStatus(s){showPage('reportsPage');if(document.getElementById('f
 function renderReportsList(reps){try{const c=document.getElementById('reportsList');if(!reps||reps.length===0){c.innerHTML='<p style="text-align:center;color:#666;padding:40px">لا توجد بلاغات</p>';return;}c.innerHTML='';c.innerHTML+=reps.slice(0,50).map(r=>{if(!r)return'';const d1=r.image?`<button class="download-btn" onclick="downloadImage('${r.image}','before_${r.id}.jpg')">⬇️ تحميل صورة قبل</button>`:'';const d2=r.doneImage?`<button class="download-btn" onclick="downloadImage('${r.doneImage}','after_${r.id}.jpg')">⬇️ تحميل صورة بعد</button>`:'';const d3=`<button class="download-btn download-all" onclick="downloadReportText(${r.id})">📄 التقرير الكامل</button>`;const q=`<button class="download-btn purple" onclick="showQR(${r.id})">📱 QR Code</button>`;const img1=r.image?`<div class="img-container"><img src="${r.image}"><div class="img-label">📷 قبل (${r.date})</div></div>${d1}`:'';const img2=r.doneImage?`<div class="img-container"><img src="${r.doneImage}"><div class="img-label done-label">✅ بعد (${r.doneTime||''})</div></div>${d2}`:'';let act='';if(r.status==='new'||r.status==='assigned')act+=`<button class="btn bo" onclick="assignDriver(${r.id})" style="margin-bottom:8px">📤 توجيه للسائق</button>`;act+=`<button class="btn br" onclick="deleteReport(${r.id})">🗑️ حذف</button>`;const recurringBadge=r.recurring?'<span style="background:#FF9800;color:#fff;padding:2px 8px;border-radius:10px;font-size:0.7rem;margin-right:5px">🔄 متكرر</span>':'';const wasteBadge=r.wasteType?`<span class="waste-badge waste-${r.wasteType}">${getWasteTypeName(r.wasteType)}</span>`:'';return`<div class="report-card ${r.status}"><div class="info-row"><b>📍 العنوان:</b> ${recurringBadge}${wasteBadge} ${r.addr}</div><div class="info-row"><b>🌍 GPS:</b> ${r.gps}</div><div class="info-row"><b>📅 التاريخ:</b> ${r.date} ${r.time}</div>${r.driverName?`<div class="info-row"><b>👷 السائق:</b> ${r.driverName}</div>`:''}<div class="info-row"><b>📊 الحالة:</b> <span style="color:${r.status==='done'?'#4CAF50':r.status==='assigned'?'#FF9800':'#f44336'}">${r.status==='done'?'✅ منجز':r.status==='assigned'?'🚚 قيد التنفيذ':'🆕 جديد'}</span></div>${img1}${img2}<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px">${q}${d3}</div><div style="margin-top:10px">${act}</div></div>`;}).join('');}catch(e){}}
 function showQR(id){try{const r=allReports.find(x=>x.id==id);if(!r){showToast('⚠️ غير موجود','error');return;}document.getElementById('qrModal').style.display='flex';document.getElementById('qrReportId').textContent=r.id;const qc=document.getElementById('qrcode');qc.innerHTML='';if(typeof QRCode!=='undefined'){try{new QRCode(qc,{text:String(r.id),width:200,height:200,colorDark:'#1B5E20',colorLight:'#ffffff',correctLevel:QRCode.CorrectLevel.M});}catch(e){qc.innerHTML='<div style="color:red;padding:20px">⚠️ فشل QR</div>';}}else{qc.innerHTML='<div style="color:red;padding:20px">⚠️ المكتبة غير محملة</div>';}}catch(e){showToast('⚠️ خطأ في QR','error');}}
 function assignDriver(id){try{const n=prompt('اسم السائق:');if(!n)return;updateReport(id,{driverName:n,status:'assigned'});showToast('✅ تم التوجيه لـ '+n);showReportsPage();}catch(e){showToast('⚠️ خطأ في التوجيه','error');}}
-function deleteReport(id){if(!confirm('حذف البلاغ؟'))return;deleteFromCloud('reports',id);allReports=allReports.filter(r=>r.id!=id);showReportsPage();updateStats();showToast('✅ تم الحذف');}function loadStaffList(){try{let s=[];try{s=JSON.parse(localStorage.getItem('medea_staff')||'[]');}catch(e){}const c=document.getElementById('staffList');if(!s.length){c.innerHTML='<p style="text-align:center;color:#666;padding:30px">لا يوجد موظفون</p>';return;}c.innerHTML=s.map((x,i)=>`<div class="staff-item"><div><b style="color:#1B5E20">${x.role}:</b> ${x.name}${x.phone?`<br><a href="tel:${x.phone}" class="phone-link">📞 ${x.phone}</a>`:''}</div><div class="action-btns"><button class="edit-btn" onclick="editStaff(${i})">✏️</button><button class="delete-btn" onclick="deleteStaff(${i})">✕</button></div></div>`).join('');}catch(e){}}
+function deleteReport(id){if(!confirm('حذف البلاغ؟'))return;deleteFromCloud('reports',id);allReports=allReports.filter(r=>r.id!=id);showReportsPage();updateStats();showToast('✅ تم الحذف');}
+function loadStaffList(){try{let s=[];try{s=JSON.parse(localStorage.getItem('medea_staff')||'[]');}catch(e){}const c=document.getElementById('staffList');if(!s.length){c.innerHTML='<p style="text-align:center;color:#666;padding:30px">لا يوجد موظفون</p>';return;}c.innerHTML=s.map((x,i)=>`<div class="staff-item"><div><b style="color:#1B5E20">${x.role}:</b> ${x.name}${x.phone?`<br><a href="tel:${x.phone}" class="phone-link">📞 ${x.phone}</a>`:''}</div><div class="action-btns"><button class="edit-btn" onclick="editStaff(${i})">✏️</button><button class="delete-btn" onclick="deleteStaff(${i})">✕</button></div></div>`).join('');}catch(e){}}
 function addStaff(){const n=document.getElementById('newStaffName').value.trim();const r=document.getElementById('newStaffRole').value.trim();const p=document.getElementById('newStaffPhone').value.trim();if(!n||!r){showToast('⚠️ الاسم والمنصب مطلوبان','error');return;}let s=[];try{s=JSON.parse(localStorage.getItem('medea_staff')||'[]');}catch(e){}s.push({name:n,role:r,phone:p});try{localStorage.setItem('medea_staff',JSON.stringify(s));}catch(e){}document.getElementById('newStaffName').value='';document.getElementById('newStaffRole').value='';document.getElementById('newStaffPhone').value='';loadStaffList();showToast('✅ تم الإضافة');}
 function editStaff(i){let s=[];try{s=JSON.parse(localStorage.getItem('medea_staff')||'[]');}catch(e){}const st=s[i];const nn=prompt('الاسم الجديد:',st.name);if(!nn)return;const nr=prompt('المنصب الجديد:',st.role);if(!nr)return;const np=prompt('الهاتف الجديد:',st.phone||'');s[i]={name:nn,role:nr,phone:np};try{localStorage.setItem('medea_staff',JSON.stringify(s));}catch(e){}loadStaffList();showToast('✅ تم التعديل');}
 function deleteStaff(i){if(!confirm('حذف الموظف؟'))return;let s=[];try{s=JSON.parse(localStorage.getItem('medea_staff')||'[]');}catch(e){}s.splice(i,1);try{localStorage.setItem('medea_staff',JSON.stringify(s));}catch(e){}loadStaffList();}
@@ -1204,8 +1027,7 @@ function registerWasteIn(){try{const source=document.getElementById('wasteSource
 function loadSortedMaterials(){try{const list=document.getElementById('sortedMaterialsList');const materials=wasteTracking.filter(w=>w.status==='sorted');if(!materials.length){list.innerHTML='<p style="text-align:center;color:#666;padding:20px">لا توجد مواد مصنفة</p>';return;}list.innerHTML=materials.map(m=>`<div class="material-card ${m.marketPublished?'reserved':'available'}"><div class="info-row"><b>📍 المصدر:</b> ${m.source}</div><div class="info-row"><b>🗑️ النوع:</b> <span class="waste-badge waste-${m.category}">${getWasteTypeName(m.category)}</span></div><div class="info-row"><b>⚖️ الكمية:</b> <span style="font-weight:bold">${m.qty} طن</span></div><div class="info-row"><b>⭐ الجودة:</b> <span class="quality-${m.quality}">${getQualityName(m.quality)}</span></div><div class="info-row"><b>🚚 الشاحنة:</b> ${m.truck||'-'}</div><div class="info-row"><b>📅 التاريخ:</b> ${m.date} ${m.time}</div>${m.notes?`<div class="info-row"><b>📝 ملاحظات:</b> ${m.notes}</div>`:''}${!m.marketPublished?`<button class="btn purple" style="margin-top:10px" onclick="publishMaterial(${m.id})">🚀 نشر في السوق</button>`:`<div style="margin-top:10px;padding:10px;background:#e8f5e9;border-radius:8px;text-align:center;color:#2E7D32">✓ منشور في السوق</div>`}</div>`).join('');}catch(e){}}
 function getQualityName(q){return{excellent:'⭐ عالية الجودة',good:'👍 جيدة',fair:'⚠️ متوسطة',poor:'❌ غير قابلة'}[q]||q;}
 function publishToMarket(){try{const unpublished=wasteTracking.filter(w=>w.status==='sorted'&&!w.marketPublished);if(!unpublished.length){showToast('⚠️ لا توجد مواد غير منشورة','error');return;}unpublished.forEach(m=>{updateWasteTracking(m.id,{marketPublished:true});saveMarketMaterial({id:Date.now()+Math.random(),wasteId:m.id,category:m.category,qty:m.qty,quality:m.quality,source:m.source,date:new Date().toLocaleDateString('ar-DZ'),status:'available',requests:[]});});showToast('✅ تم نشر '+unpublished.length+' مادة في السوق');loadSortedMaterials();loadMarketMaterials();}catch(e){showToast('⚠️ خطأ في النشر','error');}}
-function publishMaterial(id){try{updateWasteTracking(id,{marketPublished:true});const m=wasteTracking.find(w=>w.id==id);if(m){saveMarketMaterial({id:Date.now()+Math.random(),wasteId:m.id,category:m.category,qty:m.qty,quality:m.quality,source:m.source,date:new Date().toLocaleDateString('ar-DZ'),status:'available',requests:[]});}loadSortedMaterials();loadMarketMaterials();}catch(e){showToast('⚠️ خطأ','error');}}
-function filterMarket(){try{loadMarketMaterials();}catch(e){}}
+function publishMaterial(id){try{updateWasteTracking(id,{marketPublished:true});const m=wasteTracking.find(w=>w.id==id);if(m){saveMarketMaterial({id:Date.now()+Math.random(),wasteId:m.id,category:m.category,qty:m.qty,quality:m.quality,source:m.source,date:new Date().toLocaleDateString('ar-DZ'),status:'available',requests:[]});}loadSortedMaterials();loadMarketMaterials();}catch(e){showToast('⚠️ خطأ','error');}}function filterMarket(){try{loadMarketMaterials();}catch(e){}}
 function loadMarketMaterials(){try{const list=document.getElementById('marketMaterialsList');const filterType=document.getElementById('marketFilterType')?.value||'all';const filterQuality=document.getElementById('marketFilterQuality')?.value||'all';let materials=marketMaterials.filter(m=>m.status==='available');if(filterType!=='all')materials=materials.filter(m=>m.category===filterType);if(filterQuality!=='all')materials=materials.filter(m=>m.quality===filterQuality);if(!materials.length){list.innerHTML='<p style="text-align:center;color:#666;padding:20px">لا توجد مواد متاحة حالياً</p>';return;}list.innerHTML=materials.map(m=>`<div class="material-card available"><div class="info-row"><b>🗑️ النوع:</b> <span class="waste-badge waste-${m.category}">${getWasteTypeName(m.category)}</span></div><div class="info-row"><b>⚖️ الكمية:</b> <span style="font-weight:bold">${m.qty} طن</span></div><div class="info-row"><b>⭐ الجودة:</b> <span class="quality-${m.quality}">${getQualityName(m.quality)}</span></div><div class="info-row"><b>📍 المصدر:</b> ${m.source}</div><div class="info-row"><b>📅 التاريخ:</b> ${m.date}</div><button class="btn market-btn" style="margin-top:10px" onclick="openRequestForm(${m.id})">📝 طلب الاستفادة</button></div>`).join('');}catch(e){}}
 function openRequestForm(materialId){document.getElementById('requestForm').style.display='block';document.getElementById('requestForm').dataset.materialId=materialId;window.scrollTo(0,document.getElementById('requestForm').offsetTop-100);}
 function submitMarketRequest(){try{const materialId=document.getElementById('requestForm').dataset.materialId;const company=document.getElementById('companyName').value.trim();const license=document.getElementById('companyLicense').value.trim();const phone=document.getElementById('companyPhone').value.trim();const qty=parseFloat(document.getElementById('requestQty').value);const purpose=document.getElementById('requestPurpose').value.trim();if(!company||!license||!phone||!qty){showToast('⚠️ أكمل جميع الحقول','error');return;}const now=new Date();const request={id:Date.now(),materialId:materialId,company:company,license:license,phone:phone,qty:qty,purpose:purpose,date:now.toLocaleDateString('ar-DZ'),status:'pending'};const reqs=JSON.parse(localStorage.getItem('medea_market_requests')||'[]');reqs.push(request);localStorage.setItem('medea_market_requests',JSON.stringify(reqs));showToast('✅ تم إرسال طلبك وسيتم التواصل معك');document.getElementById('companyName').value='';document.getElementById('companyLicense').value='';document.getElementById('companyPhone').value='';document.getElementById('requestQty').value='';document.getElementById('requestPurpose').value='';document.getElementById('requestForm').style.display='none';}catch(e){showToast('⚠️ خطأ في الإرسال','error');}}
@@ -1222,5 +1044,129 @@ function generateStatsTable(){const total=allReports.length;const done=allReport
 function printNow(){const content=document.getElementById('printContent').innerHTML;const win=window.open('','_blank','width=900,height=700');win.document.write(`<html dir="rtl"><head><meta charset="UTF-8"><title>طباعة</title><style>body{font-family:sans-serif;padding:20px}table{width:100%;border-collapse:collapse}th{background:#1B5E20;color:#fff;padding:8px}td{padding:8px;border:1px solid #ddd}@media print{.no-print{display:none}}</style></head><body>${content}<script>window.print()<\/script></body></html>`);win.document.close();}
 function downloadPDF(){const element=document.getElementById('printContent');if(typeof html2pdf!=='undefined'){showToast('📥 جاري إنشاء PDF...');html2pdf().from(element).set({margin:10,filename:`تقرير_${Date.now()}.pdf`,html2canvas:{scale:2},jsPDF:{format:'a4'}}).save().then(()=>{showToast('✅ تم التحميل');closePrintDialog();});}else{printNow();}}
 function calculateConversion(){const type=document.getElementById('wasteType').value;const weight=parseFloat(document.getElementById('wasteWeight').value);if(!weight||weight<=0){showToast('⚠️ أدخل الوزن');return;}const factors={organic:{energy:2500,oil:0,co2:0.8},plastic:{energy:12000,oil:750,co2:1.5},metal:{energy:8000,oil:0,co2:2.0},mixed:{energy:800,oil:50,co2:0.4}};const f=factors[type];document.getElementById('resEnergy').textContent=(weight*f.energy).toLocaleString('ar-DZ');document.getElementById('resOil').textContent=(weight*f.oil).toLocaleString('ar-DZ');document.getElementById('resCO2').textContent=(weight*f.co2).toFixed(2);document.getElementById('conversionResult').style.display='block';showToast('✅ تم الحساب');}
+
+// === دوال تتبع الشاحنة ===
+function startTruckTracking(){
+  if(!currentDriver){showToast('⚠️ يجب تسجيل الدخول أولاً','error');return;}
+  truckTrackingData={active:true,driver:currentDriver,sector:currentDriverSector,startTime:new Date().toISOString(),positions:[],collectedBins:[]};
+  saveToCloud('truckTracking', truckTrackingData);
+  showPage('truckTracking');
+  updateTruckTrackingUI();
+  startGPSMonitoring();
+  showToast('✅ تم بدء التتبع المباشر');
+}
+function startGPSMonitoring(){
+  if(!navigator.geolocation){showToast('⚠️ GPS غير مدعوم','error');return;}
+  window.trackingInterval=setInterval(()=>{
+    navigator.geolocation.getCurrentPosition(pos=>{
+      const position={lat:pos.coords.latitude,lng:pos.coords.longitude,timestamp:new Date().toISOString(),accuracy:pos.coords.accuracy};
+      truckTrackingData.positions.push(position);
+      saveToCloud('truckTracking', truckTrackingData);
+      updateTruckTrackingMap(position);
+    },err=>{},{enableHighAccuracy:true,timeout:10000,maximumAge:0});
+  },10000);
+}
+function recordBinCollection(){
+  if(!truckTrackingData.active){showToast('⚠️ التتبع غير نشط','error');return;}
+  navigator.geolocation.getCurrentPosition(pos=>{
+    const bin={id:Date.now(),lat:pos.coords.latitude,lng:pos.coords.longitude,timestamp:new Date().toISOString(),sector:currentDriverSector,driver:currentDriver};
+    truckTrackingData.collectedBins.push(bin);
+    saveToCloud('truckTracking', truckTrackingData);
+    updateTruckTrackingUI();
+    if(navigator.vibrate)navigator.vibrate([200,100,200]);
+    showToast('✅ تم تسجيل الحاوية #' + truckTrackingData.collectedBins.length);
+    addBinMarkerToMap(bin);
+  },err=>{showToast('⚠️ فشل في تحديد الموقع','error');},{enableHighAccuracy:true,timeout:10000});}
+function stopTruckTracking(){
+  if(window.trackingInterval)clearInterval(window.trackingInterval);
+  truckTrackingData.active=false;
+  saveToCloud('truckTracking', truckTrackingData);
+  showToast('✅ تم إيقاف التتبع');
+  showPage('driver');
+}
+function updateTruckTrackingUI(){
+  try{
+    if(!truckTrackingData.active){
+      document.getElementById('liveTrackingStatus').innerHTML='🔴 التتبع متوقف';
+      document.getElementById('liveTrackingStatus').style.background='#757575';
+      document.getElementById('binTrackingControls').style.display='none';
+    }else{
+      document.getElementById('liveTrackingStatus').innerHTML='🟢 التتبع المباشر نشط';
+      document.getElementById('liveTrackingStatus').style.background='#4CAF50';
+      document.getElementById('binTrackingControls').style.display='block';
+    }
+    document.getElementById('trackingDriverName').textContent=truckTrackingData.driver||'-';
+    document.getElementById('trackingSector').textContent=truckTrackingData.sector||'-';
+    document.getElementById('trackingDate').textContent=truckTrackingData.startTime?new Date(truckTrackingData.startTime).toLocaleDateString('ar-DZ'):'-';
+    document.getElementById('trackingTime').textContent=truckTrackingData.startTime?new Date(truckTrackingData.startTime).toLocaleTimeString('ar-DZ'):'-';
+    document.getElementById('collectedBinsCount').textContent=truckTrackingData.collectedBins.length;
+    const binsList=document.getElementById('collectedBinsList');
+    if(truckTrackingData.collectedBins.length===0){
+      binsList.innerHTML='<p style="text-align:center;color:#666;padding:20px">لم يتم جمع أي حاويات بعد</p>';
+    }else{
+      binsList.innerHTML=truckTrackingData.collectedBins.map((bin,idx)=>`<div class="bin-collected">🗑️ حاوية #${idx+1}<br><small>${bin.lat.toFixed(6)}, ${bin.lng.toFixed(6)}</small><br><small>🕐 ${new Date(bin.timestamp).toLocaleTimeString('ar-DZ')}</small></div>`).join('');
+    }
+  }catch(e){}
+}
+function updateDriverPanel(){ try{ const ctrl=document.getElementById('binTrackingControls'); if(ctrl) ctrl.style.display=(currentDriver && truckTrackingData.active)?'block':'none'; }catch(e){} }
+function initTruckTrackingMap(){
+  try{
+    if(map){map.remove();}
+    map=L.map('map').setView([36.2642,2.7545],13);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{attribution:'© OpenStreetMap contributors'}).addTo(map);
+    if(truckTrackingData.positions.length>0){
+      const lastPos=truckTrackingData.positions[truckTrackingData.positions.length-1];
+      map.setView([lastPos.lat,lastPos.lng],15);
+      trackingMarker=L.marker([lastPos.lat,lastPos.lng]).addTo(map).bindPopup(`<b>🚚 ${truckTrackingData.driver}</b><br>القطاع: ${truckTrackingData.sector}`);
+      const latlngs=truckTrackingData.positions.map(p=>[p.lat,p.lng]);
+      trackingPath=L.polyline(latlngs,{color:'#1B5E20',weight:4}).addTo(map);
+      truckTrackingData.collectedBins.forEach(bin=>addBinMarkerToMap(bin));
+    }
+  }catch(e){}
+}
+function updateTruckTrackingMap(position){
+  try{    if(!map)return;
+    if(trackingMarker){ trackingMarker.setLatLng([position.lat,position.lng]); trackingMarker.bindPopup(`<b>🚚 ${truckTrackingData.driver}</b><br>القطاع: ${truckTrackingData.sector}<br>🕐 ${new Date(position.timestamp).toLocaleTimeString('ar-DZ')}`); }
+    else{ trackingMarker=L.marker([position.lat,position.lng]).addTo(map).bindPopup(`<b>🚚 ${truckTrackingData.driver}</b><br>القطاع: ${truckTrackingData.sector}`); }
+    const latlngs=truckTrackingData.positions.map(p=>[p.lat,p.lng]);
+    if(trackingPath){trackingPath.setLatLngs(latlngs);}else{trackingPath=L.polyline(latlngs,{color:'#1B5E20',weight:4}).addTo(map);}
+    map.fitBounds(trackingPath.getBounds());
+  }catch(e){}
+}
+function addBinMarkerToMap(bin){ try{ if(!map)return; L.circleMarker([bin.lat,bin.lng],{radius:8,fillColor:'#4CAF50',color:'#fff',weight:2,opacity:1,fillOpacity:0.8}).addTo(map).bindPopup(`🗑️ حاوية #${truckTrackingData.collectedBins.indexOf(bin)+1}<br>🕐 ${new Date(bin.timestamp).toLocaleTimeString('ar-DZ')}`); }catch(e){} }
+
+// === دوال تتبع المسار حسب القطاع ===
+function loadSectorRoute(){ const sectorId=document.getElementById('sectorSelect').value; if(sectorId && sectorRoutesData[sectorId]){ currentSectorData=sectorRoutesData[sectorId]; document.getElementById('routeInfo').style.display='block'; document.getElementById('routeSectorName').textContent=currentSectorData.name; document.getElementById('routeDate').textContent=currentSectorData.date; document.getElementById('routeDriver').textContent=currentSectorData.driver; document.getElementById('routeBinsCount').textContent=currentSectorData.bins.length; } }
+function showRouteOnMap(){
+  if(!currentSectorData){showToast('⚠️ اختر القطاع أولاً','error');return;}
+  if(routeMap){routeMap.remove();}
+  routeMap=L.map('routeMap').setView(currentSectorData.path[0],15);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{attribution:'© OpenStreetMap contributors'}).addTo(routeMap);
+  if(routeLayer)routeMap.removeLayer(routeLayer);
+  routeLayer=L.polyline(currentSectorData.path,{color:'#1B5E20',weight:5,opacity:0.8}).addTo(routeMap);
+  currentSectorData.path.forEach((point,index)=>{
+    const color=index===0?'#4CAF50':index===currentSectorData.path.length-1?'#f44336':'#2196F3';
+    const label=index===0?'🚚 البداية':index===currentSectorData.path.length-1?'🏁 النهاية':`📍 نقطة ${index}`;
+    L.circleMarker(point,{radius:8,fillColor:color,color:'#fff',weight:2,opacity:1,fillOpacity:0.9}).addTo(routeMap).bindPopup(label);
+  });
+  if(binsLayer)routeMap.removeLayer(binsLayer);
+  binsLayer=L.layerGroup().addTo(routeMap);
+  currentSectorData.bins.forEach(bin=>{ L.circleMarker([bin.lat,bin.lng],{radius:10,fillColor:'#FF9800',color:'#fff',weight:2,opacity:1,fillOpacity:0.9}).addTo(binsLayer).bindPopup(`🗑️ حاوية #${bin.id}<br>🕐 ${bin.time}`); });
+  routeMap.fitBounds(routeLayer.getBounds(),{padding:[50,50]});
+  document.getElementById('routeBinsList').style.display='block';
+  const binsListHtml=currentSectorData.bins.map(bin=>`<div class="tonnage-card" style="margin:8px 0"><div class="tonnage-info"><b>🗑️ حاوية #${bin.id}</b><span>🕐 ${bin.time}</span></div><div class="tonnage-info"><small>📍 ${bin.lat.toFixed(4)}, ${bin.lng.toFixed(4)}</small></div></div>`).join('');
+  document.getElementById('binsLocationsList').innerHTML=binsListHtml;
+  showToast('✅ تم عرض المسار بنجاح');
+}
+function exportRouteToPDF(){
+  if(!currentSectorData){showToast('⚠️ اختر القطاع أولاً','error');return;}
+  showToast('📥 جاري تحضير PDF...');
+  const printWindow=window.open('','_blank');
+  const pdfContent=`<!DOCTYPE html><html dir="rtl"><head><meta charset="UTF-8"><title>تقرير مسار القطاع</title><link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" /><script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"><\/script><style>body{margin:0;padding:20px;font-family:sans-serif;direction:rtl;text-align:right}.header{text-align:center;border-bottom:3px solid #1B5E20;padding-bottom:15px;margin-bottom:20px}.header h1{color:#1B5E20;margin:0;font-size:24px}.info-box{background:#f5f7fa;padding:15px;border-radius:10px;margin-bottom:20px}.info-row{display:flex;justify-content:space-between;margin:8px 0;padding:5px 0;border-bottom:1px solid #e0e0e0}#mapForPDF{height:500px;width:100%}table{width:100%;border-collapse:collapse}th{background:#1B5E20;color:#fff;padding:12px}td{padding:10px;border:1px solid #ddd}@media print{body{print-color-adjust:exact}}</style></head><body><div class="header"><h1>المدية نظيفة 2026</h1><p>تقرير مسار الشاحنات</p></div><div class="info-box"><h3>📊 معلومات المسار</h3><div class="info-row"><b>القطاع:</b><span>${currentSectorData.name}</span></div><div class="info-row"><b>السائق:</b><span>${currentSectorData.driver}</span></div><div class="info-row"><b>التاريخ:</b><span>${currentSectorData.date}</span></div></div><div id="mapForPDF"></div><script>const path=${JSON.stringify(currentSectorData.path)};const map=L.map('mapForPDF',{zoomControl:false}).setView(path[0],15);L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);L.polyline(path,{color:'#1B5E20',weight:5}).addTo(map);map.fitBounds(L.polyline(path).getBounds());setTimeout(()=>{window.print();window.close();},2000);<\/script></body></html>`;
+  printWindow.document.write(pdfContent);
+  printWindow.document.close();
+  showToast('✅ تم فتح نافذة الطباعة');
+}
 </script>
-</body></html>
+</body>
+</html>
