@@ -1078,24 +1078,238 @@ function showRouteOnMap(){
   showToast('✅ تم عرض المسار بنجاح');
 }
 
+// === ✅ دالة تصدير المسار إلى PDF (مصححة) ===
 function exportRouteToPDF(){
-  if(!currentSectorData){showToast('⚠️ اختر القطاع أولاً','error');return;}
+  if(!currentSectorData){
+    showToast('⚠️ اختر القطاع أولاً', 'error');
+    return;
+  }
+  
   showToast('📥 جاري تحضير PDF...');
-  const pdfContent=`<div style="padding:20px;font-family:'Segoe UI',Tahoma,sans-serif;direction:rtl;text-align:right"><div style="text-align:center;border-bottom:3px solid #1B5E20;padding-bottom:15px;margin-bottom:20px"><h1 style="color:#1B5E20;margin:0">المدية نظيفة 2026</h1><p style="margin:5px 0;color:#666">تقرير مسار الشاحنات</p></div><div style="background:#f5f7fa;padding:15px;border-radius:10px;margin-bottom:20px"><h3 style="color:#1B5E20;margin-bottom:10px">📊 معلومات المسار</h3><p><b>القطاع:</b> ${currentSectorData.name}</p><p><b>السائق:</b> ${currentSectorData.driver}</p><p><b>التاريخ:</b> ${currentSectorData.date}</p><p><b>عدد الحاويات:</b> ${currentSectorData.bins.length}</p></div><div style="margin-bottom:20px"><h3 style="color:#1B5E20;margin-bottom:10px">🗺️ الخريطة</h3><div id="mapForPDF" style="height:400px;border:2px solid #ddd;border-radius:10px"></div></div><div><h3 style="color:#1B5E20;margin-bottom:10px">🎯 مواقع الحاويات</h3><table style="width:100%;border-collapse:collapse"><thead><tr style="background:#1B5E20;color:#fff"><th style="padding:10px;border:1px solid #ddd">#</th><th style="padding:10px;border:1px solid #ddd">الوقت</th><th style="padding:10px;border:1px solid #ddd">خط العرض</th><th style="padding:10px;border:1px solid #ddd">خط الطول</th></tr></thead><tbody>${currentSectorData.bins.map(bin=>`<tr><td style="padding:8px;border:1px solid #ddd;text-align:center">${bin.id}</td><td style="padding:8px;border:1px solid #ddd;text-align:center">${bin.time}</td><td style="padding:8px;border:1px solid #ddd;text-align:center">${bin.lat.toFixed(6)}</td><td style="padding:8px;border:1px solid #ddd;text-align:center">${bin.lng.toFixed(6)}</td></tr>`).join('')}</tbody></table></div><div style="margin-top:30px;text-align:center;border-top:2px solid #1B5E20;padding-top:15px"><p style="color:#666;font-size:0.9rem">إعداد: مصلحة النظافة والوقاية الصحية - بلدية المدية</p><p style="color:#666;font-size:0.9rem">تاريخ الطباعة: ${new Date().toLocaleDateString('ar-DZ')}</p></div></div>`;
-  const printWindow=window.open('','_blank');
-  printWindow.document.write(`<html dir="rtl"><head><title>تقرير مسار القطاع ${document.getElementById('sectorSelect').value}</title><link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" /><script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"><\/script><style>body{margin:0;padding:20px;font-family:'Segoe UI',Tahoma,sans-serif;}@media print{body{print-color-adjust:exact;-webkit-print-color-adjust:exact;}}</style></head><body>${pdfContent}</body></html>`);
+  
+  // إنشاء نافذة جديدة للطباعة
+  const printWindow = window.open('', '_blank');
+  
+  // محتوى HTML للـ PDF
+  const pdfContent = `
+    <!DOCTYPE html>
+    <html dir="rtl">
+    <head>
+      <meta charset="UTF-8">
+      <title>تقرير مسار القطاع ${document.getElementById('sectorSelect').value}</title>
+      <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+      <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"><\/script>
+      <style>
+        body {
+          margin: 0;
+          padding: 20px;
+          font-family: 'Segoe UI', Tahoma, sans-serif;
+          direction: rtl;
+          text-align: right;
+        }
+        .header {
+          text-align: center;
+          border-bottom: 3px solid #1B5E20;
+          padding-bottom: 15px;
+          margin-bottom: 20px;
+        }
+        .header h1 {
+          color: #1B5E20;
+          margin: 0;
+          font-size: 24px;
+        }
+        .header p {
+          margin: 5px 0;
+          color: #666;
+        }
+        .info-box {
+          background: #f5f7fa;
+          padding: 15px;
+          border-radius: 10px;
+          margin-bottom: 20px;
+        }
+        .info-box h3 {
+          color: #1B5E20;
+          margin-bottom: 10px;
+        }
+        .info-row {
+          display: flex;
+          justify-content: space-between;
+          margin: 8px 0;
+          padding: 5px 0;
+          border-bottom: 1px solid #e0e0e0;
+        }
+        .map-container {
+          margin: 20px 0;
+          border: 2px solid #ddd;
+          border-radius: 10px;
+          overflow: hidden;
+          page-break-inside: avoid;
+        }
+        #mapForPDF {
+          height: 500px;
+          width: 100%;
+        }
+        table {
+          width: 100%;
+          border-collapse: collapse;
+          margin-top: 20px;
+        }
+        th {
+          background: #1B5E20;
+          color: white;
+          padding: 12px;
+          border: 1px solid #ddd;
+        }
+        td {
+          padding: 10px;
+          border: 1px solid #ddd;
+          text-align: center;
+        }
+        tr:nth-child(even) {
+          background: #f8f9fa;
+        }
+        .footer {
+          margin-top: 30px;
+          text-align: center;
+          border-top: 2px solid #1B5E20;
+          padding-top: 15px;
+          color: #666;
+          font-size: 12px;
+        }
+        @media print {
+          body {
+            print-color-adjust: exact;
+            -webkit-print-color-adjust: exact;
+          }
+        }
+      </style>
+    </head>
+    <body>
+      <div class="header">
+        <h1>المدية نظيفة 2026</h1>
+        <p>تقرير مسار الشاحنات</p>
+      </div>
+      
+      <div class="info-box">
+        <h3>📊 معلومات المسار</h3>
+        <div class="info-row">
+          <b>القطاع:</b>
+          <span>${currentSectorData.name}</span>
+        </div>
+        <div class="info-row">
+          <b>السائق:</b>
+          <span>${currentSectorData.driver}</span>
+        </div>
+        <div class="info-row">
+          <b>التاريخ:</b>
+          <span>${currentSectorData.date}</span>
+        </div>
+        <div class="info-row">
+          <b>عدد الحاويات:</b>
+          <span>${currentSectorData.bins.length}</span>
+        </div>
+      </div>
+
+      <div class="map-container">
+        <div id="mapForPDF"></div>
+      </div>
+
+      <h3 style="color: #1B5E20; margin: 20px 0 10px 0;">🎯 مواقع الحاويات</h3>
+      <table>
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>الوقت</th>
+            <th>خط العرض</th>
+            <th>خط الطول</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${currentSectorData.bins.map(bin => `
+            <tr>
+              <td>${bin.id}</td>
+              <td>${bin.time}</td>
+              <td>${bin.lat.toFixed(6)}</td>
+              <td>${bin.lng.toFixed(6)}</td>
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>
+
+      <div class="footer">
+        <p>إعداد: مصلحة النظافة والوقاية الصحية - بلدية المدية</p>
+        <p>تاريخ الطباعة: ${new Date().toLocaleDateString('ar-DZ')}</p>
+      </div>
+
+      <script>
+        // تهيئة الخريطة
+        const path = ${JSON.stringify(currentSectorData.path)};
+        const bins = ${JSON.stringify(currentSectorData.bins)};
+        
+        const map = L.map('mapForPDF', {
+          zoomControl: false,
+          attributionControl: false
+        }).setView(path[0], 15);
+
+        // إضافة طبقة الخريطة
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+          maxZoom: 19,
+        }).addTo(map);
+
+        // رسم المسار
+        L.polyline(path, {
+          color: '#1B5E20',
+          weight: 5,
+          opacity: 0.8
+        }).addTo(map);
+
+        // إضافة نقاط المسار
+        path.forEach((point, index) => {
+          const color = index === 0 ? '#4CAF50' : 
+                       index === path.length - 1 ? '#f44336' : '#2196F3';
+          const label = index === 0 ? '🚚 البداية' : 
+                       index === path.length - 1 ? '🏁 النهاية' : '📍 نقطة ' + index;
+          
+          L.circleMarker(point, {
+            radius: 8,
+            fillColor: color,
+            color: '#fff',
+            weight: 2,
+            opacity: 1,
+            fillOpacity: 0.9
+          }).addTo(map).bindPopup(label);
+        });
+
+        // إضافة مواقع الحاويات
+        bins.forEach(bin => {
+          L.circleMarker([bin.lat, bin.lng], {
+            radius: 10,
+            fillColor: '#FF9800',
+            color: '#fff',
+            weight: 2,
+            opacity: 1,
+            fillOpacity: 0.9
+          }).addTo(map).bindPopup('🗑️ حاوية #' + bin.id + '<br>🕐 ' + bin.time);
+        });
+
+        // ضبط الخريطة لعرض كل المسار
+        map.fitBounds(L.polyline(path).getBounds(), { padding: [50, 50] });
+
+        // انتظار تحميل الخريطة ثم الطباعة
+        setTimeout(() => {
+          window.print();
+          window.close();
+        }, 2000);
+      <\/script>
+    </body>
+    </html>
+  `;
+
+  printWindow.document.write(pdfContent);
   printWindow.document.close();
-  setTimeout(()=>{
-    const mapForPDF=printWindow.document.getElementById('mapForPDF');
-    if(mapForPDF){
-      const tempMap=L.map('mapForPDF',printWindow.document).setView(currentSectorData.path[0],15);
-      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(tempMap);
-      L.polyline(currentSectorData.path,{color:'#1B5E20',weight:5,opacity:0.8}).addTo(tempMap);
-      currentSectorData.bins.forEach(bin=>{L.circleMarker([bin.lat,bin.lng],{radius:10,fillColor:'#FF9800',color:'#fff',weight:2}).addTo(tempMap);});
-      tempMap.fitBounds(L.polyline(currentSectorData.path).getBounds());
-      setTimeout(()=>{printWindow.print();printWindow.close();showToast('✅ تم فتح نافذة الطباعة');},1000);
-    }
-  },500);
+  
+  showToast('✅ تم فتح نافذة الطباعة');
 }
 
 // === باقي الدوال ===
@@ -1120,7 +1334,7 @@ function showReportsPage(){try{applyFilters();}catch(e){document.getElementById(
 function applyFilters(){try{const st=document.getElementById('filterStatus')?.value||'all';const sr=document.getElementById('searchInput')?.value.toLowerCase()||'';let f=allReports;if(st!=='all')f=f.filter(r=>st==='pending'?r.status==='new'||r.status==='assigned':r.status===st);if(sr)f=f.filter(r=>r.addr.toLowerCase().includes(sr)||(r.driverName&&r.driverName.toLowerCase().includes(sr)));renderReportsList(f);}catch(e){}}
 function filterByStatus(s){showPage('reportsPage');if(document.getElementById('filterStatus')){document.getElementById('filterStatus').value=s==='pending'?'assigned':s;applyFilters();}}
 function renderReportsList(reps){try{const c=document.getElementById('reportsList');if(!reps||reps.length===0){c.innerHTML='<p style="text-align:center;color:#666;padding:40px">لا توجد بلاغات</p>';return;}const displayReports=reps.slice(0,50);if(reps.length>50){c.innerHTML=`<div style="background:#fff3cd;padding:10px;border-radius:8px;margin-bottom:10px;text-align:center;color:#856404">يتم عرض أول 50 بلاغ فقط من أصل ${reps.length}</div>`;}else{c.innerHTML='';}c.innerHTML+=displayReports.map(r=>{if(!r)return'';const d1=r.image?`<button class="download-btn" onclick="downloadImage('${r.image}','before_${r.id}.jpg')">⬇️ تحميل صورة قبل</button>`:'';const d2=r.doneImage?`<button class="download-btn" onclick="downloadImage('${r.doneImage}','after_${r.id}.jpg')">⬇️ تحميل صورة بعد</button>`:'';const d3=`<button class="download-btn download-all" onclick="downloadReportText(${r.id})">📄 التقرير الكامل</button>`;const q=`<button class="download-btn purple" onclick="showQR(${r.id})">📱 QR Code</button>`;const img1=r.image?`<div class="img-container"><img src="${r.image}"><div class="img-label">📷 قبل (${r.date})</div></div>${d1}`:'';const img2=r.doneImage?`<div class="img-container"><img src="${r.doneImage}"><div class="img-label done-label">✅ بعد (${r.doneTime||''})</div></div>${d2}`:'';let act='';if(r.status==='new'||r.status==='assigned')act+=`<button class="btn bo" onclick="assignDriver(${r.id})" style="margin-bottom:8px">📤 توجيه للسائق</button>`;act+=`<button class="btn br" onclick="deleteReport(${r.id})">🗑️ حذف</button>`;const recurringBadge=r.recurring?'<span style="background:#FF9800;color:#fff;padding:2px 8px;border-radius:10px;font-size:0.7rem;margin-right:5px">🔄 متكرر</span>':'';const wasteBadge=r.wasteType?`<span class="waste-badge waste-${r.wasteType}">${getWasteTypeName(r.wasteType)}</span>`:'';return`<div class="report-card ${r.status}"><div class="info-row"><b>📍 العنوان:</b> ${recurringBadge}${wasteBadge} ${r.addr}</div><div class="info-row"><b>🌍 GPS:</b> ${r.gps}</div><div class="info-row"><b>📅 التاريخ:</b> ${r.date} ${r.time}</div>${r.driverName?`<div class="info-row"><b>👷 السائق:</b> ${r.driverName}</div>`:''}<div class="info-row"><b>📊 الحالة:</b> <span style="color:${r.status==='done'?'#4CAF50':r.status==='assigned'?'#FF9800':'#f44336'}">${r.status==='done'?'✅ منجز':r.status==='assigned'?'🚚 قيد التنفيذ':'🆕 جديد'}</span></div>${img1}${img2}<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px">${q}${d3}</div><div style="margin-top:10px">${act}</div></div>`;}).join('');}catch(e){document.getElementById('reportsList').innerHTML='<div style="padding:20px;background:#ffebee;color:#c62828;border-radius:10px;text-align:center">⚠️ خطأ في العرض</div>';}}
-function showQR(id){try{const r=allReports.find(x=>x.id==id);if(!r){showToast('⚠️ غير موجود','error');return;}document.getElementById('qrModal').style.display='flex';document.getElementById('qrReportId').textContent=r.id;const qc=document.getElementById('qrcode');qc.innerHTML='';if(typeof QRCode!=='undefined'){try{new QRCode(qc,{text:String(r.id),width:200,height:200,colorDark:'#1B5E20',colorLight:'#ffffff',correctLevel:QRCode.CorrectLevel.M});}catch(e){qc.innerHTML='<div style="color:red;padding:20px">⚠️ فشل QR</div>';}}else{qc.innerHTML='<div style="color:red;padding:20px">⚠️ المكتبة غير محملة</div>'};}catch(e){showToast('⚠️ خطأ في QR','error');}}
+function showQR(id){try{const r=allReports.find(x=>x.id==id);if(!r){showToast('⚠️ غير موجود','error');return;}document.getElementById('qrModal').style.display='flex';document.getElementById('qrReportId').textContent=r.id;const qc=document.getElementById('qrcode');qc.innerHTML='';if(typeof QRCode!=='undefined'){try{new QRCode(qc,{text:String(r.id),width:200,height:200,colorDark:'#1B5E20',colorLight:'#ffffff',correctLevel:QRCode.CorrectLevel.M});}catch(e){qc.innerHTML='<div style="color:red;padding:20px">⚠️ فشل QR</div>';}}else{qc.innerHTML='<div style="color:red;padding:20px">⚠️ المكتبة غير محملة</div>';}}catch(e){showToast('⚠️ خطأ في QR','error');}}
 function assignDriver(id){try{const st=JSON.parse(localStorage.getItem('medea_staff')||'[]');const dr=st.filter(s=>s.role.includes('سائق'));if(!dr.length){showToast('⚠️ لا يوجد سائقون','error');return;}const n=prompt('اسم السائق:\n'+dr.map(d=>d.name).join('\n'));if(!n)return;const f=dr.find(d=>d.name.toLowerCase()===n.toLowerCase());if(!f){showToast('❌ غير موجود','error');return;}updateReport(id,{driverName:f.name,status:'assigned'});showToast('✅ تم التوجيه لـ '+f.name);showReportsPage();}catch(e){showToast('⚠️ خطأ في التوجيه','error');}}
 function deleteReport(id){if(!confirm('حذف البلاغ؟'))return;allReports=allReports.filter(r=>r.id!=id);try{localStorage.setItem('medea_reports',JSON.stringify(allReports));}catch(e){}showReportsPage();updateStats();updatePublicStats();showToast('✅ تم الحذف');}
 function loadStaffList(){try{let s=[];try{s=JSON.parse(localStorage.getItem('medea_staff')||'[]');}catch(e){}const c=document.getElementById('staffList');if(!s.length){c.innerHTML='<p style="text-align:center;color:#666;padding:30px">لا يوجد موظفون</p>';return;}c.innerHTML=s.map((x,i)=>`<div class="staff-item"><div><b style="color:#1B5E20">${x.role}:</b> ${x.name}${x.phone?`<br><a href="tel:${x.phone}" class="phone-link">📞 ${x.phone}</a>`:''}</div><div class="action-btns"><button class="edit-btn" onclick="editStaff(${i})">✏️</button><button class="delete-btn" onclick="deleteStaff(${i})">✕</button></div></div>`).join('');}catch(e){}}
