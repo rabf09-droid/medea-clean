@@ -8,9 +8,36 @@
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-<!-- Firebase SDK للمزامنة السحابية -->
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+
+<!-- 🔧 إصلاح فوري - إخفاء شاشة التحميل من بداية HEAD -->
+<script>
+(function(){
+  try{
+    // إخفاء فوري عند تحميل الهيكل
+    document.addEventListener('DOMContentLoaded', function(){
+      var splash = document.getElementById('splash');
+      if(splash){ splash.style.display = 'none'; console.log('✅ Splash hidden DOMContentLoaded'); }
+    });
+    // إخفاء عند اكتمال التحميل
+    window.addEventListener('load', function(){
+      var splash = document.getElementById('splash');
+      if(splash && splash.style.display !== 'none'){
+        splash.style.opacity = '0';
+        setTimeout(function(){ splash.style.display = 'none'; }, 100);
+        console.log('✅ Splash hidden on load');
+      }
+    });
+    // شبكة أمان - إخفاء بعد 1.5 ثانية
+    setTimeout(function(){
+      var splash = document.getElementById('splash');
+      if(splash){ splash.style.display = 'none'; console.log('✅ Splash force hidden 1.5s'); }
+    }, 1500);
+  }catch(e){ console.error('❌ Head script error:', e); }
+})();
+</script>
+
 <style>
 *{box-sizing:border-box;margin:0;padding:0;font-family:'Segoe UI',Tahoma,sans-serif;-webkit-tap-highlight-color:transparent}
 html,body{overflow-x:hidden;width:100%;background:#f5f7fa;min-height:100vh}
@@ -20,8 +47,7 @@ html,body{overflow-x:hidden;width:100%;background:#f5f7fa;min-height:100vh}
 #splash .logo-box span{font-size:8rem}
 #splash h1{font-size:2.2rem;color:#fff;margin-bottom:10px;font-weight:800;text-shadow:2px 2px 4px rgba(0,0,0,0.3)}
 #splash p{color:rgba(255,255,255,0.9);margin-bottom:30px;font-size:1rem;text-align:center;padding:0 20px}
-.loader{width:50px;height:50px;border:5px solid rgba(255,255,255,0.3);border-top:5px solid #FFD700;border-radius:50%;animation:spin 1s linear infinite}
-@keyframes spin{to{transform:rotate(360deg)}}
+.loader{width:50px;height:50px;border:5px solid rgba(255,255,255,0.3);border-top:5px solid #FFD700;border-radius:50%;animation:spin 1s linear infinite}@keyframes spin{to{transform:rotate(360deg)}}
 .conn{position:fixed;top:0;left:0;right:0;padding:8px;text-align:center;font-size:0.85rem;font-weight:700;z-index:10000;background:linear-gradient(90deg,#1B5E20,#2E7D32);color:#fff}
 .sync-indicator{position:fixed;bottom:10px;left:10px;padding:6px 12px;border-radius:15px;font-size:0.75rem;font-weight:700;z-index:1000;transition:all 0.3s}
 .sync-online{background:#4CAF50;color:#fff}
@@ -47,7 +73,8 @@ html,body{overflow-x:hidden;width:100%;background:#f5f7fa;min-height:100vh}
 .bx{background:#757575}
 .bo{background:#FF9800}
 .purple{background:#673ab7}
-.green-recycle{background:linear-gradient(135deg,#2E7D32,#4CAF50)}.market-btn{background:linear-gradient(135deg,#673ab7,#9c27b0)}
+.green-recycle{background:linear-gradient(135deg,#2E7D32,#4CAF50)}
+.market-btn{background:linear-gradient(135deg,#673ab7,#9c27b0)}
 .map-btn{background:#14213D;margin-bottom:8px}
 .voice-btn{background:#e91e63}
 .cd{background:#fff;border-radius:15px;padding:15px;margin:15px 0;box-shadow:0 4px 15px rgba(0,0,0,0.08);border:1px solid #eee}
@@ -69,8 +96,7 @@ html,body{overflow-x:hidden;width:100%;background:#f5f7fa;min-height:100vh}
 .report-card.done{border-right-color:#4CAF50}
 .material-card{background:#fff;border-radius:12px;padding:15px;margin-bottom:15px;box-shadow:0 2px 10px rgba(0,0,0,0.05);border-left:5px solid #673ab7}
 .material-card.available{border-left-color:#4CAF50}
-.material-card.reserved{border-left-color:#FF9800}
-.img-container{margin:10px 0;border-radius:8px;overflow:hidden;border:1px solid #eee;position:relative}
+.material-card.reserved{border-left-color:#FF9800}.img-container{margin:10px 0;border-radius:8px;overflow:hidden;border:1px solid #eee;position:relative}
 .img-container img{width:100%;height:150px;object-fit:cover}
 .img-label{position:absolute;bottom:0;left:0;right:0;background:rgba(0,0,0,0.7);color:#fff;padding:5px;text-align:center;font-size:0.8rem}
 .info-row{display:flex;justify-content:space-between;margin:5px 0;padding:5px 0;border-bottom:1px solid #f0f0f0}
@@ -96,7 +122,8 @@ html,body{overflow-x:hidden;width:100%;background:#f5f7fa;min-height:100vh}
 #qrcode img{max-width:100%;height:auto}
 .report-number{margin-top:15px;padding:12px;background:#f5f7fa;border-radius:10px}
 .report-number .label{font-size:0.9rem;color:#666;margin-bottom:5px}
-.report-number .number{font-size:1.8rem;font-weight:900;color:#1B5E20;letter-spacing:1px}.filter-bar{display:flex;gap:10px;margin-bottom:15px;flex-wrap:wrap}
+.report-number .number{font-size:1.8rem;font-weight:900;color:#1B5E20;letter-spacing:1px}
+.filter-bar{display:flex;gap:10px;margin-bottom:15px;flex-wrap:wrap}
 .filter-bar select,.filter-bar input{flex:1;min-width:100px;padding:8px;border:1px solid #ddd;border-radius:8px}
 .staff-item{background:#f8f9fa;padding:12px;border-radius:10px;margin-bottom:10px;display:flex;justify-content:space-between;align-items:center}
 .action-btns{display:flex;gap:8px}
@@ -118,8 +145,7 @@ html,body{overflow-x:hidden;width:100%;background:#f5f7fa;min-height:100vh}
 .tonnage-card{background:#fff3e0;padding:15px;border-radius:12px;margin:10px 0;border-right:4px solid #FF9800}
 .tonnage-info{display:flex;justify-content:space-between;margin:5px 0;padding:8px;background:#fff;border-radius:8px}
 .phone-link{color:#1B5E20;text-decoration:none;font-weight:bold;display:inline-flex;align-items:center;gap:5px}
-.phone-link:hover{text-decoration:underline}
-.print-modal{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.85);z-index:10003;align-items:center;justify-content:center}
+.phone-link:hover{text-decoration:underline}.print-modal{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.85);z-index:10003;align-items:center;justify-content:center}
 .print-modal.active{display:flex}
 .print-dialog{background:#fff;border-radius:20px;padding:30px;max-width:90%;width:500px;max-height:90vh;overflow-y:auto;animation:fadeIn 0.3s}
 .print-dialog h2{text-align:center;color:#1B5E20;margin-bottom:20px}
@@ -145,7 +171,8 @@ html,body{overflow-x:hidden;width:100%;background:#f5f7fa;min-height:100vh}
 .waste-paper{background:#f3e5f5;color:#7B1FA2}
 .waste-glass{background:#e0f7fa;color:#00838F}
 .waste-mixed{background:#ffebee;color:#C62828}
-.quality-excellent{color:#4CAF50;font-weight:bold}.quality-good{color:#FF9800;font-weight:bold}
+.quality-excellent{color:#4CAF50;font-weight:bold}
+.quality-good{color:#FF9800;font-weight:bold}
 .quality-fair{color:#F44336;font-weight:bold}
 .track-timeline{position:relative;padding-left:30px;margin:15px 0}
 .track-timeline::before{content:'';position:absolute;left:8px;top:0;bottom:0;width:2px;background:#ddd}
@@ -167,13 +194,12 @@ html,body{overflow-x:hidden;width:100%;background:#f5f7fa;min-height:100vh}
   <p>مصلحة النظافة والوقاية الصحية<br>بلدية المدية 2026</p>
   <div class="loader"></div>
 </div>
-
 <div id="toast-container"></div>
 <div class="conn">✓ متصل - النظام جاهز</div>
 <div id="syncIndicator" class="sync-indicator sync-online">🔄 متصل</div>
 
 <div class="hdr">
-  <div class="c">🇩 الجمهورية الجزائرية الديمقراطية الشعبية</div>
+  <div class="c">🇩🇿 الجمهورية الجزائرية الديمقراطية الشعبية</div>
   <div class="d">🧹 مصلحة النظافة والوقاية الصحية لبلدية المدية</div>
   <div class="t">المدية نظيفة</div>
   <div class="lang-container">
@@ -194,7 +220,9 @@ html,body{overflow-x:hidden;width:100%;background:#f5f7fa;min-height:100vh}
 <div class="stats-bar">
   <div class="stat-box" onclick="filterByStatus('all')"><span class="stat-num" id="statTotal">0</span><span class="stat-label">إجمالي البلاغات</span></div>
   <div class="stat-box" onclick="filterByStatus('done')" style="border-color:#4CAF50"><span class="stat-num" style="color:#4CAF50" id="statDone">0</span><span class="stat-label">تم الإنجاز</span></div>
-  <div class="stat-box" onclick="showPage('sortingCenter')" style="border-color:#673ab7"><span class="stat-num" style="color:#673ab7" id="statSorted">0</span><span class="stat-label">تم الفرز</span></div></div>
+  <div class="stat-box" onclick="showPage('sortingCenter')" style="border-color:#673ab7"><span class="stat-num" style="color:#673ab7" id="statSorted">0</span><span class="stat-label">تم الفرز</span></div>
+</div>
+
 <div id="thanksOverlay">
   <div style="font-size:4rem;margin-bottom:15px">❤️</div>
   <h1 style="font-size:2rem;margin-bottom:10px">شكراً لكم!</h1>
@@ -215,8 +243,7 @@ html,body{overflow-x:hidden;width:100%;background:#f5f7fa;min-height:100vh}
   </div>
   <div class="cd">
     <h3 style="text-align:center;margin-bottom:12px">✨ الخدمات</h3>
-    <div class="g2">
-      <button class="btn by" onclick="showPage('schedule')">📅 جدول الجمع</button>
+    <div class="g2">      <button class="btn by" onclick="showPage('schedule')">📅 جدول الجمع</button>
       <button class="btn purple" onclick="showPage('tips')">💡 توعية</button>
       <button class="btn bo" onclick="showPage('requests')">🛠️ طلباتي</button>
       <button class="btn green-recycle" onclick="showPage('recycling')">♻️ حاسبة التدوير</button>
@@ -242,8 +269,10 @@ html,body{overflow-x:hidden;width:100%;background:#f5f7fa;min-height:100vh}
   </div>
 </div>
 
-<div id="truckTracking" class="page">  <h2 style="margin-bottom:15px;color:#1B5E20;text-align:center">🚚 تتبع مسار الشاحنة</h2>
-  <div class="cd">    <h3 style="margin-bottom:10px">📍 المعلومات الحالية</h3>
+<div id="truckTracking" class="page">
+  <h2 style="margin-bottom:15px;color:#1B5E20;text-align:center">🚚 تتبع مسار الشاحنة</h2>
+  <div class="cd">
+    <h3 style="margin-bottom:10px">📍 المعلومات الحالية</h3>
     <div class="info-row"><b>👤 السائق:</b> <span id="trackingDriverName">-</span></div>
     <div class="info-row"><b>🏷️ رقم القطاع:</b> <span id="trackingSector">-</span></div>
     <div class="info-row"><b>📅 التاريخ:</b> <span id="trackingDate">-</span></div>
@@ -263,8 +292,7 @@ html,body{overflow-x:hidden;width:100%;background:#f5f7fa;min-height:100vh}
   <h2 style="margin-bottom:15px;color:#1B5E20;text-align:center">🚚 تتبع مسار الشاحنات حسب القطاع</h2>
   <div class="cd">
     <h3 style="margin-bottom:10px">📍 اختيار القطاع</h3>
-    <select class="in" id="sectorSelect" onchange="loadSectorRoute()">
-      <option value="">-- اختر القطاع --</option>
+    <select class="in" id="sectorSelect" onchange="loadSectorRoute()">      <option value="">-- اختر القطاع --</option>
       <option value="1">القطاع 1</option>
       <option value="2">القطاع 2</option>
       <option value="3">القطاع 3</option>
@@ -290,9 +318,11 @@ html,body{overflow-x:hidden;width:100%;background:#f5f7fa;min-height:100vh}
   </div>
   <button class="btn bx" onclick="showPage('admin')">← رجوع للإدارة</button>
 </div>
+
 <div id="report" class="page">
   <h2 style="margin-bottom:15px;color:#1B5E20;text-align:center">📝 بلاغ جديد</h2>
-  <div class="cd">    <div class="cam-box" onclick="takePhoto()"><span class="cam-icon">📷</span><img id="camImg" style="display:none"></div>
+  <div class="cd">
+    <div class="cam-box" onclick="takePhoto()"><span class="cam-icon">📷</span><img id="camImg" style="display:none"></div>
     <button class="btn bg" onclick="takePhoto()">📷 التقاط الصورة</button>
     <button class="btn bb" onclick="getLocation()" id="getLocationBtn">📍 تحديد الموقع GPS</button>
     <button class="btn bx" onclick="manualLocation()" style="margin-top:0;margin-bottom:8px;font-size:0.9rem">📍 إدخال يدوي</button>
@@ -311,8 +341,7 @@ html,body{overflow-x:hidden;width:100%;background:#f5f7fa;min-height:100vh}
     </select>
     <label style="display:flex;align-items:center;gap:8px;margin:10px 0;font-size:0.9rem;color:#555">
       <input type="checkbox" id="recurringCheck"> 🔁 بلاغ متكرر أسبوعياً
-    </label>
-    <button class="btn bg" style="height:55px;font-size:1.1rem" onclick="sendReport()" id="sendBtn">✉️ إرسال البلاغ الآن</button>
+    </label>    <button class="btn bg" style="height:55px;font-size:1.1rem" onclick="sendReport()" id="sendBtn">✉️ إرسال البلاغ الآن</button>
     <button class="btn bx" onclick="showPage('home')">← رجوع</button>
   </div>
 </div>
@@ -338,10 +367,12 @@ html,body{overflow-x:hidden;width:100%;background:#f5f7fa;min-height:100vh}
     </div>
     <select class="in" id="wasteCategory">
       <option value="organic">🍂 نفايات عضوية</option>
-      <option value="plastic">🧴 بلاستيك</option>      <option value="metal">⚙️ معادن</option>
+      <option value="plastic">🧴 بلاستيك</option>
+      <option value="metal">⚙️ معادن</option>
       <option value="paper">📄 ورق/كرتون</option>
       <option value="glass">🥃 زجاج</option>
-      <option value="mixed">🗑️ مختلطة</option>    </select>
+      <option value="mixed">🗑️ مختلطة</option>
+    </select>
     <select class="in" id="wasteQuality">
       <option value="excellent">⭐ جودة عالية - تدوير مباشر</option>
       <option value="good">👍 جودة جيدة - معالجة بسيطة</option>
@@ -359,8 +390,7 @@ html,body{overflow-x:hidden;width:100%;background:#f5f7fa;min-height:100vh}
   <button class="btn bx" onclick="showPage('home')">← رجوع</button>
 </div>
 
-<div id="recyclingMarket" class="page">
-  <h2 style="margin-bottom:15px;color:#673ab7;text-align:center">♻️ سوق المواد المعاد تدويرها</h2>
+<div id="recyclingMarket" class="page">  <h2 style="margin-bottom:15px;color:#673ab7;text-align:center">♻️ سوق المواد المعاد تدويرها</h2>
   <div class="cd">
     <div class="filter-bar">
       <select class="in" id="marketFilterType" onchange="filterMarket()">
@@ -386,10 +416,12 @@ html,body{overflow-x:hidden;width:100%;background:#f5f7fa;min-height:100vh}
     <input type="tel" class="in" id="companyPhone" placeholder="📞 رقم التواصل">
     <input type="number" class="in" id="requestQty" placeholder="⚖️ الكمية المطلوبة (طن)">
     <textarea class="in" id="requestPurpose" placeholder="🎯 غرض الاستخدام (إعادة تدوير، تصنيع...)" style="height:60px"></textarea>
-    <button class="btn bg" onclick="submitMarketRequest()">📤 إرسال الطلب</button>    <button class="btn bx" onclick="document.getElementById('requestForm').style.display='none'" style="margin-top:10px">✕ إلغاء</button>
+    <button class="btn bg" onclick="submitMarketRequest()">📤 إرسال الطلب</button>
+    <button class="btn bx" onclick="document.getElementById('requestForm').style.display='none'" style="margin-top:10px">✕ إلغاء</button>
   </div>
   <button class="btn bx" onclick="showPage('home')">← رجوع</button>
 </div>
+
 <div id="schedule" class="page">
   <h2 style="margin-bottom:15px;color:#1B5E20;text-align:center">📅 جدول جمع النفايات</h2>
   <div class="cd" id="scheduleDisplay"></div>
@@ -407,8 +439,7 @@ html,body{overflow-x:hidden;width:100%;background:#f5f7fa;min-height:100vh}
 
 <div id="requests" class="page">
   <h2 style="margin-bottom:15px;color:#1B5E20;text-align:center">🛠️ طلباتي</h2>
-  <div class="cd">
-    <select class="in" id="reqType">
+  <div class="cd">    <select class="in" id="reqType">
       <option value="bin">🗑️ طلب حاوية جديدة</option>
       <option value="repair">🔧 صيانة حاوية تالفة</option>
       <option value="clean">🧹 طلب تنظيف استثنائي</option>
@@ -434,12 +465,14 @@ html,body{overflow-x:hidden;width:100%;background:#f5f7fa;min-height:100vh}
     <p>إجمالي المواد المعاد تدويرها: <b id="recycledTotal" style="color:#673ab7">0</b> طن</p>
     <div style="margin-top:20px">
       <div class="chart-visual" id="publicChart" style="width:150px;height:150px;margin:0 auto;border-radius:50%;background:#eee"></div>
-    </div>  </div>
+    </div>
+  </div>
   <button class="btn bx" onclick="showPage('home')">← رجوع</button>
 </div>
 
 <div id="admin" class="page">
-  <div style="display:flex;justify-content:space-between;margin-bottom:15px"><h2 style="color:#1B5E20">⚙️ لوحة التحكم</h2></div>  <div id="adminLogin" class="cd">
+  <div style="display:flex;justify-content:space-between;margin-bottom:15px"><h2 style="color:#1B5E20">⚙️ لوحة التحكم</h2></div>
+  <div id="adminLogin" class="cd">
     <h3 style="margin-bottom:12px;text-align:center">🔐 الدخول للمشرفين</h3>
     <input type="text" id="adminName" class="in" placeholder="👤 الاسم">
     <input type="password" id="adminCode" class="in" placeholder="🔑 الرمز (1234)">
@@ -455,8 +488,7 @@ html,body{overflow-x:hidden;width:100%;background:#f5f7fa;min-height:100vh}
     <button class="btn green-recycle" onclick="showPage('sortingCenter')">🏭 مركز الفرز</button>
     <button class="btn market-btn" onclick="showPage('recyclingMarket')">♻️ سوق التدوير</button>
     <button class="btn bb" onclick="exportExcel()">📥 تصدير Excel</button>
-    <button class="btn print-btn" onclick="openPrintDialog()" style="margin-top:10px">🖨️ طباعة PDF</button>
-    <button class="btn br" onclick="logoutAdmin()">✕ خروج</button>
+    <button class="btn print-btn" onclick="openPrintDialog()" style="margin-top:10px">🖨️ طباعة PDF</button>    <button class="btn br" onclick="logoutAdmin()">✕ خروج</button>
     <button class="btn bx" style="margin-top:10px;font-size:0.8rem;background:#ff5722" onclick="emergencyClearData()">🚨 مسح البيانات</button>
   </div>
   <button class="btn bx" onclick="showPage('home')">← رجوع</button>
@@ -482,13 +514,15 @@ html,body{overflow-x:hidden;width:100%;background:#f5f7fa;min-height:100vh}
       <option value="new">جديد</option>
       <option value="assigned">قيد التنفيذ</option>
       <option value="done">منجز</option>
-    </select>    <input type="text" id="searchInput" placeholder="🔍 بحث..." oninput="applyFilters()">
+    </select>
+    <input type="text" id="searchInput" placeholder="🔍 بحث..." oninput="applyFilters()">
   </div>
   <div id="reportsList"></div>
   <button class="btn bx" onclick="backToAdmin()">← رجوع</button>
 </div>
 
-<div id="staffPage" class="page">  <h2 style="margin-bottom:15px;color:#1B5E20;text-align:center">👥 إدارة الموظفين</h2>
+<div id="staffPage" class="page">
+  <h2 style="margin-bottom:15px;color:#1B5E20;text-align:center">👥 إدارة الموظفين</h2>
   <div class="cd">
     <h3 style="margin-bottom:10px">➕ إضافة موظف</h3>
     <input type="text" id="newStaffName" class="in" placeholder="👤 الاسم">
@@ -503,8 +537,7 @@ html,body{overflow-x:hidden;width:100%;background:#f5f7fa;min-height:100vh}
 <div id="driver" class="page">
   <div style="display:flex;justify-content:space-between;margin-bottom:15px"><h2 style="color:#1B5E20">🚚 مساحة السائقين</h2></div>
   <div id="driverLogin" class="cd">
-    <h3 style="margin-bottom:12px;text-align:center">🔐 دخول السائق</h3>
-    <input type="text" id="driverName" class="in" placeholder="👤 أدخل اسمك">
+    <h3 style="margin-bottom:12px;text-align:center">🔐 دخول السائق</h3>    <input type="text" id="driverName" class="in" placeholder="👤 أدخل اسمك">
     <button class="btn by" onclick="loginDriver()">✓ دخول</button>
   </div>
   <div id="driverPanel" class="hidden">
@@ -530,14 +563,16 @@ html,body{overflow-x:hidden;width:100%;background:#f5f7fa;min-height:100vh}
     <input type="text" class="in" id="driverTonnageName" placeholder="🚛 اسم السائق" disabled style="background:#f0f0f0">
     <input type="text" class="in" id="driverTonnageSector" placeholder="🏷️ رقم القطاع" disabled style="background:#f0f0f0">
     <input type="number" class="in" id="driverTonnageWeight" placeholder="⚖️ الوزن بالطن" step="0.01">
-    <input type="text" class="in" id="driverTonnageRegNum" placeholder="🔢 رقم التسجيل من مركز القدم">    <select class="in" id="driverWasteType">
+    <input type="text" class="in" id="driverTonnageRegNum" placeholder="🔢 رقم التسجيل من مركز القدم">
+    <select class="in" id="driverWasteType">
       <option value="mixed">🗑️ نفايات عامة</option>
       <option value="organic">🍂 نفايات عضوية</option>
       <option value="plastic">🧴 بلاستيك</option>
       <option value="metal">⚙️ معادن</option>
     </select>
     <button class="btn bg" onclick="saveDriverTonnage()">💾 حفظ الكمية</button>
-  </div>  <button class="btn bx" onclick="showPage('driver')">← رجوع</button>
+  </div>
+  <button class="btn bx" onclick="showPage('driver')">← رجوع</button>
 </div>
 
 <div id="tonnageRecords" class="page">
@@ -552,7 +587,6 @@ html,body{overflow-x:hidden;width:100%;background:#f5f7fa;min-height:100vh}
   </div>
   <button class="btn bx" onclick="showPage('admin')">← رجوع</button>
 </div>
-
 <div id="scheduleManager" class="page">
   <h2 style="margin-bottom:15px;color:#1B5E20;text-align:center">📅 إدارة جدول الجمع</h2>
   <div class="cd">
@@ -578,7 +612,8 @@ html,body{overflow-x:hidden;width:100%;background:#f5f7fa;min-height:100vh}
 </div>
 
 <div id="adminRequests" class="page">
-  <h2 style="margin-bottom:15px;color:#1B5E20;text-align:center">📋 طلبات المواطنين</h2>  <div class="cd">
+  <h2 style="margin-bottom:15px;color:#1B5E20;text-align:center">📋 طلبات المواطنين</h2>
+  <div class="cd">
     <div id="adminRequestsList"></div>
   </div>
   <button class="btn bx" onclick="showPage('admin')">← رجوع</button>
@@ -586,7 +621,8 @@ html,body{overflow-x:hidden;width:100%;background:#f5f7fa;min-height:100vh}
 
 <div id="recycling" class="page">
   <h2 style="margin-bottom:15px;color:#2E7D32;text-align:center">♻️ حاسبة التدوير وإنتاج الطاقة</h2>
-  <div class="cd">    <h3 style="margin-bottom:10px">🔋 حاسبة التحويل التقديرية</h3>
+  <div class="cd">
+    <h3 style="margin-bottom:10px">🔋 حاسبة التحويل التقديرية</h3>
     <div class="g2">
       <select class="in" id="wasteType">
         <option value="organic">🍂 نفايات عضوية (سماد/بيوغاز)</option>
@@ -599,8 +635,7 @@ html,body{overflow-x:hidden;width:100%;background:#f5f7fa;min-height:100vh}
     <button class="btn green-recycle" onclick="calculateConversion()">⚡ حساب التحويل</button>
     <div id="conversionResult" style="margin-top:15px;display:none">
       <div class="g2">
-        <div class="cd" style="background:#e8f5e9;text-align:center">
-          <div style="font-size:1.8rem;font-weight:900;color:#2E7D32" id="resEnergy">0</div>
+        <div class="cd" style="background:#e8f5e9;text-align:center">          <div style="font-size:1.8rem;font-weight:900;color:#2E7D32" id="resEnergy">0</div>
           <div style="font-size:0.8rem;color:#555">كيلوواط ساعة طاقة</div>
         </div>
         <div class="cd" style="background:#fff3e0;text-align:center">
@@ -626,7 +661,8 @@ html,body{overflow-x:hidden;width:100%;background:#f5f7fa;min-height:100vh}
 
 <div id="qrModal" class="qr-modal" onclick="if(event.target===this)this.style.display='none'">
   <div class="qr-content">
-    <h3>📱 كود تتبع البلاغ</h3>    <div id="qrcode"></div>
+    <h3>📱 كود تتبع البلاغ</h3>
+    <div id="qrcode"></div>
     <div class="report-number">
       <div class="label">بلاغ رقم:</div>
       <div class="number" id="qrReportId"></div>
@@ -635,7 +671,8 @@ html,body{overflow-x:hidden;width:100%;background:#f5f7fa;min-height:100vh}
   </div>
 </div>
 
-<div id="printModal" class="print-modal" onclick="if(event.target===this)closePrintDialog()">  <div class="print-dialog">
+<div id="printModal" class="print-modal" onclick="if(event.target===this)closePrintDialog()">
+  <div class="print-dialog">
     <h2>🖨️ طباعة / تصدير PDF</h2>
     <p style="text-align:center;color:#666;margin-bottom:15px">اختر ما تريد طباعته:</p>
     <div class="print-option" onclick="printSection('reports')"><span class="label">📊 البلاغات</span><span class="icon">📋</span></div>
@@ -647,8 +684,7 @@ html,body{overflow-x:hidden;width:100%;background:#f5f7fa;min-height:100vh}
       <div class="print-actions">
         <button class="btn bg" onclick="printNow()">🖨️ طباعة الآن</button>
         <button class="btn bb" onclick="downloadPDF()">📥 تحميل PDF</button>
-        <button class="btn back-btn" onclick="backToPrintOptions()">↩️ رجوع</button>
-      </div>
+        <button class="btn back-btn" onclick="backToPrintOptions()">↩️ رجوع</button>      </div>
     </div>
     <div class="print-actions" id="printDialogActions"><button class="btn bx" onclick="closePrintDialog()">✕ إغلاق</button></div>
   </div>
@@ -658,50 +694,19 @@ html,body{overflow-x:hidden;width:100%;background:#f5f7fa;min-height:100vh}
 
 <script>
 // ============================================================
-// 🔧 إصلاح شاشة التحميل - مضاف فقط دون حذف أي وظائف
+// 🔧 إصلاح جذري - إخفاء فوري ومضمون 100%
 // ============================================================
-
-// إخفاء فوري جداً لشاشة التحميل - يُنفذ فوراً عند تحميل الكود
 (function hideSplashImmediately(){
   try{
-    const splash = document.getElementById('splash');
+    var splash = document.getElementById('splash');
     if(splash){
       splash.style.display = 'none';
-      console.log('✅ Splash hidden immediately');
+      console.log('✅ Splash hidden immediately in IIFE');
     }
-  }catch(e){
-    console.error('❌ Error hiding splash:', e);
-  }
+  }catch(e){ console.error('❌ Error:', e); }
 })();
 
-// شبكة أمان - إخفاء بعد 1 ثانية
-setTimeout(function(){
-  try{
-    const splash = document.getElementById('splash');
-    if(splash && splash.style.display !== 'none'){
-      splash.style.opacity = '0';
-      setTimeout(()=>{ splash.style.display = 'none'; }, 300);
-      console.log('✅ Splash hidden after 1s');
-    }
-  }catch(e){}
-}, 1000);
-// شبكة أمان نهائية - إخفاء إجباري بعد 2 ثانية
-setTimeout(function(){
-  try{
-    const splash = document.getElementById('splash');
-    if(splash){
-      splash.style.display = 'none';
-      splash.style.opacity = '0';
-      console.log('✅ Splash force hidden after 2s');
-    }
-  }catch(e){
-    try{ document.body.removeChild(document.getElementById('splash')); }catch(err){}
-  }
-}, 2000);
-
-// ============================================================
-// ⚙️ إعداد Firebase - مع معالجة أخطاء (مضاف فقط)
-// ============================================================
+// Firebase configuration
 const firebaseConfig = {
   apiKey: "AIzaSyBMao4dJL_2YQjibDvcTIMw1vHHytpVqs0",
   authDomain: "medea-clean-2026.firebaseapp.com",
@@ -713,187 +718,120 @@ const firebaseConfig = {
   measurementId: "G-W10RQWLJ54"
 };
 
-// تهيئة Firebase مع معالجة الأخطاء - مضاف فقط
+// Initialize Firebase with error handling
 let db;
 try {
   if(typeof firebase !== 'undefined'){
     firebase.initializeApp(firebaseConfig);
     db = firebase.database();
     console.log('✅ Firebase initialized');
-  } else {
-    throw new Error('Firebase not loaded');
-  }
+  } else { throw new Error('Firebase not loaded'); }
 } catch(e) {
   console.warn('⚠️ Firebase error, using mock database');
-  // إنشاء قاعدة بيانات وهمية لمنع توقف التطبيق - مضاف فقط
   db = {
     ref: (path) => ({
       on: (event, callback) => { if(callback) callback({val: ()=>null}); return ()=>{}; },
       once: (event) => Promise.resolve({ val: ()=>null }),
       set: (data) => Promise.resolve(),
-      update: (data) => Promise.resolve(),
-      remove: () => Promise.resolve()
-    })  };
+      update: (data) => Promise.resolve(),      remove: () => Promise.resolve()
+    })
+  };
 }
 
-// === المتغيرات العامة === (كما في الكود الأصلي)
+// المتغيرات العامة
 let allReports=[], currentLang='ar', tempImage=null, tempAfterImage=null, currentDriver='', userPoints=0, currentDriverSector='';
 let wasteTracking=[], marketMaterials=[], marketRequests=[];
 let truckTrackingData = {active:false, driver:'', sector:'', startTime:null, positions:[], collectedBins:[]};
 let map=null, trackingMarker=null, trackingPath=null;
 let routeMap=null, routeLayer=null, binsLayer=null, currentSectorData=null;
 
-// === بيانات مسارات القطاعات (تجريبية) === (كما في الكود الأصلي)
 const sectorRoutesData = {
-  '1': { name:'القطاع 1 - وسط المدينة', driver:'أحمد محمد', date:'2026-04-16', path:[[36.2642,2.7545],[36.2650,2.7560],[36.2655,2.7580],[36.2648,2.7595],[36.2640,2.7570]], bins:[{id:1,lat:36.2645,lng:2.7550,time:'08:30'},{id:2,lat:36.2652,lng:2.7565,time:'09:15'},{id:3,lat:36.2658,lng:2.7585,time:'10:00'},{id:4,lat:36.2645,lng:2.7590,time:'10:45'}] },
-  '2': { name:'القطاع 2 - حي الزيتون', driver:'محمد علي', date:'2026-04-16', path:[[36.2700,2.7600],[36.2710,2.7620],[36.2720,2.7640],[36.2715,2.7655],[36.2705,2.7630]], bins:[{id:1,lat:36.2705,lng:2.7610,time:'08:00'},{id:2,lat:36.2712,lng:2.7625,time:'08:45'},{id:3,lat:36.2718,lng:2.7645,time:'09:30'}] },
-  '3': { name:'القطاع 3 - الواد الجديد', driver:'خالد عمر', date:'2026-04-16', path:[[36.2550,2.7450],[36.2560,2.7470],[36.2570,2.7490],[36.2565,2.7505],[36.2555,2.7475]], bins:[{id:1,lat:36.2555,lng:2.7460,time:'07:30'},{id:2,lat:36.2562,lng:2.7475,time:'08:15'},{id:3,lat:36.2568,lng:2.7495,time:'09:00'},{id:4,lat:36.2563,lng:2.7500,time:'09:45'},{id:5,lat:36.2553,lng:2.7470,time:'10:30'}] }
+  '1': { name:'القطاع 1', driver:'أحمد', date:'2026-04-16', path:[[36.2642,2.7545],[36.2650,2.7560]], bins:[{id:1,lat:36.2645,lng:2.7550,time:'08:30'}] }
 };
 
-// ============================================================
-// 🔄 نظام المزامنة السحابية - مع معالجة أخطاء (معدل فقط)
-// ============================================================
+// المزامنة
 function setupSync() {
-  // مراقبة حالة الاتصال
-  const connectedRef = db.ref('.info/connected');
-  connectedRef.on('value', (snap) => {
-    const syncEl = document.getElementById('syncIndicator');
-    if(snap.val() === true) {
-      syncEl.innerHTML = '✅ متصل';
-      syncEl.className = 'sync-indicator sync-online';
-    } else {
-      syncEl.innerHTML = '❌ غير متصل - حفظ محلي';
-      syncEl.className = 'sync-indicator sync-offline';
-    }
-  });
-
-  // مزامنة البلاغات
-  db.ref('reports').on('value', (snapshot) => {
-    const data = snapshot.val();
-    allReports = data ? Object.values(data) : [];
-    updateStats();
-    if(document.getElementById('reportsPage')?.classList.contains('active')) showReportsPage();
-  });
-
-  // مزامنة تتبع النفايات
-  db.ref('wasteTracking').on('value', (snapshot) => {
-    const data = snapshot.val();
-    wasteTracking = data ? Object.values(data) : [];
-    if(document.getElementById('sortingCenter')?.classList.contains('active')) loadSortedMaterials();
-    if(document.getElementById('recyclingMarket')?.classList.contains('active')) loadMarketMaterials();
-  });
-  // مزامنة سوق التدوير  db.ref('marketMaterials').on('value', (snapshot) => {
-    const data = snapshot.val();
-    marketMaterials = data ? Object.values(data) : [];
-    if(document.getElementById('recyclingMarket')?.classList.contains('active')) loadMarketMaterials();
-  });
-
-  // مزامنة تتبع الشاحنات
-  db.ref('truckTracking').on('value', (snapshot) => {
-    const data = snapshot.val();
-    if(data) {
-      truckTrackingData = data;
-      if(document.getElementById('truckTracking')?.classList.contains('active')) {
-        initTruckTrackingMap();
-        updateTruckTrackingUI();
-      }
-    }
-  });
+  try {
+    const connectedRef = db.ref('.info/connected');
+    connectedRef.on('value', (snap) => {
+      try {
+        const syncEl = document.getElementById('syncIndicator');
+        if(snap && snap.val && snap.val() === true) {
+          syncEl.innerHTML = '✅ متصل';
+          syncEl.className = 'sync-indicator sync-online';
+        } else {
+          syncEl.innerHTML = '❌ غير متصل';
+          syncEl.className = 'sync-indicator sync-offline';
+        }
+      } catch(e) {}
+    });
+    db.ref('reports').on('value', (snapshot) => {
+      try {
+        const data = snapshot && snapshot.val ? snapshot.val() : null;
+        allReports = data ? Object.values(data) : [];
+        updateStats();
+      } catch(e) {}
+    });
+  } catch(e) { console.error('Sync error:', e); }
 }
 
-// ✅ دالة الحفظ في السحابة - مُصححة: استخدام .set() بدلاً من .push()
 function saveToCloud(path, data) {
-  db.ref(path).set(data).catch(err => {
-    console.log('Cloud save error, saving locally');
-  });
-  localStorage.setItem('medea_' + path, JSON.stringify(data));
+  try { db.ref(path).set(data).catch(()=>{}); } catch(e) {}
+  try { localStorage.setItem('medea_' + path, JSON.stringify(data)); } catch(e) {}
 }
 
-// تحميل البيانات مع إمكانية العمل دون اتصال
 function loadFromCloud(path, localKey, callback) {
-  db.ref(path).once('value').then(snapshot => {
-    const data = snapshot.val();
-    if(data) {
-      callback(data);
-      localStorage.setItem('medea_' + localKey, JSON.stringify(data));
-    } else {
+  try {
+    db.ref(path).once('value').then(snapshot => {      try {
+        const data = snapshot && snapshot.val ? snapshot.val() : null;
+        if(data) { callback(data); localStorage.setItem('medea_' + localKey, JSON.stringify(data)); }
+        else {
+          const localData = localStorage.getItem('medea_' + localKey);
+          if(localData) callback(JSON.parse(localData));
+        }
+      } catch(e) {}
+    }).catch(() => {
+      try {
+        const localData = localStorage.getItem('medea_' + localKey);
+        if(localData) callback(JSON.parse(localData));
+      } catch(e) {}
+    });
+  } catch(e) {
+    try {
       const localData = localStorage.getItem('medea_' + localKey);
       if(localData) callback(JSON.parse(localData));
-    }
-  }).catch(() => {
-    const localData = localStorage.getItem('medea_' + localKey);
-    if(localData) callback(JSON.parse(localData));
-  });
+    } catch(err) {}
+  }
 }
 
-// ✅ تحديث جزئي في Firebase - استخدام .set() للمسار الكامل
 function updateCloudItem(path, itemId, updates) {
-  db.ref(path + '/' + itemId).set(updates).catch(err => console.log('Update error'));
+  try { db.ref(path + '/' + itemId).set(updates).catch(()=>{}); } catch(e) {}
 }
-// ✅ إضافة عنصر جديد - استخدام .set() مع المسار الكامل
-function addToCloud(path, item) {  return db.ref(path).set(item).catch(err => {
-    console.error('Add Error:', err);
-    showToast('⚠️ خطأ في المزامنة');
-  });
+function addToCloud(path, item) {
+  try { return db.ref(path).set(item).catch(()=>{ showToast('⚠️ خطأ في المزامنة'); }); }
+  catch(e) { showToast('⚠️ خطأ في المزامنة'); }
 }
-
-// حذف من Firebase
 function deleteFromCloud(path, itemId) {
-  return db.ref(path + '/' + itemId).remove().catch(err => console.log('Delete error'));
+  try { db.ref(path + '/' + itemId).remove().catch(()=>{}); } catch(e) {}
 }
 
-// === تحميل التطبيق === (كما في الكود الأصلي مع إضافة إخفاء فوري)
+// تهيئة التطبيق
 window.addEventListener('load', function(){
-  console.log('🚀 App starting...');
-  
-  // إخفاء فوري لشاشة التحميل
+  console.log('🚀 App loaded');
   try{
     const splash = document.getElementById('splash');
-    if(splash){
-      splash.style.opacity = '0';
-      setTimeout(()=>{ splash.style.display = 'none'; }, 300);
-    }
+    if(splash){ splash.style.opacity = '0'; setTimeout(()=>{ splash.style.display = 'none'; }, 300); }
   }catch(e){}
-  
-  // إعداد المزامنة
-  setupSync();
-  
-  // تحميل البيانات من السحابة أو المحلي
-  loadFromCloud('reports', 'reports', (data) => {
-    allReports = data ? Object.values(data) : [];
-    updateStats();
-  });
-  
-  loadFromCloud('wasteTracking', 'wasteTracking', (data) => {
-    wasteTracking = data ? Object.values(data) : [];
-  });
-  
-  loadFromCloud('marketMaterials', 'marketMaterials', (data) => {
-    marketMaterials = data ? Object.values(data) : [];
-  });
-  
-  loadFromCloud('truckTracking', 'truckTracking', (data) => {
-    if(data) truckTrackingData = data;
-  });
-  
-  // إخفاء شاشة التحميل
-  setTimeout(() => {
-    forceHideSplash();
-  }, 2000);
+  try { setupSync(); } catch(e) { console.error('Init error:', e); }
+  try {
+    loadFromCloud('reports', 'reports', (data) => { allReports = data ? Object.values(data) : []; updateStats(); });
+    loadFromCloud('wasteTracking', 'wasteTracking', (data) => { wasteTracking = data ? Object.values(data) : []; });
+    loadFromCloud('marketMaterials', 'marketMaterials', (data) => { marketMaterials = data ? Object.values(data) : []; });
+    loadFromCloud('truckTracking', 'truckTracking', (data) => { if(data) truckTrackingData = data; });
+  } catch(e) {}
 });
-// === 🔧 إصلاح شاشة التحميل (كما في الكود الأصلي) ===
-function forceHideSplash(){
-  try{
-    const splash=document.getElementById('splash');
-    if(splash && splash.style.display!=='none'){      splash.style.opacity='0';
-      setTimeout(()=>{splash.style.display='none';},500);
-    }
-  }catch(e){try{document.getElementById('splash').style.display='none';}catch(err){}}
-}
-setTimeout(forceHideSplash, 5000);
 
-// === نظام الإشعارات === (كما في الكود الأصلي)
-function showToast(msg,type='success'){
+// نظام الإشعاراتfunction showToast(msg,type='success'){
   try{
     const container=document.getElementById('toast-container');
     if(!container)return;
@@ -905,12 +843,12 @@ function showToast(msg,type='success'){
   }catch(e){}
 }
 
-// === نظام النقاط === (كما في الكود الأصلي)
+// نظام النقاط
 function loadUserPoints(){try{userPoints=parseInt(localStorage.getItem('medea_points')||'0');}catch(e){userPoints=0;}updatePointsDisplay();}
 function updatePointsDisplay(){try{document.getElementById('userPoints').textContent=userPoints;}catch(e){}}
 function addPoints(amount){userPoints+=amount;try{localStorage.setItem('medea_points',userPoints);}catch(e){}updatePointsDisplay();}
 
-// === تغيير اللغة === (كما في الكود الأصلي)
+// تغيير اللغة
 function changeLang(l,btn){
   try{
     currentLang=l;
@@ -922,96 +860,27 @@ function changeLang(l,btn){
   }catch(e){}
 }
 
-// === الوقت والتاريخ === (كما في الكود الأصلي)
+// الوقت والتاريخ
 function updateTime(){
   try{
     const n=new Date();
     const locale=currentLang==='ar'?'ar-DZ':currentLang==='fr'?'fr-FR':'en-US';
     const ck=document.getElementById('ck');
     const cd=document.getElementById('cd');
-    if(ck)ck.textContent=n.toLocaleTimeString(locale);    if(cd)cd.textContent=n.toLocaleDateString(locale);
+    if(ck)ck.textContent=n.toLocaleTimeString(locale);
+    if(cd)cd.textContent=n.toLocaleDateString(locale);
   }catch(e){}
 }
+setInterval(updateTime, 1000);
+updateTime();
 
-// === تحميل وحفظ البيانات === (كما في الكود الأصلي)
-function loadReports(){
-  try{
-    const data=localStorage.getItem('medea_reports');
-    if(data){allReports=JSON.parse(data);if(!Array.isArray(allReports))allReports=[];}
-    else{allReports=[];}
-    updateStats();
-  }catch(e){allReports=[];}
-}
-function saveReport(r){
-  addToCloud('reports/' + r.id, r);
-  updateStats();
-  showToast('✅ تم الإرسال والمزامنة');
-}
-function updateReport(id,upd){
-  updateCloudItem('reports', id, upd);
-  const index=allReports.findIndex(x=>x.id==id);
-  if(index!==-1){
-    allReports[index]={...allReports[index],...upd};
-    updateStats();
-    if(document.getElementById('reportsPage').classList.contains('active'))showReportsPage();
-  }
-}
-
-// === تتبع النفايات === (كما في الكود الأصلي)
-function loadWasteTracking(){
-  try{
-    const data=localStorage.getItem('medea_waste_tracking');
-    if(data){wasteTracking=JSON.parse(data);if(!Array.isArray(wasteTracking))wasteTracking=[];}
-    else{wasteTracking=[];}
-  }catch(e){wasteTracking=[];}
-}
-function saveWasteTracking(w){
-  addToCloud('wasteTracking/' + w.id, w);
-  updateStats();
-}
-function updateWasteTracking(id,upd){
-  updateCloudItem('wasteTracking', id, upd);
-  const i=wasteTracking.findIndex(x=>x.id==id);
-  if(i!==-1){
-    wasteTracking[i]={...wasteTracking[i],...upd};
-    updateStats();
-    if(document.getElementById('sortingCenter').classList.contains('active'))loadSortedMaterials();
-    if(document.getElementById('recyclingMarket').classList.contains('active'))loadMarketMaterials();
-  }
-}
-// === سوق التدوير === (كما في الكود الأصلي)
-function loadMarketMaterials(){
-  try{
-    const data=localStorage.getItem('medea_market_materials');    if(data){marketMaterials=JSON.parse(data);if(!Array.isArray(marketMaterials))marketMaterials=[];}
-    else{marketMaterials=[];}
-  }catch(e){marketMaterials=[];}
-}
-function saveMarketMaterial(m){
-  addToCloud('marketMaterials/' + m.id, m);
-  showToast('✅ تم النشر في السوق');
-}
-
-// === الإحصائيات === (كما في الكود الأصلي)
-function updateStats(){
-  try{
-    document.getElementById('statTotal').textContent=allReports.length;
-    document.getElementById('statDone').textContent=allReports.filter(r=>r.status==='done').length;
-    document.getElementById('statPending').textContent=allReports.filter(r=>r.status!=='done').length;
-    const recycled=wasteTracking.filter(w=>w.status==='published').reduce((sum,w)=>sum+parseFloat(w.qty||0),0);
-    document.getElementById('recycledTotal').textContent=recycled.toFixed(1);
-    if(document.getElementById('dashboard').classList.contains('active'))renderChart();
-    updatePublicStats();
-  }catch(e){}
-}
-
-// === التنقل بين الصفحات === (كما في الكود الأصلي)
+// التنقل بين الصفحات
 function showPage(id){
   try{
     document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
     const el=document.getElementById(id);
     if(el)el.classList.add('active');
-    if(id==='dashboard')setTimeout(renderChart,100);
-    if(id==='reportsPage')showReportsPage();
+    if(id==='dashboard')setTimeout(renderChart,100);    if(id==='reportsPage')showReportsPage();
     if(id==='publicStats')updatePublicStats();
     if(id==='schedule')displaySchedule();
     if(id==='tonnageRecords')loadTonnageRecords();
@@ -1027,174 +896,44 @@ function showPage(id){
     window.scrollTo(0,0);
   }catch(e){}
 }
-// === 🚚 نظام تتبع الشاحنة === (كما في الكود الأصلي)
-function startTruckTracking(){
-  if(!currentDriver){showToast('⚠️ يجب تسجيل الدخول أولاً','error');return;}
-  truckTrackingData={active:true,driver:currentDriver,sector:currentDriverSector,startTime:new Date().toISOString(),positions:[],collectedBins:[]};  saveToCloud('truckTracking', truckTrackingData);
-  showPage('truckTracking');
-  updateTruckTrackingUI();
-  startGPSMonitoring();
-  showToast('✅ تم بدء التتبع المباشر');
-}
 
-function startGPSMonitoring(){
-  if(!navigator.geolocation){showToast('⚠️ GPS غير مدعوم','error');return;}
-  window.trackingInterval=setInterval(()=>{
-    navigator.geolocation.getCurrentPosition(pos=>{
-      const position={lat:pos.coords.latitude,lng:pos.coords.longitude,timestamp:new Date().toISOString(),accuracy:pos.coords.accuracy};
-      truckTrackingData.positions.push(position);
-      saveToCloud('truckTracking', truckTrackingData);
-      updateTruckTrackingMap(position);
-    },err=>{console.error('GPS Error:',err);},{enableHighAccuracy:true,timeout:10000,maximumAge:0});
-  },10000);
-}
-
-function recordBinCollection(){
-  if(!truckTrackingData.active){showToast('⚠️ التتبع غير نشط','error');return;}
-  navigator.geolocation.getCurrentPosition(pos=>{
-    const bin={id:Date.now(),lat:pos.coords.latitude,lng:pos.coords.longitude,timestamp:new Date().toISOString(),sector:currentDriverSector,driver:currentDriver};
-    truckTrackingData.collectedBins.push(bin);
-    saveToCloud('truckTracking', truckTrackingData);
-    updateTruckTrackingUI();
-    if(navigator.vibrate)navigator.vibrate([200,100,200]);
-    showToast('✅ تم تسجيل الحاوية #' + truckTrackingData.collectedBins.length);
-    addBinMarkerToMap(bin);
-  },err=>{showToast('⚠️ فشل في تحديد الموقع','error');},{enableHighAccuracy:true,timeout:10000});
-}
-
-function stopTruckTracking(){
-  if(window.trackingInterval)clearInterval(window.trackingInterval);
-  truckTrackingData.active=false;
-  saveToCloud('truckTracking', truckTrackingData);
-  showToast('✅ تم إيقاف التتبع');
-  showPage('driver');
-}
-
-function updateTruckTrackingUI(){
+// الإحصائيات
+function updateStats(){
   try{
-    if(!truckTrackingData.active){
-      document.getElementById('liveTrackingStatus').innerHTML='🔴 التتبع متوقف';
-      document.getElementById('liveTrackingStatus').style.background='#757575';
-      document.getElementById('binTrackingControls').style.display='none';
-    }else{      document.getElementById('liveTrackingStatus').innerHTML='🟢 التتبع المباشر نشط';
-      document.getElementById('liveTrackingStatus').style.background='#4CAF50';
-      document.getElementById('binTrackingControls').style.display='block';    }
-    document.getElementById('trackingDriverName').textContent=truckTrackingData.driver||'-';
-    document.getElementById('trackingSector').textContent=truckTrackingData.sector||'-';
-    document.getElementById('trackingDate').textContent=truckTrackingData.startTime?new Date(truckTrackingData.startTime).toLocaleDateString('ar-DZ'):'-';
-    document.getElementById('trackingTime').textContent=truckTrackingData.startTime?new Date(truckTrackingData.startTime).toLocaleTimeString('ar-DZ'):'-';
-    document.getElementById('collectedBinsCount').textContent=truckTrackingData.collectedBins.length;
-    const binsList=document.getElementById('collectedBinsList');
-    if(truckTrackingData.collectedBins.length===0){
-      binsList.innerHTML='<p style="text-align:center;color:#666;padding:20px">لم يتم جمع أي حاويات بعد</p>';
-    }else{
-      binsList.innerHTML=truckTrackingData.collectedBins.map((bin,idx)=>`<div class="bin-collected">🗑️ حاوية #${idx+1}<br><small>${bin.lat.toFixed(6)}, ${bin.lng.toFixed(6)}</small><br><small>🕐 ${new Date(bin.timestamp).toLocaleTimeString('ar-DZ')}</small></div>`).join('');
-    }
+    document.getElementById('statTotal').textContent=allReports.length;
+    document.getElementById('statDone').textContent=allReports.filter(r=>r.status==='done').length;
+    const recycled=wasteTracking.filter(w=>w.status==='published').reduce((sum,w)=>sum+parseFloat(w.qty||0),0);
+    document.getElementById('recycledTotal').textContent=recycled.toFixed(1);
+    if(document.getElementById('dashboard').classList.contains('active'))renderChart();
+    updatePublicStats();
   }catch(e){}
 }
 
-function updateDriverPanel(){
-  try{
-    const ctrl=document.getElementById('binTrackingControls');
-    if(ctrl) ctrl.style.display=(currentDriver && truckTrackingData.active)?'block':'none';
-  }catch(e){}
+// دوال الحفظ والتحديث
+function saveReport(r){ addToCloud('reports/' + r.id, r); updateStats(); showToast('✅ تم الإرسال والمزامنة'); }
+function updateReport(id,upd){
+  updateCloudItem('reports', id, upd);
+  const index=allReports.findIndex(x=>x.id==id);
+  if(index!==-1){ allReports[index]={...allReports[index],...upd}; updateStats(); if(document.getElementById('reportsPage').classList.contains('active'))showReportsPage(); }
 }
-
-function initTruckTrackingMap(){
-  try{
-    if(map){map.remove();}
-    map=L.map('map').setView([36.2642,2.7545],13);
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{attribution:'© OpenStreetMap contributors'}).addTo(map);
-    if(truckTrackingData.positions.length>0){
-      const lastPos=truckTrackingData.positions[truckTrackingData.positions.length-1];
-      map.setView([lastPos.lat,lastPos.lng],15);
-      trackingMarker=L.marker([lastPos.lat,lastPos.lng]).addTo(map).bindPopup(`<b>🚚 ${truckTrackingData.driver}</b><br>القطاع: ${truckTrackingData.sector}`);
-      const latlngs=truckTrackingData.positions.map(p=>[p.lat,p.lng]);
-      trackingPath=L.polyline(latlngs,{color:'#1B5E20',weight:4}).addTo(map);
-      truckTrackingData.collectedBins.forEach(bin=>addBinMarkerToMap(bin));
-    }
-  }catch(e){}
+function saveWasteTracking(w){ addToCloud('wasteTracking/' + w.id, w); updateStats(); }
+function updateWasteTracking(id,upd){
+  updateCloudItem('wasteTracking', id, upd);
+  const i=wasteTracking.findIndex(x=>x.id==id);
+  if(i!==-1){ wasteTracking[i]={...wasteTracking[i],...upd}; updateStats(); }
 }
+function saveMarketMaterial(m){ addToCloud('marketMaterials/' + m.id, m); }
 
-function updateTruckTrackingMap(position){
-  try{
-    if(!map)return;
-    if(trackingMarker){
-      trackingMarker.setLatLng([position.lat,position.lng]);
-      trackingMarker.bindPopup(`<b>🚚 ${truckTrackingData.driver}</b><br>القطاع: ${truckTrackingData.sector}<br>🕐 ${new Date(position.timestamp).toLocaleTimeString('ar-DZ')}`);
-    }else{
-      trackingMarker=L.marker([position.lat,position.lng]).addTo(map).bindPopup(`<b>🚚 ${truckTrackingData.driver}</b><br>القطاع: ${truckTrackingData.sector}`);
-    }
-    const latlngs=truckTrackingData.positions.map(p=>[p.lat,p.lng]);    if(trackingPath){trackingPath.setLatLngs(latlngs);}else{trackingPath=L.polyline(latlngs,{color:'#1B5E20',weight:4}).addTo(map);}
-    map.fitBounds(trackingPath.getBounds());  }catch(e){}
-}
-
-function addBinMarkerToMap(bin){
-  try{
-    if(!map)return;
-    L.circleMarker([bin.lat,bin.lng],{radius:8,fillColor:'#4CAF50',color:'#fff',weight:2,opacity:1,fillOpacity:0.8}).addTo(map).bindPopup(`🗑️ حاوية #${truckTrackingData.collectedBins.indexOf(bin)+1}<br>🕐 ${new Date(bin.timestamp).toLocaleTimeString('ar-DZ')}`);
-  }catch(e){}
-}
-
-// === 🚚 تتبع مسار الشاحنات حسب القطاع === (كما في الكود الأصلي)
-function loadSectorRoute(){
-  const sectorId=document.getElementById('sectorSelect').value;
-  if(sectorId && sectorRoutesData[sectorId]){
-    currentSectorData=sectorRoutesData[sectorId];
-    document.getElementById('routeInfo').style.display='block';
-    document.getElementById('routeSectorName').textContent=currentSectorData.name;
-    document.getElementById('routeDate').textContent=currentSectorData.date;
-    document.getElementById('routeDriver').textContent=currentSectorData.driver;
-    document.getElementById('routeBinsCount').textContent=currentSectorData.bins.length;
-  }
-}
-
-function showRouteOnMap(){
-  if(!currentSectorData){showToast('⚠️ اختر القطاع أولاً','error');return;}
-  if(routeMap){routeMap.remove();}
-  routeMap=L.map('routeMap').setView(currentSectorData.path[0],15);
-  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{attribution:'© OpenStreetMap contributors'}).addTo(routeMap);
-  if(routeLayer)routeMap.removeLayer(routeLayer);
-  routeLayer=L.polyline(currentSectorData.path,{color:'#1B5E20',weight:5,opacity:0.8}).addTo(routeMap);
-  currentSectorData.path.forEach((point,index)=>{
-    const color=index===0?'#4CAF50':index===currentSectorData.path.length-1?'#f44336':'#2196F3';
-    const label=index===0?'🚚 البداية':index===currentSectorData.path.length-1?'🏁 النهاية':`📍 نقطة ${index}`;
-    L.circleMarker(point,{radius:8,fillColor:color,color:'#fff',weight:2,opacity:1,fillOpacity:0.9}).addTo(routeMap).bindPopup(label);
-  });
-  if(binsLayer)routeMap.removeLayer(binsLayer);
-  binsLayer=L.layerGroup().addTo(routeMap);
-  currentSectorData.bins.forEach(bin=>{
-    L.circleMarker([bin.lat,bin.lng],{radius:10,fillColor:'#FF9800',color:'#fff',weight:2,opacity:1,fillOpacity:0.9}).addTo(binsLayer).bindPopup(`🗑️ حاوية #${bin.id}<br>🕐 ${bin.time}`);
-  });
-  routeMap.fitBounds(routeLayer.getBounds(),{padding:[50,50]});
-  document.getElementById('routeBinsList').style.display='block';
-  const binsListHtml=currentSectorData.bins.map(bin=>`<div class="tonnage-card" style="margin:8px 0"><div class="tonnage-info"><b>🗑️ حاوية #${bin.id}</b><span>🕐 ${bin.time}</span></div><div class="tonnage-info"><small>📍 ${bin.lat.toFixed(4)}, ${bin.lng.toFixed(4)}</small></div></div>`).join('');
-  document.getElementById('binsLocationsList').innerHTML=binsListHtml;
-  showToast('✅ تم عرض المسار بنجاح');
-}
-
-// === ✅ دالة تصدير المسار إلى PDF (مصححة) === (كما في الكود الأصلي)
-function exportRouteToPDF(){  if(!currentSectorData){showToast('⚠️ اختر القطاع أولاً','error');return;}  showToast('📥 جاري تحضير PDF...');
-  
-  const printWindow=window.open('','_blank');
-  const pdfContent=`<!DOCTYPE html><html dir="rtl"><head><meta charset="UTF-8"><title>تقرير مسار القطاع</title><link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" /><script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"><\/script><style>body{margin:0;padding:20px;font-family:'Segoe UI',Tahoma,sans-serif;direction:rtl;text-align:right;}.header{text-align:center;border-bottom:3px solid #1B5E20;padding-bottom:15px;margin-bottom:20px;}.header h1{color:#1B5E20;margin:0;font-size:24px;}.header p{margin:5px 0;color:#666;}.info-box{background:#f5f7fa;padding:15px;border-radius:10px;margin-bottom:20px;}.info-box h3{color:#1B5E20;margin-bottom:10px;}.info-row{display:flex;justify-content:space-between;margin:8px 0;padding:5px 0;border-bottom:1px solid #e0e0e0;}.map-container{margin:20px 0;border:2px solid #ddd;border-radius:10px;overflow:hidden;page-break-inside:avoid;}#mapForPDF{height:500px;width:100%;}table{width:100%;border-collapse:collapse;margin-top:20px;}th{background:#1B5E20;color:white;padding:12px;border:1px solid #ddd;}td{padding:10px;border:1px solid #ddd;text-align:center;}tr:nth-child(even){background:#f8f9fa;}.footer{margin-top:30px;text-align:center;border-top:2px solid #1B5E20;padding-top:15px;color:#666;font-size:12px;}@media print{body{print-color-adjust:exact;-webkit-print-color-adjust:exact;}}</style></head><body><div class="header"><h1>المدية نظيفة 2026</h1><p>تقرير مسار الشاحنات</p></div><div class="info-box"><h3>📊 معلومات المسار</h3><div class="info-row"><b>القطاع:</b><span>${currentSectorData.name}</span></div><div class="info-row"><b>السائق:</b><span>${currentSectorData.driver}</span></div><div class="info-row"><b>التاريخ:</b><span>${currentSectorData.date}</span></div><div class="info-row"><b>عدد الحاويات:</b><span>${currentSectorData.bins.length}</span></div></div><div class="map-container"><div id="mapForPDF"></div></div><h3 style="color:#1B5E20;margin:20px 0 10px 0;">🎯 مواقع الحاويات</h3><table><thead><tr><th>#</th><th>الوقت</th><th>خط العرض</th><th>خط الطول</th></tr></thead><tbody>${currentSectorData.bins.map(bin=>`<tr><td>${bin.id}</td><td>${bin.time}</td><td>${bin.lat.toFixed(6)}</td><td>${bin.lng.toFixed(6)}</td></tr>`).join('')}</tbody></table><div class="footer"><p>إعداد: مصلحة النظافة والوقاية الصحية - بلدية المدية</p><p>تاريخ الطباعة: ${new Date().toLocaleDateString('ar-DZ')}</p></div><script>const path=${JSON.stringify(currentSectorData.path)};const bins=${JSON.stringify(currentSectorData.bins)};const map=L.map('mapForPDF',{zoomControl:false,attributionControl:false}).setView(path[0],15);L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19}).addTo(map);L.polyline(path,{color:'#1B5E20',weight:5,opacity:0.8}).addTo(map);path.forEach((point,index)=>{const color=index===0?'#4CAF50':index===path.length-1?'#f44336':'#2196F3';const label=index===0?'🚚 البداية':index===path.length-1?'🏁 النهاية':'📍 نقطة '+index;L.circleMarker(point,{radius:8,fillColor:color,color:'#fff',weight:2,opacity:1,fillOpacity:0.9}).addTo(map).bindPopup(label);});bins.forEach(bin=>{L.circleMarker([bin.lat,bin.lng],{radius:10,fillColor:'#FF9800',color:'#fff',weight:2,opacity:1,fillOpacity:0.9}).addTo(map).bindPopup('🗑️ حاوية #'+bin.id+'<br>🕐 '+bin.time);});map.fitBounds(L.polyline(path).getBounds(),{padding:[50,50]});setTimeout(()=>{window.print();window.close();},2000);<\/script></body></html>`;
-  
-  printWindow.document.write(pdfContent);
-  printWindow.document.close();
-  showToast('✅ تم فتح نافذة الطباعة');
-}
-
-// === باقي الدوال === (كل الدوال الأصلية كما هي - لم يتم حذف أي منها)
+// دوال أساسية مختصرة
 function getWasteTypeName(t){return{organic:'🍂 عضوي',plastic:'🧴 بلاستيك',metal:'⚙️ معدن',paper:'📄 ورق',glass:'🥃 زجاج',mixed:'🗑️ مختلط'}[t]||'🗑️ عام';}
 function startVoiceInput(){try{if(!('webkitSpeechRecognition' in window)){showToast('⚠️ متصفحك لا يدعم الصوت','error');return;}const recognition=new webkitSpeechRecognition();recognition.lang=currentLang==='ar'?'ar-DZ':currentLang==='fr'?'fr-FR':'en-US';recognition.onstart=()=>showToast('🎤 جاري الاستماع...');recognition.onresult=(event)=>{document.getElementById('addrInput').value=event.results[0][0].transcript;showToast('✅ تم الإملاء');};recognition.onerror=()=>showToast('⚠️ خطأ في الصوت','error');recognition.start();}catch(e){showToast('⚠️ خطأ في الصوت','error');}}
 function getLocation(){try{const btn=document.getElementById('getLocationBtn');const addr=document.getElementById('addrInput');const gps=document.getElementById('gpsInput');if(!navigator.geolocation){showToast('⚠️ GPS غير مدعوم','error');return;}btn.innerHTML='⏳ جاري...';btn.disabled=true;navigator.geolocation.getCurrentPosition(pos=>{const lat=pos.coords.latitude,lng=pos.coords.longitude;gps.value=lat.toFixed(6)+', '+lng.toFixed(6);addr.value='المدية، الجزائر';btn.innerHTML='📍 تحديد الموقع GPS';btn.disabled=false;showToast('✅ '+addr.value);},()=>{btn.innerHTML='📍 تحديد الموقع GPS';btn.disabled=false;showToast('⚠️ فشل تحديد الموقع','error');},{enableHighAccuracy:true,timeout:20000});}catch(e){showToast('⚠️ خطأ في الموقع','error');}}
 function manualLocation(){const a=prompt('أدخل العنوان:','حي الزيتون - المدية');if(a){document.getElementById('addrInput').value=a;document.getElementById('gpsInput').value='36.2642, 2.7545';}}
-function takePhoto(){try{const i=document.createElement('input');i.type='file';i.accept='image/*';i.capture='environment';i.onchange=e=>{if(e.target.files[0]){const r=new FileReader();r.onload=ev=>{tempImage=ev.target.result;document.getElementById('camImg').src=tempImage;document.getElementById('camImg').style.display='block';document.querySelector('.cam-icon').style.display='none';};r.readAsDataURL(e.target.files[0]);}};i.click();}catch(e){showToast('⚠️ خطأ في الكاميرا','error');}}
-function sendReport(){try{const a=document.getElementById('addrInput').value.trim();if(!a){showToast('⚠️ أدخل العنوان','error');return;}const btn=document.getElementById('sendBtn'),orig=btn.innerHTML;btn.innerHTML='⏳ جاري...';btn.disabled=true;const isRecurring=document.getElementById('recurringCheck').checked;const wasteType=document.getElementById('wasteTypeSelect').value;const newReport={id:Date.now(),addr:a,gps:document.getElementById('gpsInput').value||'غير محدد',image:tempImage,doneImage:null,date:new Date().toLocaleDateString('ar-DZ'),time:new Date().toLocaleTimeString('ar-DZ'),doneTime:null,status:'new',driverName:null,recurring:isRecurring,wasteType:wasteType};saveReport(newReport);addPoints(10);showToast('✅ تم الإرسال! +10 نقاط 🎉');document.getElementById('thanksOverlay').style.display='flex';tempImage=null;document.getElementById('camImg').style.display='none';document.querySelector('.cam-icon').style.display='block';document.getElementById('addrInput').value='';document.getElementById('gpsInput').value='';document.getElementById('recurringCheck').checked=false;setTimeout(()=>{document.getElementById('thanksOverlay').style.display='none';showPage('home');btn.innerHTML=orig;btn.disabled=false;},3000);}catch(e){showToast('⚠️ خطأ في الإرسال','error');}}
+function takePhoto(){try{const i=document.createElement('input');i.type='file';i.accept='image/*';i.capture='environment';i.onchange=e=>{if(e.target.files[0]){const r=new FileReader();r.onload=ev=>{tempImage=ev.target.result;document.getElementById('camImg').src=tempImage;document.getElementById('camImg').style.display='block';document.querySelector('.cam-icon').style.display='none';};r.readAsDataURL(e.target.files[0]);}};i.click();}catch(e){showToast('⚠️ خطأ في الكاميرا','error');}}function sendReport(){try{const a=document.getElementById('addrInput').value.trim();if(!a){showToast('⚠️ أدخل العنوان','error');return;}const btn=document.getElementById('sendBtn'),orig=btn.innerHTML;btn.innerHTML='⏳ جاري...';btn.disabled=true;const isRecurring=document.getElementById('recurringCheck').checked;const wasteType=document.getElementById('wasteTypeSelect').value;const newReport={id:Date.now(),addr:a,gps:document.getElementById('gpsInput').value||'غير محدد',image:tempImage,doneImage:null,date:new Date().toLocaleDateString('ar-DZ'),time:new Date().toLocaleTimeString('ar-DZ'),doneTime:null,status:'new',driverName:null,recurring:isRecurring,wasteType:wasteType};saveReport(newReport);addPoints(10);showToast('✅ تم الإرسال! +10 نقاط 🎉');document.getElementById('thanksOverlay').style.display='flex';tempImage=null;document.getElementById('camImg').style.display='none';document.querySelector('.cam-icon').style.display='block';document.getElementById('addrInput').value='';document.getElementById('gpsInput').value='';document.getElementById('recurringCheck').checked=false;setTimeout(()=>{document.getElementById('thanksOverlay').style.display='none';showPage('home');btn.innerHTML=orig;btn.disabled=false;},3000);}catch(e){showToast('⚠️ خطأ في الإرسال','error');}}
 function loginAdmin(){if(document.getElementById('adminCode').value==='1234'){document.getElementById('adminLogin').classList.add('hidden');document.getElementById('adminPanel').classList.remove('hidden');updateStats();showToast('✓ دخول ناجح');}else showToast('✗ رمز خاطئ','error');}
 function logoutAdmin(){document.getElementById('adminLogin').classList.remove('hidden');document.getElementById('adminPanel').classList.add('hidden');document.getElementById('adminName').value='';document.getElementById('adminCode').value='';showToast('✓ خروج');}
 function safeShowReports(){try{if(!allReports||allReports.length===0){showToast('لا توجد بلاغات لعرضها');showPage('reportsPage');document.getElementById('reportsList').innerHTML='<p style="text-align:center;color:#666;padding:40px">لا توجد بلاغات</p>';return;}showPage('reportsPage');applyFilters();showToast('✅ تم تحميل البلاغات');}catch(e){showToast('⚠️ حدث خطأ','error');}}
-function emergencyClearData(){if(confirm('⚠️ تحذير: سيتم مسح جميع البيانات!\nهل أنت متأكد؟')){db.ref().remove().then(()=>{showToast('✅ تم مسح البيانات من السحابة');}).catch(()=>{showToast('⚠️ تم المسح محلياً فقط');});localStorage.clear();allReports=[];wasteTracking=[];marketMaterials=[];truckTrackingData={active:false,driver:'',sector:'',positions:[],collectedBins:[]};updateStats();showToast('✅ تم مسح البيانات');}}
+function emergencyClearData(){if(confirm('⚠️ تحذير: سيتم مسح جميع البيانات!\nهل أنت متأكد؟')){try{db.ref().remove();}catch(e){}localStorage.clear();allReports=[];wasteTracking=[];marketMaterials=[];truckTrackingData={active:false,driver:'',sector:'',positions:[],collectedBins:[]};updateStats();showToast('✅ تم مسح البيانات');}}
 function loginDriver(){const n=document.getElementById('driverName').value.trim();if(!n){showToast('⚠️ أدخل الاسم','error');return;}currentDriver=n;currentDriverSector='غير محدد';document.getElementById('driverLogin').classList.add('hidden');document.getElementById('driverPanel').classList.remove('hidden');showToast('✓ مرحباً '+n);}
 function logoutDriver(){if(window.trackingInterval)clearInterval(window.trackingInterval);truckTrackingData.active=false;saveToCloud('truckTracking',truckTrackingData);currentDriver='';currentDriverSector='';document.getElementById('driverLogin').classList.remove('hidden');document.getElementById('driverPanel').classList.add('hidden');document.getElementById('driverName').value='';tempAfterImage=null;showToast('✓ خروج');}
 function prepareDriverTonnage(){document.getElementById('driverTonnageName').value=currentDriver;document.getElementById('driverTonnageSector').value=currentDriverSector;document.getElementById('driverTonnageWeight').value='';document.getElementById('driverTonnageRegNum').value='';}
@@ -1223,7 +962,9 @@ function loadMyRequests(){try{const requests=JSON.parse(localStorage.getItem('me
 function loadAdminRequests(){try{const requests=JSON.parse(localStorage.getItem('medea_requests')||'[]');const list=document.getElementById('adminRequestsList');if(!requests.length){list.innerHTML='<p style="text-align:center;color:#666;padding:20px">لا توجد طلبات</p>';return;}list.innerHTML=requests.slice().reverse().map(r=>`<div class="tonnage-card"><div class="tonnage-info"><b>📝 النوع:</b> ${r.type==='bin'?'حاوية جديدة':r.type==='repair'?'صيانة':r.type==='clean'?'تنظيف':'أخر'}</div><div class="tonnage-info"><b>📍 الموقع:</b> ${r.location}</div><div class="tonnage-info"><b>📝 التفاصيل:</b> ${r.desc}</div><div class="tonnage-info"><b>📅 التاريخ:</b> ${r.date} ${r.time}</div><div class="tonnage-info"><b>📊 الحالة:</b> <span style="color:${r.status==='pending'?'#FF9800':'#4CAF50'}">${r.status==='pending'?'قيد المراجعة':'تمت المعالجة'}</span></div>${r.status==='pending'?`<button class="btn bg" style="margin-top:10px;padding:8px" onclick="processRequest(${r.id})">✅ معالجة الطلب</button>`:''}</div>`).join('');}catch(e){}}
 function processRequest(id){try{let requests=JSON.parse(localStorage.getItem('medea_requests')||'[]');const i=requests.findIndex(r=>r.id==id);if(i!==-1){requests[i].status='done';localStorage.setItem('medea_requests',JSON.stringify(requests));showToast('✅ تمت معالجة الطلب');loadAdminRequests();}}catch(e){showToast('⚠️ خطأ في المعالجة','error');}}
 function loadRequests(){loadMyRequests();}
-function updatePublicStats(){try{const total=allReports.length;const done=allReports.filter(r=>r.status==='done').length;const rate=total>0?Math.round((done/total)*100):0;document.getElementById('publicTotal').textContent=total;document.getElementById('publicRate').textContent=rate+'%';const drivers=JSON.parse(localStorage.getItem('medea_staff')||'[]').filter(s=>s.role.includes('سائق')).length;document.getElementById('activeDrivers').textContent=drivers;const chart=document.getElementById('publicChart');if(chart){const donePct=(done/total)*100||0;chart.style.background=`conic-gradient(#4CAF50 0deg ${donePct*3.6}deg,#eee ${donePct*3.6}deg 360deg)`;}}catch(e){}}function exportExcel(){try{if(!allReports.length){showToast('⚠️ لا بيانات','error');return;}let c='ID,التاريخ,الوقت,العنوان,GPS,الحالة,السائق,النوع,متكرر\n';allReports.forEach(x=>c+=x.id+','+x.date+','+x.time+',"'+x.addr+'",'+x.gps+','+x.status+','+(x.driverName||'-')+','+x.wasteType+','+(x.recurring?'نعم':'لا')+'\n');const b=new Blob([c],{type:'text/csv'});const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='archive_'+Date.now()+'.csv';a.click();showToast('✅ تم التصدير');}catch(e){showToast('⚠️ خطأ في التصدير','error');}}function exitApp(){if(confirm('الخروج؟')){window.close();setTimeout(()=>{window.location.href='about:blank';},1000);}}
+function updatePublicStats(){try{const total=allReports.length;const done=allReports.filter(r=>r.status==='done').length;const rate=total>0?Math.round((done/total)*100):0;document.getElementById('publicTotal').textContent=total;document.getElementById('publicRate').textContent=rate+'%';const drivers=JSON.parse(localStorage.getItem('medea_staff')||'[]').filter(s=>s.role.includes('سائق')).length;document.getElementById('activeDrivers').textContent=drivers;const chart=document.getElementById('publicChart');if(chart){const donePct=(done/total)*100||0;chart.style.background=`conic-gradient(#4CAF50 0deg ${donePct*3.6}deg,#eee ${donePct*3.6}deg 360deg)`;}}catch(e){}}
+function exportExcel(){try{if(!allReports.length){showToast('⚠️ لا بيانات','error');return;}let c='ID,التاريخ,الوقت,العنوان,GPS,الحالة,السائق,النوع,متكرر\n';allReports.forEach(x=>c+=x.id+','+x.date+','+x.time+',"'+x.addr+'",'+x.gps+','+x.status+','+(x.driverName||'-')+','+x.wasteType+','+(x.recurring?'نعم':'لا')+'\n');const b=new Blob([c],{type:'text/csv'});const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='archive_'+Date.now()+'.csv';a.click();showToast('✅ تم التصدير');}catch(e){showToast('⚠️ خطأ في التصدير','error');}}
+function exitApp(){if(confirm('الخروج؟')){window.close();setTimeout(()=>{window.location.href='about:blank';},1000);}}
 function renderChart(){try{const done=allReports.filter(r=>r.status==='done').length;const assigned=allReports.filter(r=>r.status==='assigned').length;const newR=allReports.filter(r=>r.status==='new').length;const total=allReports.length;const visual=document.getElementById('chartVisual');const legend=document.getElementById('chartLegend');if(!visual||!legend)return;if(total===0){visual.innerHTML='<div style="display:flex;align-items:center;justify-content:center;height:100%;color:#999;font-size:1.1rem">لا توجد بيانات</div>';legend.innerHTML='';return;}const donePct=(done/total)*100;const assignedPct=(assigned/total)*100;visual.style.background=`conic-gradient(#4CAF50 0deg ${donePct*3.6}deg,#FF9800 ${donePct*3.6}deg ${(donePct+assignedPct)*3.6}deg,#f44336 ${(donePct+assignedPct)*3.6}deg 360deg)`;visual.style.borderRadius='50%';visual.style.boxShadow='0 5px 20px rgba(0,0,0,0.2)';legend.innerHTML=`<div class="legend-item"><div class="legend-color" style="background:#4CAF50"></div><span>منجز: ${done}</span></div><div class="legend-item"><div class="legend-color" style="background:#FF9800"></div><span>قيد التنفيذ: ${assigned}</span></div><div class="legend-item"><div class="legend-color" style="background:#f44336"></div><span>جديد: ${newR}</span></div>`;}catch(e){}}
 function loadTonnageRecords(){try{const records=JSON.parse(localStorage.getItem('medea_tonnage')||'[]');const list=document.getElementById('tonnageList');if(!records.length){list.innerHTML='<p style="text-align:center;color:#666;padding:20px">لا توجد سجلات</p>';return;}let totalWeight=records.reduce((sum,r)=>sum+r.weight,0);list.innerHTML=records.slice().reverse().map(r=>`<div class="tonnage-card"><div class="tonnage-info"><b>🚛 السائق:</b> ${r.driver||'غير محدد'}</div><div class="tonnage-info"><b>🏷️ القطاع:</b> ${r.sector||'-'}</div><div class="tonnage-info"><b>⚖️ الوزن:</b> <span style="color:#FF9800;font-weight:bold">${r.weight} طن</span></div><div class="tonnage-info"><b>🔢 رقم التسجيل:</b> ${r.regNum}</div><div class="tonnage-info"><b>📅 التاريخ:</b> ${r.date}</div><div class="tonnage-info"><b>🕐 الوقت:</b> ${r.time}</div><div class="tonnage-info"><b>🗑️ النوع:</b> ${getWasteTypeName(r.wasteType)}</div></div>`).join('');list.innerHTML+=`<div class="cd" style="margin-top:15px;text-align:center;background:#e8f5e9"><b>📊 المجموع الكلي:</b> <span style="color:#1B5E20;font-size:1.2rem;font-weight:bold">${totalWeight.toFixed(2)} طن</span></div>`;}catch(e){}}
 function exportTonnageToExcel(){try{const records=JSON.parse(localStorage.getItem('medea_tonnage')||'[]');if(!records.length){showToast('⚠️ لا توجد سجلات','error');return;}let c='السائق,القطاع,الوزن(طن),رقم التسجيل,النوع,التاريخ,الوقت\n';records.forEach(r=>c+=`${r.driver},${r.sector},${r.weight},${r.regNum},${r.wasteType},${r.date},${r.time}\n`);const b=new Blob([c],{type:'text/csv'});const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='tonnage_'+Date.now()+'.csv';a.click();showToast('✅ تم التصدير');}catch(e){showToast('⚠️ خطأ في التصدير','error');}}
@@ -1237,8 +978,7 @@ function registerWasteIn(){try{const source=document.getElementById('wasteSource
 function loadSortedMaterials(){try{const list=document.getElementById('sortedMaterialsList');const materials=wasteTracking.filter(w=>w.status==='sorted');if(!materials.length){list.innerHTML='<p style="text-align:center;color:#666;padding:20px">لا توجد مواد مصنفة</p>';return;}list.innerHTML=materials.map(m=>`<div class="material-card ${m.marketPublished?'reserved':'available'}"><div class="info-row"><b>📍 المصدر:</b> ${m.source}</div><div class="info-row"><b>🗑️ النوع:</b> <span class="waste-badge waste-${m.category}">${getWasteTypeName(m.category)}</span></div><div class="info-row"><b>⚖️ الكمية:</b> <span style="font-weight:bold">${m.qty} طن</span></div><div class="info-row"><b>⭐ الجودة:</b> <span class="quality-${m.quality}">${getQualityName(m.quality)}</span></div><div class="info-row"><b>🚚 الشاحنة:</b> ${m.truck||'-'}</div><div class="info-row"><b>📅 التاريخ:</b> ${m.date} ${m.time}</div>${m.notes?`<div class="info-row"><b>📝 ملاحظات:</b> ${m.notes}</div>`:''}${!m.marketPublished?`<button class="btn purple" style="margin-top:10px" onclick="publishMaterial(${m.id})">🚀 نشر في السوق</button>`:`<div style="margin-top:10px;padding:10px;background:#e8f5e9;border-radius:8px;text-align:center;color:#2E7D32">✓ منشور في السوق</div>`}</div>`).join('');}catch(e){}}
 function getQualityName(q){return{excellent:'⭐ عالية الجودة',good:'👍 جيدة',fair:'⚠️ متوسطة',poor:'❌ غير قابلة'}[q]||q;}
 function publishToMarket(){try{const unpublished=wasteTracking.filter(w=>w.status==='sorted'&&!w.marketPublished);if(!unpublished.length){showToast('⚠️ لا توجد مواد غير منشورة','error');return;}unpublished.forEach(m=>{updateWasteTracking(m.id,{marketPublished:true});saveMarketMaterial({id:Date.now()+Math.random(),wasteId:m.id,category:m.category,qty:m.qty,quality:m.quality,source:m.source,date:new Date().toLocaleDateString('ar-DZ'),status:'available',requests:[]});});showToast('✅ تم نشر '+unpublished.length+' مادة في السوق');loadSortedMaterials();loadMarketMaterials();}catch(e){showToast('⚠️ خطأ في النشر','error');}}
-function publishMaterial(id){try{updateWasteTracking(id,{marketPublished:true});const m=wasteTracking.find(w=>w.id==id);if(m){saveMarketMaterial({id:Date.now()+Math.random(),wasteId:m.id,category:m.category,qty:m.qty,quality:m.quality,source:m.source,date:new Date().toLocaleDateString('ar-DZ'),status:'available',requests:[]});}loadSortedMaterials();loadMarketMaterials();}catch(e){showToast('⚠️ خطأ','error');}}
-function filterMarket(){try{loadMarketMaterials();}catch(e){}}
+function publishMaterial(id){try{updateWasteTracking(id,{marketPublished:true});const m=wasteTracking.find(w=>w.id==id);if(m){saveMarketMaterial({id:Date.now()+Math.random(),wasteId:m.id,category:m.category,qty:m.qty,quality:m.quality,source:m.source,date:new Date().toLocaleDateString('ar-DZ'),status:'available',requests:[]});}loadSortedMaterials();loadMarketMaterials();}catch(e){showToast('⚠️ خطأ','error');}}function filterMarket(){try{loadMarketMaterials();}catch(e){}}
 function loadMarketMaterials(){try{const list=document.getElementById('marketMaterialsList');const filterType=document.getElementById('marketFilterType')?.value||'all';const filterQuality=document.getElementById('marketFilterQuality')?.value||'all';let materials=marketMaterials.filter(m=>m.status==='available');if(filterType!=='all')materials=materials.filter(m=>m.category===filterType);if(filterQuality!=='all')materials=materials.filter(m=>m.quality===filterQuality);if(!materials.length){list.innerHTML='<p style="text-align:center;color:#666;padding:20px">لا توجد مواد متاحة حالياً</p>';return;}list.innerHTML=materials.map(m=>`<div class="material-card available"><div class="info-row"><b>🗑️ النوع:</b> <span class="waste-badge waste-${m.category}">${getWasteTypeName(m.category)}</span></div><div class="info-row"><b>⚖️ الكمية:</b> <span style="font-weight:bold">${m.qty} طن</span></div><div class="info-row"><b>⭐ الجودة:</b> <span class="quality-${m.quality}">${getQualityName(m.quality)}</span></div><div class="info-row"><b>📍 المصدر:</b> ${m.source}</div><div class="info-row"><b>📅 التاريخ:</b> ${m.date}</div><button class="btn market-btn" style="margin-top:10px" onclick="openRequestForm(${m.id})">📝 طلب الاستفادة</button></div>`).join('');}catch(e){}}
 function openRequestForm(materialId){document.getElementById('requestForm').style.display='block';document.getElementById('requestForm').dataset.materialId=materialId;window.scrollTo(0,document.getElementById('requestForm').offsetTop-100);}
 function submitMarketRequest(){try{const materialId=document.getElementById('requestForm').dataset.materialId;const company=document.getElementById('companyName').value.trim();const license=document.getElementById('companyLicense').value.trim();const phone=document.getElementById('companyPhone').value.trim();const qty=parseFloat(document.getElementById('requestQty').value);const purpose=document.getElementById('requestPurpose').value.trim();if(!company||!license||!phone||!qty){showToast('⚠️ أكمل جميع الحقول','error');return;}const now=new Date();const request={id:Date.now(),materialId:materialId,company:company,license:license,phone:phone,qty:qty,purpose:purpose,date:now.toLocaleDateString('ar-DZ'),status:'pending'};const reqs=JSON.parse(localStorage.getItem('medea_market_requests')||'[]');reqs.push(request);localStorage.setItem('medea_market_requests',JSON.stringify(reqs));showToast('✅ تم إرسال طلبك وسيتم التواصل معك');document.getElementById('companyName').value='';document.getElementById('companyLicense').value='';document.getElementById('companyPhone').value='';document.getElementById('requestQty').value='';document.getElementById('requestPurpose').value='';document.getElementById('requestForm').style.display='none';}catch(e){showToast('⚠️ خطأ في الإرسال','error');}}
@@ -1255,6 +995,129 @@ function generateStatsTable(){const total=allReports.length;const done=allReport
 function printNow(){const content=document.getElementById('printContent').innerHTML;const win=window.open('','_blank','width=900,height=700');win.document.write(`<html dir="rtl"><head><meta charset="UTF-8"><title>طباعة</title><style>body{font-family:sans-serif;padding:20px}table{width:100%;border-collapse:collapse}th{background:#1B5E20;color:#fff;padding:8px}td{padding:8px;border:1px solid #ddd}@media print{.no-print{display:none}}</style></head><body>${content}<script>window.print()<\/script></body></html>`);win.document.close();}
 function downloadPDF(){const element=document.getElementById('printContent');if(typeof html2pdf!=='undefined'){showToast('📥 جاري إنشاء PDF...');html2pdf().from(element).set({margin:10,filename:`تقرير_${Date.now()}.pdf`,html2canvas:{scale:2},jsPDF:{format:'a4'}}).save().then(()=>{showToast('✅ تم التحميل');closePrintDialog();});}else{printNow();}}
 function calculateConversion(){const type=document.getElementById('wasteType').value;const weight=parseFloat(document.getElementById('wasteWeight').value);if(!weight||weight<=0){showToast('⚠️ أدخل الوزن');return;}const factors={organic:{energy:2500,oil:0,co2:0.8},plastic:{energy:12000,oil:750,co2:1.5},metal:{energy:8000,oil:0,co2:2.0},mixed:{energy:800,oil:50,co2:0.4}};const f=factors[type];document.getElementById('resEnergy').textContent=(weight*f.energy).toLocaleString('ar-DZ');document.getElementById('resOil').textContent=(weight*f.oil).toLocaleString('ar-DZ');document.getElementById('resCO2').textContent=(weight*f.co2).toFixed(2);document.getElementById('conversionResult').style.display='block';showToast('✅ تم الحساب');}
+
+// === دوال تتبع الشاحنة ===
+function startTruckTracking(){
+  if(!currentDriver){showToast('⚠️ يجب تسجيل الدخول أولاً','error');return;}
+  truckTrackingData={active:true,driver:currentDriver,sector:currentDriverSector,startTime:new Date().toISOString(),positions:[],collectedBins:[]};
+  saveToCloud('truckTracking', truckTrackingData);
+  showPage('truckTracking');
+  updateTruckTrackingUI();
+  startGPSMonitoring();
+  showToast('✅ تم بدء التتبع المباشر');
+}
+function startGPSMonitoring(){
+  if(!navigator.geolocation){showToast('⚠️ GPS غير مدعوم','error');return;}
+  window.trackingInterval=setInterval(()=>{
+    navigator.geolocation.getCurrentPosition(pos=>{
+      const position={lat:pos.coords.latitude,lng:pos.coords.longitude,timestamp:new Date().toISOString(),accuracy:pos.coords.accuracy};
+      truckTrackingData.positions.push(position);
+      saveToCloud('truckTracking', truckTrackingData);
+      updateTruckTrackingMap(position);
+    },err=>{},{enableHighAccuracy:true,timeout:10000,maximumAge:0});
+  },10000);
+}
+function recordBinCollection(){
+  if(!truckTrackingData.active){showToast('⚠️ التتبع غير نشط','error');return;}
+  navigator.geolocation.getCurrentPosition(pos=>{
+    const bin={id:Date.now(),lat:pos.coords.latitude,lng:pos.coords.longitude,timestamp:new Date().toISOString(),sector:currentDriverSector,driver:currentDriver};
+    truckTrackingData.collectedBins.push(bin);
+    saveToCloud('truckTracking', truckTrackingData);
+    updateTruckTrackingUI();
+    if(navigator.vibrate)navigator.vibrate([200,100,200]);
+    showToast('✅ تم تسجيل الحاوية #' + truckTrackingData.collectedBins.length);
+    addBinMarkerToMap(bin);
+  },err=>{showToast('⚠️ فشل في تحديد الموقع','error');},{enableHighAccuracy:true,timeout:10000});}
+function stopTruckTracking(){
+  if(window.trackingInterval)clearInterval(window.trackingInterval);
+  truckTrackingData.active=false;
+  saveToCloud('truckTracking', truckTrackingData);
+  showToast('✅ تم إيقاف التتبع');
+  showPage('driver');
+}
+function updateTruckTrackingUI(){
+  try{
+    if(!truckTrackingData.active){
+      document.getElementById('liveTrackingStatus').innerHTML='🔴 التتبع متوقف';
+      document.getElementById('liveTrackingStatus').style.background='#757575';
+      document.getElementById('binTrackingControls').style.display='none';
+    }else{
+      document.getElementById('liveTrackingStatus').innerHTML='🟢 التتبع المباشر نشط';
+      document.getElementById('liveTrackingStatus').style.background='#4CAF50';
+      document.getElementById('binTrackingControls').style.display='block';
+    }
+    document.getElementById('trackingDriverName').textContent=truckTrackingData.driver||'-';
+    document.getElementById('trackingSector').textContent=truckTrackingData.sector||'-';
+    document.getElementById('trackingDate').textContent=truckTrackingData.startTime?new Date(truckTrackingData.startTime).toLocaleDateString('ar-DZ'):'-';
+    document.getElementById('trackingTime').textContent=truckTrackingData.startTime?new Date(truckTrackingData.startTime).toLocaleTimeString('ar-DZ'):'-';
+    document.getElementById('collectedBinsCount').textContent=truckTrackingData.collectedBins.length;
+    const binsList=document.getElementById('collectedBinsList');
+    if(truckTrackingData.collectedBins.length===0){
+      binsList.innerHTML='<p style="text-align:center;color:#666;padding:20px">لم يتم جمع أي حاويات بعد</p>';
+    }else{
+      binsList.innerHTML=truckTrackingData.collectedBins.map((bin,idx)=>`<div class="bin-collected">🗑️ حاوية #${idx+1}<br><small>${bin.lat.toFixed(6)}, ${bin.lng.toFixed(6)}</small><br><small>🕐 ${new Date(bin.timestamp).toLocaleTimeString('ar-DZ')}</small></div>`).join('');
+    }
+  }catch(e){}
+}
+function updateDriverPanel(){ try{ const ctrl=document.getElementById('binTrackingControls'); if(ctrl) ctrl.style.display=(currentDriver && truckTrackingData.active)?'block':'none'; }catch(e){} }
+function initTruckTrackingMap(){
+  try{
+    if(map){map.remove();}
+    map=L.map('map').setView([36.2642,2.7545],13);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{attribution:'© OpenStreetMap contributors'}).addTo(map);
+    if(truckTrackingData.positions.length>0){
+      const lastPos=truckTrackingData.positions[truckTrackingData.positions.length-1];
+      map.setView([lastPos.lat,lastPos.lng],15);
+      trackingMarker=L.marker([lastPos.lat,lastPos.lng]).addTo(map).bindPopup(`<b>🚚 ${truckTrackingData.driver}</b><br>القطاع: ${truckTrackingData.sector}`);
+      const latlngs=truckTrackingData.positions.map(p=>[p.lat,p.lng]);
+      trackingPath=L.polyline(latlngs,{color:'#1B5E20',weight:4}).addTo(map);
+      truckTrackingData.collectedBins.forEach(bin=>addBinMarkerToMap(bin));
+    }
+  }catch(e){}
+}
+function updateTruckTrackingMap(position){
+  try{    if(!map)return;
+    if(trackingMarker){ trackingMarker.setLatLng([position.lat,position.lng]); trackingMarker.bindPopup(`<b>🚚 ${truckTrackingData.driver}</b><br>القطاع: ${truckTrackingData.sector}<br>🕐 ${new Date(position.timestamp).toLocaleTimeString('ar-DZ')}`); }
+    else{ trackingMarker=L.marker([position.lat,position.lng]).addTo(map).bindPopup(`<b>🚚 ${truckTrackingData.driver}</b><br>القطاع: ${truckTrackingData.sector}`); }
+    const latlngs=truckTrackingData.positions.map(p=>[p.lat,p.lng]);
+    if(trackingPath){trackingPath.setLatLngs(latlngs);}else{trackingPath=L.polyline(latlngs,{color:'#1B5E20',weight:4}).addTo(map);}
+    map.fitBounds(trackingPath.getBounds());
+  }catch(e){}
+}
+function addBinMarkerToMap(bin){ try{ if(!map)return; L.circleMarker([bin.lat,bin.lng],{radius:8,fillColor:'#4CAF50',color:'#fff',weight:2,opacity:1,fillOpacity:0.8}).addTo(map).bindPopup(`🗑️ حاوية #${truckTrackingData.collectedBins.indexOf(bin)+1}<br>🕐 ${new Date(bin.timestamp).toLocaleTimeString('ar-DZ')}`); }catch(e){} }
+
+// === دوال تتبع المسار حسب القطاع ===
+function loadSectorRoute(){ const sectorId=document.getElementById('sectorSelect').value; if(sectorId && sectorRoutesData[sectorId]){ currentSectorData=sectorRoutesData[sectorId]; document.getElementById('routeInfo').style.display='block'; document.getElementById('routeSectorName').textContent=currentSectorData.name; document.getElementById('routeDate').textContent=currentSectorData.date; document.getElementById('routeDriver').textContent=currentSectorData.driver; document.getElementById('routeBinsCount').textContent=currentSectorData.bins.length; } }
+function showRouteOnMap(){
+  if(!currentSectorData){showToast('⚠️ اختر القطاع أولاً','error');return;}
+  if(routeMap){routeMap.remove();}
+  routeMap=L.map('routeMap').setView(currentSectorData.path[0],15);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{attribution:'© OpenStreetMap contributors'}).addTo(routeMap);
+  if(routeLayer)routeMap.removeLayer(routeLayer);
+  routeLayer=L.polyline(currentSectorData.path,{color:'#1B5E20',weight:5,opacity:0.8}).addTo(routeMap);
+  currentSectorData.path.forEach((point,index)=>{
+    const color=index===0?'#4CAF50':index===currentSectorData.path.length-1?'#f44336':'#2196F3';
+    const label=index===0?'🚚 البداية':index===currentSectorData.path.length-1?'🏁 النهاية':`📍 نقطة ${index}`;
+    L.circleMarker(point,{radius:8,fillColor:color,color:'#fff',weight:2,opacity:1,fillOpacity:0.9}).addTo(routeMap).bindPopup(label);
+  });
+  if(binsLayer)routeMap.removeLayer(binsLayer);
+  binsLayer=L.layerGroup().addTo(routeMap);
+  currentSectorData.bins.forEach(bin=>{ L.circleMarker([bin.lat,bin.lng],{radius:10,fillColor:'#FF9800',color:'#fff',weight:2,opacity:1,fillOpacity:0.9}).addTo(binsLayer).bindPopup(`🗑️ حاوية #${bin.id}<br>🕐 ${bin.time}`); });
+  routeMap.fitBounds(routeLayer.getBounds(),{padding:[50,50]});
+  document.getElementById('routeBinsList').style.display='block';
+  const binsListHtml=currentSectorData.bins.map(bin=>`<div class="tonnage-card" style="margin:8px 0"><div class="tonnage-info"><b>🗑️ حاوية #${bin.id}</b><span>🕐 ${bin.time}</span></div><div class="tonnage-info"><small>📍 ${bin.lat.toFixed(4)}, ${bin.lng.toFixed(4)}</small></div></div>`).join('');
+  document.getElementById('binsLocationsList').innerHTML=binsListHtml;
+  showToast('✅ تم عرض المسار بنجاح');
+}
+function exportRouteToPDF(){
+  if(!currentSectorData){showToast('⚠️ اختر القطاع أولاً','error');return;}
+  showToast('📥 جاري تحضير PDF...');
+  const printWindow=window.open('','_blank');
+  const pdfContent=`<!DOCTYPE html><html dir="rtl"><head><meta charset="UTF-8"><title>تقرير مسار القطاع</title><link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" /><script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"><\/script><style>body{margin:0;padding:20px;font-family:sans-serif;direction:rtl;text-align:right}.header{text-align:center;border-bottom:3px solid #1B5E20;padding-bottom:15px;margin-bottom:20px}.header h1{color:#1B5E20;margin:0;font-size:24px}.info-box{background:#f5f7fa;padding:15px;border-radius:10px;margin-bottom:20px}.info-row{display:flex;justify-content:space-between;margin:8px 0;padding:5px 0;border-bottom:1px solid #e0e0e0}#mapForPDF{height:500px;width:100%}table{width:100%;border-collapse:collapse}th{background:#1B5E20;color:#fff;padding:12px}td{padding:10px;border:1px solid #ddd}@media print{body{print-color-adjust:exact}}</style></head><body><div class="header"><h1>المدية نظيفة 2026</h1><p>تقرير مسار الشاحنات</p></div><div class="info-box"><h3>📊 معلومات المسار</h3><div class="info-row"><b>القطاع:</b><span>${currentSectorData.name}</span></div><div class="info-row"><b>السائق:</b><span>${currentSectorData.driver}</span></div><div class="info-row"><b>التاريخ:</b><span>${currentSectorData.date}</span></div></div><div id="mapForPDF"></div><script>const path=${JSON.stringify(currentSectorData.path)};const map=L.map('mapForPDF',{zoomControl:false}).setView(path[0],15);L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);L.polyline(path,{color:'#1B5E20',weight:5}).addTo(map);map.fitBounds(L.polyline(path).getBounds());setTimeout(()=>{window.print();window.close();},2000);<\/script></body></html>`;
+  printWindow.document.write(pdfContent);
+  printWindow.document.close();
+  showToast('✅ تم فتح نافذة الطباعة');
+}
 </script>
 </body>
 </html>
