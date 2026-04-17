@@ -156,6 +156,10 @@ html,body{overflow-x:hidden;width:100%;background:#f5f7fa;min-height:100vh}
 .truck-marker{background:#1B5E20;color:#fff;padding:5px 10px;border-radius:8px;font-weight:bold;box-shadow:0 2px 8px rgba(0,0,0,0.3)}
 .bin-collected{background:#4CAF50;color:#fff;padding:8px 15px;border-radius:20px;margin:5px 0;text-align:center;font-weight:bold}
 .live-tracking{background:#ff5722;color:#fff;padding:10px;border-radius:10px;text-align:center;margin:10px 0;animation:pulse 2s infinite}
+/* ✅ زر إنهاء المهمة */
+.end-mission-btn{background:linear-gradient(135deg,#d21034,#a00d28);margin-top:15px;font-size:1.2rem;padding:18px;box-shadow:0 4px 15px rgba(210,16,52,0.4)}
+.mission-summary{background:#f5f7fa;padding:15px;border-radius:12px;margin:15px 0;border-right:4px solid #4CAF50}
+.mission-summary h3{color:#1B5E20;margin-bottom:10px}
 </style>
 </head>
 <body>
@@ -173,7 +177,7 @@ html,body{overflow-x:hidden;width:100%;background:#f5f7fa;min-height:100vh}
 <div id="syncIndicator" class="sync-indicator sync-online">🔄 متصل</div>
 
 <div class="hdr">
-  <div class="c">🇩🇿 الجمهورية الجزائرية الديمقراطية الشعبية</div>
+  <div class="c">🇩 الجمهورية الجزائرية الديمقراطية الشعبية</div>
   <div class="d">🧹 مصلحة النظافة والوقاية الصحية لبلدية المدية</div>
   <div class="t">المدية نظيفة</div>
   <div class="lang-container">
@@ -190,11 +194,11 @@ html,body{overflow-x:hidden;width:100%;background:#f5f7fa;min-height:100vh}
     <span class="points-badge">⭐ <span id="userPoints">0</span></span>
   </div>
 </div>
-
 <div class="stats-bar">
   <div class="stat-box" onclick="filterByStatus('all')"><span class="stat-num" id="statTotal">0</span><span class="stat-label">إجمالي البلاغات</span></div>
   <div class="stat-box" onclick="filterByStatus('done')" style="border-color:#4CAF50"><span class="stat-num" style="color:#4CAF50" id="statDone">0</span><span class="stat-label">تم الإنجاز</span></div>
-  <div class="stat-box" onclick="showPage('sortingCenter')" style="border-color:#673ab7"><span class="stat-num" style="color:#673ab7" id="statSorted">0</span><span class="stat-label">تم الفرز</span></div></div>
+  <div class="stat-box" onclick="showPage('sortingCenter')" style="border-color:#673ab7"><span class="stat-num" style="color:#673ab7" id="statSorted">0</span><span class="stat-label">تم الفرز</span></div>
+</div>
 
 <div id="thanksOverlay">
   <div style="font-size:4rem;margin-bottom:15px">❤️</div>
@@ -239,11 +243,11 @@ html,body{overflow-x:hidden;width:100%;background:#f5f7fa;min-height:100vh}
     <div class="g2">
       <button class="btn by sb2" onclick="showPage('driver')">🚚 السائقين</button>
       <button class="btn bb sb2" onclick="showPage('admin')">🛡️ الإدارة</button>
-    </div>
-  </div>
+    </div>  </div>
 </div>
 
-<div id="truckTracking" class="page">  <h2 style="margin-bottom:15px;color:#1B5E20;text-align:center">🚚 تتبع مسار الشاحنة</h2>
+<div id="truckTracking" class="page">
+  <h2 style="margin-bottom:15px;color:#1B5E20;text-align:center">🚚 تتبع مسار الشاحنة</h2>
   <div class="cd">
     <h3 style="margin-bottom:10px">📍 المعلومات الحالية</h3>
     <div class="info-row"><b>👤 السائق:</b> <span id="trackingDriverName">-</span></div>
@@ -288,10 +292,10 @@ html,body{overflow-x:hidden;width:100%;background:#f5f7fa;min-height:100vh}
   <div id="routeMap"></div>
   <div class="cd" id="routeBinsList" style="display:none">
     <h3 style="margin-bottom:10px">🎯 مواقع الحاويات</h3>
-    <div id="binsLocationsList"></div>
-  </div>
+    <div id="binsLocationsList"></div>  </div>
   <button class="btn bx" onclick="showPage('admin')">← رجوع للإدارة</button>
 </div>
+
 <!-- ✅ نافذة خيارات PDF -->
 <div id="pdfOptionsModal" class="print-modal" onclick="if(event.target===this)closePDFOptions()">
   <div class="print-dialog">
@@ -318,7 +322,6 @@ html,body{overflow-x:hidden;width:100%;background:#f5f7fa;min-height:100vh}
     <button class="btn bg" onclick="takePhoto()">📷 التقاط الصورة</button>
     <button class="btn bb" onclick="getLocation()" id="getLocationBtn">📍 تحديد الموقع GPS</button>
     <button class="btn bx" onclick="manualLocation()" style="margin-top:0;margin-bottom:8px;font-size:0.9rem">📍 إدخال يدوي</button>
-    <!-- ✅ حقل العنوان المحسن -->
     <input type="text" class="in" id="addrInput" placeholder="📍 العنوان: الحي / الشارع / البلدية">
     <div style="display:flex;gap:10px">
       <input type="text" class="in" id="gpsInput" placeholder="🌍 إحداثيات GPS" readonly style="background:#f0f0f0;flex:2">
@@ -339,9 +342,9 @@ html,body{overflow-x:hidden;width:100%;background:#f5f7fa;min-height:100vh}
     <button class="btn bx" onclick="showPage('home')">← رجوع</button>
   </div>
 </div>
-
 <div id="sortingCenter" class="page">
-  <h2 style="margin-bottom:15px;color:#2E7D32;text-align:center">🏭 مركز الفرز التقني</h2>  <div class="cd">
+  <h2 style="margin-bottom:15px;color:#2E7D32;text-align:center">🏭 مركز الفرز التقني</h2>
+  <div class="cd">
     <h3 style="margin-bottom:10px">🔗 تتبع سلسلة القيمة</h3>
     <div class="track-timeline">
       <div class="track-step done">📍 نقطة الرفع</div>
@@ -387,10 +390,10 @@ html,body{overflow-x:hidden;width:100%;background:#f5f7fa;min-height:100vh}
   <h2 style="margin-bottom:15px;color:#673ab7;text-align:center">♻️ سوق المواد المعاد تدويرها</h2>
   <div class="cd">
     <div class="filter-bar">
-      <select class="in" id="marketFilterType" onchange="filterMarket()">
-        <option value="all">📦 جميع الأنواع</option>
+      <select class="in" id="marketFilterType" onchange="filterMarket()">        <option value="all">📦 جميع الأنواع</option>
         <option value="plastic">🧴 بلاستيك</option>
-        <option value="metal">⚙️ معادن</option>        <option value="paper">📄 ورق</option>
+        <option value="metal">⚙️ معادن</option>
+        <option value="paper">📄 ورق</option>
         <option value="glass">🥃 زجاج</option>
         <option value="organic">🍂 عضوي</option>
       </select>
@@ -436,10 +439,10 @@ html,body{overflow-x:hidden;width:100%;background:#f5f7fa;min-height:100vh}
     <select class="in" id="reqType">
       <option value="bin">🗑️ طلب حاوية جديدة</option>
       <option value="repair">🔧 صيانة حاوية تالفة</option>
-      <option value="clean">🧹 طلب تنظيف استثنائي</option>
-      <option value="other">❓ طلب آخر</option>
+      <option value="clean">🧹 طلب تنظيف استثنائي</option>      <option value="other">❓ طلب آخر</option>
     </select>
-    <input type="text" class="in" id="reqDesc" placeholder="📝 تفاصيل الطلب">    <input type="text" class="in" id="reqLocation" placeholder="📍 موقع الطلب">
+    <input type="text" class="in" id="reqDesc" placeholder="📝 تفاصيل الطلب">
+    <input type="text" class="in" id="reqLocation" placeholder="📍 موقع الطلب">
     <button class="btn bg" onclick="submitRequest()">📤 إرسال الطلب</button>
   </div>
   <div class="cd" style="margin-top:15px">
@@ -485,10 +488,10 @@ html,body{overflow-x:hidden;width:100%;background:#f5f7fa;min-height:100vh}
     <button class="btn br" onclick="logoutAdmin()">✕ خروج</button>
     <button class="btn bx" style="margin-top:10px;font-size:0.8rem;background:#ff5722" onclick="emergencyClearData()">🚨 مسح البيانات</button>
   </div>
-  <button class="btn bx" onclick="showPage('home')">← رجوع</button>
-</div>
+  <button class="btn bx" onclick="showPage('home')">← رجوع</button></div>
 
-<div id="dashboard" class="page">  <h2 style="margin-bottom:15px;color:#1B5E20;text-align:center">📈 لوحة الإحصائيات</h2>
+<div id="dashboard" class="page">
+  <h2 style="margin-bottom:15px;color:#1B5E20;text-align:center">📈 لوحة الإحصائيات</h2>
   <div class="cd">
     <h3 style="margin-bottom:12px;text-align:center">📊 توزيع حالات البلاغات</h3>
     <div class="chart-container">
@@ -534,10 +537,10 @@ html,body{overflow-x:hidden;width:100%;background:#f5f7fa;min-height:100vh}
     <input type="text" id="driverName" class="in" placeholder="👤 أدخل اسمك">
     <button class="btn by" onclick="loginDriver()">✓ دخول</button>
   </div>
-  <div id="driverPanel" class="hidden">
-    <div style="background:#fff3e0;padding:12px;border-radius:10px;margin-bottom:12px;text-align:center;color:#FF9800">✓ مرحباً - مهامك جاهزة</div>
+  <div id="driverPanel" class="hidden">    <div style="background:#fff3e0;padding:12px;border-radius:10px;margin-bottom:12px;text-align:center;color:#FF9800">✓ مرحباً - مهامك جاهزة</div>
     <button class="btn bg" onclick="startTruckTracking()" style="margin-bottom:15px;background:linear-gradient(135deg,#ff5722,#f44336)">📍 بدء تتبع المسار</button>
-    <div id="binTrackingControls" style="display:none;margin-bottom:15px">      <div style="background:#4CAF50;color:#fff;padding:10px;border-radius:10px;text-align:center;margin-bottom:10px;font-weight:bold">🟢 التتبع نشط - سجل الحاويات</div>
+    <div id="binTrackingControls" style="display:none;margin-bottom:15px">
+      <div style="background:#4CAF50;color:#fff;padding:10px;border-radius:10px;text-align:center;margin-bottom:10px;font-weight:bold">🟢 التتبع نشط - سجل الحاويات</div>
       <button class="btn bg" onclick="recordBinCollection()" style="background:linear-gradient(135deg,#4CAF50,#8BC34A);font-size:1.2rem;padding:20px">🗑️ <span style="font-size:1.3rem">تسجيل موقع الحاوية</span></button>
       <div style="text-align:center;margin-top:10px;color:#666">اضغط عند كل حاوية ترفعها</div>
     </div>
@@ -583,10 +586,10 @@ html,body{overflow-x:hidden;width:100%;background:#f5f7fa;min-height:100vh}
 
 <div id="scheduleManager" class="page">
   <h2 style="margin-bottom:15px;color:#1B5E20;text-align:center">📅 إدارة جدول الجمع</h2>
-  <div class="cd">
-    <h3 style="margin-bottom:10px">➕ إضافة قطاع</h3>
+  <div class="cd">    <h3 style="margin-bottom:10px">➕ إضافة قطاع</h3>
     <input type="text" class="in" id="sectorNum" placeholder="🏷️ رقم القطاع">
-    <select class="in" id="sectorType">      <option value="بلدية">🏛️ خاص / بلدية</option>
+    <select class="in" id="sectorType">
+      <option value="بلدية">🏛️ خاص / بلدية</option>
       <option value="خاص">🏠 خاص</option>
     </select>
     <input type="text" class="in" id="sectorName" placeholder="📍 الأحياء والشوارع">
@@ -632,10 +635,10 @@ html,body{overflow-x:hidden;width:100%;background:#f5f7fa;min-height:100vh}
           <div style="font-size:1.8rem;font-weight:900;color:#2E7D32" id="resEnergy">0</div>
           <div style="font-size:0.8rem;color:#555">كيلوواط ساعة طاقة</div>
         </div>
-        <div class="cd" style="background:#fff3e0;text-align:center">
-          <div style="font-size:1.8rem;font-weight:900;color:#FF9800" id="resOil">0</div>
+        <div class="cd" style="background:#fff3e0;text-align:center">          <div style="font-size:1.8rem;font-weight:900;color:#FF9800" id="resOil">0</div>
           <div style="font-size:0.8rem;color:#555">لتر وقود حيوي/زيت</div>
-        </div>      </div>
+        </div>
+      </div>
       <div class="cd" style="background:#e3f2fd;text-align:center;margin-top:10px">
         <div style="font-size:1.5rem;font-weight:900;color:#1976D2" id="resCO2">0</div>
         <div style="font-size:0.8rem;color:#555">طن CO₂ مُوفرة</div>
@@ -681,10 +684,10 @@ html,body{overflow-x:hidden;width:100%;background:#f5f7fa;min-height:100vh}
       </div>
     </div>
     <div class="print-actions" id="printDialogActions"><button class="btn bx" onclick="closePrintDialog()">✕ إغلاق</button></div>
-  </div>
-</div>
+  </div></div>
 
 <div class="ft">🛡️ <span>إعداد د. رابحي فتحي - مصلحة النظافة والوقاية الصحية - بلدية المدية 2026 ©</span></div>
+
 <script>
 // Firebase configuration
 const firebaseConfig = {
@@ -730,10 +733,10 @@ const sectorRoutesData = {
   '3': { name:'القطاع 3 - الواد الجديد', driver:'خالد عمر', date:'2026-04-16', path:[[36.2550,2.7450],[36.2560,2.7470],[36.2570,2.7490],[36.2565,2.7505],[36.2555,2.7475]], bins:[{id:1,lat:36.2555,lng:2.7460,time:'07:30'},{id:2,lat:36.2562,lng:2.7475,time:'08:15'},{id:3,lat:36.2568,lng:2.7495,time:'09:00'},{id:4,lat:36.2563,lng:2.7500,time:'09:45'},{id:5,lat:36.2553,lng:2.7470,time:'10:30'}] }
 };
 
-// ✅ دالة إخفاء شاشة الترحيب مع تأخير كافٍ
-function hideSplash() {
+// ✅ دالة إخفاء شاشة الترحيب مع تأخير كافٍfunction hideSplash() {
   setTimeout(() => {
-    const splash = document.getElementById('splash');    if (splash) {
+    const splash = document.getElementById('splash');
+    if (splash) {
       splash.style.opacity = '0';
       setTimeout(() => { splash.style.display = 'none'; }, 300);
     }
@@ -748,19 +751,15 @@ async function getAddressFromCoords(lat, lng) {
     
     if (data && data.address) {
       const parts = [];
-      // ✅ استخراج الحي/الشارع
       if (data.address.road || data.address.pedestrian) {
         parts.push(data.address.road || data.address.pedestrian);
       }
-      // ✅ استخراج الحي
       if (data.address.suburb || data.address.neighbourhood) {
         parts.push(data.address.suburb || data.address.neighbourhood);
       }
-      // ✅ استخراج البلدية/المدينة
       if (data.address.city || data.address.town || data.address.village) {
         parts.push(data.address.city || data.address.town || data.address.village);
       }
-      // ✅ إذا لم نجد، نستخدم الاسم الكامل
       if (parts.length === 0 && data.display_name) {
         return data.display_name;
       }
@@ -782,8 +781,8 @@ function changeLang(lang, btn) {
   showToast(currentLang === 'ar' ? 'تم تغيير اللغة' : currentLang === 'fr' ? 'Langue changée' : 'Language changed');
 }
 
-// ✅ دالة تحديث الوقتfunction updateTime() {
-  const n = new Date();
+// ✅ دالة تحديث الوقت
+function updateTime() {  const n = new Date();
   const locale = currentLang === 'ar' ? 'ar-DZ' : currentLang === 'fr' ? 'fr-FR' : 'en-US';
   const ck = document.getElementById('ck');
   const cd = document.getElementById('cd');
@@ -810,10 +809,7 @@ function getLocation() {
       const lat = position.coords.latitude;
       const lng = position.coords.longitude;
       
-      // ✅ تحديث إحداثيات GPS
       gpsInput.value = `${lat.toFixed(6)}, ${lng.toFixed(6)}`;
-      
-      // ✅ الحصول على العنوان الكامل من الإحداثيات
       const fullAddress = await getAddressFromCoords(lat, lng);
       addrInput.value = fullAddress;
       
@@ -831,11 +827,11 @@ function getLocation() {
 }
 
 // ✅ دالة الإدخال اليدوي للعنوان
-function manualLocation() {  const a = prompt('أدخل العنوان (الحي / الشارع / البلدية):', 'حي الزيتون / شارع الشهداء / المدية');
+function manualLocation() {
+  const a = prompt('أدخل العنوان (الحي / الشارع / البلدية):', 'حي الزيتون / شارع الشهداء / المدية');
   if (a) {
     document.getElementById('addrInput').value = a;
-    document.getElementById('gpsInput').value = '36.2642, 2.7545';
-  }
+    document.getElementById('gpsInput').value = '36.2642, 2.7545';  }
 }
 
 // ✅ دالة إرسال البلاغ مع العنوان الثابت
@@ -858,7 +854,7 @@ function sendReport() {
   
   const newReport = {
     id: Date.now(),
-    addr: addr, // ✅ العنوان الكامل محفوظ
+    addr: addr,
     gps: document.getElementById('gpsInput').value || 'غير محدد',
     image: tempImage,
     doneImage: null,
@@ -871,23 +867,20 @@ function sendReport() {
     wasteType: wasteType
   };
   
-  // حفظ في السحابة
   try { db.ref('reports/' + newReport.id).set(newReport); } catch(e) {}
-  // حفظ محلي
   allReports.push(newReport);
   localStorage.setItem('medea_reports', JSON.stringify(allReports));
   
   addPoints(10);
   showToast('✅ تم إرسال البلاغ! +10 نقاط 🎉');
   
-  document.getElementById('thanksOverlay').style.display = 'flex';  tempImage = null;
+  document.getElementById('thanksOverlay').style.display = 'flex';
+  tempImage = null;
   document.getElementById('camImg').style.display = 'none';
   document.querySelector('.cam-icon').style.display = 'block';
   
-  // ✅ مسح الحقول
   addrInput.value = '';
-  document.getElementById('gpsInput').value = '';
-  document.getElementById('recurringCheck').checked = false;
+  document.getElementById('gpsInput').value = '';  document.getElementById('recurringCheck').checked = false;
   
   setTimeout(() => {
     document.getElementById('thanksOverlay').style.display = 'none';
@@ -915,7 +908,6 @@ function exportPDF(action) {
   }
   
   if (action === 'print') {
-    // ✅ طباعة مباشرة
     const printWindow = window.open('', '_blank');
     printWindow.document.write(`
       <!DOCTYPE html>
@@ -929,15 +921,15 @@ function exportPDF(action) {
           body { margin: 0; padding: 15px; font-family: 'Segoe UI', Tahoma, sans-serif; direction: rtl; font-size: 12px; }
           .header { text-align: center; border-bottom: 2px solid #1B5E20; padding-bottom: 10px; margin-bottom: 15px; }
           .header h1 { color: #1B5E20; margin: 0; font-size: 18px; }
-          .header p { margin: 3px 0; color: #666; font-size: 11px; }          .info-box { background: #f5f7fa; padding: 10px; border-radius: 8px; margin-bottom: 15px; }
+          .header p { margin: 3px 0; color: #666; font-size: 11px; }
+          .info-box { background: #f5f7fa; padding: 10px; border-radius: 8px; margin-bottom: 15px; }
           .info-box h3 { color: #1B5E20; margin-bottom: 8px; font-size: 14px; }
           .info-row { display: flex; justify-content: space-between; margin: 5px 0; padding: 5px 0; border-bottom: 1px solid #e0e0e0; font-size: 12px; }
           .map-container { margin: 15px 0; border: 2px solid #ddd; border-radius: 8px; overflow: hidden; page-break-inside: avoid; }
           #mapForPDF { height: 300px; width: 100%; }
           table { width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 11px; }
           th { background: #1B5E20; color: white; padding: 8px; font-size: 11px; }
-          td { padding: 6px; border: 1px solid #ddd; text-align: center; font-size: 11px; }
-          tr:nth-child(even) { background: #f8f9fa; }
+          td { padding: 6px; border: 1px solid #ddd; text-align: center; font-size: 11px; }          tr:nth-child(even) { background: #f8f9fa; }
           .footer { margin-top: 20px; text-align: center; border-top: 2px solid #1B5E20; padding-top: 10px; color: #666; font-size: 10px; }
           @media print { body { print-color-adjust: exact; -webkit-print-color-adjust: exact; } #mapForPDF { height: 250px; } }
         </style>
@@ -978,17 +970,16 @@ function exportPDF(action) {
             L.circleMarker(point, {radius: 6, fillColor: color, color: '#fff', weight: 2, opacity: 1, fillOpacity: 0.9}).addTo(map).bindPopup(label);
           });
           bins.forEach(bin => {
-            L.circleMarker([bin.lat, bin.lng], {radius: 8, fillColor: '#FF9800', color: '#fff', weight: 2, opacity: 1, fillOpacity: 0.9}).addTo(map).bindPopup('🗑️ حاوية #' + bin.id + '<br>🕐 ' + bin.time);          });
+            L.circleMarker([bin.lat, bin.lng], {radius: 8, fillColor: '#FF9800', color: '#fff', weight: 2, opacity: 1, fillOpacity: 0.9}).addTo(map).bindPopup('🗑️ حاوية #' + bin.id + '<br>🕐 ' + bin.time);
+          });
           map.fitBounds(L.polyline(path).getBounds(), {padding: [30, 30]});
           setTimeout(() => { window.print(); window.close(); }, 1500);
         <\/script>
       </body>
       </html>
     `);
-    printWindow.document.close();
-    showToast('✅ تم فتح نافذة الطباعة');
+    printWindow.document.close();    showToast('✅ تم فتح نافذة الطباعة');
   } else {
-    // ✅ تحميل ملف PDF
     showToast('📥 جاري تحضير PDF...');
     const element = document.createElement('div');
     element.innerHTML = `
@@ -1027,7 +1018,8 @@ function exportPDF(action) {
     }).save().then(() => {
       showToast('✅ تم تحميل PDF بنجاح');
     }).catch(err => {
-      console.error(err);      showToast('⚠️ تعذر تحميل PDF', 'error');
+      console.error(err);
+      showToast('⚠️ تعذر تحميل PDF', 'error');
     });
   }
 }
@@ -1035,8 +1027,7 @@ function exportPDF(action) {
 // المزامنة
 function setupSync() {
   try {
-    const connectedRef = db.ref('.info/connected');
-    connectedRef.on('value', (snap) => {
+    const connectedRef = db.ref('.info/connected');    connectedRef.on('value', (snap) => {
       try {
         const syncEl = document.getElementById('syncIndicator');
         if (snap && snap.val && snap.val() === true) {
@@ -1062,10 +1053,9 @@ function setupSync() {
 // تهيئة التطبيق
 window.addEventListener('load', function() {
   setupSync();
-  hideSplash(); // ✅ إخفاء شاشة الترحيب بعد التحميل
+  hideSplash();
   updateTime();
   
-  // تطبيق اللغة المحفوظة
   const savedLang = localStorage.getItem('medea_lang');
   if (savedLang) {
     currentLang = savedLang;
@@ -1076,7 +1066,8 @@ window.addEventListener('load', function() {
 });
 
 // دوال مساعدة
-function updateStats() {  document.getElementById('statTotal').textContent = allReports.length;
+function updateStats() {
+  document.getElementById('statTotal').textContent = allReports.length;
   document.getElementById('statDone').textContent = allReports.filter(r => r.status === 'done').length;
   const recycled = wasteTracking.filter(w => w.status === 'published').reduce((sum, w) => sum + parseFloat(w.qty || 0), 0);
   document.getElementById('recycledTotal').textContent = recycled.toFixed(1);
@@ -1085,8 +1076,7 @@ function updateStats() {  document.getElementById('statTotal').textContent = all
 function showPage(id) {
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
   const el = document.getElementById(id);
-  if (el) el.classList.add('active');
-  if (id === 'dashboard') setTimeout(renderChart, 100);
+  if (el) el.classList.add('active');  if (id === 'dashboard') setTimeout(renderChart, 100);
   if (id === 'reportsPage') showReportsPage();
   if (id === 'publicStats') updatePublicStats();
   if (id === 'schedule') displaySchedule();
@@ -1125,6 +1115,7 @@ function applyFilters() { showReportsPage(); }
 function filterByStatus(s) { showPage('reportsPage'); applyFilters(); }
 function updatePublicStats() { document.getElementById('publicTotal').textContent = allReports.length; document.getElementById('publicRate').textContent = (allReports.length > 0 ? Math.round((allReports.filter(r => r.status === 'done').length / allReports.length) * 100) : 0) + '%'; }
 function renderChart() { const done = allReports.filter(r => r.status === 'done').length; const assigned = allReports.filter(r => r.status === 'assigned').length; const newR = allReports.filter(r => r.status === 'new').length; const total = allReports.length; const visual = document.getElementById('chartVisual'); if (!visual) return; if (total === 0) { visual.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100%;color:#999">لا توجد بيانات</div>'; return; } const donePct = (done / total) * 100; const assignedPct = (assigned / total) * 100; visual.style.background = `conic-gradient(#4CAF50 0deg ${donePct * 3.6}deg, #FF9800 ${donePct * 3.6}deg ${(donePct + assignedPct) * 3.6}deg, #f44336 ${(donePct + assignedPct) * 3.6}deg 360deg)`; }
+
 // دوال الإدارة
 function loginAdmin() { if (document.getElementById('adminCode').value === '1234') { document.getElementById('adminLogin').classList.add('hidden'); document.getElementById('adminPanel').classList.remove('hidden'); showToast('✓ دخول ناجح'); } else { showToast('✗ رمز خاطئ', 'error'); } }
 function logoutAdmin() { document.getElementById('adminLogin').classList.remove('hidden'); document.getElementById('adminPanel').classList.add('hidden'); showToast('✓ خروج'); }
@@ -1134,8 +1125,7 @@ function emergencyClearData() { if (confirm('⚠️ مسح جميع البيان
 // دوال السائقين
 function loginDriver() { const n = document.getElementById('driverName').value.trim(); if (!n) { showToast('⚠️ أدخل الاسم', 'error'); return; } currentDriver = n; document.getElementById('driverLogin').classList.add('hidden'); document.getElementById('driverPanel').classList.remove('hidden'); showToast('✓ مرحباً ' + n); }
 function logoutDriver() { currentDriver = ''; document.getElementById('driverLogin').classList.remove('hidden'); document.getElementById('driverPanel').classList.add('hidden'); showToast('✓ خروج'); }
-function updateDriverPanel() { const ctrl = document.getElementById('binTrackingControls'); if (ctrl) ctrl.style.display = currentDriver ? 'block' : 'none'; }
-function startTruckTracking() { if (!currentDriver) { showToast('⚠️ سجل دخول أولاً', 'error'); return; } showToast('✅ تم بدء التتبع'); }
+function updateDriverPanel() { const ctrl = document.getElementById('binTrackingControls'); if (ctrl) ctrl.style.display = currentDriver ? 'block' : 'none'; }function startTruckTracking() { if (!currentDriver) { showToast('⚠️ سجل دخول أولاً', 'error'); return; } showToast('✅ تم بدء التتبع'); }
 function recordBinCollection() { showToast('✅ تم تسجيل الحاوية'); }
 function prepareDriverTonnage() { document.getElementById('driverTonnageName').value = currentDriver; }
 function saveDriverTonnage() { const weight = document.getElementById('driverTonnageWeight').value; if (!weight) { showToast('⚠️ أدخل الوزن', 'error'); return; } showToast('✅ تم الحفظ: ' + weight + ' طن'); document.getElementById('driverTonnageWeight').value = ''; showPage('driver'); }
@@ -1174,7 +1164,8 @@ function printTonnage() { showToast('✅ جاري الطباعة'); }
 // دوال التتبع
 function initTruckTrackingMap() { if (map) map.remove(); map = L.map('map').setView([36.2642, 2.7545], 13); L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '© OpenStreetMap' }).addTo(map); }
 
-// دوال تتبع المسارfunction loadSectorRoute() {
+// دوال تتبع المسار
+function loadSectorRoute() {
   const sectorId = document.getElementById('sectorSelect').value;
   if (sectorId && sectorRoutesData[sectorId]) {
     currentSectorData = sectorRoutesData[sectorId];
@@ -1183,8 +1174,7 @@ function initTruckTrackingMap() { if (map) map.remove(); map = L.map('map').setV
     document.getElementById('routeDate').textContent = currentSectorData.date;
     document.getElementById('routeDriver').textContent = currentSectorData.driver;
     document.getElementById('routeBinsCount').textContent = currentSectorData.bins.length;
-    
-    if (routeMap) routeMap.remove();
+        if (routeMap) routeMap.remove();
     routeMap = L.map('routeMap').setView(currentSectorData.path[0], 15);
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '© OpenStreetMap' }).addTo(routeMap);
     L.polyline(currentSectorData.path, { color: '#1B5E20', weight: 5 }).addTo(routeMap);
@@ -1223,7 +1213,8 @@ function calculateConversion() {
   document.getElementById('resEnergy').textContent = (weight * f.energy).toLocaleString('ar-DZ');
   document.getElementById('resOil').textContent = (weight * f.oil).toLocaleString('ar-DZ');
   document.getElementById('resCO2').textContent = (weight * f.co2).toFixed(2);
-  document.getElementById('conversionResult').style.display = 'block';  showToast('✅ تم الحساب');
+  document.getElementById('conversionResult').style.display = 'block';
+  showToast('✅ تم الحساب');
 }
 </script>
 </body>
