@@ -12,7 +12,6 @@
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
 
 <style>
-/* الألوان الثلاثة: أحمر، أبيض، أخضر */
 :root {
   --red: #C41E3A;
   --white: #FFFFFF;
@@ -22,52 +21,64 @@
 }
 
 *{box-sizing:border-box;margin:0;padding:0;font-family:'Segoe UI',Tahoma,sans-serif;-webkit-tap-highlight-color:transparent}
-html,body{overflow-x:hidden;width:100%;background:var(--white);min-height:100vh}
+html,body{overflow-x:hidden;width:100%;height:100%;background:linear-gradient(135deg,#e8f5e9 0%,#ffebee 100%)}
 
 /* شاشة اختيار الجهاز */
 #deviceSelector{
   position:fixed;top:0;left:0;width:100%;height:100%;
-  background:linear-gradient(135deg,var(--green) 0%,var(--white) 35%,var(--red) 100%);
+  background:linear-gradient(135deg,var(--green) 0%,var(--white) 50%,var(--red) 100%);
   z-index:99999;display:flex;flex-direction:column;
   align-items:center;justify-content:center;padding:20px;
 }
-.device-header{
-  background:var(--white);padding:35px;border-radius:25px;
-  box-shadow:0 15px 50px rgba(0,0,0,0.3);text-align:center;
-  max-width:550px;width:100%;margin-bottom:30px;
-  border:5px solid var(--green);position:relative;overflow:hidden;
+.device-card{
+  background:var(--white);width:100%;max-width:500px;
+  border-radius:30px;padding:35px 30px;
+  box-shadow:0 20px 60px rgba(0,0,0,0.3);
+  border:5px solid var(--green);
+  text-align:center;animation:slideIn 0.5s ease;
 }
-.device-header::before{
-  content:'';position:absolute;top:0;left:0;right:0;height:5px;
-  background:linear-gradient(90deg,var(--green),var(--white),var(--red));
+@keyframes slideIn{from{opacity:0;transform:translateY(-50px)}to{opacity:1;transform:translateY(0)}}
+
+.algerian-flag{
+  font-size:4rem;margin-bottom:15px;
+  animation:wave 2s ease-in-out infinite;
+  display:inline-block;cursor:pointer;
 }
-.device-header h1{color:var(--green);font-size:2.3rem;margin-bottom:15px;font-weight:900}
-.device-header h2{color:var(--red);font-size:1.9rem;margin-bottom:25px;font-weight:800}
-.device-header p{color:#333;font-size:1.15rem;margin-bottom:30px;line-height:1.6}
-.device-buttons{display:flex;flex-direction:column;gap:20px;align-items:center}
+@keyframes wave{0%,100%{transform:rotate(-5deg)}50%{transform:rotate(5deg)}}
+
+.device-card h1{color:var(--green);font-size:2.3rem;margin:15px 0;font-weight:900}
+.device-card h2{color:var(--red);font-size:2rem;margin:15px 0;font-weight:800}.device-card p{color:#555;font-size:1.1rem;margin:25px 0;line-height:1.6}
+
 .device-btn{
-  width:300px;padding:28px;font-size:1.4rem;border:none;border-radius:18px;
-  cursor:pointer;font-weight:bold;transition:all 0.3s;  display:flex;align-items:center;justify-content:center;gap:15px;
-  box-shadow:0 6px 25px rgba(0,0,0,0.25);
+  width:100%;padding:25px;margin:12px 0;border:none;
+  border-radius:20px;cursor:pointer;font-size:1.3rem;
+  font-weight:bold;transition:all 0.3s;
+  display:flex;align-items:center;justify-content:center;gap:12px;
+  box-shadow:0 5px 20px rgba(0,0,0,0.2);
 }
 .device-btn.computer{background:var(--green);color:var(--white)}
 .device-btn.phone{background:var(--red);color:var(--white)}
-.device-btn:hover{transform:translateY(-6px);box-shadow:0 10px 35px rgba(0,0,0,0.35)}
-.device-btn:active{transform:translateY(-3px)}
-.footer-text{color:var(--white);text-align:center;margin-top:25px;font-size:1rem;text-shadow:1px 1px 3px rgba(0,0,0,0.5)}
-.footer-text p{margin:5px 0}
+.device-btn:hover{transform:translateY(-5px);box-shadow:0 8px 30px rgba(0,0,0,0.3)}
+.device-btn:active{transform:translateY(-2px)}
+
+.footer-info{
+  color:var(--white);text-align:center;margin-top:30px;
+  font-size:0.95rem;text-shadow:1px 1px 3px rgba(0,0,0,0.5);
+  line-height:1.8;
+}
 
 /* شاشة الترحيب */
 #splash{
   position:fixed;top:0;left:0;width:100%;height:100%;
   background:linear-gradient(135deg,var(--green),var(--white),var(--red));
-  z-index:99998;display:flex;flex-direction:column;
+  z-index:99998;display:none;flex-direction:column;
   align-items:center;justify-content:center;
 }
 .splash-content{
   background:var(--white);padding:45px;border-radius:25px;
   text-align:center;box-shadow:0 15px 50px rgba(0,0,0,0.3);
   border:6px solid var(--green);max-width:400px;
+  animation:fadeIn 0.5s;
 }
 .splash-content .logo{font-size:6rem;margin-bottom:25px}
 .splash-content h1{color:var(--green);font-size:2.2rem;margin-bottom:12px;font-weight:900}
@@ -78,15 +89,14 @@ html,body{overflow-x:hidden;width:100%;background:var(--white);min-height:100vh}
   animation:spin 1s linear infinite;margin:25px auto;
 }
 @keyframes spin{0%{transform:rotate(0deg)}100%{transform:rotate(360deg)}}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
 
 /* المحتوى الرئيسي */
 .main-content{display:none;padding:15px;max-width:100%;min-height:100vh}
-.main-content.active{display:block}
+.main-content.active{display:block;animation:fadeIn 0.5s}
 
-/* الهيدر */
 .top-bar{
-  position:fixed;top:0;left:0;right:0;height:52px;
-  background:linear-gradient(90deg,var(--green),var(--white),var(--red));
+  position:fixed;top:0;left:0;right:0;height:52px;  background:linear-gradient(90deg,var(--green),var(--white),var(--red));
   color:var(--white);display:flex;align-items:center;
   justify-content:space-between;padding:0 22px;z-index:10000;
   box-shadow:0 3px 12px rgba(0,0,0,0.2);
@@ -96,7 +106,8 @@ html,body{overflow-x:hidden;width:100%;background:var(--white);min-height:100vh}
 
 .header{
   background:var(--white);padding:28px 22px;text-align:center;
-  margin-top:52px;border-bottom:5px solid var(--gold);  box-shadow:0 3px 12px rgba(0,0,0,0.1);
+  margin-top:52px;border-bottom:5px solid var(--gold);
+  box-shadow:0 3px 12px rgba(0,0,0,0.1);
 }
 .header .c{font-size:0.82rem;color:var(--dark);margin:6px 0}
 .header .d{font-size:1.05rem;color:var(--green);margin:6px 0;font-weight:700}
@@ -110,10 +121,7 @@ html,body{overflow-x:hidden;width:100%;background:var(--white);min-height:100vh}
 .lang-btn:hover{background:var(--green);color:var(--white);transform:scale(1.06)}
 .lang-btn.active{background:var(--red);color:var(--white);border-color:var(--red)}
 
-/* شريط المعلومات */
 .info-bar{display:flex;justify-content:space-around;padding:12px;background:#fff8e1;border-bottom:3px solid var(--gold);font-size:0.98rem;margin-top:12px}
-
-/* شريط الإحصائيات */
 .stats-bar{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin:22px 0}
 .stat-box{
   background:var(--white);padding:22px 12px;border-radius:18px;
@@ -124,12 +132,9 @@ html,body{overflow-x:hidden;width:100%;background:var(--white);min-height:100vh}
 .stat-num{font-size:2.1rem;font-weight:900;color:var(--green);display:block}
 .stat-label{font-size:0.88rem;color:#666;margin-top:6px;display:block}
 
-/* الصفحات */
 .page{display:none;padding:22px;max-width:600px;margin:auto;min-height:80vh;animation:fadeIn 0.3s}
 .page.active{display:block}
-@keyframes fadeIn{from{opacity:0;transform:translateY(22px)}to{opacity:1;transform:translateY(0)}}
 
-/* الأزرار */
 .btn{
   width:100%;padding:18px;border:none;border-radius:15px;
   font-size:1.08rem;font-weight:bold;cursor:pointer;
@@ -140,19 +145,15 @@ html,body{overflow-x:hidden;width:100%;background:var(--white);min-height:100vh}
 .btn:active{transform:scale(0.98)}
 .bg{background:linear-gradient(135deg,var(--green),#008040)}
 .bb{background:var(--dark)}
-.by{background:#f39c12}
-.br{background:var(--red)}
+.by{background:#f39c12}.br{background:var(--red)}
 .bx{background:#757575}
 .bo{background:#FF9800}
 .purple{background:#673ab7}
-.green-recycle{background:linear-gradient(135deg,#2E7D32,#4CAF50)}.market-btn{background:linear-gradient(135deg,#673ab7,#9c27b0)}
+.green-recycle{background:linear-gradient(135deg,#2E7D32,#4CAF50)}
+.market-btn{background:linear-gradient(135deg,#673ab7,#9c27b0)}
 .map-btn{background:var(--dark);margin-bottom:10px}
 .voice-btn{background:#e91e63}
-.demo-btn{background:linear-gradient(135deg,#667eea,#764ba2);margin-top:12px}
-.print-btn{background:#607d8b;margin-top:12px}
-.exit-btn{background:linear-gradient(135deg,#d21034,#a00d28);margin-top:12px}
 
-/* البطاقات */
 .cd{
   background:var(--white);border-radius:18px;padding:22px;
   margin:18px 0;box-shadow:0 5px 18px rgba(0,0,0,0.1);
@@ -160,7 +161,6 @@ html,body{overflow-x:hidden;width:100%;background:var(--white);min-height:100vh}
 }
 .cd h3{color:var(--green);margin-bottom:18px;text-align:center;font-size:1.2rem}
 
-/* حقول الإدخال */
 .in{
   width:100%;padding:16px;border:2px solid #e0e0e0;border-radius:12px;
   margin:12px 0;text-align:center;font-size:1.05rem;transition:border 0.3s;
@@ -168,19 +168,16 @@ html,body{overflow-x:hidden;width:100%;background:var(--white);min-height:100vh}
 .in:focus{border-color:var(--green);outline:none}
 .in:disabled{background:#f0f0f0;color:#666}
 
-/* الشبكة */
 .g2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
 .mb{height:145px;font-size:1.45rem;flex-direction:column}
 .sb2{height:62px}
 
-/* التذييل */
 .ft{
   background:var(--white);padding:18px;text-align:center;
   border-top:5px solid var(--gold);margin-top:25px;
   color:#666;font-size:0.92rem;
 }
 
-/* الكاميرا */
 .cam-box{
   height:210px;background:#f9f9f9;border:3px dashed #ccc;
   border-radius:15px;display:flex;align-items:center;
@@ -190,15 +187,13 @@ html,body{overflow-x:hidden;width:100%;background:var(--white);min-height:100vh}
 .cam-box img{width:100%;height:100%;object-fit:cover;position:absolute}
 .cam-icon{font-size:3.2rem;color:#aaa}
 
-/* التراكبات */
 #thanksOverlay{
   display:none;position:fixed;top:0;left:0;width:100%;height:100%;
   background:rgba(27,94,32,0.96);color:var(--white);
-  flex-direction:column;align-items:center;justify-content:center;  z-index:10001;text-align:center;animation:fadeIn 0.5s;
+  flex-direction:column;align-items:center;justify-content:center;
+  z-index:10001;text-align:center;animation:fadeIn 0.5s;
 }
 .hidden{display:none!important}
-
-/* بطاقات البلاغات */
 .report-card{
   background:var(--white);border-radius:15px;padding:18px;
   margin-bottom:18px;box-shadow:0 3px 12px rgba(0,0,0,0.08);
@@ -207,7 +202,6 @@ html,body{overflow-x:hidden;width:100%;background:var(--white);min-height:100vh}
 .report-card.assigned{border-right-color:#FF9800}
 .report-card.done{border-right-color:#4CAF50}
 
-/* بطاقات المواد */
 .material-card{
   background:var(--white);border-radius:15px;padding:18px;
   margin-bottom:18px;box-shadow:0 3px 12px rgba(0,0,0,0.08);
@@ -216,16 +210,13 @@ html,body{overflow-x:hidden;width:100%;background:var(--white);min-height:100vh}
 .material-card.available{border-left-color:#4CAF50}
 .material-card.reserved{border-left-color:#FF9800}
 
-/* صور البلاغات */
 .img-container{margin:12px 0;border-radius:10px;overflow:hidden;border:1px solid #eee;position:relative}
 .img-container img{width:100%;height:155px;object-fit:cover}
 .img-label{position:absolute;bottom:0;left:0;right:0;background:rgba(0,0,0,0.72);color:var(--white);padding:6px;text-align:center;font-size:0.82rem}
 
-/* صفوف المعلومات */
 .info-row{display:flex;justify-content:space-between;margin:6px 0;padding:6px 0;border-bottom:1px solid #f0f0f0}
 .info-row b{color:var(--green)}
 
-/* أزرار التحميل */
 .download-btn{
   display:inline-block;width:100%;padding:12px;background:#2196F3;
   color:var(--white);text-decoration:none;border-radius:10px;
@@ -234,16 +225,15 @@ html,body{overflow-x:hidden;width:100%;background:var(--white);min-height:100vh}
 }
 .download-all{background:#4CAF50;margin-top:12px}
 
-/* الرسوم البيانية */
 .chart-container{height:310px;margin:18px 0;background:#fafafa;border-radius:15px;padding:22px;display:flex;align-items:center;justify-content:center}
 .chart-visual{width:210px;height:210px;border-radius:50%;box-shadow:0 6px 18px rgba(0,0,0,0.12)}
 .chart-legend{display:flex;gap:22px;flex-wrap:wrap;justify-content:center;margin-top:22px}
 .legend-item{display:flex;align-items:center;gap:10px;padding:10px 18px;background:var(--white);border-radius:22px;box-shadow:0 3px 8px rgba(0,0,0,0.1)}
 .legend-color{width:22px;height:22px;border-radius:50%}
 
-/* كود الاستجابة السريعة */
 .qr-modal{
-  display:none;position:fixed;top:0;left:0;width:100%;height:100%;  background:rgba(0,0,0,0.82);z-index:10002;
+  display:none;position:fixed;top:0;left:0;width:100%;height:100%;
+  background:rgba(0,0,0,0.82);z-index:10002;
   align-items:center;justify-content:center;
 }
 .qr-content{
@@ -253,15 +243,12 @@ html,body{overflow-x:hidden;width:100%;background:var(--white);min-height:100vh}
 .qr-content h3{color:var(--green);margin-bottom:22px;font-size:1.35rem}
 #qrcode{margin:22px auto;display:flex;justify-content:center;align-items:center;min-height:230px;background:var(--white);padding:18px;border-radius:12px}
 #qrcode img{max-width:100%;height:auto}
-.report-number{margin-top:18px;padding:14px;background:#f5f7fa;border-radius:12px}
-.report-number .label{font-size:0.92rem;color:#666;margin-bottom:6px}
+.report-number{margin-top:18px;padding:14px;background:#f5f7fa;border-radius:12px}.report-number .label{font-size:0.92rem;color:#666;margin-bottom:6px}
 .report-number .number{font-size:1.9rem;font-weight:900;color:var(--green);letter-spacing:1px}
 
-/* شريط الفلترة */
 .filter-bar{display:flex;gap:12px;margin-bottom:18px;flex-wrap:wrap}
 .filter-bar select,.filter-bar input{flex:1;min-width:100px;padding:10px;border:1px solid #ddd;border-radius:10px}
 
-/* عناصر الموظفين */
 .staff-item{
   background:#f8f9fa;padding:14px;border-radius:12px;
   margin-bottom:12px;display:flex;justify-content:space-between;
@@ -279,7 +266,6 @@ html,body{overflow-x:hidden;width:100%;background:var(--white);min-height:100vh}
   font-size:1.05rem;display:flex;align-items:center;justify-content:center;
 }
 
-/* رسائل التنبيه */
 #toast-container{
   position:fixed;top:42px;left:12px;right:12px;z-index:10001;
   display:flex;flex-direction:column;gap:6px;pointer-events:none;
@@ -292,10 +278,9 @@ html,body{overflow-x:hidden;width:100%;background:var(--white);min-height:100vh}
 }
 @keyframes slideIn{from{transform:translateY(-22px);opacity:0}to{transform:translateY(0);opacity:1}}
 
-/* التقييم بالنجوم */.star-rating{display:flex;justify-content:center;gap:6px;font-size:1.55rem;color:#ddd;cursor:pointer;margin:12px 0}
+.star-rating{display:flex;justify-content:center;gap:6px;font-size:1.55rem;color:#ddd;cursor:pointer;margin:12px 0}
 .star-rating .star.active{color:#FFD700}
 
-/* شارة النقاط */
 .points-badge{
   background:linear-gradient(135deg,#FFD700,#FFA500);
   color:var(--white);padding:6px 18px;border-radius:22px;
@@ -303,37 +288,30 @@ html,body{overflow-x:hidden;width:100%;background:var(--white);min-height:100vh}
   align-items:center;gap:6px;
 }
 
-/* بطاقات النصائح */
 .tip-card{
   background:#e8f5e9;padding:14px;border-radius:12px;
   margin-bottom:12px;border-right:4px solid #4CAF50;font-size:0.92rem;
 }
-
-/* موجات الصوت */
 .voice-wave{display:flex;align-items:center;justify-content:center;gap:4px;height:27px;margin-top:6px}
 .voice-bar{width:5px;height:12px;background:#e91e63;border-radius:3px;animation:wave 0.8s infinite alternate}
 @keyframes wave{0%{height:12px}100%{height:27px}}
 
-/* جدول الجدول */
 .schedule-table{width:100%;border-collapse:collapse;font-size:0.92rem}
 .schedule-table th{background:var(--green);color:var(--white);padding:12px;text-align:right}
 .schedule-table td{padding:12px;border-bottom:1px solid #eee}
 
-/* بطاقات الكميات */
 .tonnage-card{
   background:#fff3e0;padding:18px;border-radius:15px;
   margin:12px 0;border-right:5px solid #FF9800;
 }
 .tonnage-info{display:flex;justify-content:space-between;margin:6px 0;padding:10px;background:var(--white);border-radius:10px}
 
-/* روابط الهاتف */
 .phone-link{
   color:var(--green);text-decoration:none;font-weight:bold;
   display:inline-flex;align-items:center;gap:6px;
 }
 .phone-link:hover{text-decoration:underline}
 
-/* نافذة الطباعة */
 .print-modal{
   display:none;position:fixed;top:0;left:0;width:100%;height:100%;
   background:rgba(0,0,0,0.87);z-index:10003;
@@ -341,7 +319,8 @@ html,body{overflow-x:hidden;width:100%;background:var(--white);min-height:100vh}
 }
 .print-modal.active{display:flex}
 .print-dialog{
-  background:var(--white);border-radius:22px;padding:32px;  max-width:92%;width:520px;max-height:92vh;overflow-y:auto;
+  background:var(--white);border-radius:22px;padding:32px;
+  max-width:92%;width:520px;max-height:92vh;overflow-y:auto;
   animation:fadeIn 0.3s;
 }
 .print-dialog h2{text-align:center;color:var(--green);margin-bottom:22px}
@@ -362,10 +341,8 @@ html,body{overflow-x:hidden;width:100%;background:var(--white);min-height:100vh}
 .print-preview-header h3{color:var(--green);font-size:21px}
 .print-preview-header p{color:#666;font-size:12px}
 .print-actions{display:flex;gap:12px;margin-top:18px}
-.print-actions .btn{flex:1}
-.back-btn{background:#757575}
+.print-actions .btn{flex:1}.back-btn{background:#757575}
 
-/* شارات النفايات */
 .waste-badge{
   display:inline-block;padding:5px 14px;border-radius:22px;
   font-size:0.82rem;font-weight:600;margin:3px;
@@ -377,12 +354,10 @@ html,body{overflow-x:hidden;width:100%;background:var(--white);min-height:100vh}
 .waste-glass{background:#e0f7fa;color:#00838F}
 .waste-mixed{background:#ffebee;color:#C62828}
 
-/* جودة المواد */
 .quality-excellent{color:#4CAF50;font-weight:bold}
 .quality-good{color:#FF9800;font-weight:bold}
 .quality-fair{color:#F44336;font-weight:bold}
 
-/* خط زمني للتتبع */
 .track-timeline{position:relative;padding-left:32px;margin:18px 0}
 .track-timeline::before{
   content:'';position:absolute;left:10px;top:0;bottom:0;
@@ -390,14 +365,14 @@ html,body{overflow-x:hidden;width:100%;background:var(--white);min-height:100vh}
 }
 .track-step{position:relative;padding:12px 0;padding-left:28px}
 .track-step::before{
-  content:'';position:absolute;left:-6px;top:17px;  width:14px;height:14px;border-radius:50%;
+  content:'';position:absolute;left:-6px;top:17px;
+  width:14px;height:14px;border-radius:50%;
   background:var(--green);border:4px solid var(--white);
   box-shadow:0 0 0 3px var(--green);
 }
 .track-step.done::before{background:#4CAF50}
 .track-step.pending::before{background:#FF9800}
 
-/* الخرائط */
 #map,#routeMap,#previewMap{
   height:410px;width:100%;border-radius:15px;
   margin:18px 0;z-index:1;
@@ -415,31 +390,27 @@ html,body{overflow-x:hidden;width:100%;background:var(--white);min-height:100vh}
   background:#ff5722;color:var(--white);padding:12px;
   border-radius:12px;text-align:center;margin:12px 0;
   animation:pulse 2s infinite;font-weight:bold;
-}
-@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.8}}
+}@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.8}}
 
-/* زر إنهاء المهمة */
 .end-mission-btn{
   background:linear-gradient(135deg,#d21034,#a00d28);
   margin-top:18px;font-size:1.22rem;padding:20px;
   box-shadow:0 5px 18px rgba(210,16,52,0.4);
 }
 
-/* ملخص المهمة */
 .mission-summary{
   background:#f5f7fa;padding:18px;border-radius:15px;
   margin:18px 0;border-right:5px solid #4CAF50;
 }
 .mission-summary h3{color:var(--green);margin-bottom:12px}
 
-/* أزرار ملف PDF */
 .pdf-action-buttons{
   margin-top:32px;padding:22px;background:#f5f7fa;
   border-radius:18px;text-align:center;
 }
 .pdf-action-buttons .btn{margin:12px 0;padding:20px;font-size:1.12rem}
 
-/* وضع الكمبيوتر */body.desktop-mode .main-content{max-width:1250px;padding:32px}
+body.desktop-mode .main-content{max-width:1250px;padding:32px}
 body.desktop-mode .g2{grid-template-columns:repeat(4,1fr)}
 body.desktop-mode .stats-bar{grid-template-columns:repeat(4,1fr)}
 body.desktop-mode .btn{padding:22px;font-size:1.12rem}
@@ -448,7 +419,6 @@ body.desktop-mode #map,body.desktop-mode #routeMap,body.desktop-mode #previewMap
 body.desktop-mode .cam-box{height:320px}
 body.desktop-mode .cam-box span{font-size:5.2rem}
 
-/* زر تبديل الوضع */
 #modeToggle{
   position:fixed;bottom:22px;left:22px;padding:14px 22px;
   border:none;border-radius:32px;background:var(--green);
@@ -463,23 +433,23 @@ body.desktop-mode .cam-box span{font-size:5.2rem}
 
 <!-- شاشة اختيار الجهاز -->
 <div id="deviceSelector">
-  <div class="device-header">
-    <h1>🇩🇿 النظافة من الإيمان</h1>
+  <div class="device-card">
+    <div class="algerian-flag" title="الجزائر">🇩🇿</div>
+    <h1>النظافة من الإيمان</h1>
     <h2>المدية نظيفة 2026</h2>
     <p>اختر نوع الجهاز لبدء استخدام التطبيق</p>
-    <div class="device-buttons">
-      <button class="device-btn computer" onclick="selectDevice('desktop')">
-        💻 الكمبيوتر
-      </button>
-      <button class="device-btn phone" onclick="selectDevice('mobile')">
-        📱 الهاتف
-      </button>
-    </div>
+    
+    <button class="device-btn computer" onclick="selectDevice('desktop')">      💻 الكمبيوتر
+    </button>
+    <button class="device-btn phone" onclick="selectDevice('mobile')">
+      📱 الهاتف
+    </button>
   </div>
-  <div class="footer-text">
+  
+  <div class="footer-info">
     <p>🧹 مصلحة النظافة والوقاية الصحية - بلدية المدية</p>
     <p>التطبيق من إعداد د. رابحي فتحي</p>
-    <p style="margin-top:12px;font-size:0.92rem;opacity:0.9">✓ سيتم حفظ اختيارك للزيارات القادمة</p>
+    <p style="margin-top:10px;font-size:0.9rem">✓ سيتم حفظ اختيارك للزيارات القادمة</p>
   </div>
 </div>
 
@@ -488,7 +458,8 @@ body.desktop-mode .cam-box span{font-size:5.2rem}
   <div class="splash-content">
     <div class="logo">🗑️</div>
     <h1>المدية نظيفة</h1>
-    <p>مصلحة النظافة والوقاية الصحية<br>بلدية المدية 2026</p>    <div class="loader"></div>
+    <p>مصلحة النظافة والوقاية الصحية<br>بلدية المدية 2026</p>
+    <div class="loader"></div>
   </div>
 </div>
 
@@ -517,7 +488,6 @@ body.desktop-mode .cam-box span{font-size:5.2rem}
       <span class="points-badge">⭐ <span id="userPoints">0</span></span>
     </div>
   </div>
-
   <div class="stats-bar">
     <div class="stat-box" onclick="filterByStatus('all')">
       <span class="stat-num" id="statTotal">0</span>
@@ -533,12 +503,6 @@ body.desktop-mode .cam-box span{font-size:5.2rem}
     </div>
   </div>
 
-  <div id="thanksOverlay">
-    <div style="font-size:4.2rem;margin-bottom:18px">❤️</div>
-    <h1 style="font-size:2.2rem;margin-bottom:12px">شكراً لكم!</h1>
-    <p style="font-size:1.05rem;margin-bottom:22px">تم إرسال بلاغكم بنجاح</p>
-    <div style="padding:12px 32px;border:3px solid #FFD700;border-radius:32px;font-weight:700;background:rgba(255,255,255,0.22)">♻️ معاً لمدية خضراء 2026</div>  </div>
-
   <!-- الصفحة الرئيسية -->
   <div id="home" class="page active">
     <button class="btn bg mb" onclick="showPage('report')">
@@ -548,11 +512,11 @@ body.desktop-mode .cam-box span{font-size:5.2rem}
     <div class="cd" style="border-color:#667eea;background:#f8f9ff">
       <h3 style="text-align:center;margin-bottom:12px;color:#667eea">🎬 أدوات العرض</h3>
       <div class="g2">
-        <button class="btn demo-btn" onclick="loadDemoData()">🎲 بيانات تجريبية</button>
-        <button class="btn print-btn" onclick="openPrintDialog()">🖨️ طباعة PDF</button>
+        <button class="btn" style="background:linear-gradient(135deg,#667eea,#764ba2)" onclick="loadDemoData()">🎲 بيانات تجريبية</button>
+        <button class="btn" style="background:#607d8b" onclick="openPrintDialog()">🖨️ طباعة PDF</button>
       </div>
       <button class="btn purple" onclick="showPage('dashboard')" style="margin-top:12px">📊 لوحة الإحصائيات</button>
-      <button class="btn exit-btn" onclick="exitApp()" style="margin-top:12px">🚪 الخروج</button>
+      <button class="btn br" onclick="exitApp()" style="margin-top:12px">🚪 الخروج</button>
     </div>
     
     <div class="cd">
@@ -573,8 +537,7 @@ body.desktop-mode .cam-box span{font-size:5.2rem}
       </div>
     </div>
     
-    <div class="cd" style="margin-top:18px">
-      <h3 style="text-align:center;margin-bottom:14px">🚚 التتبع المباشر</h3>
+    <div class="cd" style="margin-top:18px">      <h3 style="text-align:center;margin-bottom:14px">🚚 التتبع المباشر</h3>
       <button class="btn bg" onclick="showPage('truckTracking')" style="background:linear-gradient(135deg,#ff5722,#f44336)">📍 تتبع مسار الشاحنات</button>
     </div>
     
@@ -586,6 +549,36 @@ body.desktop-mode .cam-box span{font-size:5.2rem}
       </div>
     </div>
   </div>
+
+  <!-- صفحة بلاغ جديد -->
+  <div id="report" class="page">
+    <h2 style="margin-bottom:18px;color:var(--green);text-align:center">📝 بلاغ جديد</h2>
+    <div class="cd">
+      <div class="cam-box" onclick="takePhoto()"><span class="cam-icon">📷</span><img id="camImg" style="display:none"></div>
+      <button class="btn bg" onclick="takePhoto()">📷 التقاط الصورة</button>
+      <button class="btn bb" onclick="getLocation()" id="getLocationBtn">📍 تحديد الموقع GPS</button>
+      <button class="btn bx" onclick="manualLocation()" style="margin-top:0;margin-bottom:10px;font-size:0.92rem">📍 إدخال يدوي</button>
+      <input type="text" class="in" id="addrInput" placeholder="📍 اسم الحي أو الشارع">
+      <div style="display:flex;gap:12px">
+        <input type="text" class="in" id="gpsInput" placeholder="🌍 إحداثيات GPS" readonly style="background:#f0f0f0;flex:2">
+        <button class="btn voice-btn" style="flex:1;margin:0;padding:14px" onclick="startVoiceInput()" title="إملاء صوتي">🎤</button>
+      </div>
+      <select class="in" id="wasteTypeSelect">
+        <option value="mixed">🗑️ نفايات عامة</option>
+        <option value="organic">🍂 نفايات عضوية</option>
+        <option value="plastic">🧴 بلاستيك</option>
+        <option value="metal">⚙️ معادن</option>
+        <option value="paper">📄 ورق/كرتون</option>
+        <option value="glass">🥃 زجاج</option>
+      </select>
+      <label style="display:flex;align-items:center;gap:10px;margin:12px 0;font-size:0.92rem;color:#555">
+        <input type="checkbox" id="recurringCheck"> 🔁 بلاغ متكرر أسبوعياً
+      </label>
+      <button class="btn bg" style="height:58px;font-size:1.12rem" onclick="sendReport()" id="sendBtn">✉️ إرسال البلاغ الآن</button>
+      <button class="btn bx" onclick="showPage('home')">← رجوع</button>
+    </div>
+  </div>
+
   <!-- صفحة تتبع الشاحنة -->
   <div id="truckTracking" class="page">
     <h2 style="margin-bottom:18px;color:var(--green);text-align:center">🚚 تتبع مسار الشاحنة</h2>
@@ -593,8 +586,7 @@ body.desktop-mode .cam-box span{font-size:5.2rem}
       <h3 style="margin-bottom:12px">📍 المعلومات الحالية</h3>
       <div class="info-row"><b>👤 السائق:</b> <span id="trackingDriverName">-</span></div>
       <div class="info-row"><b>🏷️ رقم القطاع:</b> <span id="trackingSector">-</span></div>
-      <div class="info-row"><b>📅 التاريخ:</b> <span id="trackingDate">-</span></div>
-      <div class="info-row"><b>🕐 الوقت:</b> <span id="trackingTime">-</span></div>
+      <div class="info-row"><b>📅 التاريخ:</b> <span id="trackingDate">-</span></div>      <div class="info-row"><b>🕐 الوقت:</b> <span id="trackingTime">-</span></div>
       <div class="info-row"><b>🗑️ الحاويات المجمعة:</b> <span id="collectedBinsCount" style="color:#4CAF50;font-weight:bold">0</span></div>
     </div>
     <div class="live-tracking" id="liveTrackingStatus">🔴 التتبع المباشر نشط</div>
@@ -635,15 +627,15 @@ body.desktop-mode .cam-box span{font-size:5.2rem}
     <div class="cd" id="routeBinsList" style="display:none">
       <h3 style="margin-bottom:12px">🎯 مواقع الحاويات</h3>
       <div id="binsLocationsList"></div>
-    </div>    <button class="btn bx" onclick="showPage('driver')">← رجوع</button>
+    </div>
+    <button class="btn bx" onclick="showPage('driver')">← رجوع</button>
   </div>
 
   <!-- صفحة معاينة التقرير -->
   <div id="pdfPreviewPage" class="page">
     <h2 style="margin-bottom:18px;color:var(--green);text-align:center">📄 معاينة التقرير</h2>
     <div id="pdfPreviewContent" style="background:var(--white);padding:22px;border-radius:12px;margin-bottom:22px">
-      <div style="text-align:center;border-bottom:3px solid var(--green);padding-bottom:12px;margin-bottom:18px">
-        <h1 style="color:var(--green);margin:0;font-size:25px">المدية نظيفة 2026</h1>
+      <div style="text-align:center;border-bottom:3px solid var(--green);padding-bottom:12px;margin-bottom:18px">        <h1 style="color:var(--green);margin:0;font-size:25px">المدية نظيفة 2026</h1>
         <p style="margin:4px 0;color:#666;font-size:14px">تقرير مسار الشاحنات</p>
       </div>
       <div style="background:#f5f7fa;padding:18px;border-radius:10px;margin-bottom:18px">
@@ -672,34 +664,6 @@ body.desktop-mode .cam-box span{font-size:5.2rem}
     </div>
   </div>
 
-  <!-- صفحة بلاغ جديد -->
-  <div id="report" class="page">
-    <h2 style="margin-bottom:18px;color:var(--green);text-align:center">📝 بلاغ جديد</h2>
-    <div class="cd">
-      <div class="cam-box" onclick="takePhoto()"><span class="cam-icon">📷</span><img id="camImg" style="display:none"></div>
-      <button class="btn bg" onclick="takePhoto()">📷 التقاط الصورة</button>
-      <button class="btn bb" onclick="getLocation()" id="getLocationBtn">📍 تحديد الموقع GPS</button>
-      <button class="btn bx" onclick="manualLocation()" style="margin-top:0;margin-bottom:10px;font-size:0.92rem">📍 إدخال يدوي</button>
-      <input type="text" class="in" id="addrInput" placeholder="📍 اسم الحي أو الشارع">
-      <div style="display:flex;gap:12px">
-        <input type="text" class="in" id="gpsInput" placeholder="🌍 إحداثيات GPS" readonly style="background:#f0f0f0;flex:2">
-        <button class="btn voice-btn" style="flex:1;margin:0;padding:14px" onclick="startVoiceInput()" title="إملاء صوتي">🎤</button>
-      </div>      <select class="in" id="wasteTypeSelect">
-        <option value="mixed">🗑️ نفايات عامة</option>
-        <option value="organic">🍂 نفايات عضوية</option>
-        <option value="plastic">🧴 بلاستيك</option>
-        <option value="metal">⚙️ معادن</option>
-        <option value="paper">📄 ورق/كرتون</option>
-        <option value="glass">🥃 زجاج</option>
-      </select>
-      <label style="display:flex;align-items:center;gap:10px;margin:12px 0;font-size:0.92rem;color:#555">
-        <input type="checkbox" id="recurringCheck"> 🔁 بلاغ متكرر أسبوعياً
-      </label>
-      <button class="btn bg" style="height:58px;font-size:1.12rem" onclick="sendReport()" id="sendBtn">✉️ إرسال البلاغ الآن</button>
-      <button class="btn bx" onclick="showPage('home')">← رجوع</button>
-    </div>
-  </div>
-
   <!-- صفحة مركز الفرز -->
   <div id="sortingCenter" class="page">
     <h2 style="margin-bottom:18px;color:#2E7D32;text-align:center">🏭 مركز الفرز التقني</h2>
@@ -720,8 +684,7 @@ body.desktop-mode .cam-box span{font-size:5.2rem}
         <input type="number" class="in" id="wasteQty" placeholder="⚖️ الكمية بالطن" step="0.1">
         <input type="text" class="in" id="truckNumber" placeholder="🚚 رقم الشاحنة">
       </div>
-      <select class="in" id="wasteCategory">
-        <option value="organic">🍂 نفايات عضوية</option>
+      <select class="in" id="wasteCategory">        <option value="organic">🍂 نفايات عضوية</option>
         <option value="plastic">🧴 بلاستيك</option>
         <option value="metal">⚙️ معادن</option>
         <option value="paper">📄 ورق/كرتون</option>
@@ -733,7 +696,8 @@ body.desktop-mode .cam-box span{font-size:5.2rem}
         <option value="good">👍 جودة جيدة - معالجة بسيطة</option>
         <option value="fair">⚠️ جودة متوسطة - فرز إضافي</option>
         <option value="poor">❌ غير قابلة للتدوير</option>
-      </select>      <textarea class="in" id="wasteNotes" placeholder="📝 ملاحظات (نوع البلاستيك، درجة التلوث...)" style="height:72px"></textarea>
+      </select>
+      <textarea class="in" id="wasteNotes" placeholder="📝 ملاحظات (نوع البلاستيك، درجة التلوث...)" style="height:72px"></textarea>
       <button class="btn bg" onclick="registerWasteIn()">✅ تسجيل الوارد</button>
     </div>
     <div class="cd">
@@ -769,8 +733,7 @@ body.desktop-mode .cam-box span{font-size:5.2rem}
       <h3 style="margin-bottom:12px">📝 طلب الاستفادة من المادة</h3>
       <input type="text" class="in" id="companyName" placeholder="🏢 اسم المؤسسة/الشركة">
       <input type="text" class="in" id="companyLicense" placeholder="📄 رقم السجل التجاري">
-      <input type="tel" class="in" id="companyPhone" placeholder="📞 رقم التواصل">
-      <input type="number" class="in" id="requestQty" placeholder="⚖️ الكمية المطلوبة (طن)">
+      <input type="tel" class="in" id="companyPhone" placeholder="📞 رقم التواصل">      <input type="number" class="in" id="requestQty" placeholder="⚖️ الكمية المطلوبة (طن)">
       <textarea class="in" id="requestPurpose" placeholder="🎯 غرض الاستخدام (إعادة تدوير، تصنيع...)" style="height:62px"></textarea>
       <button class="btn bg" onclick="submitMarketRequest()">📤 إرسال الطلب</button>
       <button class="btn bx" onclick="document.getElementById('requestForm').style.display='none'" style="margin-top:12px">✕ إلغاء</button>
@@ -782,7 +745,8 @@ body.desktop-mode .cam-box span{font-size:5.2rem}
   <div id="schedule" class="page">
     <h2 style="margin-bottom:18px;color:var(--green);text-align:center">📅 جدول جمع النفايات</h2>
     <div class="cd" id="scheduleDisplay"></div>
-    <button class="btn bx" onclick="showPage('home')">← رجوع</button>  </div>
+    <button class="btn bx" onclick="showPage('home')">← رجوع</button>
+  </div>
 
   <!-- صفحة التوعية -->
   <div id="tips" class="page">
@@ -818,8 +782,7 @@ body.desktop-mode .cam-box span{font-size:5.2rem}
   <!-- صفحة إحصائيات عامة -->
   <div id="publicStats" class="page">
     <h2 style="margin-bottom:18px;color:var(--green);text-align:center">📊 إحصائيات عامة</h2>
-    <div class="cd" style="text-align:center">
-      <p>إجمالي البلاغات في البلدية: <b id="publicTotal">0</b></p>
+    <div class="cd" style="text-align:center">      <p>إجمالي البلاغات في البلدية: <b id="publicTotal">0</b></p>
       <p>نسبة الإنجاز: <b id="publicRate" style="color:#4CAF50">0%</b></p>
       <p>عدد السائقين النشطين: <b id="activeDrivers">0</b></p>
       <p>إجمالي المواد المعاد تدويرها: <b id="recycledTotal" style="color:#673ab7">0</b> طن</p>
@@ -831,7 +794,8 @@ body.desktop-mode .cam-box span{font-size:5.2rem}
   </div>
 
   <!-- صفحة الإدارة -->
-  <div id="admin" class="page">    <div style="display:flex;justify-content:space-between;margin-bottom:18px"><h2 style="color:var(--green)">⚙️ لوحة التحكم</h2></div>
+  <div id="admin" class="page">
+    <div style="display:flex;justify-content:space-between;margin-bottom:18px"><h2 style="color:var(--green)">⚙️ لوحة التحكم</h2></div>
     <div id="adminLogin" class="cd">
       <h3 style="margin-bottom:14px;text-align:center">🔐 الدخول للمشرفين</h3>
       <input type="text" id="adminName" class="in" placeholder="👤 الاسم">
@@ -867,7 +831,6 @@ body.desktop-mode .cam-box span{font-size:5.2rem}
     </div>
     <button class="btn bx" onclick="showPage('home')">← رجوع</button>
   </div>
-
   <!-- صفحة قائمة البلاغات -->
   <div id="reportsPage" class="page">
     <h2 style="margin-bottom:18px;color:var(--green);text-align:center">📋 قائمة البلاغات</h2>
@@ -880,7 +843,8 @@ body.desktop-mode .cam-box span{font-size:5.2rem}
       </select>
       <input type="text" id="searchInput" placeholder="🔍 بحث..." oninput="applyFilters()">
     </div>
-    <div id="reportsList"></div>    <button class="btn bx" onclick="backToAdmin()">← رجوع</button>
+    <div id="reportsList"></div>
+    <button class="btn bx" onclick="backToAdmin()">← رجوع</button>
   </div>
 
   <!-- صفحة إدارة الموظفين -->
@@ -916,8 +880,7 @@ body.desktop-mode .cam-box span{font-size:5.2rem}
       <button class="btn bg" onclick="showPage('driverTonnage')" style="margin-bottom:18px">➕ تسجيل نفايات جديدة</button>
       <h3 style="margin-bottom:14px;color:var(--green)">📋 مهامك</h3>
       <div id="tasksList"></div>
-      <button class="btn end-mission-btn" onclick="endMission()" id="endMissionBtn" style="display:none">🏁 إنهاء المهمة</button>
-      <button class="btn br" onclick="logoutDriver()">✕ خروج</button>
+      <button class="btn end-mission-btn" onclick="endMission()" id="endMissionBtn" style="display:none">🏁 إنهاء المهمة</button>      <button class="btn br" onclick="logoutDriver()">✕ خروج</button>
     </div>
     <button class="btn bx" onclick="showPage('home')">← رجوع</button>
   </div>
@@ -929,7 +892,8 @@ body.desktop-mode .cam-box span{font-size:5.2rem}
       <h3 style="margin-bottom:12px">📝 بيانات الرحلة</h3>
       <input type="text" class="in" id="driverTonnageName" placeholder="🚛 اسم السائق" disabled style="background:#f0f0f0">
       <input type="text" class="in" id="driverTonnageSector" placeholder="🏷️ رقم القطاع" disabled style="background:#f0f0f0">
-      <input type="number" class="in" id="driverTonnageWeight" placeholder="⚖️ الوزن بالطن" step="0.01">      <input type="text" class="in" id="driverTonnageRegNum" placeholder="🔢 رقم التسجيل من مركز القدم">
+      <input type="number" class="in" id="driverTonnageWeight" placeholder="⚖️ الوزن بالطن" step="0.01">
+      <input type="text" class="in" id="driverTonnageRegNum" placeholder="🔢 رقم التسجيل من مركز القدم">
       <select class="in" id="driverWasteType">
         <option value="mixed">🗑️ نفايات عامة</option>
         <option value="organic">🍂 نفايات عضوية</option>
@@ -965,8 +929,7 @@ body.desktop-mode .cam-box span{font-size:5.2rem}
         <option value="بلدية">🏛️ خاص / بلدية</option>
         <option value="خاص">🏠 خاص</option>
       </select>
-      <input type="text" class="in" id="sectorName" placeholder="📍 الأحياء والشوارع">
-      <input type="text" class="in" id="sectorDays" placeholder="📅 الأيام (مثال: أحد-ثلاثاء-خميس)">
+      <input type="text" class="in" id="sectorName" placeholder="📍 الأحياء والشوارع">      <input type="text" class="in" id="sectorDays" placeholder="📅 الأيام (مثال: أحد-ثلاثاء-خميس)">
       <input type="text" class="in" id="sectorTime" placeholder="🕐 وقت المرور (مثال: 07:00 - 09:00)">
       <input type="text" class="in" id="sectorCatchup" placeholder="⏳ أوقات الاستدراك (اختياري)">
       <input type="text" class="in" id="sectorDriver" placeholder="👤 اسم السائق">
@@ -979,6 +942,7 @@ body.desktop-mode .cam-box span{font-size:5.2rem}
     </div>
     <button class="btn bx" onclick="showPage('admin')">← رجوع</button>
   </div>
+
   <!-- صفحة طلبات المواطنين -->
   <div id="adminRequests" class="page">
     <h2 style="margin-bottom:18px;color:var(--green);text-align:center">📋 طلبات المواطنين</h2>
@@ -1014,8 +978,7 @@ body.desktop-mode .cam-box span{font-size:5.2rem}
             <div style="font-size:0.82rem;color:#555">لتر وقود حيوي/زيت</div>
           </div>
         </div>
-        <div class="cd" style="background:#e3f2fd;text-align:center;margin-top:12px">
-          <div style="font-size:1.55rem;font-weight:900;color:#1976D2" id="resCO2">0</div>
+        <div class="cd" style="background:#e3f2fd;text-align:center;margin-top:12px">          <div style="font-size:1.55rem;font-weight:900;color:#1976D2" id="resCO2">0</div>
           <div style="font-size:0.82rem;color:#555">طن CO₂ مُوفرة</div>
         </div>
       </div>
@@ -1027,7 +990,8 @@ body.desktop-mode .cam-box span{font-size:5.2rem}
       <div class="tip-card">⚙️ <b>المعادن:</b> إعادة صهرها توفر 70% من الطاقة مقارنة باستخراج الخام</div>
       <div class="tip-card">📉 <b>الأثر:</b> كل طن مُعاد تدويره يوفر ~1.5 طن انبعاثات ويولد دخلاً بلدياً</div>
     </div>
-    <button class="btn bx" onclick="showPage('home')">← رجوع</button>  </div>
+    <button class="btn bx" onclick="showPage('home')">← رجوع</button>
+  </div>
 
   <!-- نافذة كود التتبع -->
   <div id="qrModal" class="qr-modal" onclick="if(event.target===this)this.style.display='none'">
@@ -1063,8 +1027,7 @@ body.desktop-mode .cam-box span{font-size:5.2rem}
     </div>
   </div>
 
-  <div class="ft">🛡️ <span>إعداد د. رابحي فتحي - مصلحة النظافة والوقاية الصحية - بلدية المدية 2026 ©</span></div>
-  <button id="modeToggle" onclick="switchMode()">🔄 تبديل الوضع</button>
+  <div class="ft">🛡️ <span>إعداد د. رابحي فتحي - مصلحة النظافة والوقاية الصحية - بلدية المدية 2026 ©</span></div>  <button id="modeToggle" onclick="switchMode()">🔄 تبديل الوضع</button>
 </div>
 
 <script>
@@ -1076,59 +1039,45 @@ const firebaseConfig = {
   authDomain: "medea-clean-2026.firebaseapp.com",
   databaseURL: "https://medea-clean-2026-default-rtdb.firebaseio.com",
   projectId: "medea-clean-2026",
-  storageBucket: "medea-clean-2026.firebasestorage.app",  messagingSenderId: "215503269481",
+  storageBucket: "medea-clean-2026.firebasestorage.app",
+  messagingSenderId: "215503269481",
   appId: "1:215503269481:web:fa0d4c81ac1081b648fcf8",
   measurementId: "G-W10RQWLJ54"
 };
 
-let db;
-try {
-  if(typeof firebase !== 'undefined'){
-    firebase.initializeApp(firebaseConfig);
-    db = firebase.database();
-  } else { throw new Error('Firebase not loaded'); }
-} catch(e) {
-  db = {
-    ref: (path) => ({
-      on: (event, callback) => { if(callback) callback({val: ()=>null}); return ()=>{}; },
-      once: (event) => Promise.resolve({ val: ()=>null }),
-      set: (data) => Promise.resolve(),
-      update: (data) => Promise.resolve(),
-      remove: () => Promise.resolve()
-    })
-  };
-}
-
-// المتغيرات العامة
-let allReports=[], currentLang='ar', tempImage=null, tempAfterImage=null, currentDriver='', userPoints=0, currentDriverSector='';
-let wasteTracking=[], marketMaterials=[], marketRequests=[];
+let db, currentLang = 'ar', tempImage = null, tempAfterImage = null, currentDriver = '', userPoints = 0, currentDriverSector = '';
+let allReports = [], wasteTracking = [], marketMaterials = [], marketRequests = [];
 let truckTrackingData = {active:false, driver:'', sector:'', startTime:null, positions:[], collectedBins:[]};
-let map=null, trackingMarker=null, trackingPath=null;
-let routeMap=null, routeLayer=null, binsLayer=null, currentSectorData=null;
-let previewMap=null;
+let map = null, trackingMarker = null, trackingPath = null;
+let routeMap = null, routeLayer = null, binsLayer = null, currentSectorData = null;
+let previewMap = null;
 
 const sectorRoutesData = {
   '1': { name:'القطاع 1', driver:'أحمد', date:'2026-04-16', path:[[36.2642,2.7545],[36.2650,2.7560]], bins:[{id:1,lat:36.2645,lng:2.7550,time:'08:30'}] }
 };
 
 // ==========================================
-// شاشة اختيار الجهاز
+// شاشة اختيار الجهاز - الإصلاح الرئيسي
 // ==========================================
 function selectDevice(mode) {
   localStorage.setItem('app_mode', mode);
   const selector = document.getElementById('deviceSelector');
-  const splash = document.getElementById('splash');
-  const main = document.getElementById('mainContent');
-  
   selector.style.opacity = '0';
+  selector.style.transition = 'opacity 0.5s';
+  
   setTimeout(() => {
     selector.style.display = 'none';
-    if (mode === 'desktop') document.body.classList.add('desktop-mode');
+    if(mode === 'desktop') document.body.classList.add('desktop-mode');
     
-    splash.style.display = 'flex';    setTimeout(() => {
+    const splash = document.getElementById('splash');
+    splash.style.display = 'flex';
+    
+    setTimeout(() => {
       splash.style.opacity = '0';
-      setTimeout(() => {
-        splash.style.display = 'none';
+      splash.style.transition = 'opacity 0.5s';
+      
+      setTimeout(() => {        splash.style.display = 'none';
+        const main = document.getElementById('mainContent');
         main.style.display = 'block';
         setTimeout(() => { main.classList.add('active'); }, 100);
         updateTime();
@@ -1160,9 +1109,7 @@ function changeLang(lang, btn) {
     localStorage.setItem('medea_lang', lang);
     updateTime();
     showToast('✅ تم تغيير اللغة');
-  } catch(e) {
-    showToast('⚠️ خطأ', 'error');
-  }
+  } catch(e) { showToast('⚠️ خطأ', 'error'); }
 }
 
 function updateTime(){
@@ -1174,11 +1121,11 @@ function updateTime(){
     if(ck)ck.textContent=n.toLocaleTimeString(locale);
     if(cd)cd.textContent=n.toLocaleDateString(locale);
   }catch(e){}}
-setInterval(updateTime, 1000);updateTime();
+setInterval(updateTime, 1000);
+updateTime();
 
 function showPage(id){
-  try{
-    document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  try{    document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
     const el=document.getElementById(id);
     if(el)el.classList.add('active');
     if(id==='dashboard')setTimeout(renderChart,100);
@@ -1212,6 +1159,9 @@ function showToast(msg,type='success'){
   }catch(e){}
 }
 
+// ==========================================
+// Firebase Sync Functions
+// ==========================================
 function setupSync() {
   try {
     const connectedRef = db.ref('.info/connected');
@@ -1223,8 +1173,8 @@ function setupSync() {
           syncEl.className = 'sync-indicator sync-online';
         } else {
           syncEl.innerHTML = '❌ غير متصل';
-          syncEl.className = 'sync-indicator sync-offline';        }
-      } catch(e) {}
+          syncEl.className = 'sync-indicator sync-offline';
+        }      } catch(e) {}
     });
     db.ref('reports').on('value', (snapshot) => {
       try {
@@ -1270,9 +1220,12 @@ function updateCloudItem(path, itemId, updates) { try { db.ref(path + '/' + item
 function addToCloud(path, item) { try { return db.ref(path).set(item).catch(()=>{ showToast('⚠️ خطأ في المزامنة'); }); } catch(e) { showToast('⚠️ خطأ في المزامنة'); } }
 function deleteFromCloud(path, itemId) { try { db.ref(path + '/' + itemId).remove().catch(()=>{}); } catch(e) {} }
 
-function updateStats(){ try{
-    document.getElementById('statTotal').textContent=allReports.length;
-    document.getElementById('statDone').textContent=allReports.filter(r=>r.status==='done').length;    const recycled=wasteTracking.filter(w=>w.status==='published').reduce((sum,w)=>sum+parseFloat(w.qty||0),0);
+// ==========================================
+// Core Functions
+// ==========================================
+function updateStats(){ try{    document.getElementById('statTotal').textContent=allReports.length;
+    document.getElementById('statDone').textContent=allReports.filter(r=>r.status==='done').length;
+    const recycled=wasteTracking.filter(w=>w.status==='published').reduce((sum,w)=>sum+parseFloat(w.qty||0),0);
     document.getElementById('recycledTotal').textContent=recycled.toFixed(1);
     if(document.getElementById('dashboard').classList.contains('active'))renderChart();
     updatePublicStats();
@@ -1320,8 +1273,8 @@ function manualLocation(){const a=prompt('أدخل العنوان:','حي الز
 function takePhoto(){try{const i=document.createElement('input');i.type='file';i.accept='image/*';i.capture='environment';i.onchange=e=>{if(e.target.files[0]){const r=new FileReader();r.onload=ev=>{tempImage=ev.target.result;document.getElementById('camImg').src=tempImage;document.getElementById('camImg').style.display='block';document.querySelector('.cam-icon').style.display='none';};r.readAsDataURL(e.target.files[0]);}};i.click();}catch(e){showToast('⚠️ خطأ في الكاميرا','error');}}
 
 function sendReport(){try{const a=document.getElementById('addrInput').value.trim();if(!a){showToast('⚠️ أدخل العنوان','error');return;}const btn=document.getElementById('sendBtn'),orig=btn.innerHTML;btn.innerHTML='⏳ جاري...';btn.disabled=true;const isRecurring=document.getElementById('recurringCheck').checked;const wasteType=document.getElementById('wasteTypeSelect').value;const newReport={id:Date.now(),addr:a,gps:document.getElementById('gpsInput').value||'غير محدد',image:tempImage,doneImage:null,date:new Date().toLocaleDateString('ar-DZ'),time:new Date().toLocaleTimeString('ar-DZ'),doneTime:null,status:'new',driverName:null,recurring:isRecurring,wasteType:wasteType};saveReport(newReport);addPoints(10);showToast('✅ تم الإرسال! +10 نقاط 🎉');document.getElementById('thanksOverlay').style.display='flex';tempImage=null;document.getElementById('camImg').style.display='none';document.querySelector('.cam-icon').style.display='block';document.getElementById('addrInput').value='';document.getElementById('gpsInput').value='';document.getElementById('recurringCheck').checked=false;setTimeout(()=>{document.getElementById('thanksOverlay').style.display='none';showPage('home');btn.innerHTML=orig;btn.disabled=false;},3000);}catch(e){showToast('⚠️ خطأ في الإرسال','error');}}
-
-function loginAdmin(){if(document.getElementById('adminCode').value==='1234'){document.getElementById('adminLogin').classList.add('hidden');document.getElementById('adminPanel').classList.remove('hidden');updateStats();showToast('✓ دخول ناجح');}else showToast('✗ رمز خاطئ','error');}function logoutAdmin(){document.getElementById('adminLogin').classList.remove('hidden');document.getElementById('adminPanel').classList.add('hidden');document.getElementById('adminName').value='';document.getElementById('adminCode').value='';showToast('✓ خروج');}
+function loginAdmin(){if(document.getElementById('adminCode').value==='1234'){document.getElementById('adminLogin').classList.add('hidden');document.getElementById('adminPanel').classList.remove('hidden');updateStats();showToast('✓ دخول ناجح');}else showToast('✗ رمز خاطئ','error');}
+function logoutAdmin(){document.getElementById('adminLogin').classList.remove('hidden');document.getElementById('adminPanel').classList.add('hidden');document.getElementById('adminName').value='';document.getElementById('adminCode').value='';showToast('✓ خروج');}
 function safeShowReports(){try{if(!allReports||allReports.length===0){showToast('لا توجد بلاغات لعرضها');showPage('reportsPage');document.getElementById('reportsList').innerHTML='<p style="text-align:center;color:#666;padding:40px">لا توجد بلاغات</p>';return;}showPage('reportsPage');applyFilters();showToast('✅ تم تحميل البلاغات');}catch(e){showToast('⚠️ حدث خطأ','error');}}
 function emergencyClearData(){if(confirm('⚠️ تحذير: سيتم مسح جميع البيانات!\nهل أنت متأكد؟')){try{db.ref().remove();}catch(e){}localStorage.clear();allReports=[];wasteTracking=[];marketMaterials=[];truckTrackingData={active:false,driver:'',sector:'',positions:[],collectedBins:[]};updateStats();showToast('✅ تم مسح البيانات');}}
 
@@ -1368,9 +1321,9 @@ function exitApp(){if(confirm('الخروج؟')){window.close();setTimeout(()=>{
 
 function renderChart(){try{const done=allReports.filter(r=>r.status==='done').length;const assigned=allReports.filter(r=>r.status==='assigned').length;const newR=allReports.filter(r=>r.status==='new').length;const total=allReports.length;const visual=document.getElementById('chartVisual');const legend=document.getElementById('chartLegend');if(!visual||!legend)return;if(total===0){visual.innerHTML='<div style="display:flex;align-items:center;justify-content:center;height:100%;color:#999;font-size:1.1rem">لا توجد بيانات</div>';legend.innerHTML='';return;}const donePct=(done/total)*100;const assignedPct=(assigned/total)*100;visual.style.background=`conic-gradient(#4CAF50 0deg ${donePct*3.6}deg,#FF9800 ${donePct*3.6}deg ${(donePct+assignedPct)*3.6}deg,#f44336 ${(donePct+assignedPct)*3.6}deg 360deg)`;visual.style.borderRadius='50%';visual.style.boxShadow='0 5px 20px rgba(0,0,0,0.2)';legend.innerHTML=`<div class="legend-item"><div class="legend-color" style="background:#4CAF50"></div><span>منجز: ${done}</span></div><div class="legend-item"><div class="legend-color" style="background:#FF9800"></div><span>قيد التنفيذ: ${assigned}</span></div><div class="legend-item"><div class="legend-color" style="background:#f44336"></div><span>جديد: ${newR}</span></div>`;}catch(e){}}
 function addPoints(am){userPoints+=am;try{localStorage.setItem('medea_points',userPoints);}catch(e){}try{document.getElementById('userPoints').textContent=userPoints;}catch(e){}}
-function loadTonnageRecords(){try{const records=JSON.parse(localStorage.getItem('medea_tonnage')||'[]');const list=document.getElementById('tonnageList');if(!records.length){list.innerHTML='<p style="text-align:center;color:#666;padding:20px">لا توجد سجلات</p>';return;}let totalWeight=records.reduce((sum,r)=>sum+r.weight,0);list.innerHTML=records.slice().reverse().map(r=>`<div class="tonnage-card"><div class="tonnage-info"><b>🚛 السائق:</b> ${r.driver||'غير محدد'}</div><div class="tonnage-info"><b>🏷️ القطاع:</b> ${r.sector||'-'}</div><div class="tonnage-info"><b>⚖️ الوزن:</b> <span style="color:#FF9800;font-weight:bold">${r.weight} طن</span></div><div class="tonnage-info"><b>🔢 رقم التسجيل:</b> ${r.regNum}</div><div class="tonnage-info"><b>📅 التاريخ:</b> ${r.date}</div><div class="tonnage-info"><b>🕐 الوقت:</b> ${r.time}</div><div class="tonnage-info"><b>🗑️ النوع:</b> ${getWasteTypeName(r.wasteType)}</div></div>`).join('');list.innerHTML+=`<div class="cd" style="margin-top:15px;text-align:center;background:#e8f5e9"><b>📊 المجموع الكلي:</b> <span style="color:var(--green);font-size:1.22rem;font-weight:bold">${totalWeight.toFixed(2)} طن</span></div>`;}catch(e){}}
-function exportTonnageToExcel(){try{const records=JSON.parse(localStorage.getItem('medea_tonnage')||'[]');if(!records.length){showToast('⚠️ لا توجد سجلات','error');return;}let c='السائق,القطاع,الوزن(طن),رقم التسجيل,النوع,التاريخ,الوقت\n';records.forEach(r=>c+=`${r.driver},${r.sector},${r.weight},${r.regNum},${r.wasteType},${r.date},${r.time}\n`);const b=new Blob([c],{type:'text/csv'});const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='tonnage_'+Date.now()+'.csv';a.click();showToast('✅ تم التصدير');}catch(e){showToast('⚠️ خطأ في التصدير','error');}}
+function loadTonnageRecords(){try{const records=JSON.parse(localStorage.getItem('medea_tonnage')||'[]');const list=document.getElementById('tonnageList');if(!records.length){list.innerHTML='<p style="text-align:center;color:#666;padding:20px">لا توجد سجلات</p>';return;}let totalWeight=records.reduce((sum,r)=>sum+r.weight,0);list.innerHTML=records.slice().reverse().map(r=>`<div class="tonnage-card"><div class="tonnage-info"><b>🚛 السائق:</b> ${r.driver||'غير محدد'}</div><div class="tonnage-info"><b>🏷️ القطاع:</b> ${r.sector||'-'}</div><div class="tonnage-info"><b>⚖️ الوزن:</b> <span style="color:#FF9800;font-weight:bold">${r.weight} طن</span></div><div class="tonnage-info"><b>🔢 رقم التسجيل:</b> ${r.regNum}</div><div class="tonnage-info"><b>📅 التاريخ:</b> ${r.date}</div><div class="tonnage-info"><b>🕐 الوقت:</b> ${r.time}</div><div class="tonnage-info"><b>🗑️ النوع:</b> ${getWasteTypeName(r.wasteType)}</div></div>`).join('');list.innerHTML+=`<div class="cd" style="margin-top:15px;text-align:center;background:#e8f5e9"><b>📊 المجموع الكلي:</b> <span style="color:var(--green);font-size:1.22rem;font-weight:bold">${totalWeight.toFixed(2)} طن</span></div>`;}catch(e){}}function exportTonnageToExcel(){try{const records=JSON.parse(localStorage.getItem('medea_tonnage')||'[]');if(!records.length){showToast('⚠️ لا توجد سجلات','error');return;}let c='السائق,القطاع,الوزن(طن),رقم التسجيل,النوع,التاريخ,الوقت\n';records.forEach(r=>c+=`${r.driver},${r.sector},${r.weight},${r.regNum},${r.wasteType},${r.date},${r.time}\n`);const b=new Blob([c],{type:'text/csv'});const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='tonnage_'+Date.now()+'.csv';a.click();showToast('✅ تم التصدير');}catch(e){showToast('⚠️ خطأ في التصدير','error');}}
 function printTonnage(){openPrintDialog();printSection('tonnage');}
+
 function addScheduleSector(){try{const num=document.getElementById('sectorNum').value.trim();const type=document.getElementById('sectorType').value;const name=document.getElementById('sectorName').value.trim();const days=document.getElementById('sectorDays').value.trim();const time=document.getElementById('sectorTime').value.trim();const catchup=document.getElementById('sectorCatchup').value.trim();const driver=document.getElementById('sectorDriver').value.trim();const phone=document.getElementById('sectorPhone').value.trim();if(!name||!days||!time){showToast('⚠️ أكمل الحقول الأساسية','error');return;}const sectors=JSON.parse(localStorage.getItem('medea_schedule')||'[]');sectors.push({id:Date.now(),num,type,name,days,time,catchup,driver,phone});localStorage.setItem('medea_schedule',JSON.stringify(sectors));showToast('✅ تم إضافة القطاع');document.getElementById('sectorNum').value='';document.getElementById('sectorName').value='';document.getElementById('sectorDays').value='';document.getElementById('sectorTime').value='';document.getElementById('sectorCatchup').value='';document.getElementById('sectorDriver').value='';document.getElementById('sectorPhone').value='';loadScheduleSectors();}catch(e){showToast('⚠️ خطأ في الإضافة','error');}}
 function loadScheduleSectors(){try{const sectors=JSON.parse(localStorage.getItem('medea_schedule')||'[]');const list=document.getElementById('scheduleList');if(!sectors.length){list.innerHTML='<p style="text-align:center;color:#666;padding:20px">لا توجد قطاعات مسجلة</p>';return;}list.innerHTML=sectors.map(s=>`<div class="tonnage-card"><div class="tonnage-info"><b>🏷️ رقم القطاع:</b> ${s.num||'-'}</div><div class="tonnage-info"><b>🏛️ النوع:</b> ${s.type}</div><div class="tonnage-info"><b>📍 الأحياء:</b> ${s.name}</div><div class="tonnage-info"><b>📅 الأيام:</b> ${s.days}</div><div class="tonnage-info"><b>🕐 وقت المرور:</b> ${s.time}</div><div class="tonnage-info"><b>⏳ الاستدراك:</b> ${s.catchup||'-'}</div><div class="tonnage-info"><b>👤 السائق:</b> ${s.driver||'-'} ${s.phone?`<a href="tel:${s.phone}" class="phone-link">📞 ${s.phone}</a>`:''}</div><button class="btn br" style="margin-top:10px;padding:8px" onclick="deleteScheduleSector(${s.id})">🗑️ حذف</button></div>`).join('');}catch(e){}}
 function deleteScheduleSector(id){if(!confirm('حذف القطاع؟'))return;try{let sectors=JSON.parse(localStorage.getItem('medea_schedule')||'[]');sectors=sectors.filter(s=>s.id!=id);localStorage.setItem('medea_schedule',JSON.stringify(sectors));showToast('✅ تم الحذف');loadScheduleSectors();}catch(e){showToast('⚠️ خطأ في الحذف','error');}}
@@ -1417,9 +1370,9 @@ function addBinMarkerToMap(bin){ try{ if(!map)return; L.circleMarker([bin.lat,bi
 function loadSectorRoute(){ const sectorId=document.getElementById('sectorSelect').value; if(sectorId && sectorRoutesData[sectorId]){ currentSectorData=sectorRoutesData[sectorId]; document.getElementById('routeInfo').style.display='block'; document.getElementById('routeSectorName').textContent=currentSectorData.name; document.getElementById('routeDate').textContent=currentSectorData.date; document.getElementById('routeDriver').textContent=currentSectorData.driver; document.getElementById('routeBinsCount').textContent=currentSectorData.bins.length; } }
 function showRouteOnMap(){if(!currentSectorData){showToast('⚠️ اختر القطاع أولاً','error');return;}if(routeMap){routeMap.remove();}routeMap=L.map('routeMap').setView(currentSectorData.path[0],15);L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{attribution:'© OpenStreetMap contributors'}).addTo(routeMap);if(routeLayer)routeMap.removeLayer(routeLayer);routeLayer=L.polyline(currentSectorData.path,{color:var(--green),weight:5,opacity:0.8}).addTo(routeMap);currentSectorData.path.forEach((point,index)=>{const color=index===0?'#4CAF50':index===currentSectorData.path.length-1?'#f44336':'#2196F3';const label=index===0?'🚚 البداية':index===currentSectorData.path.length-1?'🏁 النهاية':`📍 نقطة ${index}`;L.circleMarker(point,{radius:8,fillColor:color,color:var(--white),weight:2,opacity:1,fillOpacity:0.9}).addTo(routeMap).bindPopup(label);});if(binsLayer)routeMap.removeLayer(binsLayer);binsLayer=L.layerGroup().addTo(routeMap);currentSectorData.bins.forEach(bin=>{ L.circleMarker([bin.lat,bin.lng],{radius:10,fillColor:'#FF9800',color:var(--white),weight:2,opacity:1,fillOpacity:0.9}).addTo(binsLayer).bindPopup(`🗑️ حاوية #${bin.id}<br>🕐 ${bin.time}`); });routeMap.fitBounds(routeLayer.getBounds(),{padding:[50,50]});document.getElementById('routeBinsList').style.display='block';const binsListHtml=currentSectorData.bins.map(bin=>`<div class="tonnage-card" style="margin:8px 0"><div class="tonnage-info"><b>🗑️ حاوية #${bin.id}</b><span>🕐 ${bin.time}</span></div><div class="tonnage-info"><small>📍 ${bin.lat.toFixed(4)}, ${bin.lng.toFixed(4)}</small></div></div>`).join('');document.getElementById('binsLocationsList').innerHTML=binsListHtml;showToast('✅ تم عرض المسار بنجاح');}
 
-// === تصدير PDF مع المعاينة ===
-function exportRouteToPDF(){
-  if(!currentSectorData){showToast('⚠️ اختر القطاع أولاً','error');return;}  document.getElementById('previewSector').textContent = currentSectorData.name;
+// === تصدير PDF مع المعاينة ===function exportRouteToPDF(){
+  if(!currentSectorData){showToast('⚠️ اختر القطاع أولاً','error');return;}
+  document.getElementById('previewSector').textContent = currentSectorData.name;
   document.getElementById('previewDriver').textContent = currentSectorData.driver;
   document.getElementById('previewDate').textContent = currentSectorData.date;
   document.getElementById('previewBinsCount').textContent = currentSectorData.bins.length;
@@ -1466,34 +1419,59 @@ function downloadPreviewPDF(){
 
 function closePDFPreview(){showPage('routeTracking');}
 
+// ==========================================// التهيئة عند تحميل الصفحة
 // ==========================================
-// تهيئة التطبيق عند التحميل
-// ==========================================window.addEventListener('DOMContentLoaded', function(){
+window.addEventListener('DOMContentLoaded', function(){
   const savedMode = localStorage.getItem('app_mode');
-  if(!savedMode){
-    // إذا لم يتم اختيار الجهاز، أظهر شاشة الاختيار
-    document.getElementById('deviceSelector').style.display = 'flex';
-  } else {
-    // إذا تم اختيار الجهاز مسبقاً
+  const savedLang = localStorage.getItem('medea_lang');
+  
+  if(savedLang) {
+    currentLang = savedLang;
+    document.querySelectorAll('.lang-btn').forEach(b => {
+      b.classList.remove('active');
+      if(b.onclick && b.onclick.toString().includes(savedLang)) {
+        b.classList.add('active');
+      }
+    });
+  }
+  
+  if(savedMode) {
+    // إذا كان هناك وضع محفوظ، تخطي شاشة الاختيار
     document.getElementById('deviceSelector').style.display = 'none';
-    if(savedMode === 'desktop') document.body.classList.add('desktop-mode');
     
-    // إظهار شاشة الترحيب
-    document.getElementById('splash').style.display = 'flex';
+    if(savedMode === 'desktop') {
+      document.body.classList.add('desktop-mode');
+    }
+    
+    // إظهار شاشة الترحيب مباشرة
+    const splash = document.getElementById('splash');
+    splash.style.display = 'flex';
+    
     setTimeout(() => {
-      document.getElementById('splash').style.opacity = '0';
+      splash.style.opacity = '0';
+      splash.style.transition = 'opacity 0.5s';
+      
       setTimeout(() => {
-        document.getElementById('splash').style.display = 'none';
-        document.getElementById('mainContent').style.display = 'block';
-        setTimeout(() => { document.getElementById('mainContent').classList.add('active'); }, 100);
-        updateTime();
-        setupSync();
-        loadFromCloud('reports', 'reports', (data) => { allReports = data ? Object.values(data) : []; updateStats(); });
-        loadFromCloud('wasteTracking', 'wasteTracking', (data) => { wasteTracking = data ? Object.values(data) : []; });
-        loadFromCloud('marketMaterials', 'marketMaterials', (data) => { marketMaterials = data ? Object.values(data) : []; });
-        loadFromCloud('truckTracking', 'truckTracking', (data) => { if(data) truckTrackingData = data; });
+        splash.style.display = 'none';
+        
+        const main = document.getElementById('mainContent');
+        main.style.display = 'block';
+        
+        setTimeout(() => {
+          main.classList.add('active');
+          updateTime();
+          setupSync();
+          loadFromCloud('reports', 'reports', (data) => { allReports = data ? Object.values(data) : []; updateStats(); });
+          loadFromCloud('wasteTracking', 'wasteTracking', (data) => { wasteTracking = data ? Object.values(data) : []; });
+          loadFromCloud('marketMaterials', 'marketMaterials', (data) => { marketMaterials = data ? Object.values(data) : []; });
+          loadFromCloud('truckTracking', 'truckTracking', (data) => { if(data) truckTrackingData = data; });
+        }, 100);
+        
       }, 500);
-    }, 3000);
+    }, 3000);    
+  } else {
+    // إظهار شاشة اختيار الجهاز
+    document.getElementById('deviceSelector').style.display = 'flex';
   }
 });
 </script>
