@@ -1,1055 +1,1040 @@
-<!DOCTYPE html>
+ <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>المدية نظيفة 2026 - نظام متكامل متزامن</title>
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<title data-i18n="appTitle">المدية نظيفة 2026 - نظام متكامل</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+
 <style>
 *{box-sizing:border-box;margin:0;padding:0;font-family:'Segoe UI',Tahoma,sans-serif;-webkit-tap-highlight-color:transparent}
 html,body{overflow-x:hidden;width:100%;background:#f5f7fa;min-height:100vh}
-#splash{position:fixed;top:0;left:0;width:100%;height:100%;background:linear-gradient(135deg,#1B5E20,#2E7D32);z-index:99999;display:none;flex-direction:column;align-items:center;justify-content:center;transition:opacity 0.5s}
-#splash .logo-box{width:250px;height:250px;background:#fff;border-radius:50%;margin-bottom:25px;display:flex;align-items:center;justify-content:center;box-shadow:0 10px 40px rgba(0,0,0,0.3);animation:pulse 2s infinite}
+#splash{position:fixed;top:0;left:0;width:100%;height:100%;background:linear-gradient(135deg,#1B5E20,#2E7D32);z-index:99999;display:flex;flex-direction:column;align-items:center;justify-content:center;transition:opacity 0.8s}
+#splash .logo-box{width:200px;height:200px;background:#fff;border-radius:50%;margin-bottom:20px;display:flex;align-items:center;justify-content:center;box-shadow:0 10px 40px rgba(0,0,0,0.3);animation:pulse 2s infinite}
 @keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.05)}}
-#splash .logo-box span{font-size:8rem}
-#splash h1{font-size:2.2rem;color:#fff;margin-bottom:10px;font-weight:800;text-shadow:2px 2px 4px rgba(0,0,0,0.3)}
-#splash p{color:rgba(255,255,255,0.9);margin-bottom:30px;font-size:1rem;text-align:center;padding:0 20px}
-.loader{width:50px;height:50px;border:5px solid rgba(255,255,255,0.3);border-top:5px solid #FFD700;border-radius:50%;animation:spin 1s linear infinite}@keyframes spin{to{transform:rotate(360deg)}}
+#splash .logo-box span{font-size:5rem}
+#splash h1{font-size:2rem;color:#fff;margin-bottom:10px;font-weight:800}
+#splash p{color:rgba(255,255,255,0.9);margin-bottom:20px;font-size:1rem;text-align:center}
+.loader{width:40px;height:40px;border:4px solid rgba(255,255,255,0.3);border-top:4px solid #FFD700;border-radius:50%;animation:spin 1s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
 .conn{position:fixed;top:0;left:0;right:0;padding:8px;text-align:center;font-size:0.85rem;font-weight:700;z-index:10000;background:linear-gradient(90deg,#1B5E20,#2E7D32);color:#fff}
-.sync-indicator{position:fixed;bottom:10px;left:10px;padding:6px 12px;border-radius:15px;font-size:0.75rem;font-weight:700;z-index:1000;transition:all 0.3s}
-.sync-online{background:#4CAF50;color:#fff}.sync-offline{background:#f44336;color:#fff}
-.hdr{background:#fff;padding:15px 10px;text-align:center;border-bottom:3px solid #D4AF37;margin-top:36px}
+.hdr{background:#fff;padding:15px;text-align:center;border-bottom:3px solid #D4AF37;margin-top:36px;box-shadow:0 4px 10px rgba(0,0,0,0.05)}
 .hdr .c{font-size:0.75rem;color:#14213D;margin:5px 0}
 .hdr .d{font-size:0.9rem;color:#2E7D32;margin:5px 0;font-weight:700}
-.hdr .t{font-size:1.8rem;color:#1B5E20;margin:10px 0;font-weight:900}
-.lang-container{display:flex;gap:8px;justify-content:center;margin-top:15px;flex-wrap:wrap}
-.lang-btn{background:#fff;border:2px solid #D4AF37;padding:8px 16px;border-radius:25px;cursor:pointer;font-size:0.9rem;font-weight:700;color:#1B5E20;transition:all 0.3s}
-.lang-btn:hover{transform:scale(1.05)}.lang-btn.active{background:#D4AF37;color:#fff}
+.hdr .t{font-size:1.6rem;color:#1B5E20;margin:10px 0;font-weight:900}
+.lang-container{display:flex;gap:8px;justify-content:center;margin-top:15px}
+.lang-btn{background:#fff;border:2px solid #D4AF37;padding:6px 14px;border-radius:20px;cursor:pointer;font-size:0.85rem;font-weight:700;color:#1B5E20;transition:all 0.3s}
+.lang-btn:hover{background:#D4AF37;color:#fff;transform:scale(1.05)}
+.lang-btn.active{background:#D4AF37;color:#fff;box-shadow:0 2px 8px rgba(212,175,55,0.4)}
 .ib{display:flex;justify-content:space-around;padding:10px;background:#fff8e1;border-bottom:2px solid #D4AF37;font-size:0.9rem}
-.page{display:none;padding:20px;max-width:600px;margin:auto;min-height:80vh;animation:fadeIn 0.3s}
-.page.active{display:block}@keyframes fadeIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
-.btn{width:100%;padding:14px;border:none;border-radius:12px;font-size:1rem;font-weight:700;cursor:pointer;margin:8px 0;color:#fff;display:flex;align-items:center;justify-content:center;gap:8px;transition:transform 0.1s}
+.page{display:none;padding:15px;max-width:600px;margin:auto;min-height:80vh;animation:fadeIn 0.4s}
+.page.active{display:block}
+@keyframes fadeIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+.btn{width:100%;padding:14px;border:none;border-radius:16px;font-size:1rem;font-weight:700;cursor:pointer;margin:8px 0;color:#fff;display:flex;align-items:center;justify-content:center;gap:8px;transition:all 0.2s;box-shadow:0 4px 12px rgba(0,0,0,0.1)}
+.btn:hover{transform:translateY(-3px);box-shadow:0 6px 20px rgba(0,0,0,0.2)}
 .btn:active{transform:scale(0.98)}
-.bg{background:linear-gradient(135deg,#1B5E20,#2E7D32)}.bb{background:#14213D}.by{background:#f39c12}
-.br{background:#d21034}.bx{background:#757575}.bo{background:#FF9800}.purple{background:#673ab7}
-.green-recycle{background:linear-gradient(135deg,#2E7D32,#4CAF50)}.market-btn{background:linear-gradient(135deg,#673ab7,#9c27b0)}
-.map-btn{background:#14213D;margin-bottom:8px}.voice-btn{background:#e91e63}
-.cd{background:#fff;border-radius:15px;padding:15px;margin:15px 0;box-shadow:0 4px 15px rgba(0,0,0,0.08);border:1px solid #eee}
-.mb{height:140px;font-size:1.4rem;flex-direction:column}.g2{display:grid;grid-template-columns:1fr 1fr;gap:12px}.sb2{height:60px}
-.ft{background:#fff;padding:15px;text-align:center;border-top:3px solid #D4AF37;margin-top:20px;font-size:0.85rem;color:#666}
-.in{width:100%;padding:12px;border:2px solid #e0e0e0;border-radius:10px;margin:10px 0;text-align:center;font-size:1rem}
-.in:focus{border-color:#1B5E20;outline:none}.in:disabled{background:#f0f0f0;color:#666}
-.cam-box{height:200px;background:#f9f9f9;border:2px dashed #ccc;border-radius:12px;display:flex;align-items:center;justify-content:center;margin-bottom:15px;cursor:pointer;position:relative;overflow:hidden}
-.cam-box img{width:100%;height:100%;object-fit:cover;position:absolute}.cam-icon{font-size:3rem;color:#aaa}
-#thanksOverlay{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(27,94,32,0.95);color:#fff;flex-direction:column;align-items:center;justify-content:center;z-index:10001;text-align:center;animation:fadeIn 0.5s}
-.hidden{display:none!important}.report-card{background:#fff;border-radius:12px;padding:15px;margin-bottom:15px;box-shadow:0 2px 10px rgba(0,0,0,0.05);border-right:5px solid #f44336}
-.report-card.assigned{border-right-color:#FF9800}.report-card.done{border-right-color:#4CAF50}
-.material-card{background:#fff;border-radius:12px;padding:15px;margin-bottom:15px;box-shadow:0 2px 10px rgba(0,0,0,0.05);border-left:5px solid #673ab7}
-.material-card.available{border-left-color:#4CAF50}.material-card.reserved{border-left-color:#FF9800}
-.img-container{margin:10px 0;border-radius:8px;overflow:hidden;border:1px solid #eee;position:relative}
-.img-container img{width:100%;height:150px;object-fit:cover}
-.img-label{position:absolute;bottom:0;left:0;right:0;background:rgba(0,0,0,0.7);color:#fff;padding:5px;text-align:center;font-size:0.8rem}
-.info-row{display:flex;justify-content:space-between;margin:5px 0;padding:5px 0;border-bottom:1px solid #f0f0f0}.info-row b{color:#1B5E20}
-.download-btn{display:inline-block;width:100%;padding:10px;background:#2196F3;color:#fff;text-decoration:none;border-radius:8px;margin:5px 0;font-weight:bold;text-align:center;cursor:pointer;border:none;font-size:0.9rem}
-.download-all{background:#4CAF50;margin-top:10px}
-.stats-bar{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:15px 0}
-.stat-box{background:#fff;padding:12px 5px;border-radius:12px;text-align:center;border:1px solid #eee;cursor:pointer}
-.stat-num{font-size:1.5rem;font-weight:900;color:#1B5E20;display:block}.stat-label{font-size:0.75rem;color:#666;margin-top:4px}
-.demo-btn{background:linear-gradient(135deg,#667eea,#764ba2);margin-top:10px}.print-btn{background:#607d8b;margin-top:10px}
-.exit-btn{background:linear-gradient(135deg,#d21034,#a00d28);margin-top:10px}
-.chart-container{height:300px;margin:15px 0;background:#fafafa;border-radius:12px;padding:20px;display:flex;align-items:center;justify-content:center}
-.chart-visual{width:200px;height:200px;border-radius:50%;box-shadow:0 5px 15px rgba(0,0,0,0.1)}
-.chart-legend{display:flex;gap:20px;flex-wrap:wrap;justify-content:center;margin-top:20px}
-.legend-item{display:flex;align-items:center;gap:8px;padding:8px 15px;background:#fff;border-radius:20px;box-shadow:0 2px 5px rgba(0,0,0,0.1)}
-.legend-color{width:20px;height:20px;border-radius:50%}
-.qr-modal{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.8);z-index:10002;align-items:center;justify-content:center}
-.qr-content{background:#fff;padding:25px;border-radius:20px;text-align:center;max-width:90%;width:320px;animation:fadeIn 0.3s}
-.qr-content h3{color:#1B5E20;margin-bottom:20px;font-size:1.3rem}
-#qrcode{margin:20px auto;display:flex;justify-content:center;align-items:center;min-height:220px;background:#fff;padding:15px;border-radius:10px}
-#qrcode img{max-width:100%;height:auto}
-.report-number{margin-top:15px;padding:12px;background:#f5f7fa;border-radius:10px}
-.report-number .label{font-size:0.9rem;color:#666;margin-bottom:5px}
-.report-number .number{font-size:1.8rem;font-weight:900;color:#1B5E20;letter-spacing:1px}
-.filter-bar{display:flex;gap:10px;margin-bottom:15px;flex-wrap:wrap}.filter-bar select,.filter-bar input{flex:1;min-width:100px;padding:8px;border:1px solid #ddd;border-radius:8px}
-.staff-item{background:#f8f9fa;padding:12px;border-radius:10px;margin-bottom:10px;display:flex;justify-content:space-between;align-items:center}
-.action-btns{display:flex;gap:8px}
-.edit-btn{background:#f39c12;color:#fff;border:none;width:30px;height:30px;border-radius:50%;cursor:pointer;font-size:1rem;display:flex;align-items:center;justify-content:center}
-.delete-btn{background:#d21034;color:#fff;border:none;width:30px;height:30px;border-radius:50%;cursor:pointer;font-size:1rem;display:flex;align-items:center;justify-content:center}
-#toast-container{position:fixed;top:40px;left:10px;right:10px;z-index:10001;display:flex;flex-direction:column;gap:5px;pointer-events:none}
-.toast{background:rgba(255,255,255,0.95);padding:12px 15px;border-radius:10px;box-shadow:0 4px 15px rgba(0,0,0,0.2);border-right:4px solid #1B5E20;animation:slideIn 0.3s;font-size:0.9rem;color:#333;display:flex;align-items:center;gap:10px}
-@keyframes slideIn{from{transform:translateY(-20px);opacity:0}to{transform:translateY(0);opacity:1}}
-.star-rating{display:flex;justify-content:center;gap:5px;font-size:1.5rem;color:#ddd;cursor:pointer;margin:10px 0}
-.star-rating .star.active{color:#FFD700}
-.points-badge{background:linear-gradient(135deg,#FFD700,#FFA500);color:#fff;padding:5px 15px;border-radius:20px;font-weight:bold;font-size:0.9rem;display:inline-flex;align-items:center;gap:5px}
-.tip-card{background:#e8f5e9;padding:12px;border-radius:10px;margin-bottom:10px;border-right:3px solid #4CAF50;font-size:0.9rem}
-.voice-wave{display:flex;align-items:center;justify-content:center;gap:3px;height:25px;margin-top:5px}
-.voice-bar{width:4px;height:10px;background:#e91e63;border-radius:2px;animation:wave 0.8s infinite alternate}
-@keyframes wave{0%{height:10px}100%{height:25px}}
-.schedule-table{width:100%;border-collapse:collapse;font-size:0.9rem}
-.schedule-table th{background:#1B5E20;color:#fff;padding:10px;text-align:right}
-.schedule-table td{padding:10px;border-bottom:1px solid #eee}
-.tonnage-card{background:#fff3e0;padding:15px;border-radius:12px;margin:10px 0;border-right:4px solid #FF9800}
-.tonnage-info{display:flex;justify-content:space-between;margin:5px 0;padding:8px;background:#fff;border-radius:8px}
-.phone-link{color:#1B5E20;text-decoration:none;font-weight:bold;display:inline-flex;align-items:center;gap:5px}
-.phone-link:hover{text-decoration:underline}.print-modal{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.85);z-index:10003;align-items:center;justify-content:center}
+.bg{background:linear-gradient(135deg,#1B5E20,#2E7D32)}
+.bb{background:linear-gradient(135deg,#14213D,#1E3A5F)}
+.by{background:linear-gradient(135deg,#f39c12,#d35400)}
+.br{background:linear-gradient(135deg,#d21034,#a00d28)}
+.bx{background:linear-gradient(135deg,#757575,#616161)}
+.bo{background:linear-gradient(135deg,#FF9800,#F57C00)}
+.purple{background:linear-gradient(135deg,#673ab7,#512DA8)}
+.green-recycle{background:linear-gradient(135deg,#2E7D32,#4CAF50)}
+.market-btn{background:linear-gradient(135deg,#673ab7,#9c27b0)}
+.cd{background:#fff;border-radius:16px;padding:15px;margin:15px 0;box-shadow:0 5px 20px rgba(0,0,0,0.08);border:1px solid #eee}.g2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.in{width:100%;padding:12px;border:2px solid #e0e0e0;border-radius:12px;margin:8px 0;font-size:1rem}
+.in:focus{border-color:#1B5E20;outline:none}
+.ft{background:#fff;padding:15px;text-align:center;border-top:3px solid #D4AF37;margin-top:20px;font-size:0.8rem;color:#666}
+.cam-box{height:180px;background:#f9f9f9;border:2px dashed #ccc;border-radius:12px;display:flex;align-items:center;justify-content:center;margin-bottom:15px;cursor:pointer;position:relative;overflow:hidden}
+.cam-box img{width:100%;height:100%;object-fit:cover;position:absolute}
+.stats-bar{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:12px 0}
+.stat-box{background:#fff;padding:10px 5px;border-radius:12px;text-align:center;border:1px solid #eee}
+.stat-num{font-size:1.4rem;font-weight:900;color:#1B5E20}
+.stat-label{font-size:0.7rem;color:#666}
+.hidden{display:none!important}
+#thanksOverlay{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(27,94,32,0.95);color:#fff;flex-direction:column;align-items:center;justify-content:center;z-index:10001;text-align:center}
+#map,#routeMap,#previewMap{height:350px;width:100%;border-radius:12px;margin:15px 0;z-index:1}
+.print-modal{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.8);z-index:10002;align-items:center;justify-content:center}
 .print-modal.active{display:flex}
-.print-dialog{background:#fff;border-radius:20px;padding:30px;max-width:90%;width:500px;max-height:90vh;overflow-y:auto;animation:fadeIn 0.3s}
-.print-dialog h2{text-align:center;color:#1B5E20;margin-bottom:20px}
-.print-option{display:flex;align-items:center;justify-content:space-between;padding:15px;margin:8px 0;background:#f8f9fa;border-radius:12px;cursor:pointer;transition:all 0.3s;border:2px solid transparent}
-.print-option:hover{background:#e8f5e9;border-color:#1B5E20;transform:translateX(-5px)}
-.print-option .label{font-size:1.1rem;font-weight:600}.print-option .icon{font-size:1.5rem}
-.print-preview{display:none;background:#fff;padding:20px;border-radius:10px;margin:15px 0}
-.print-preview table{width:100%;border-collapse:collapse;margin:15px 0}
-.print-preview th{background:#1B5E20;color:#fff;padding:12px;font-size:14px}
-.print-preview td{padding:10px;border:1px solid #ddd;font-size:13px}
-.print-preview tr:nth-child(even){background:#f8f9fa}
-.print-preview-header{text-align:center;margin-bottom:15px;padding-bottom:10px;border-bottom:2px solid #1B5E20}
-.print-preview-header h3{color:#1B5E20;font-size:20px}
-.print-preview-header p{color:#666;font-size:12px}
-.print-actions{display:flex;gap:10px;margin-top:15px}.print-actions .btn{flex:1}
-.back-btn{background:#757575}
-.waste-badge{display:inline-block;padding:4px 12px;border-radius:20px;font-size:0.8rem;font-weight:600;margin:2px}
-.waste-organic{background:#e8f5e9;color:#2E7D32}.waste-plastic{background:#e3f2fd;color:#1976D2}
-.waste-metal{background:#fff3e0;color:#F57C00}.waste-paper{background:#f3e5f5;color:#7B1FA2}
-.waste-glass{background:#e0f7fa;color:#00838F}.waste-mixed{background:#ffebee;color:#C62828}
-.quality-excellent{color:#4CAF50;font-weight:bold}.quality-good{color:#FF9800;font-weight:bold}.quality-fair{color:#F44336;font-weight:bold}
-.track-timeline{position:relative;padding-left:30px;margin:15px 0}
-.track-timeline::before{content:'';position:absolute;left:8px;top:0;bottom:0;width:2px;background:#ddd}
-.track-step{position:relative;padding:10px 0;padding-left:25px}
-.track-step::before{content:'';position:absolute;left:-4px;top:15px;width:12px;height:12px;border-radius:50%;background:#1B5E20;border:3px solid #fff;box-shadow:0 0 0 2px #1B5E20}
-.track-step.done::before{background:#4CAF50}.track-step.pending::before{background:#FF9800}
-#map,#routeMap,#previewMap{height:400px;width:100%;border-radius:12px;margin:15px 0;z-index:1}
-.truck-marker{background:#1B5E20;color:#fff;padding:5px 10px;border-radius:8px;font-weight:bold;box-shadow:0 2px 8px rgba(0,0,0,0.3)}
-.bin-collected{background:#4CAF50;color:#fff;padding:8px 15px;border-radius:20px;margin:5px 0;text-align:center;font-weight:bold}
-.live-tracking{background:#ff5722;color:#fff;padding:10px;border-radius:10px;text-align:center;margin:10px 0;animation:pulse 2s infinite}
-.end-mission-btn{background:linear-gradient(135deg,#d21034,#a00d28);margin-top:15px;font-size:1.2rem;padding:18px;box-shadow:0 4px 15px rgba(210,16,52,0.4)}
-.mission-summary{background:#f5f7fa;padding:15px;border-radius:12px;margin:15px 0;border-right:4px solid #4CAF50}
-.mission-summary h3{color:#1B5E20;margin-bottom:10px}
-.pdf-action-buttons{margin-top:30px;padding:20px;background:#f5f7fa;border-radius:15px;text-align:center}
-.pdf-action-buttons .btn{margin:10px 0;padding:18px;font-size:1.1rem}
-
-/* ==========================================
-   ✅ أنماط وضع الكمبيوتر (Desktop Mode)
-   ========================================== */
-body.desktop-mode { background:#eef2f6; }
-body.desktop-mode .page { max-width:1100px; padding:30px; }
-body.desktop-mode .g2 { grid-template-columns: repeat(4, 1fr); }
-body.desktop-mode .stats-bar { grid-template-columns: repeat(4, 1fr); }
-body.desktop-mode .lang-container { position:fixed; top:45px; left:15px; margin:0; }
-body.desktop-mode .btn { padding:18px; font-size:1.1rem; }
-body.desktop-mode .btn svg, body.desktop-mode .btn span:first-child { margin-left:10px; }
-body.desktop-mode table { font-size:1.1rem; box-shadow:0 2px 8px rgba(0,0,0,0.05); }
-body.desktop-mode .cd { padding:25px; box-shadow:0 4px 20px rgba(0,0,0,0.08); }
-body.desktop-mode .cam-box { height:280px; }body.desktop-mode #map, body.desktop-mode #routeMap, body.desktop-mode #previewMap { height:500px; }
-body.desktop-mode .stat-box { padding:20px 10px; }
-body.desktop-mode .stat-num { font-size:2rem; }
-body.desktop-mode .lang-btn { padding:10px 20px; font-size:1rem; }
-body.desktop-mode .in { padding:16px; font-size:1.1rem; }
-body.desktop-mode .tip-card { padding:18px; font-size:1.05rem; }
-body.desktop-mode .footer { font-size:1rem; }
-body.desktop-mode .print-dialog { max-width:800px; }
-
-/* زر تبديل الوضع */
-#modeToggle { position:fixed; bottom:20px; left:20px; padding:12px 20px; border:none; border-radius:30px; background:#1B5E20; color:#fff; cursor:pointer; font-size:0.95rem; font-weight:bold; box-shadow:0 4px 15px rgba(0,0,0,0.2); z-index:9999; transition:all 0.3s; }
-#modeToggle:hover { transform:scale(1.05); background:#2E7D32; }
+.print-dialog{background:#fff;padding:20px;border-radius:16px;width:90%;max-width:500px;max-height:90vh;overflow-y:auto}
+.info-row{display:flex;justify-content:space-between;margin:5px 0;border-bottom:1px solid #eee;padding:5px 0;font-size:0.9rem}
+.report-card{background:#fff;border-radius:12px;padding:15px;margin-bottom:15px;box-shadow:0 2px 10px rgba(0,0,0,0.05);border-right:5px solid #f44336}
+.report-card.done{border-right-color:#4CAF50}
+.report-card.assigned{border-right-color:#FF9800}
+.filter-bar{display:flex;gap:8px;margin-bottom:15px}
+.filter-bar select,.filter-bar input{flex:1;padding:8px;border:1px solid #ddd;border-radius:8px}
+#toast-container{position:fixed;top:40px;left:10px;right:10px;z-index:10003}
+.toast{background:#fff;padding:12px;border-radius:8px;margin-bottom:8px;box-shadow:0 4px 12px rgba(0,0,0,0.15);border-right:4px solid #1B5E20;animation:slideIn 0.3s}
+@keyframes slideIn{from{transform:translateX(-100%);opacity:0}to{transform:translateX(0);opacity:1}}
 </style>
 </head>
 <body>
 
-<!-- شاشة اختيار الجهاز -->
-<div id="deviceSelector" style="position:fixed;top:0;left:0;width:100%;height:100%;background:linear-gradient(135deg,#1B5E20,#2E7D32);z-index:99999;display:flex;flex-direction:column;align-items:center;justify-content:center;color:#fff;">
-  <h1 style="margin-bottom:30px;font-size:2.2rem;">اختر نوع الجهاز</h1>
-  <div style="display:flex;gap:25px;flex-wrap:wrap;justify-content:center;">
-    <button onclick="selectDevice('mobile')" style="padding:20px 40px;font-size:1.2rem;border:none;border-radius:15px;background:#fff;color:#1B5E20;cursor:pointer;font-weight:bold;box-shadow:0 5px 15px rgba(0,0,0,0.2);">📱 الهاتف</button>
-    <button onclick="selectDevice('desktop')" style="padding:20px 40px;font-size:1.2rem;border:none;border-radius:15px;background:#fff;color:#1B5E20;cursor:pointer;font-weight:bold;box-shadow:0 5px 15px rgba(0,0,0,0.2);">💻 الكمبيوتر</button>
-  </div>
-  <p style="margin-top:20px;font-size:0.9rem;opacity:0.8;">سيتم حفظ اختيارك للزيارات القادمة</p>
-</div>
-
 <!-- شاشة الترحيب -->
 <div id="splash">
   <div class="logo-box"><span>🗑️</span></div>
-  <h1 data-i18n="app_name">المدية نظيفة</h1>
-  <p data-i18n="app_subtitle">مصلحة النظافة والوقاية الصحية - بلدية المدية 2026</p>
+  <h1 data-i18n="appName">المدية نظيفة</h1>
+  <p data-i18n="appSubtitle">مصلحة النظافة والوقاية الصحية<br>بلدية المدية 2026</p>
   <div class="loader"></div>
 </div>
 
 <div id="toast-container"></div>
-<div class="conn" data-i18n="conn_status">✓ متصل - النظام جاهز</div>
-<div id="syncIndicator" class="sync-indicator sync-online" data-i18n="sync_online">🔄 متصل</div>
+<div class="conn" data-i18n="connected">✓ متصل - النظام جاهز</div>
 
 <div class="hdr">
   <div class="c" data-i18n="country">🇩🇿 الجمهورية الجزائرية الديمقراطية الشعبية</div>
-  <div class="d" data-i18n="dept_name">🧹 مصلحة النظافة والوقاية الصحية لبلدية المدية</div>
-  <div class="t" data-i18n="app_name">المدية نظيفة</div>
+  <div class="d" data-i18n="department">🧹 مصلحة النظافة والوقاية الصحية لبلدية المدية</div>
+  <div class="t" data-i18n="appName">المدية نظيفة</div>
   <div class="lang-container">
-    <button class="lang-btn" onclick="changeLang('en', this)" data-i18n="lang_en">English</button>
-    <button class="lang-btn" onclick="changeLang('fr', this)" data-i18n="lang_fr">Français</button>
-    <button class="lang-btn active" onclick="changeLang('ar', this)" data-i18n="lang_ar">العربية</button>
+    <button class="lang-btn" onclick="changeLang('en', this)">English</button>
+    <button class="lang-btn" onclick="changeLang('fr', this)">Français</button>
+    <button class="lang-btn active" onclick="changeLang('ar', this)">العربية</button>
   </div>
 </div>
-
-<div class="ib">  <div>🕐 <span id="ck">00:00:00</span></div>
+<div class="ib">
+  <div>🕐 <span id="ck">--:--:--</span></div>
   <div>📅 <span id="cd">--/--/----</span></div>
-  <div style="display:flex;align-items:center;gap:10px">
-    <span class="points-badge">⭐ <span id="userPoints">0</span> <span data-i18n="points">نقاط</span></span>
-  </div>
+  <div>⭐ <span id="userPoints">0</span> <span data-i18n="points">نقطة</span></div>
 </div>
 
 <div class="stats-bar">
-  <div class="stat-box" onclick="filterByStatus('all')"><span class="stat-num" id="statTotal">0</span><span class="stat-label" data-i18n="stat_total">إجمالي البلاغات</span></div>
-  <div class="stat-box" onclick="filterByStatus('done')" style="border-color:#4CAF50"><span class="stat-num" style="color:#4CAF50" id="statDone">0</span><span class="stat-label" data-i18n="stat_done">تم الإنجاز</span></div>
-  <div class="stat-box" onclick="showPage('sortingCenter')" style="border-color:#673ab7"><span class="stat-num" style="color:#673ab7" id="statSorted">0</span><span class="stat-label" data-i18n="stat_sorted">تم الفرز</span></div>
+  <div class="stat-box"><span class="stat-num" id="statTotal">0</span><span class="stat-label" data-i18n="totalReports">إجمالي البلاغات</span></div>
+  <div class="stat-box"><span class="stat-num" style="color:#4CAF50" id="statDone">0</span><span class="stat-label" data-i18n="completed">تم الإنجاز</span></div>
+  <div class="stat-box"><span class="stat-num" style="color:#673ab7" id="statSorted">0</span><span class="stat-label" data-i18n="sorted">تم الفرز</span></div>
 </div>
 
-<div id="thanksOverlay">
-  <div style="font-size:4rem;margin-bottom:15px">❤️</div>
-  <h1 style="font-size:2rem;margin-bottom:10px" data-i18n="thanks_title">شكراً لكم!</h1>
-  <p style="font-size:1rem;margin-bottom:20px" data-i18n="thanks_msg">تم إرسال بلاغكم بنجاح</p>
-  <div style="padding:10px 30px;border:2px solid #FFD700;border-radius:30px;font-weight:700;background:rgba(255,255,255,0.2)">♻️ معاً لمدية خضراء 2026</div>
-</div>
-
+<!-- الصفحة الرئيسية -->
 <div id="home" class="page active">
-  <button class="btn bg mb" onclick="showPage('report')"><span style="font-size:2.5rem">🚚</span><br><span data-i18n="btn_send_report">إرسال تبليغ</span></button>
-  <div class="cd" style="border-color:#667eea;background:#f8f9ff">
-    <h3 style="text-align:center;margin-bottom:10px;color:#667eea" data-i18n="section_tools">🎬 أدوات العرض</h3>
-    <div class="g2">
-      <button class="btn demo-btn" onclick="loadDemoData()" data-i18n="btn_demo">🎲 بيانات تجريبية</button>
-      <button class="btn print-btn" onclick="openPrintDialog()" data-i18n="btn_print">🖨️ طباعة PDF</button>
-    </div>
-    <button class="btn purple" onclick="showPage('dashboard')" style="margin-top:10px" data-i18n="btn_dashboard">📊 لوحة الإحصائيات</button>
-    <button class="btn exit-btn" onclick="exitApp()" data-i18n="btn_exit">🚪 الخروج</button>
-  </div>
+  <button class="btn bg" onclick="showPage('report')" style="height:130px;font-size:1.2rem"><span style="font-size:3rem">🚚</span><br><span data-i18n="sendReport">إرسال تبليغ</span></button>
+  
   <div class="cd">
-    <h3 style="text-align:center;margin-bottom:12px" data-i18n="section_services">✨ الخدمات</h3>
+    <h3 style="text-align:center;margin-bottom:10px" data-i18n="displayTools">🎬 أدوات العرض</h3>
     <div class="g2">
-      <button class="btn by" onclick="showPage('schedule')" data-i18n="btn_schedule">📅 جدول الجمع</button>
-      <button class="btn purple" onclick="showPage('tips')" data-i18n="btn_tips">💡 توعية</button>
-      <button class="btn bo" onclick="showPage('requests')" data-i18n="btn_requests">🛠️ طلباتي</button>
-      <button class="btn green-recycle" onclick="showPage('recycling')" data-i18n="btn_calc">♻️ حاسبة التدوير</button>
+      <button class="btn purple" onclick="loadDemoData()">🎲 <span data-i18n="demoData">بيانات تجريبية</span></button>
+      <button class="btn bo" onclick="openPrintDialog()">🖨️ <span data-i18n="printPDF">طباعة PDF</span></button>
     </div>
+    <button class="btn bb" onclick="showPage('dashboard')" style="margin-top:10px">📊 <span data-i18n="dashboard">لوحة الإحصائيات</span></button>
   </div>
+  
   <div class="cd">
-    <h3 style="text-align:center;margin-bottom:12px" data-i18n="section_circular">🔄 الاقتصاد الدائري</h3>
+    <h3 style="text-align:center;margin-bottom:10px" data-i18n="services">✨ الخدمات</h3>
     <div class="g2">
-      <button class="btn green-recycle" onclick="showPage('sortingCenter')" data-i18n="btn_sorting">🏭 مركز الفرز</button>
-      <button class="btn market-btn" onclick="showPage('recyclingMarket')" data-i18n="btn_market">🛒 سوق التدوير</button>
+      <button class="btn by" onclick="showPage('schedule')">📅 <span data-i18n="collectionSchedule">جدول الجمع</span></button>
+      <button class="btn purple" onclick="showPage('tips')">💡 <span data-i18n="awareness">توعية</span></button>
+      <button class="btn bo" onclick="showPage('requests')">🛠️ <span data-i18n="myRequests">طلباتي</span></button>
+      <button class="btn green-recycle" onclick="showPage('recycling')">♻️ <span data-i18n="recyclingCalc">حاسبة التدوير</span></button>
     </div>
   </div>
-  <div class="cd" style="margin-top:15px">
-    <h3 style="text-align:center;margin-bottom:12px" data-i18n="section_tracking">🚚 التتبع المباشر</h3>
-    <button class="btn bg" onclick="showPage('truckTracking')" style="background:linear-gradient(135deg,#ff5722,#f44336)" data-i18n="btn_track_trucks">📍 تتبع مسار الشاحنات</button>  </div>
-  <div class="cd" style="margin-top:15px">
-    <h3 style="text-align:center;margin-bottom:12px" data-i18n="section_hall">👥 الرواق</h3>
+  
+  <div class="cd">
+    <h3 style="text-align:center;margin-bottom:10px" data-i18n="circularEconomy">🔄 الاقتصاد الدائري</h3>
     <div class="g2">
-      <button class="btn by sb2" onclick="showPage('driver')" data-i18n="btn_drivers">🚚 السائقين</button>
-      <button class="btn bb sb2" onclick="showPage('admin')" data-i18n="btn_admin">🛡️ الإدارة</button>
+      <button class="btn green-recycle" onclick="showPage('sortingCenter')">🏭 <span data-i18n="sortingCenter">مركز الفرز</span></button>
+      <button class="btn market-btn" onclick="showPage('recyclingMarket')">🛒 <span data-i18n="recyclingMarket">سوق التدوير</span></button>
+    </div>
+  </div>
+  
+  <div class="cd">
+    <h3 style="text-align:center;margin-bottom:10px" data-i18n="liveTracking">🚚 التتبع المباشر</h3>
+    <button class="btn bg" onclick="showPage('truckTracking')" style="background:linear-gradient(135deg,#ff5722,#f44336)">📍 <span data-i18n="trackTrucks">تتبع مسار الشاحنات</span></button>
+  </div>
+  
+  <div class="cd">    <h3 style="text-align:center;margin-bottom:10px" data-i18n="staffArea">👥 الرواق</h3>
+    <div class="g2">
+      <button class="btn by" onclick="showPage('driver')">🚚 <span data-i18n="drivers">السائقين</span></button>
+      <button class="btn bb" onclick="showPage('admin')">🛡️ <span data-i18n="admin">الإدارة</span></button>
     </div>
   </div>
 </div>
 
-<div id="truckTracking" class="page">
-  <h2 style="margin-bottom:15px;color:#1B5E20;text-align:center" data-i18n="page_truck_tracking">🚚 تتبع مسار الشاحنة</h2>
+<!-- صفحة إرسال البلاغ -->
+<div id="report" class="page">
+  <h2 style="margin-bottom:15px;color:#1B5E20;text-align:center" data-i18n="newReport">📝 بلاغ جديد</h2>
   <div class="cd">
-    <h3 style="margin-bottom:10px" data-i18n="info_current">📍 المعلومات الحالية</h3>
-    <div class="info-row"><b data-i18n="label_driver">👤 السائق:</b> <span id="trackingDriverName">-</span></div>
-    <div class="info-row"><b data-i18n="label_sector">🏷️ رقم القطاع:</b> <span id="trackingSector">-</span></div>
-    <div class="info-row"><b data-i18n="label_date">📅 التاريخ:</b> <span id="trackingDate">-</span></div>
-    <div class="info-row"><b data-i18n="label_time">🕐 الوقت:</b> <span id="trackingTime">-</span></div>
-    <div class="info-row"><b data-i18n="label_bins">🗑️ الحاويات المجمعة:</b> <span id="collectedBinsCount" style="color:#4CAF50;font-weight:bold">0</span></div>
-  </div>
-  <div class="live-tracking" id="liveTrackingStatus" data-i18n="tracking_active">🔴 التتبع المباشر نشط</div>
-  <div id="map"></div>
-  <div class="cd">
-    <h3 style="margin-bottom:10px" data-i18n="bins_log">🎯 سجل الحاويات المجمعة</h3>
-    <div id="collectedBinsList"></div>
-  </div>
-  <button class="btn bx" onclick="showPage('driver')" data-i18n="btn_back">← رجوع</button>
-</div>
-
-<div id="routeTracking" class="page">
-  <h2 style="margin-bottom:15px;color:#1B5E20;text-align:center" data-i18n="page_route_tracking">🚚 تتبع مسار الشاحنات حسب القطاع</h2>
-  <div class="cd">
-    <h3 style="margin-bottom:10px" data-i18n="select_sector">📍 اختيار القطاع</h3>
-    <select class="in" id="sectorSelect" onchange="loadSectorRoute()">
-      <option value="" data-i18n="opt_select">-- اختر القطاع --</option>
-      <option value="1" data-i18n="opt_sector1">القطاع 1</option>
-      <option value="2" data-i18n="opt_sector2">القطاع 2</option>
-      <option value="3" data-i18n="opt_sector3">القطاع 3</option>
-      <option value="4" data-i18n="opt_sector4">القطاع 4</option>
-      <option value="5" data-i18n="opt_sector5">القطاع 5</option>
+    <div class="cam-box" onclick="takePhoto()">
+      <span style="font-size:3rem;color:#aaa">📷</span>
+      <img id="camImg" style="display:none;width:100%;height:100%;object-fit:cover;position:absolute">
+    </div>
+    <button class="btn bg" onclick="takePhoto()">📷 <span data-i18n="takePhoto">التقاط الصورة</span></button>
+    <button class="btn bb" onclick="getLocation()" id="getLocationBtn">📍 <span data-i18n="getLocation">تحديد الموقع GPS</span></button>
+    <input type="text" class="in" id="addrInput" data-i18n-placeholder="address" placeholder="📍 اسم الحي أو الشارع">
+    <input type="text" class="in" id="gpsInput" data-i18n-placeholder="gps" placeholder="🌍 إحداثيات GPS" readonly style="background:#f0f0f0">
+    <select class="in" id="wasteTypeSelect">
+      <option value="mixed" data-i18n="wasteMixed">🗑️ نفايات عامة</option>
+      <option value="organic" data-i18n="wasteOrganic">🍂 نفايات عضوية</option>
+      <option value="plastic" data-i18n="wastePlastic">🧴 بلاستيك</option>
+      <option value="metal" data-i18n="wasteMetal">⚙️ معادن</option>
+      <option value="paper" data-i18n="wastePaper">📄 ورق/كرتون</option>
+      <option value="glass" data-i18n="wasteGlass">🥃 زجاج</option>
     </select>
-    <div class="g2" style="margin-top:10px">
-      <button class="btn bg" onclick="showRouteOnMap()" data-i18n="btn_show_route">🗺️ عرض المسار</button>
-      <button class="btn bo" onclick="exportRouteToPDF()" data-i18n="btn_export_pdf">📄 تصدير PDF</button>
+    <label style="display:flex;align-items:center;gap:8px;margin:10px 0">
+      <input type="checkbox" id="recurringCheck"> <span data-i18n="recurringReport">بلاغ متكرر أسبوعياً</span>
+    </label>
+    <button class="btn bg" style="height:50px;font-size:1.1rem" onclick="sendReport()" id="sendBtn">✉️ <span data-i18n="send">إرسال البلاغ الآن</span></button>
+    <button class="btn bx" onclick="showPage('home')">← <span data-i18n="back">رجوع</span></button>
+  </div>
+</div>
+
+<!-- صفحة تتبع الشاحنات -->
+<div id="truckTracking" class="page">
+  <h2 style="margin-bottom:15px;color:#1B5E20;text-align:center" data-i18n="sectorTracking">🚚 تتبع مسار الشاحنات حسب القطاع</h2>
+  <div class="cd">
+    <h3 data-i18n="selectSector">📍 اختيار القطاع</h3>
+    <select class="in" id="sectorSelect" onchange="loadSectorRoute()">
+      <option value="">-- <span data-i18n="chooseSector">اختر القطاع</span> --</option>
+      <option value="1" data-i18n="sector1">القطاع 1</option>
+      <option value="2" data-i18n="sector2">القطاع 2</option>
+      <option value="3" data-i18n="sector3">القطاع 3</option>
+      <option value="4" data-i18n="sector4">القطاع 4</option>
+      <option value="5" data-i18n="sector5">القطاع 5</option>
+    </select>
+    <div class="g2" style="margin-top:10px">      <button class="btn bg" onclick="showRouteOnMap()">🗺️ <span data-i18n="showRoute">عرض المسار</span></button>
+      <button class="btn bo" onclick="exportRouteToPDF()">📄 <span data-i18n="exportPDF">تصدير PDF</span></button>
     </div>
   </div>
   <div class="cd" id="routeInfo" style="display:none">
-    <h3 style="margin-bottom:10px" data-i18n="route_info">📊 معلومات المسار</h3>
-    <div class="info-row"><b data-i18n="label_sector">🏷️ القطاع:</b> <span id="routeSectorName">-</span></div>
-    <div class="info-row"><b data-i18n="label_date">📅 التاريخ:</b> <span id="routeDate">-</span></div>    <div class="info-row"><b data-i18n="label_driver">🚛 السائق:</b> <span id="routeDriver">-</span></div>
-    <div class="info-row"><b data-i18n="label_bins">🗑️ الحاويات المجمعة:</b> <span id="routeBinsCount" style="color:#4CAF50;font-weight:bold">0</span></div>
+    <h3 data-i18n="routeInfo">📊 معلومات المسار</h3>
+    <div class="info-row"><b data-i18n="sector">🏷️ القطاع:</b> <span id="routeSectorName">-</span></div>
+    <div class="info-row"><b data-i18n="date">📅 التاريخ:</b> <span id="routeDate">-</span></div>
+    <div class="info-row"><b data-i18n="driver">🚛 السائق:</b> <span id="routeDriver">-</span></div>
+    <div class="info-row"><b data-i18n="collectedBins">🗑️ الحاويات:</b> <span id="routeBinsCount" style="color:#4CAF50;font-weight:bold">0</span></div>
   </div>
   <div id="routeMap"></div>
   <div class="cd" id="routeBinsList" style="display:none">
-    <h3 style="margin-bottom:10px" data-i18n="bins_locations">🎯 مواقع الحاويات</h3>
+    <h3 data-i18n="binLocations">🎯 مواقع الحاويات</h3>
     <div id="binsLocationsList"></div>
   </div>
-  <button class="btn bx" onclick="showPage('driver')" data-i18n="btn_back">← رجوع</button>
+  <button class="btn bx" onclick="showPage('home')">← <span data-i18n="back">رجوع</span></button>
 </div>
 
-<div id="pdfPreviewPage" class="page">
-  <h2 style="margin-bottom:15px;color:#1B5E20;text-align:center" data-i18n="page_pdf_preview">📄 معاينة التقرير</h2>
-  <div id="pdfPreviewContent" style="background:#fff;padding:20px;border-radius:10px;margin-bottom:20px">
-    <div style="text-align:center;border-bottom:2px solid #1B5E20;padding-bottom:10px;margin-bottom:15px">
-      <h1 style="color:#1B5E20;margin:0;font-size:24px" data-i18n="app_name">المدية نظيفة 2026</h1>
-      <p style="margin:3px 0;color:#666;font-size:14px" data-i18n="report_trucks">تقرير مسار الشاحنات</p>
-    </div>
-    <div style="background:#f5f7fa;padding:15px;border-radius:8px;margin-bottom:15px">
-      <h3 style="color:#1B5E20;margin-bottom:8px;font-size:18px;text-align:center" data-i18n="route_info">📊 معلومات المسار</h3>
-      <div style="display:flex;justify-content:space-between;margin:5px 0;padding:8px 0;border-bottom:1px solid #e0e0e0"><b data-i18n="label_sector">القطاع:</b><span id="previewSector">-</span></div>
-      <div style="display:flex;justify-content:space-between;margin:5px 0;padding:8px 0;border-bottom:1px solid #e0e0e0"><b data-i18n="label_driver">السائق:</b><span id="previewDriver">-</span></div>
-      <div style="display:flex;justify-content:space-between;margin:5px 0;padding:8px 0;border-bottom:1px solid #e0e0e0"><b data-i18n="label_date">التاريخ:</b><span id="previewDate">-</span></div>
-      <div style="display:flex;justify-content:space-between;margin:5px 0;padding:8px 0;border-bottom:1px solid #e0e0e0"><b data-i18n="label_bins">عدد الحاويات:</b><span id="previewBinsCount">-</span></div>
-    </div>
-    <h3 style="color:#1B5E20;margin:15px 0 10px 0;font-size:18px;text-align:center" data-i18n="bins_locations">🎯 مواقع الحاويات 📍</h3>
-    <div id="previewMap"></div>
-    <h3 style="color:#1B5E20;margin:15px 0 10px 0;font-size:18px" data-i18n="bins_table">📋 جدول الحاويات</h3>
-    <table style="width:100%;border-collapse:collapse;margin-top:15px;font-size:14px">
-      <thead><tr style="background:#1B5E20;color:white"><th style="padding:10px">#</th><th style="padding:10px" data-i18n="col_time">الوقت</th><th style="padding:10px" data-i18n="col_lat">خط العرض</th><th style="padding:10px" data-i18n="col_lng">خط الطول</th></tr></thead>
-      <tbody id="previewBinsTable"></tbody>
-    </table>
-    <div style="margin-top:20px;text-align:center;border-top:2px solid #1B5E20;padding-top:10px;color:#666;font-size:12px">
-      <p data-i18n="footer_prepared">إعداد: مصلحة النظافة والوقاية الصحية - بلدية المدية</p>
-      <p data-i18n="footer_print_date">تاريخ الطباعة: <span id="previewPrintDate"></span></p>
-    </div>
-  </div>
-  <div class="pdf-action-buttons">
-    <button class="btn bg" onclick="printPreview()" style="margin-left:10px;background:#d21034" data-i18n="btn_print_now">🖨️ طباعة</button>
-    <button class="btn bg" onclick="downloadPreviewPDF()" data-i18n="btn_download">📥 تحميل PDF</button>
-    <button class="btn bx" onclick="closePDFPreview()" style="margin-top:10px" data-i18n="btn_close">✕ إغلاق</button>
-  </div>
-</div>
-
-<div id="report" class="page">
-  <h2 style="margin-bottom:15px;color:#1B5E20;text-align:center" data-i18n="page_new_report">📝 بلاغ جديد</h2>
-  <div class="cd">
-    <div class="cam-box" onclick="takePhoto()"><span class="cam-icon">📷</span><img id="camImg" style="display:none"></div>
-    <button class="btn bg" onclick="takePhoto()" data-i18n="btn_capture">📷 التقاط الصورة</button>
-    <button class="btn bb" onclick="getLocation()" id="getLocationBtn" data-i18n="btn_gps">📍 تحديد الموقع GPS</button>    <button class="btn bx" onclick="manualLocation()" style="margin-top:0;margin-bottom:8px;font-size:0.9rem" data-i18n="btn_manual">📍 إدخال يدوي</button>
-    <input type="text" class="in" id="addrInput" data-i18n-placeholder="ph_address">
-    <div style="display:flex;gap:10px">
-      <input type="text" class="in" id="gpsInput" data-i18n-placeholder="ph_gps" readonly style="background:#f0f0f0;flex:2">
-      <button class="btn voice-btn" style="flex:1;margin:0;padding:12px" onclick="startVoiceInput()" title="إملاء صوتي">🎤</button>
-    </div>
-    <select class="in" id="wasteTypeSelect">
-      <option value="mixed" data-i18n="waste_mixed">🗑️ نفايات عامة</option>
-      <option value="organic" data-i18n="waste_organic">🍂 نفايات عضوية</option>
-      <option value="plastic" data-i18n="waste_plastic">🧴 بلاستيك</option>
-      <option value="metal" data-i18n="waste_metal">⚙️ معادن</option>
-      <option value="paper" data-i18n="waste_paper">📄 ورق/كرتون</option>
-      <option value="glass" data-i18n="waste_glass">🥃 زجاج</option>
-    </select>
-    <label style="display:flex;align-items:center;gap:8px;margin:10px 0;font-size:0.9rem;color:#555">
-      <input type="checkbox" id="recurringCheck"> <span data-i18n="chk_recurring">🔁 بلاغ متكرر أسبوعياً</span>
-    </label>
-    <button class="btn bg" style="height:55px;font-size:1.1rem" onclick="sendReport()" id="sendBtn" data-i18n="btn_send">✉️ إرسال البلاغ الآن</button>
-    <button class="btn bx" onclick="showPage('home')" data-i18n="btn_back">← رجوع</button>
-  </div>
-</div>
-
-<div id="sortingCenter" class="page">
-  <h2 style="margin-bottom:15px;color:#2E7D32;text-align:center" data-i18n="page_sorting">🏭 مركز الفرز التقني</h2>
-  <div class="cd">
-    <h3 style="margin-bottom:10px" data-i18n="value_chain">🔗 تتبع سلسلة القيمة</h3>
-    <div class="track-timeline">
-      <div class="track-step done" data-i18n="step_pickup">📍 نقطة الرفع</div>
-      <div class="track-step done" data-i18n="step_transport">🚚 النقل</div>
-      <div class="track-step pending" data-i18n="step_sorting">🏭 مركز الفرز</div>
-      <div class="track-step" data-i18n="step_recycling">♻️ إعادة التدوير</div>
-      <div class="track-step" data-i18n="step_market">🏢 السوق</div>
-    </div>
-  </div>
-  <div class="cd">
-    <h3 style="margin-bottom:10px" data-i18n="register_in">📥 تسجيل وارد جديد</h3>
-    <input type="text" class="in" id="wasteSource" data-i18n-placeholder="ph_source">
-    <div class="g2">
-      <input type="number" class="in" id="wasteQty" data-i18n-placeholder="ph_qty" step="0.1">
-      <input type="text" class="in" id="truckNumber" data-i18n-placeholder="ph_truck">
-    </div>
-    <select class="in" id="wasteCategory">
-      <option value="organic" data-i18n="waste_organic">🍂 نفايات عضوية</option>
-      <option value="plastic" data-i18n="waste_plastic">🧴 بلاستيك</option>
-      <option value="metal" data-i18n="waste_metal">⚙️ معادن</option>
-      <option value="paper" data-i18n="waste_paper">📄 ورق/كرتون</option>
-      <option value="glass" data-i18n="waste_glass">🥃 زجاج</option>
-      <option value="mixed" data-i18n="waste_mixed">🗑️ مختلطة</option>
-    </select>
-    <select class="in" id="wasteQuality">      <option value="excellent" data-i18n="qlt_excellent">⭐ جودة عالية - تدوير مباشر</option>
-      <option value="good" data-i18n="qlt_good">👍 جودة جيدة - معالجة بسيطة</option>
-      <option value="fair" data-i18n="qlt_fair">⚠️ جودة متوسطة - فرز إضافي</option>
-      <option value="poor" data-i18n="qlt_poor">❌ غير قابلة للتدوير</option>
-    </select>
-    <textarea class="in" id="wasteNotes" data-i18n-placeholder="ph_notes" style="height:70px"></textarea>
-    <button class="btn bg" onclick="registerWasteIn()" data-i18n="btn_register">✅ تسجيل الوارد</button>
-  </div>
-  <div class="cd">
-    <h3 style="margin-bottom:10px" data-i18n="materials_avail">📦 المواد المصنفة المتاحة</h3>
-    <div id="sortedMaterialsList"></div>
-    <button class="btn purple" onclick="publishToMarket()" style="margin-top:10px" data-i18n="btn_publish">🚀 نشر في سوق التدوير</button>
-  </div>
-  <button class="btn bx" onclick="showPage('home')" data-i18n="btn_back">← رجوع</button>
-</div>
-
-<div id="recyclingMarket" class="page">
-  <h2 style="margin-bottom:15px;color:#673ab7;text-align:center" data-i18n="page_market">♻️ سوق المواد المعاد تدويرها</h2>
-  <div class="cd">
-    <div class="filter-bar">
-      <select class="in" id="marketFilterType" onchange="filterMarket()">
-        <option value="all" data-i18n="filter_type">📦 جميع الأنواع</option>
-        <option value="plastic" data-i18n="waste_plastic">🧴 بلاستيك</option>
-        <option value="metal" data-i18n="waste_metal">⚙️ معادن</option>
-        <option value="paper" data-i18n="waste_paper">📄 ورق</option>
-        <option value="glass" data-i18n="waste_glass">🥃 زجاج</option>
-        <option value="organic" data-i18n="waste_organic">🍂 عضوي</option>
-      </select>
-      <select class="in" id="marketFilterQuality" onchange="filterMarket()">
-        <option value="all" data-i18n="filter_qlt">⭐ جميع الجودات</option>
-        <option value="excellent" data-i18n="qlt_excellent">⭐ عالية الجودة</option>
-        <option value="good" data-i18n="qlt_good">👍 جيدة</option>
-      </select>
-    </div>
-  </div>
-  <div id="marketMaterialsList"></div>
-  <div class="cd" id="requestForm" style="display:none">
-    <h3 style="margin-bottom:10px" data-i18n="req_form_title">📝 طلب الاستفادة من المادة</h3>
-    <input type="text" class="in" id="companyName" data-i18n-placeholder="ph_company">
-    <input type="text" class="in" id="companyLicense" data-i18n-placeholder="ph_license">
-    <input type="tel" class="in" id="companyPhone" data-i18n-placeholder="ph_phone">
-    <input type="number" class="in" id="requestQty" data-i18n-placeholder="ph_req_qty">
-    <textarea class="in" id="requestPurpose" data-i18n-placeholder="ph_purpose" style="height:60px"></textarea>
-    <button class="btn bg" onclick="submitMarketRequest()" data-i18n="btn_submit_req">📤 إرسال الطلب</button>
-    <button class="btn bx" onclick="document.getElementById('requestForm').style.display='none'" style="margin-top:10px" data-i18n="btn_cancel">✕ إلغاء</button>
-  </div>
-  <button class="btn bx" onclick="showPage('home')" data-i18n="btn_back">← رجوع</button>
-</div>
-
-<div id="schedule" class="page">  <h2 style="margin-bottom:15px;color:#1B5E20;text-align:center" data-i18n="page_schedule">📅 جدول جمع النفايات</h2>
-  <div class="cd" id="scheduleDisplay"></div>
-  <button class="btn bx" onclick="showPage('home')" data-i18n="btn_back">← رجوع</button>
-</div>
-
-<div id="tips" class="page">
-  <h2 style="margin-bottom:15px;color:#1B5E20;text-align:center" data-i18n="page_tips">💡 نصائح بيئية</h2>
-  <div class="tip-card"><span data-i18n="tip_sort">♻️ <b>الفرز من المصدر:</b> افصل البلاستيك عن الورق لتسهيل إعادة التدوير.</span></div>
-  <div class="tip-card"><span data-i18n="tip_no_litter">🚫 <b>لا للرمي العشوائي:</b> حافظ على نظافة شوارعك، النظافة من الإيمان.</span></div>
-  <div class="tip-card"><span data-i18n="tip_bags">📦 <b>تقليل الأكياس:</b> استخدم أكياس قماشية قابلة لإعادة الاستخدام.</span></div>
-  <div class="tip-card"><span data-i18n="tip_bins">🗑️ <b>استخدام الحاويات:</b> ارمِ النفايات في الأماكن المخصصة فقط.</span></div>
-  <button class="btn bx" onclick="showPage('home')" data-i18n="btn_back">← رجوع</button>
-</div>
-
-<div id="requests" class="page">
-  <h2 style="margin-bottom:15px;color:#1B5E20;text-align:center" data-i18n="page_my_requests">🛠️ طلباتي</h2>
-  <div class="cd">
-    <select class="in" id="reqType">
-      <option value="bin" data-i18n="req_bin">🗑️ طلب حاوية جديدة</option>
-      <option value="repair" data-i18n="req_repair">🔧 صيانة حاوية تالفة</option>
-      <option value="clean" data-i18n="req_clean">🧹 طلب تنظيف استثنائي</option>
-      <option value="other" data-i18n="req_other">❓ طلب آخر</option>
-    </select>
-    <input type="text" class="in" id="reqDesc" data-i18n-placeholder="ph_desc">
-    <input type="text" class="in" id="reqLocation" data-i18n-placeholder="ph_location">
-    <button class="btn bg" onclick="submitRequest()" data-i18n="btn_submit">📤 إرسال الطلب</button>
-  </div>
-  <div class="cd" style="margin-top:15px">
-    <h3 style="margin-bottom:10px" data-i18n="my_prev_req">📋 طلباتي السابقة</h3>
-    <div id="myRequestsList"></div>
-  </div>
-  <button class="btn bx" onclick="showPage('home')" data-i18n="btn_back">← رجوع</button>
-</div>
-
-<div id="publicStats" class="page">
-  <h2 style="margin-bottom:15px;color:#1B5E20;text-align:center" data-i18n="page_public_stats">📊 إحصائيات عامة</h2>
-  <div class="cd" style="text-align:center">
-    <p><span data-i18n="stat_total_mun">إجمالي البلاغات في البلدية:</span> <b id="publicTotal">0</b></p>
-    <p><span data-i18n="stat_rate">نسبة الإنجاز:</span> <b id="publicRate" style="color:#4CAF50">0%</b></p>
-    <p><span data-i18n="stat_active_drivers">عدد السائقين النشطين:</span> <b id="activeDrivers">0</b></p>
-    <p><span data-i18n="stat_recycled">إجمالي المواد المعاد تدويرها:</span> <b id="recycledTotal" style="color:#673ab7">0</b> <span data-i18n="unit_tons">طن</span></p>
-    <div style="margin-top:20px">
-      <div class="chart-visual" id="publicChart" style="width:150px;height:150px;margin:0 auto;border-radius:50%;background:#eee"></div>
-    </div>
-  </div>
-  <button class="btn bx" onclick="showPage('home')" data-i18n="btn_back">← رجوع</button>
-</div>
-
+<!-- صفحة الإدارة -->
 <div id="admin" class="page">
-  <div style="display:flex;justify-content:space-between;margin-bottom:15px"><h2 style="color:#1B5E20" data-i18n="page_admin">⚙️ لوحة التحكم</h2></div>  <div id="adminLogin" class="cd">
-    <h3 style="margin-bottom:12px;text-align:center" data-i18n="admin_login">🔐 الدخول للمشرفين</h3>
-    <input type="text" id="adminName" class="in" data-i18n-placeholder="ph_admin_name">
-    <input type="password" id="adminCode" class="in" data-i18n-placeholder="ph_admin_code">
-    <button class="btn bb" onclick="loginAdmin()" data-i18n="btn_login">✓ دخول</button>
+  <h2 style="margin-bottom:15px;color:#1B5E20;text-align:center" data-i18n="controlPanel">⚙️ لوحة التحكم</h2>
+  <div id="adminLogin" class="cd">
+    <h3 style="margin-bottom:12px;text-align:center" data-i18n="adminLogin">🔐 الدخول للمشرفين</h3>
+    <input type="text" id="adminName" class="in" data-i18n-placeholder="adminName" placeholder="👤 الاسم">
+    <input type="password" id="adminCode" class="in" data-i18n-placeholder="adminCode" placeholder="🔑 الرمز (1234)">
+    <button class="btn bb" onclick="loginAdmin()">✓ <span data-i18n="login">دخول</span></button>
   </div>
   <div id="adminPanel" class="hidden">
-    <div style="background:#e8f5e9;padding:12px;border-radius:10px;margin-bottom:12px;text-align:center;color:#2E7D32" data-i18n="admin_active">✓ وضع المشرف مفعل</div>
-    <button class="btn bg" onclick="safeShowReports()" data-i18n="btn_reports">📊 عرض البلاغات</button>
-    <button class="btn purple" onclick="showPage('routeTracking')" data-i18n="btn_track_trucks">🚚 تتبع مسار الشاحنات</button>
-    <button class="btn by" onclick="manageStaffPage()" data-i18n="btn_staff">👥 إدارة الموظفين</button>
-    <button class="btn purple" onclick="showPage('tonnageRecords')" data-i18n="btn_tonnage">⚖️ سجل الكميات</button>
-    <button class="btn bo" onclick="showPage('scheduleManager')" data-i18n="btn_schedule_mgr">📅 إدارة الجدول</button>
-    <button class="btn green-recycle" onclick="showPage('sortingCenter')" data-i18n="btn_sorting">🏭 مركز الفرز</button>
-    <button class="btn market-btn" onclick="showPage('recyclingMarket')" data-i18n="btn_market">♻️ سوق التدوير</button>
-    <button class="btn bb" onclick="exportExcel()" data-i18n="btn_export_excel">📥 تصدير Excel</button>
-    <button class="btn print-btn" onclick="openPrintDialog()" style="margin-top:10px" data-i18n="btn_print">🖨️ طباعة PDF</button>
-    <button class="btn br" onclick="logoutAdmin()" data-i18n="btn_logout">✕ خروج</button>
-    <button class="btn bx" style="margin-top:10px;font-size:0.8rem;background:#ff5722" onclick="emergencyClearData()" data-i18n="btn_emergency">🚨 مسح البيانات</button>
+    <div style="background:#e8f5e9;padding:12px;border-radius:10px;margin-bottom:12px;text-align:center;color:#2E7D32" data-i18n="adminModeEnabled">✓ وضع المشرف مفعل</div>
+    <button class="btn bg" onclick="showPage('reportsPage')">📊 <span data-i18n="viewReports">عرض البلاغات</span></button>
+    <button class="btn purple" onclick="showPage('truckTracking')">🚚 <span data-i18n="trackTrucks">تتبع مسار الشاحنات</span></button>
+    <button class="btn by" onclick="showPage('tonnageRecords')">⚖️ <span data-i18n="tonnageRecords">سجل الكميات</span></button>
+    <button class="btn bo" onclick="openPrintDialog()">🖨️ <span data-i18n="printPDF">طباعة PDF</span></button>
+    <button class="btn br" onclick="logoutAdmin()">✕ <span data-i18n="logout">خروج</span></button>
   </div>
-  <button class="btn bx" onclick="showPage('home')" data-i18n="btn_back">← رجوع</button>
+  <button class="btn bx" onclick="showPage('home')">← <span data-i18n="back">رجوع</span></button>
 </div>
 
-<div id="dashboard" class="page">
-  <h2 style="margin-bottom:15px;color:#1B5E20;text-align:center" data-i18n="page_dashboard">📈 لوحة الإحصائيات</h2>
-  <div class="cd">
-    <h3 style="margin-bottom:12px;text-align:center" data-i18n="chart_title">📊 توزيع حالات البلاغات</h3>
-    <div class="chart-container">
-      <div class="chart-visual" id="chartVisual"></div>
-    </div>
-    <div class="chart-legend" id="chartLegend"></div>
-  </div>
-  <button class="btn bx" onclick="showPage('home')" data-i18n="btn_back">← رجوع</button>
-</div>
-
+<!-- صفحة عرض البلاغات -->
 <div id="reportsPage" class="page">
-  <h2 style="margin-bottom:15px;color:#1B5E20;text-align:center" data-i18n="page_reports">📋 قائمة البلاغات</h2>
+  <h2 style="margin-bottom:15px;color:#1B5E20;text-align:center" data-i18n="reportsList">📋 قائمة البلاغات</h2>
   <div class="filter-bar">
     <select id="filterStatus" onchange="applyFilters()">
-      <option value="all" data-i18n="filter_all">جميع الحالات</option>
-      <option value="new" data-i18n="filter_new">جديد</option>
-      <option value="assigned" data-i18n="filter_assigned">قيد التنفيذ</option>
-      <option value="done" data-i18n="filter_done">منجز</option>
+      <option value="all" data-i18n="allStatuses">جميع الحالات</option>
+      <option value="new" data-i18n="statusNew">جديد</option>
+      <option value="assigned" data-i18n="statusAssigned">قيد التنفيذ</option>
+      <option value="done" data-i18n="statusDone">منجز</option>
     </select>
-    <input type="text" id="searchInput" data-i18n-placeholder="ph_search" oninput="applyFilters()">
-  </div>
+    <input type="text" id="searchInput" data-i18n-placeholder="search" placeholder="🔍 بحث..." oninput="applyFilters()">  </div>
   <div id="reportsList"></div>
-  <button class="btn bx" onclick="backToAdmin()" data-i18n="btn_back">← رجوع</button>
-</div>
-<div id="staffPage" class="page">
-  <h2 style="margin-bottom:15px;color:#1B5E20;text-align:center" data-i18n="page_staff">👥 إدارة الموظفين</h2>
-  <div class="cd">
-    <h3 style="margin-bottom:10px" data-i18n="add_staff">➕ إضافة موظف</h3>
-    <input type="text" id="newStaffName" class="in" data-i18n-placeholder="ph_staff_name">
-    <input type="text" id="newStaffRole" class="in" data-i18n-placeholder="ph_staff_role">
-    <input type="tel" id="newStaffPhone" class="in" data-i18n-placeholder="ph_staff_phone">
-    <button class="btn bg" onclick="addStaff()" data-i18n="btn_save">💾 حفظ</button>
-  </div>
-  <div id="staffList" style="margin-top:15px"></div>
-  <button class="btn bx" onclick="backToAdmin()" data-i18n="btn_back">← رجوع</button>
+  <button class="btn bx" onclick="showPage('admin')">← <span data-i18n="back">رجوع</span></button>
 </div>
 
-<div id="driver" class="page">
-  <div style="display:flex;justify-content:space-between;margin-bottom:15px"><h2 style="color:#1B5E20" data-i18n="page_driver">🚚 مساحة السائقين</h2></div>
-  <div id="driverLogin" class="cd">
-    <h3 style="margin-bottom:12px;text-align:center" data-i18n="driver_login">🔐 دخول السائق</h3>
-    <input type="text" id="driverName" class="in" data-i18n-placeholder="ph_driver_name">
-    <button class="btn by" onclick="loginDriver()" data-i18n="btn_login">✓ دخول</button>
-  </div>
-  <div id="driverPanel" class="hidden">
-    <div style="background:#fff3e0;padding:12px;border-radius:10px;margin-bottom:12px;text-align:center;color:#FF9800" data-i18n="driver_welcome">✓ مرحباً - مهامك جاهزة</div>
-    <button class="btn bg" onclick="startTruckTracking()" style="margin-bottom:15px;background:linear-gradient(135deg,#ff5722,#f44336)" data-i18n="btn_start_tracking">📍 بدء تتبع المسار</button>
-    <div id="binTrackingControls" style="display:none;margin-bottom:15px">
-      <div style="background:#4CAF50;color:#fff;padding:10px;border-radius:10px;text-align:center;margin-bottom:10px;font-weight:bold" data-i18n="tracking_on">🟢 التتبع نشط - سجل الحاويات</div>
-      <button class="btn bg" onclick="recordBinCollection()" style="background:linear-gradient(135deg,#4CAF50,#8BC34A);font-size:1.2rem;padding:20px" data-i18n="btn_record_bin">🗑️ <span style="font-size:1.3rem">تسجيل موقع الحاوية</span></button>
-      <div style="text-align:center;margin-top:10px;color:#666" data-i18n="tap_instruction">اضغط عند كل حاوية ترفعها</div>
-    </div>
-    <button class="btn bg" onclick="showPage('driverTonnage')" style="margin-bottom:15px" data-i18n="btn_new_tonnage">➕ تسجيل نفايات جديدة</button>
-    <h3 style="margin-bottom:12px;color:#1B5E20" data-i18n="my_tasks">📋 مهامك</h3>
-    <div id="tasksList"></div>
-    <button class="btn end-mission-btn" onclick="endMission()" id="endMissionBtn" style="display:none" data-i18n="btn_end_mission">🏁 إنهاء المهمة</button>
-    <button class="btn br" onclick="logoutDriver()" data-i18n="btn_logout_driver">✕ خروج</button>
-  </div>
-  <button class="btn bx" onclick="showPage('home')" data-i18n="btn_back">← رجوع</button>
-</div>
-
-<div id="driverTonnage" class="page">
-  <h2 style="margin-bottom:15px;color:#1B5E20;text-align:center" data-i18n="page_driver_tonnage">⚖️ تسجيل كمية جديدة</h2>
+<!-- صفحة لوحة الإحصائيات -->
+<div id="dashboard" class="page">
+  <h2 style="margin-bottom:15px;color:#1B5E20;text-align:center" data-i18n="dashboard">📈 لوحة الإحصائيات</h2>
   <div class="cd">
-    <h3 style="margin-bottom:10px" data-i18n="trip_data">📝 بيانات الرحلة</h3>
-    <input type="text" class="in" id="driverTonnageName" data-i18n-placeholder="ph_driver" disabled style="background:#f0f0f0">
-    <input type="text" class="in" id="driverTonnageSector" data-i18n-placeholder="ph_sector" disabled style="background:#f0f0f0">
-    <input type="number" class="in" id="driverTonnageWeight" data-i18n-placeholder="ph_weight" step="0.01">
-    <input type="text" class="in" id="driverTonnageRegNum" data-i18n-placeholder="ph_reg_num">
-    <select class="in" id="driverWasteType">
-      <option value="mixed" data-i18n="waste_mixed">🗑️ نفايات عامة</option>
-      <option value="organic" data-i18n="waste_organic">🍂 نفايات عضوية</option>
-      <option value="plastic" data-i18n="waste_plastic">🧴 بلاستيك</option>
-      <option value="metal" data-i18n="waste_metal">⚙️ معادن</option>    </select>
-    <button class="btn bg" onclick="saveDriverTonnage()" data-i18n="btn_save">💾 حفظ الكمية</button>
-  </div>
-  <button class="btn bx" onclick="showPage('driver')" data-i18n="btn_back">← رجوع</button>
-</div>
-
-<div id="tonnageRecords" class="page">
-  <h2 style="margin-bottom:15px;color:#1B5E20;text-align:center" data-i18n="page_tonnage">⚖️ سجل الكميات المرفوعة</h2>
-  <div class="cd">
-    <h3 style="margin-bottom:10px" data-i18n="all_records">📋 جميع السجلات</h3>
-    <div id="tonnageList"></div>
-    <div class="g2" style="margin-top:15px">
-      <button class="btn br" onclick="exportTonnageToExcel()" data-i18n="btn_export_excel">📥 تصدير Excel</button>
-      <button class="btn purple" onclick="printTonnage()" data-i18n="btn_print">🖨️ طباعة</button>
-    </div>
-  </div>
-  <button class="btn bx" onclick="showPage('admin')" data-i18n="btn_back">← رجوع</button>
-</div>
-
-<div id="scheduleManager" class="page">
-  <h2 style="margin-bottom:15px;color:#1B5E20;text-align:center" data-i18n="page_schedule_mgr">📅 إدارة جدول الجمع</h2>
-  <div class="cd">
-    <h3 style="margin-bottom:10px" data-i18n="add_sector">➕ إضافة قطاع</h3>
-    <input type="text" class="in" id="sectorNum" data-i18n-placeholder="ph_sector_num">
-    <select class="in" id="sectorType">
-      <option value="بلدية" data-i18n="opt_municipal">🏛️ خاص / بلدية</option>
-      <option value="خاص" data-i18n="opt_private">🏠 خاص</option>
-    </select>
-    <input type="text" class="in" id="sectorName" data-i18n-placeholder="ph_sector_name">
-    <input type="text" class="in" id="sectorDays" data-i18n-placeholder="ph_days">
-    <input type="text" class="in" id="sectorTime" data-i18n-placeholder="ph_time">
-    <input type="text" class="in" id="sectorCatchup" data-i18n-placeholder="ph_catchup">
-    <input type="text" class="in" id="sectorDriver" data-i18n-placeholder="ph_sector_driver">
-    <input type="tel" class="in" id="sectorPhone" data-i18n-placeholder="ph_sector_phone">
-    <button class="btn bg" onclick="addScheduleSector()" data-i18n="btn_save_sector">💾 حفظ القطاع</button>
-  </div>
-  <div class="cd">
-    <h3 style="margin-bottom:10px" data-i18n="sectors_list">📋 القطاعات المسجلة</h3>
-    <div id="scheduleList"></div>
-  </div>
-  <button class="btn bx" onclick="showPage('admin')" data-i18n="btn_back">← رجوع</button>
-</div>
-
-<div id="adminRequests" class="page">
-  <h2 style="margin-bottom:15px;color:#1B5E20;text-align:center" data-i18n="page_admin_requests">📋 طلبات المواطنين</h2>
-  <div class="cd">
-    <div id="adminRequestsList"></div>
-  </div>
-  <button class="btn bx" onclick="showPage('admin')" data-i18n="btn_back">← رجوع</button>
-</div>
-<div id="recycling" class="page">
-  <h2 style="margin-bottom:15px;color:#2E7D32;text-align:center" data-i18n="page_recycling">♻️ حاسبة التدوير وإنتاج الطاقة</h2>
-  <div class="cd">
-    <h3 style="margin-bottom:10px" data-i18n="calc_title">🔋 حاسبة التحويل التقديرية</h3>
-    <div class="g2">
-      <select class="in" id="wasteType">
-        <option value="organic" data-i18n="opt_organic_calc">🍂 نفايات عضوية (سماد/بيوغاز)</option>
-        <option value="plastic" data-i18n="opt_plastic_calc">🧴 بلاستيك (تحويل لوقود)</option>
-        <option value="metal" data-i18n="opt_metal_calc">⚙️ معادن (إعادة تدوير)</option>
-        <option value="mixed" data-i18n="opt_mixed_calc">🗑️ نفايات مختلطة</option>
-      </select>
-      <input type="number" class="in" id="wasteWeight" data-i18n-placeholder="ph_weight" step="0.1">
-    </div>
-    <button class="btn green-recycle" onclick="calculateConversion()" data-i18n="btn_calculate">⚡ حساب التحويل</button>
-    <div id="conversionResult" style="margin-top:15px;display:none">
-      <div class="g2">
-        <div class="cd" style="background:#e8f5e9;text-align:center">
-          <div style="font-size:1.8rem;font-weight:900;color:#2E7D32" id="resEnergy">0</div>
-          <div style="font-size:0.8rem;color:#555" data-i18n="res_energy">كيلوواط ساعة طاقة</div>
-        </div>
-        <div class="cd" style="background:#fff3e0;text-align:center">
-          <div style="font-size:1.8rem;font-weight:900;color:#FF9800" id="resOil">0</div>
-          <div style="font-size:0.8rem;color:#555" data-i18n="res_oil">لتر وقود حيوي/زيت</div>
-        </div>
-      </div>
-      <div class="cd" style="background:#e3f2fd;text-align:center;margin-top:10px">
-        <div style="font-size:1.5rem;font-weight:900;color:#1976D2" id="resCO2">0</div>
-        <div style="font-size:0.8rem;color:#555" data-i18n="res_co2">طن CO₂ مُوفرة</div>
+    <h3 style="text-align:center;margin-bottom:12px" data-i18n="reportDistribution">📊 توزيع حالات البلاغات</h3>
+    <div style="height:300px;display:flex;align-items:center;justify-content:center;background:#fafafa;border-radius:12px" id="chartContainer">
+      <div style="text-align:center">
+        <div style="font-size:3rem;margin-bottom:10px">📊</div>
+        <div id="chartText" data-i18n="noData">لا توجد بيانات</div>
       </div>
     </div>
   </div>
-  <div class="cd">
-    <h3 style="margin-bottom:10px" data-i18n="why_recycle">📚 لماذا التدوير؟</h3>
-    <div class="tip-card"><span data-i18n="tip_organic">🍂 <b>النفايات العضوية:</b> تُحول لسماد زراعي أو بيوغاز يولد كهرباء للمرافق البلدية</span></div>
-    <div class="tip-card"><span data-i18n="tip_plastic">🧴 <b>البلاستيك:</b> بالتسخين بدون أكسجة (Pyrolysis) يُنتج وقوداً سائلاً يشبه الديزل</span></div>
-    <div class="tip-card"><span data-i18n="tip_metal">⚙️ <b>المعادن:</b> إعادة صهرها توفر 70% من الطاقة مقارنة باستخراج الخام</span></div>
-    <div class="tip-card"><span data-i18n="tip_impact">📉 <b>الأثر:</b> كل طن مُعاد تدويره يوفر ~1.5 طن انبعاثات ويولد دخلاً بلدياً</span></div>
-  </div>
-  <button class="btn bx" onclick="showPage('home')" data-i18n="btn_back">← رجوع</button>
+  <button class="btn bx" onclick="showPage('home')">← <span data-i18n="back">رجوع</span></button>
 </div>
 
-<div id="qrModal" class="qr-modal" onclick="if(event.target===this)this.style.display='none'">
-  <div class="qr-content">
-    <h3 data-i18n="qr_title">📱 كود تتبع البلاغ</h3>
-    <div id="qrcode"></div>
-    <div class="report-number">
-      <div class="label" data-i18n="report_num">بلاغ رقم:</div>
-      <div class="number" id="qrReportId"></div>
-    </div>    <button class="btn bb" onclick="document.getElementById('qrModal').style.display='none'" style="margin-top:15px" data-i18n="btn_close">✕ إغلاق</button>
-  </div>
+<!-- نافذة الشكر -->
+<div id="thanksOverlay">
+  <div style="font-size:4rem;margin-bottom:15px">❤️</div>
+  <h1 style="font-size:2rem;margin-bottom:10px" data-i18n="thankYou">شكراً لكم!</h1>
+  <p style="font-size:1rem;margin-bottom:20px" data-i18n="reportSent">تم إرسال بلاغكم بنجاح</p>
+  <div style="padding:10px 30px;border:2px solid #FFD700;border-radius:30px;font-weight:700;background:rgba(255,255,255,0.2)">♻️ <span data-i18n="slogan">معاً لمدية خضراء 2026</span></div>
+  <button class="btn bx" onclick="document.getElementById('thanksOverlay').style.display='none';showPage('home')" style="width:auto;margin-top:20px">← <span data-i18n="back">رجوع</span></button>
 </div>
 
-<div id="printModal" class="print-modal" onclick="if(event.target===this)closePrintDialog()">
+<!-- نافذة الطباعة -->
+<div id="printModal" class="print-modal" onclick="if(event.target===this)closePrintModal()">
   <div class="print-dialog">
-    <h2 data-i18n="print_title">🖨️ طباعة / تصدير PDF</h2>
-    <p style="text-align:center;color:#666;margin-bottom:15px" data-i18n="print_select">اختر ما تريد طباعته:</p>
-    <div class="print-option" onclick="printSection('reports')"><span class="label" data-i18n="opt_reports">📊 البلاغات</span><span class="icon">📋</span></div>
-    <div class="print-option" onclick="printSection('tonnage')"><span class="label" data-i18n="opt_tonnage">⚖️ سجل الكميات</span><span class="icon">📦</span></div>
-    <div class="print-option" onclick="printSection('sorting')"><span class="label" data-i18n="opt_sorting">🏭 مركز الفرز</span><span class="icon">♻️</span></div>
-    <div class="print-option" onclick="printSection('market')"><span class="label" data-i18n="opt_market">♻️ سوق التدوير</span><span class="icon">🛒</span></div>
-    <div class="print-option" onclick="printSection('stats')"><span class="label" data-i18n="opt_stats">📈 الإحصائيات</span><span class="icon">📊</span></div>
-    <div id="printPreviewContainer" class="print-preview" style="display:none"><div id="printContent"></div>
-      <div class="print-actions">
-        <button class="btn bg" onclick="printNow()" data-i18n="btn_print_now">🖨️ طباعة الآن</button>
-        <button class="btn bb" onclick="downloadPDF()" data-i18n="btn_download">📥 تحميل PDF</button>
-        <button class="btn back-btn" onclick="backToPrintOptions()" data-i18n="btn_back">↩️ رجوع</button>
-      </div>
-    </div>
-    <div class="print-actions" id="printDialogActions"><button class="btn bx" onclick="closePrintDialog()" data-i18n="btn_close">✕ إغلاق</button></div>
+    <h2 data-i18n="printExport">🖨️ طباعة / تصدير PDF</h2>
+    <p style="text-align:center;color:#666;margin:15px 0" data-i18n="selectPrint">اختر ما تريد طباعته:</p>
+    <button class="btn bg" onclick="printSection('reports')" style="margin-bottom:10px">📊 <span data-i18n="reports">البلاغات</span></button>
+    <button class="btn purple" onclick="printSection('tonnage')" style="margin-bottom:10px">⚖️ <span data-i18n="tonnageRecords">سجل الكميات</span></button>
+    <button class="btn bx" onclick="closePrintModal()" style="margin-top:10px">✕ <span data-i18n="close">إغلاق</span></button>
   </div>
 </div>
 
-<div class="ft"><span data-i18n="footer">🛡️ إعداد د. رابحي فتحي - مصلحة النظافة والوقاية الصحية - بلدية المدية 2026 ©</span></div>
-
-<button id="modeToggle" onclick="switchMode()">🔄 تبديل الوضع</button>
+<div class="ft" data-i18n="footer">🛡️ إعداد د. رابحي فتحي - مصلحة النظافة والوقاية الصحية - بلدية المدية 2026 ©</div>
 
 <script>
-// ============================================
-// ✅ Firebase Configuration
-// ============================================
-const firebaseConfig = { apiKey:"AIzaSyBMao4dJL_2YQjibDvcTIMw1vHHytpVqs0", authDomain:"medea-clean-2026.firebaseapp.com", databaseURL:"https://medea-clean-2026-default-rtdb.firebaseio.com", projectId:"medea-clean-2026", storageBucket:"medea-clean-2026.firebasestorage.app", messagingSenderId:"215503269481", appId:"1:215503269481:web:fa0d4c81ac1081b648fcf8", measurementId:"G-W10RQWLJ54" };
-let db; try{ if(typeof firebase!=='undefined'){ firebase.initializeApp(firebaseConfig); db=firebase.database(); }else{throw new Error('Firebase not loaded');} }catch(e){ db={ ref:(p)=>({ on:(ev,cb)=>{if(cb)cb({val:()=>null});return ()=>{};}, once:(ev)=>Promise.resolve({val:()=>null}), set:(d)=>Promise.resolve(), update:(d)=>Promise.resolve(), remove:()=>Promise.resolve() }) }; }
-
-// ============================================
-// ✅ Global Variables
-// ============================================
-let allReports=[], currentLang='ar', tempImage=null, tempAfterImage=null, currentDriver='', userPoints=0, currentDriverSector='';
-let wasteTracking=[], marketMaterials=[], marketRequests=[];
-let truckTrackingData={active:false,driver:'',sector:'',startTime:null,positions:[],collectedBins:[]};
-let map=null,trackingMarker=null,trackingPath=null; let routeMap=null,routeLayer=null,binsLayer=null,currentSectorData=null; let previewMap=null;
-const sectorRoutesData={'1':{name:'القطاع 1',driver:'أحمد',date:'2026-04-16',path:[[36.2642,2.7545],[36.2650,2.7560]],bins:[{id:1,lat:36.2645,lng:2.7550,time:'08:30'}]}};
-
-// ============================================
-// ✅ Device Selection & Mode Toggle
-// ============================================
-function selectDevice(mode) {
-  document.body.className = mode + '-mode';
-  localStorage.setItem('app_mode', mode);  document.getElementById('deviceSelector').style.opacity = '0';
-  setTimeout(() => { document.getElementById('deviceSelector').style.display = 'none'; }, 300);
-  setTimeout(() => {
-    document.getElementById('splash').style.display = 'flex';
-    setTimeout(() => {
-      document.getElementById('splash').style.opacity = '0';
-      setTimeout(() => { document.getElementById('splash').style.display = 'none'; }, 500);
-    }, 3000);
-  }, 300);
-}
-function switchMode() {
-  const current = document.body.classList.contains('desktop-mode') ? 'desktop' : 'mobile';
-  const next = current === 'mobile' ? 'desktop' : 'mobile';
-  document.body.className = next + '-mode';
-  localStorage.setItem('app_mode', next);
-  location.reload();
-}
-
-// ============================================
-// ✅ Translation System
-// ============================================
-const translations = {
-  ar: {
-    "app_title":"المدية نظيفة 2026","app_name":"المدية نظيفة",
-    "conn_status":"✓ متصل - النظام جاهز","sync_online":"🔄 متصل","sync_offline":"❌ غير متصل",
-    "lang_ar":"العربية","lang_fr":"Français","lang_en":"English",
-    "stat_total":"إجمالي البلاغات","stat_done":"تم الإنجاز","stat_sorted":"تم الفرز",
-    "points":"نقاط","unit_tons":"طن",
-    "thanks_title":"شكراً لكم!","thanks_msg":"تم إرسال بلاغكم بنجاح",
-    "btn_send_report":"إرسال تبليغ","btn_demo":"🎲 بيانات تجريبية",
-    "btn_print":"🖨️ طباعة PDF","btn_dashboard":"📊 لوحة الإحصائيات","btn_exit":"🚪 الخروج",
-    "section_tools":"🎬 أدوات العرض","section_services":"✨ الخدمات","section_circular":"🔄 الاقتصاد الدائري",
-    "section_tracking":"🚚 التتبع المباشر","section_hall":"👥 الرواق",
-    "btn_schedule":"📅 جدول الجمع","btn_tips":"💡 توعية","btn_requests":"🛠️ طلباتي","btn_calc":"♻️ حاسبة التدوير",
-    "btn_sorting":"🏭 مركز الفرز","btn_market":"🛒 سوق التدوير","btn_track_trucks":"📍 تتبع مسار الشاحنات",
-    "btn_drivers":"🚚 السائقين","btn_admin":"🛡️ الإدارة","btn_back":"← رجوع","btn_close":"✕ إغلاق",
-    "page_truck_tracking":"🚚 تتبع مسار الشاحنة","page_route_tracking":"🚚 تتبع مسار الشاحنات حسب القطاع",
-    "page_pdf_preview":"📄 معاينة التقرير","page_new_report":"📝 بلاغ جديد","page_sorting":"🏭 مركز الفرز التقني",
-    "page_market":"♻️ سوق المواد المعاد تدويرها","page_schedule":"📅 جدول جمع النفايات",
-    "page_tips":"💡 نصائح بيئية","page_my_requests":"🛠️ طلباتي","page_public_stats":"📊 إحصائيات عامة",
-    "page_admin":"⚙️ لوحة التحكم","page_dashboard":"📈 لوحة الإحصائيات","page_reports":"📋 قائمة البلاغات",
-    "page_staff":"👥 إدارة الموظفين","page_driver":"🚚 مساحة السائقين",
-    "page_driver_tonnage":"⚖️ تسجيل كمية جديدة","page_tonnage":"⚖️ سجل الكميات المرفوعة",
-    "page_schedule_mgr":"📅 إدارة جدول الجمع","page_admin_requests":"📋 طلبات المواطنين",
-    "page_recycling":"♻️ حاسبة التدوير وإنتاج الطاقة",
-    "btn_print_now":"🖨️ طباعة","btn_download":"📥 تحميل PDF","btn_capture":"📷 التقاط الصورة",
-    "btn_gps":"📍 تحديد الموقع GPS","btn_manual":"📍 إدخال يدوي","btn_send":"✉️ إرسال البلاغ الآن",
-    "btn_register":"✅ تسجيل الوارد","btn_publish":"🚀 نشر في سوق التدوير",
-    "btn_submit":"📤 إرسال الطلب","btn_cancel":"✕ إلغاء","btn_process":"✅ معالجة الطلب",
-    "btn_save":"💾 حفظ","btn_delete":"🗑️ حذف","btn_assign":"📤 توجيه للسائق",    "btn_login":"✓ دخول","btn_logout":"✕ خروج","btn_export_excel":"📥 تصدير Excel",
-    "btn_emergency":"🚨 مسح البيانات","btn_show_route":"🗺️ عرض المسار","btn_export_pdf":"📄 تصدير PDF",
-    "btn_start_tracking":"📍 بدء تتبع المسار","btn_end_mission":"🏁 إنهاء المهمة",
-    "btn_new_tonnage":"➕ تسجيل نفايات جديدة","btn_record_bin":"🗑️ تسجيل موقع الحاوية",
-    "btn_save_sector":"💾 حفظ القطاع","btn_open_map":"🗺️ الدخول للخريطة",
-    "btn_confirm":"✅ تأكيد الإنجاز","btn_full_report":"📄 التقرير الكامل",
-    "lbl_address":"العنوان","lbl_date":"التاريخ","lbl_time":"الوقت","lbl_driver":"السائق",
-    "lbl_sector":"رقم القطاع","lbl_bins":"الحاويات المجمعة","lbl_status":"الحالة",
-    "lbl_type":"النوع","lbl_quality":"الجودة","lbl_recurring":"متكرر",
-    "lbl_done":"منجز","lbl_in_progress":"قيد التنفيذ","lbl_new":"جديد",
-    "ph_address":"📍 اسم الحي أو الشارع","ph_gps":"🌍 إحداثيات GPS",
-    "ph_desc":"📝 تفاصيل الطلب","ph_location":"📍 موقع الطلب",
-    "ph_company":"🏢 اسم المؤسسة/الشركة","ph_license":"📄 رقم السجل التجاري",
-    "ph_phone":"📞 رقم التواصل","ph_req_qty":"⚖️ الكمية المطلوبة (طن)",
-    "ph_purpose":"🎯 غرض الاستخدام","ph_admin_name":"👤 الاسم","ph_admin_code":"🔑 الرمز (1234)",
-    "ph_staff_name":"👤 الاسم","ph_staff_role":"💼 المنصب","ph_staff_phone":"📞 الهاتف",
-    "ph_driver_name":"👤 أدخل اسمك","ph_weight":"⚖️ الوزن بالطن","ph_reg_num":"🔢 رقم التسجيل",
-    "ph_search":"🔍 بحث...",
-    "filter_all":"جميع الحالات","filter_new":"جديد","filter_assigned":"قيد التنفيذ","filter_done":"منجز",
-    "waste_mixed":"🗑️ نفايات عامة","waste_organic":"🍂 نفايات عضوية","waste_plastic":"🧴 بلاستيك",
-    "waste_metal":"⚙️ معادن","waste_paper":"📄 ورق/كرتون","waste_glass":"🥃 زجاج",
-    "qlt_excellent":"⭐ عالية","qlt_good":"👍 جيدة","qlt_fair":"⚠️ متوسطة","qlt_poor":"❌ غير قابلة",
-    "confirm_delete":"حذف؟","confirm_exit":"الخروج؟","confirm_demo":"تحميل بيانات تجريبية؟",
-    "msg_lang_changed":"✅ تم تغيير اللغة","msg_sent":"✅ تم الإرسال!","msg_sent_success":"✅ تم الإرسال! +10 نقاط 🎉",
-    "msg_login_success":"✓ دخول ناجح","msg_logout":"✓ خروج","msg_welcome":"✓ مرحباً",
-    "msg_saved":"✅ تم الحفظ","msg_downloaded":"✅ تم التحميل","msg_deleted":"✅ تم الحذف",
-    "msg_added":"✅ تم الإضافة","msg_updated":"✅ تم التعديل","msg_published":"✅ تم النشر",
-    "msg_request_sent":"✅ تم إرسال طلبك","msg_processed":"✅ تمت المعالجة","msg_exported":"✅ تم التصدير",
-    "msg_calculated":"✅ تم الحساب","msg_tracking_started":"✅ تم بدء التتبع",
-    "msg_tracking_stopped":"✅ تم إيقاف التتبع","msg_bin_recorded":"✅ تم تسجيل الحاوية",
-    "msg_pdf_creating":"📥 جاري إنشاء PDF...","msg_pdf_downloaded":"✅ تم تحميل PDF",
-    "warn_enter_address":"⚠️ أدخل العنوان","warn_gps_not_supported":"⚠️ GPS غير مدعوم",
-    "warn_camera_error":"⚠️ خطأ في الكاميرا","warn_no_data":"⚠️ لا بيانات",
-    "warn_no_reports":"لا توجد بلاغات","warn_no_staff":"لا يوجد موظفون",
-    "warn_enter_weight":"⚠️ أدخل الوزن ورقم التسجيل","warn_complete_fields":"⚠️ أكمل جميع الحقول",
-    "warn_select_sector":"⚠️ اختر القطاع","warn_login_first":"⚠️ سجل دخول أولاً",
-    "warn_tracking_inactive":"⚠️ التتبع غير نشط","loading":"جاري..."
-  },
-  fr: {
-    "app_title":"Médéa Propre 2026","app_name":"Médéa Propre",
-    "conn_status":"✓ Connecté","sync_online":"🔄 Connecté","sync_offline":"❌ Déconnecté",
-    "lang_ar":"العربية","lang_fr":"Français","lang_en":"English",
-    "stat_total":"Total","stat_done":"Terminés","stat_sorted":"Triés","points":"points","unit_tons":"tonnes",
-    "thanks_title":"Merci!","thanks_msg":"Envoyé avec succès",
-    "btn_send_report":"Envoyer","btn_demo":"🎲 Démo","btn_print":"🖨️ PDF","btn_dashboard":"📊 Dashboard","btn_exit":"🚪 Quitter",
-    "section_tools":"🎬 Outils","section_services":"✨ Services","section_circular":"🔄 Circulaire",
-    "section_tracking":"🚚 Suivi","section_hall":"👥 Hall",
-    "btn_schedule":"📅 Calendrier","btn_tips":"💡 Conseils","btn_requests":"🛠️ Demandes","btn_calc":"♻️ Calculateur",
-    "btn_sorting":"🏭 Centre tri","btn_market":"🛒 Marché","btn_track_trucks":"📍 Suivi camions",
-    "btn_drivers":"🚚 Chauffeurs","btn_admin":"🛡️ Admin","btn_back":"← Retour","btn_close":"✕ Fermer",    "btn_print_now":"🖨️ Imprimer","btn_download":"📥 Télécharger","btn_capture":"📷 Photo",
-    "btn_gps":"📍 GPS","btn_manual":"📍 Manuel","btn_send":"✉️ Envoyer",
-    "btn_register":"✅ Enregistrer","btn_publish":"🚀 Publier","btn_submit":"📤 Envoyer","btn_cancel":"✕ Annuler",
-    "btn_save":"💾 Sauver","btn_delete":"🗑️ Supprimer","btn_assign":"📤 Attribuer",
-    "btn_login":"✓ Connexion","btn_logout":"✕ Déconnexion","btn_export_excel":"📥 Excel",
-    "msg_lang_changed":"✅ Langue changée","msg_sent":"✅ Envoyé!","msg_login_success":"✓ Connecté",
-    "msg_logout":"✓ Déconnecté","msg_saved":"✅ Sauvegardé","msg_deleted":"✅ Supprimé",
-    "warn_enter_address":"⚠️ Entrez adresse","warn_enter_weight":"⚠️ Entrez poids","loading":"Chargement..."
-  },
-  en: {
-    "app_title":"Clean Médéa 2026","app_name":"Clean Médéa",
-    "conn_status":"✓ Connected","sync_online":"🔄 Connected","sync_offline":"❌ Offline",
-    "lang_ar":"العربية","lang_fr":"Français","lang_en":"English",
-    "stat_total":"Total","stat_done":"Completed","stat_sorted":"Sorted","points":"points","unit_tons":"tons",
-    "thanks_title":"Thank You!","thanks_msg":"Sent successfully",
-    "btn_send_report":"Send Report","btn_demo":"🎲 Demo","btn_print":"🖨️ PDF","btn_dashboard":"📊 Dashboard","btn_exit":"🚪 Exit",
-    "section_tools":"🎬 Tools","section_services":"✨ Services","section_circular":"🔄 Circular",
-    "section_tracking":"🚚 Tracking","section_hall":"👥 Hall",
-    "btn_schedule":"📅 Schedule","btn_tips":"💡 Tips","btn_requests":"🛠️ Requests","btn_calc":"♻️ Calculator",
-    "btn_sorting":"🏭 Sorting","btn_market":"🛒 Market","btn_track_trucks":"📍 Track Trucks",
-    "btn_drivers":"🚚 Drivers","btn_admin":"🛡️ Admin","btn_back":"← Back","btn_close":"✕ Close",
-    "btn_print_now":"🖨️ Print","btn_download":"📥 Download","btn_capture":"📷 Photo",
-    "btn_gps":"📍 GPS","btn_manual":"📍 Manual","btn_send":"✉️ Send",
-    "btn_register":"✅ Register","btn_publish":"🚀 Publish","btn_submit":"📤 Submit","btn_cancel":"✕ Cancel",
-    "btn_save":"💾 Save","btn_delete":"🗑️ Delete","btn_assign":"📤 Assign",
-    "btn_login":"✓ Login","btn_logout":"✕ Logout","btn_export_excel":"📥 Excel",
-    "msg_lang_changed":"✅ Language changed","msg_sent":"✅ Sent!","msg_login_success":"✓ Logged in",
-    "msg_logout":"✓ Logged out","msg_saved":"✅ Saved","msg_deleted":"✅ Deleted",
-    "warn_enter_address":"⚠️ Enter address","warn_enter_weight":"⚠️ Enter weight","loading":"Loading..."
-  }
+// ==========================================
+// 1. التكوين والمتغيرات العامة
+// ==========================================
+let db, currentLang='ar', allReports=[], userPoints=0;
+let wasteTracking=[], marketMaterials=[];
+let routeMap=null, currentSectorData=null;
+// بيانات القطاعات التجريبية
+const sectorRoutesData = {
+  '1': { name:'القطاع 1', driver:'أحمد', date:'2026-04-16', bins:[{id:1,lat:36.2642,lng:2.7545,time:'08:30'},{id:2,lat:36.2650,lng:2.7560,time:'08:45'}] },
+  '2': { name:'القطاع 2', driver:'محمد', date:'2026-04-16', bins:[{id:3,lat:36.2700,lng:2.7600,time:'09:00'}] },
+  '3': { name:'القطاع 3', driver:'خالد', date:'2026-04-16', bins:[] },
+  '4': { name:'القطاع 4', driver:'يوسف', date:'2026-04-16', bins:[] },
+  '5': { name:'القطاع 5', driver:'عمر', date:'2026-04-16', bins:[] }
 };
 
+// ==========================================
+// 2. تهيئة Firebase مع معالجة الأخطاء
+// ==========================================
+try {
+  const firebaseConfig = {
+    apiKey: "AIzaSyBMao4dJL_2YQjibDvcTIMw1vHHytpVqs0",
+    authDomain: "medea-clean-2026.firebaseapp.com",
+    databaseURL: "https://medea-clean-2026-default-rtdb.firebaseio.com",
+    projectId: "medea-clean-2026",
+    storageBucket: "medea-clean-2026.firebasestorage.app",
+    messagingSenderId: "215503269481",
+    appId: "1:215503269481:web:fa0d4c81ac1081b648fcf8"
+  };
+  
+  if(typeof firebase !== 'undefined') {
+    firebase.initializeApp(firebaseConfig);
+    db = firebase.database();
+  }
+} catch(e) {
+  console.log('Firebase error:', e);
+  db = {
+    ref: (p) => ({
+      on: (e, cb) => { if(cb) cb({val:()=>null}); return ()=>{}; },
+      once: (e) => Promise.resolve({val:()=>null}),
+      set: (d) => Promise.resolve(),
+      update: (d) => Promise.resolve(),
+      remove: () => Promise.resolve()
+    })
+  };
+}
+
+// ==========================================
+// 3. قاموس الترجمة الشامل
+// ==========================================
+const translations = {
+  ar: {
+    appTitle: 'المدية نظيفة 2026 - نظام متكامل',
+    appName: 'المدية نظيفة',
+    appSubtitle: 'مصلحة النظافة والوقاية الصحية<br>بلدية المدية 2026',
+    country: '🇩🇿 الجمهورية الجزائرية الديمقراطية الشعبية',
+    department: '🧹 مصلحة النظافة والوقاية الصحية لبلدية المدية',    connected: '✓ متصل - النظام جاهز',
+    points: 'نقطة',
+    totalReports: 'إجمالي البلاغات',
+    completed: 'تم الإنجاز',
+    sorted: 'تم الفرز',
+    sendReport: 'إرسال تبليغ',
+    displayTools: '🎬 أدوات العرض',
+    demoData: 'بيانات تجريبية',
+    printPDF: 'طباعة PDF',
+    dashboard: 'لوحة الإحصائيات',
+    services: '✨ الخدمات',
+    collectionSchedule: 'جدول الجمع',
+    awareness: 'توعية',
+    myRequests: 'طلباتي',
+    recyclingCalc: 'حاسبة التدوير',
+    circularEconomy: '🔄 الاقتصاد الدائري',
+    sortingCenter: 'مركز الفرز',
+    recyclingMarket: 'سوق التدوير',
+    liveTracking: '🚚 التتبع المباشر',
+    trackTrucks: 'تتبع مسار الشاحنات',
+    staffArea: '👥 الرواق',
+    drivers: 'السائقين',
+    admin: 'الإدارة',
+    newReport: '📝 بلاغ جديد',
+    takePhoto: 'التقاط الصورة',
+    getLocation: 'تحديد الموقع GPS',
+    address: 'اسم الحي أو الشارع',
+    gps: 'إحداثيات GPS',
+    wasteMixed: '🗑️ نفايات عامة',
+    wasteOrganic: '🍂 نفايات عضوية',
+    wastePlastic: '🧴 بلاستيك',
+    wasteMetal: '⚙️ معادن',
+    wastePaper: '📄 ورق/كرتون',
+    wasteGlass: '🥃 زجاج',
+    recurringReport: 'بلاغ متكرر أسبوعياً',
+    send: 'إرسال البلاغ الآن',
+    back: 'رجوع',
+    sectorTracking: '🚚 تتبع مسار الشاحنات حسب القطاع',
+    selectSector: '📍 اختيار القطاع',
+    chooseSector: 'اختر القطاع',
+    sector1: 'القطاع 1',
+    sector2: 'القطاع 2',
+    sector3: 'القطاع 3',
+    sector4: 'القطاع 4',
+    sector5: 'القطاع 5',
+    showRoute: 'عرض المسار',
+    exportPDF: 'تصدير PDF',
+    routeInfo: '📊 معلومات المسار',
+    sector: 'القطاع',
+    date: 'التاريخ',    driver: 'السائق',
+    collectedBins: 'الحاويات',
+    binLocations: '🎯 مواقع الحاويات',
+    controlPanel: '⚙️ لوحة التحكم',
+    adminLogin: '🔐 الدخول للمشرفين',
+    adminName: 'الاسم',
+    adminCode: 'الرمز (1234)',
+    login: 'دخول',
+    adminModeEnabled: '✓ وضع المشرف مفعل',
+    viewReports: 'عرض البلاغات',
+    tonnageRecords: 'سجل الكميات',
+    logout: 'خروج',
+    reportsList: '📋 قائمة البلاغات',
+    allStatuses: 'جميع الحالات',
+    statusNew: 'جديد',
+    statusAssigned: 'قيد التنفيذ',
+    statusDone: 'منجز',
+    search: 'بحث...',
+    reportDistribution: '📊 توزيع حالات البلاغات',
+    noData: 'لا توجد بيانات',
+    thankYou: 'شكراً لكم!',
+    reportSent: 'تم إرسال بلاغكم بنجاح',
+    slogan: '♻️ معاً لمدية خضراء 2026',
+    printExport: '🖨️ طباعة / تصدير PDF',
+    selectPrint: 'اختر ما تريد طباعته:',
+    reports: 'البلاغات',
+    close: 'إغلاق',
+    footer: '🛡️ إعداد د. رابحي فتحي - مصلحة النظافة والوقاية الصحية - بلدية المدية 2026 ©'
+  },
+  fr: {
+    appTitle: 'Médéa Propre 2026 - Système Intégré',
+    appName: 'Médéa Propre',
+    appSubtitle: 'Service de Propreté - Commune de Médéa 2026',
+    country: '🇩🇿 République Algérienne',
+    department: '🧹 Service de Propreté - Médéa',
+    connected: '✓ Connecté - Prêt',
+    points: 'points',
+    totalReports: 'Total signalements',
+    completed: 'Terminé',
+    sorted: 'Trié',
+    sendReport: 'Envoyer signalement',
+    displayTools: '🎬 Outils',
+    demoData: 'Données démo',
+    printPDF: 'Imprimer PDF',
+    dashboard: 'Tableau de bord',
+    services: '✨ Services',
+    collectionSchedule: 'Calendrier',
+    awareness: 'Sensibilisation',
+    myRequests: 'Mes demandes',
+    recyclingCalc: 'Calcul recyclage',    circularEconomy: '🔄 Économie circulaire',
+    sortingCenter: 'Centre de tri',
+    recyclingMarket: 'Marché recyclage',
+    liveTracking: '🚚 Suivi direct',
+    trackTrucks: 'Suivre camions',
+    staffArea: '👥 Équipe',
+    drivers: 'Chauffeurs',
+    admin: 'Administration',
+    newReport: '📝 Nouveau',
+    takePhoto: 'Prendre photo',
+    getLocation: 'Localiser GPS',
+    address: 'Quartier/Rue',
+    gps: 'Coordonnées',
+    wasteMixed: '🗑️ Général',
+    wasteOrganic: '🍂 Organique',
+    wastePlastic: '🧴 Plastique',
+    wasteMetal: '⚙️ Métal',
+    wastePaper: '📄 Papier',
+    wasteGlass: '🥃 Verre',
+    recurringReport: 'Hebdomadaire',
+    send: 'Envoyer',
+    back: 'Retour',
+    sectorTracking: '🚚 Par secteur',
+    selectSector: '📍 Choisir',
+    chooseSector: 'Choisir',
+    sector1: 'Secteur 1',
+    sector2: 'Secteur 2',
+    sector3: 'Secteur 3',
+    sector4: 'Secteur 4',
+    sector5: 'Secteur 5',
+    showRoute: 'Afficher',
+    exportPDF: 'Exporter PDF',
+    routeInfo: '📊 Infos',
+    sector: 'Secteur',
+    date: 'Date',
+    driver: 'Chauffeur',
+    collectedBins: 'Bacs',
+    binLocations: '🎯 Emplacements',
+    controlPanel: '⚙️ Panel',
+    adminLogin: '🔐 Admin',
+    adminName: 'Nom',
+    adminCode: 'Code',
+    login: 'Connexion',
+    adminModeEnabled: '✓ Admin actif',
+    viewReports: 'Voir',
+    tonnageRecords: 'Tonnages',
+    logout: 'Déconnexion',
+    reportsList: '📋 Liste',
+    allStatuses: 'Tous',
+    statusNew: 'Nouveau',    statusAssigned: 'En cours',
+    statusDone: 'Fait',
+    search: 'Chercher...',
+    reportDistribution: '📊 Distribution',
+    noData: 'Aucune donnée',
+    thankYou: 'Merci!',
+    reportSent: 'Envoyé avec succès',
+    slogan: '♻️ Médéa Verte 2026',
+    printExport: '🖨️ PDF',
+    selectPrint: 'Choisir:',
+    reports: 'Signalements',
+    close: 'Fermer',
+    footer: '🛡️ Dr. Rabhi - Médéa 2026 ©'
+  },
+  en: {
+    appTitle: 'Clean Medea 2026 - Integrated System',
+    appName: 'Clean Medea',
+    appSubtitle: 'Sanitation Service - Medea 2026',
+    country: '🇩🇿 Algeria',
+    department: '🧹 Sanitation Service',
+    connected: '✓ Connected - Ready',
+    points: 'points',
+    totalReports: 'Total Reports',
+    completed: 'Completed',
+    sorted: 'Sorted',
+    sendReport: 'Submit Report',
+    displayTools: '🎬 Tools',
+    demoData: 'Demo Data',
+    printPDF: 'Print PDF',
+    dashboard: 'Dashboard',
+    services: '✨ Services',
+    collectionSchedule: 'Schedule',
+    awareness: 'Awareness',
+    myRequests: 'My Requests',
+    recyclingCalc: 'Recycling Calc',
+    circularEconomy: '🔄 Circular Economy',
+    sortingCenter: 'Sorting Center',
+    recyclingMarket: 'Recycling Market',
+    liveTracking: '🚚 Live Tracking',
+    trackTrucks: 'Track Trucks',
+    staffArea: '👥 Staff',
+    drivers: 'Drivers',
+    admin: 'Admin',
+    newReport: '📝 New Report',
+    takePhoto: 'Take Photo',
+    getLocation: 'Get GPS',
+    address: 'Location',
+    gps: 'Coordinates',
+    wasteMixed: '🗑️ General',
+    wasteOrganic: '🍂 Organic',    wastePlastic: '🧴 Plastic',
+    wasteMetal: '⚙️ Metal',
+    wastePaper: '📄 Paper',
+    wasteGlass: '🥃 Glass',
+    recurringReport: 'Weekly',
+    send: 'Send',
+    back: 'Back',
+    sectorTracking: '🚚 By Sector',
+    selectSector: '📍 Select',
+    chooseSector: 'Choose',
+    sector1: 'Sector 1',
+    sector2: 'Sector 2',
+    sector3: 'Sector 3',
+    sector4: 'Sector 4',
+    sector5: 'Sector 5',
+    showRoute: 'Show',
+    exportPDF: 'Export PDF',
+    routeInfo: '📊 Info',
+    sector: 'Sector',
+    date: 'Date',
+    driver: 'Driver',
+    collectedBins: 'Bins',
+    binLocations: '🎯 Locations',
+    controlPanel: '⚙️ Panel',
+    adminLogin: '🔐 Admin',
+    adminName: 'Name',
+    adminCode: 'Code',
+    login: 'Login',
+    adminModeEnabled: '✓ Admin Mode',
+    viewReports: 'View',
+    tonnageRecords: 'Tonnages',
+    logout: 'Logout',
+    reportsList: '📋 List',
+    allStatuses: 'All',
+    statusNew: 'New',
+    statusAssigned: 'Active',
+    statusDone: 'Done',
+    search: 'Search...',
+    reportDistribution: '📊 Distribution',
+    noData: 'No data',
+    thankYou: 'Thank You!',
+    reportSent: 'Report Submitted',
+    slogan: '♻️ Green Medea 2026',
+    printExport: '🖨️ PDF',
+    selectPrint: 'Select:',
+    reports: 'Reports',
+    close: 'Close',
+    footer: '🛡️ Dr. Rabhi - Medea 2026 ©'
+  }
+};
+// ==========================================
+// 4. دوال الترجمة
+// ==========================================
 function changeLang(lang, btn) {
   try {
     currentLang = lang;
     document.querySelectorAll('.lang-btn').forEach(b => b.classList.remove('active'));
     if(btn) btn.classList.add('active');
     localStorage.setItem('medea_lang', lang);
+    
+    // تحديث النصوص
     document.querySelectorAll('[data-i18n]').forEach(el => {
       const key = el.getAttribute('data-i18n');
-      if(translations[lang] && translations[lang][key]) el.textContent = translations[lang][key];
+      if(translations[lang] && translations[lang][key]) {
+        if(el.tagName === 'INPUT' || el.tagName === 'TEXTAREA') {
+          el.placeholder = translations[lang][key];
+        } else {
+          el.innerHTML = translations[lang][key];
+        }
+      }
     });
+    
+    // تحديث placeholders
     document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
       const key = el.getAttribute('data-i18n-placeholder');
-      if(translations[lang] && translations[lang][key]) el.placeholder = translations[lang][key];
+      if(translations[lang] && translations[lang][key]) {
+        el.placeholder = translations[lang][key];
+      }
     });
+    
     updateTime();
-    showToast(translations[lang].msg_lang_changed || '✅ Language changed');
-  } catch(e) { showToast('⚠️ Error', 'error'); }
-}
-// ============================================
-// ✅ Core Functions (All Previous Functions Preserved)
-// ============================================
-function updateTime(){ try{ const n=new Date(); const locale=currentLang==='ar'?'ar-DZ':currentLang==='fr'?'fr-FR':'en-US'; const ck=document.getElementById('ck'), cd=document.getElementById('cd'); if(ck)ck.textContent=n.toLocaleTimeString(locale); if(cd)cd.textContent=n.toLocaleDateString(locale); }catch(e){} }
-setInterval(updateTime, 1000); updateTime();
-
-function showPage(id){ try{ document.querySelectorAll('.page').forEach(p=>p.classList.remove('active')); const el=document.getElementById(id); if(el)el.classList.add('active'); if(id==='dashboard')setTimeout(renderChart,100); if(id==='reportsPage')showReportsPage(); if(id==='publicStats')updatePublicStats(); if(id==='schedule')displaySchedule(); if(id==='tonnageRecords')loadTonnageRecords(); if(id==='scheduleManager')loadScheduleSectors(); if(id==='adminRequests')loadAdminRequests(); if(id==='requests')loadMyRequests(); if(id==='driverTonnage')prepareDriverTonnage(); if(id==='sortingCenter')loadSortedMaterials(); if(id==='recyclingMarket')loadMarketMaterials(); if(id==='truckTracking')initTruckTrackingMap(); if(id==='routeTracking')loadSectorRoute(); if(id==='driver')updateDriverPanel(); if(id==='pdfPreviewPage')initPreviewMap(); window.scrollTo(0,0); }catch(e){} }
-
-function showToast(msg,type='success'){ try{ const container=document.getElementById('toast-container'); if(!container)return; const toast=document.createElement('div'); toast.className='toast'; toast.innerHTML=`<span>${type==='success'?'✅':'ℹ️'}</span><span>${msg}</span>`; container.appendChild(toast); setTimeout(()=>{toast.style.opacity='0';setTimeout(()=>toast.remove(),300);},3000); }catch(e){} }
-
-function setupSync(){ try{ const cr=db.ref('.info/connected'); cr.on('value',(sn)=>{ try{ const se=document.getElementById('syncIndicator'); if(sn&&sn.val&&sn.val()===true){se.innerHTML='✅ '+translations[currentLang].sync_online;se.className='sync-indicator sync-online';}else{se.innerHTML='❌ '+translations[currentLang].sync_offline;se.className='sync-indicator sync-offline';} }catch(e){} }); db.ref('reports').on('value',(sn)=>{ try{ const d=sn&&sn.val?sn.val():null; allReports=d?Object.values(d):[]; updateStats(); }catch(e){} }); }catch(e){} }
-function saveToCloud(p,d){ try{db.ref(p).set(d).catch(()=>{});}catch(e){} try{localStorage.setItem('medea_'+p,JSON.stringify(d));}catch(e){} }
-function loadFromCloud(p,lk,cb){ try{ db.ref(p).once('value').then(sn=>{ try{ const d=sn&&sn.val?sn.val():null; if(d){cb(d);localStorage.setItem('medea_'+lk,JSON.stringify(d));}else{ const ld=localStorage.getItem('medea_'+lk); if(ld)cb(JSON.parse(ld));} }catch(e){} }).catch(()=>{ try{ const ld=localStorage.getItem('medea_'+lk); if(ld)cb(JSON.parse(ld)); }catch(e){} }); }catch(e){ try{ const ld=localStorage.getItem('medea_'+lk); if(ld)cb(JSON.parse(ld)); }catch(err){} } }
-function updateCloudItem(p,iid,up){ try{db.ref(p+'/'+iid).set(up).catch(()=>{});}catch(e){} }
-function addToCloud(p,it){ try{return db.ref(p).set(it).catch(()=>{showToast(translations[currentLang].warn_sync_error||'⚠️ Sync Error','error');});}catch(e){showToast(translations[currentLang].warn_sync_error||'⚠️ Sync Error','error');} }
-function deleteFromCloud(p,iid){ try{db.ref(p+'/'+iid).remove().catch(()=>{});}catch(e){} }
-
-function updateStats(){ try{ document.getElementById('statTotal').textContent=allReports.length; document.getElementById('statDone').textContent=allReports.filter(r=>r.status==='done').length; const rc=wasteTracking.filter(w=>w.status==='published').reduce((s,w)=>s+parseFloat(w.qty||0),0); document.getElementById('recycledTotal').textContent=rc.toFixed(1); if(document.getElementById('dashboard').classList.contains('active'))renderChart(); updatePublicStats(); }catch(e){} }
-function saveReport(r){ addToCloud('reports/'+r.id,r); updateStats(); showToast(translations[currentLang].msg_sent); }
-function updateReport(id,up){ updateCloudItem('reports',id,up); const ix=allReports.findIndex(x=>x.id==id); if(ix!==-1){ allReports[ix]={...allReports[ix],...up}; updateStats(); if(document.getElementById('reportsPage').classList.contains('active'))showReportsPage(); } }
-function saveWasteTracking(w){ addToCloud('wasteTracking/'+w.id,w); updateStats(); }
-function updateWasteTracking(id,up){ updateCloudItem('wasteTracking',id,up); const i=wasteTracking.findIndex(x=>x.id==id); if(i!==-1){ wasteTracking[i]={...wasteTracking[i],...up}; updateStats(); } }
-function saveMarketMaterial(m){ addToCloud('marketMaterials/'+m.id,m); }
-function getWasteTypeName(t){ return{organic:'🍂 عضوي',plastic:'🧴 بلاستيك',metal:'⚙️ معدن',paper:'📄 ورق',glass:'🥃 زجاج',mixed:'🗑️ مختلط'}[t]||'🗑️ عام'; }
-
-function startVoiceInput(){ try{ if(!('webkitSpeechRecognition' in window)){showToast(translations[currentLang].warn_voice_not_supported||'⚠️ Voice not supported','error');return;} const rec=new webkitSpeechRecognition(); rec.lang=currentLang==='ar'?'ar-DZ':currentLang==='fr'?'fr-FR':'en-US'; rec.onstart=()=>showToast('🎤 Listening...'); rec.onresult=(ev)=>{document.getElementById('addrInput').value=ev.results[0][0].transcript;showToast(translations[currentLang].msg_voice_done||'✅ Done');}; rec.onerror=()=>showToast(translations[currentLang].warn_voice_error||'⚠️ Voice Error','error'); rec.start(); }catch(e){showToast(translations[currentLang].warn_voice_error||'⚠️ Voice Error','error');} }
-
-async function getAddressFromCoords(lat,lng){ try{ const rs=await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&accept-language=ar`); const dt=await rs.json(); if(dt&&dt.address){ const pts=[]; if(dt.address.road||dt.address.pedestrian)pts.push(dt.address.road||dt.address.pedestrian); if(dt.address.suburb||dt.address.neighbourhood)pts.push(dt.address.suburb||dt.address.neighbourhood); if(dt.address.city||dt.address.town||dt.address.village)pts.push(dt.address.city||dt.address.town||dt.address.village); if(pts.length===0&&dt.display_name)return dt.display_name; return pts.join(' / '); } return translations[currentLang].default_location||'المدية، الجزائر'; }catch(e){ return translations[currentLang].default_location||'المدية، الجزائر'; } }
-
-function getLocation(){ try{ const btn=document.getElementById('getLocationBtn'),addr=document.getElementById('addrInput'),gps=document.getElementById('gpsInput'); if(!navigator.geolocation){showToast(translations[currentLang].warn_gps_not_supported,'error');return;} btn.innerHTML='⏳ '+translations[currentLang].loading||'جاري...'; btn.disabled=true; navigator.geolocation.getCurrentPosition(async(pos)=>{ const lat=pos.coords.latitude,lng=pos.coords.longitude; gps.value=lat.toFixed(6)+', '+lng.toFixed(6); const fa=await getAddressFromCoords(lat,lng); addr.value=fa; btn.innerHTML='📍 '+translations[currentLang].btn_update_location||'تحديث الموقع'; btn.disabled=false; showToast(translations[currentLang].msg_location_ok||'✅ الموقع: '+fa); },()=>{ btn.innerHTML='📍 '+translations[currentLang].btn_gps; btn.disabled=false; showToast(translations[currentLang].warn_location_failed,'error'); },{enableHighAccuracy:true,timeout:20000}); }catch(e){showToast(translations[currentLang].warn_location_error,'error');} }
-
-function manualLocation(){ const a=prompt(translations[currentLang].ph_address||'أدخل العنوان:','حي الزيتون - المدية'); if(a){document.getElementById('addrInput').value=a;document.getElementById('gpsInput').value='36.2642, 2.7545';} }
-
-function takePhoto(){ try{ const i=document.createElement('input'); i.type='file'; i.accept='image/*'; i.capture='environment'; i.onchange=e=>{ if(e.target.files[0]){ const r=new FileReader(); r.onload=ev=>{ tempImage=ev.target.result; document.getElementById('camImg').src=tempImage; document.getElementById('camImg').style.display='block'; document.querySelector('.cam-icon').style.display='none'; }; r.readAsDataURL(e.target.files[0]); } }; i.click(); }catch(e){showToast(translations[currentLang].warn_camera_error,'error');} }
-
-function sendReport(){ try{ const a=document.getElementById('addrInput').value.trim(); if(!a){showToast(translations[currentLang].warn_enter_address,'error');return;} const btn=document.getElementById('sendBtn'),orig=btn.innerHTML; btn.innerHTML='⏳ '+translations[currentLang].loading||'جاري...'; btn.disabled=true; const isR=document.getElementById('recurringCheck').checked, wt=document.getElementById('wasteTypeSelect').value; const nr={id:Date.now(),addr:a,gps:document.getElementById('gpsInput').value||translations[currentLang].not_specified||'غير محدد',image:tempImage,doneImage:null,date:new Date().toLocaleDateString('ar-DZ'),time:new Date().toLocaleTimeString('ar-DZ'),doneTime:null,status:'new',driverName:null,recurring:isR,wasteType:wt}; saveReport(nr); addPoints(10); showToast(translations[currentLang].msg_sent_success); document.getElementById('thanksOverlay').style.display='flex'; tempImage=null; document.getElementById('camImg').style.display='none'; document.querySelector('.cam-icon').style.display='block'; document.getElementById('addrInput').value=''; document.getElementById('gpsInput').value=''; document.getElementById('recurringCheck').checked=false; setTimeout(()=>{ document.getElementById('thanksOverlay').style.display='none'; showPage('home'); btn.innerHTML=orig; btn.disabled=false; },3000); }catch(e){showToast(translations[currentLang].warn_send_error,'error');} }
-
-function loginAdmin(){ if(document.getElementById('adminCode').value==='1234'){ document.getElementById('adminLogin').classList.add('hidden'); document.getElementById('adminPanel').classList.remove('hidden'); updateStats(); showToast(translations[currentLang].msg_login_success); }else showToast(translations[currentLang].msg_wrong_code||'✗ رمز خاطئ','error'); }
-function logoutAdmin(){ document.getElementById('adminLogin').classList.remove('hidden'); document.getElementById('adminPanel').classList.add('hidden'); document.getElementById('adminName').value=''; document.getElementById('adminCode').value=''; showToast(translations[currentLang].msg_logout); }
-function safeShowReports(){ try{ if(!allReports||allReports.length===0){ showToast(translations[currentLang].warn_no_reports); showPage('reportsPage'); document.getElementById('reportsList').innerHTML='<p style="text-align:center;color:#666;padding:40px">'+translations[currentLang].warn_no_reports+'</p>'; return; } showPage('reportsPage'); applyFilters(); showToast(translations[currentLang].msg_loaded||'✅ تم تحميل البلاغات'); }catch(e){showToast(translations[currentLang].msg_error,'error');} }
-function emergencyClearData(){ if(confirm(translations[currentLang].confirm_emergency||'⚠️ تحذير: سيتم مسح جميع البيانات!\nهل أنت متأكد؟')){ try{db.ref().remove();}catch(e){} localStorage.clear(); allReports=[]; wasteTracking=[]; marketMaterials=[]; truckTrackingData={active:false,driver:'',sector:'',positions:[],collectedBins:[]}; updateStats(); showToast(translations[currentLang].msg_cleared||'✅ تم مسح البيانات'); } }
-
-function loginDriver(){ const n=document.getElementById('driverName').value.trim(); if(!n){showToast(translations[currentLang].warn_enter_name,'error');return;} currentDriver=n; currentDriverSector=translations[currentLang].not_specified||'غير محدد'; document.getElementById('driverLogin').classList.add('hidden'); document.getElementById('driverPanel').classList.remove('hidden'); showToast(translations[currentLang].msg_welcome+' '+n); }
-function logoutDriver(){ if(window.trackingInterval)clearInterval(window.trackingInterval); truckTrackingData.active=false; saveToCloud('truckTracking',truckTrackingData); currentDriver=''; currentDriverSector=''; document.getElementById('driverLogin').classList.remove('hidden'); document.getElementById('driverPanel').classList.add('hidden'); document.getElementById('driverName').value=''; tempAfterImage=null; showToast(translations[currentLang].msg_logout); }
-function prepareDriverTonnage(){ document.getElementById('driverTonnageName').value=currentDriver; document.getElementById('driverTonnageSector').value=currentDriverSector; document.getElementById('driverTonnageWeight').value=''; document.getElementById('driverTonnageRegNum').value=''; }
-function saveDriverTonnage(){ try{ const wt=document.getElementById('driverTonnageWeight').value, rn=document.getElementById('driverTonnageRegNum').value.trim(), wst=document.getElementById('driverWasteType').value; if(!wt||!rn){showToast(translations[currentLang].warn_enter_weight,'error');return;} const recs=JSON.parse(localStorage.getItem('medea_tonnage')||'[]'); const now=new Date(); recs.push({id:Date.now(),driver:currentDriver,sector:currentDriverSector,weight:parseFloat(wt),regNum:rn,date:now.toLocaleDateString('ar-DZ'),time:now.toLocaleTimeString('ar-DZ'),wasteType:wst}); localStorage.setItem('medea_tonnage',JSON.stringify(recs)); showToast(translations[currentLang].msg_saved+': '+wt+' '+translations[currentLang].unit_tons); document.getElementById('driverTonnageWeight').value=''; document.getElementById('driverTonnageRegNum').value=''; showPage('driver'); }catch(e){showToast(translations[currentLang].warn_save_error,'error');} }
-
-function downloadImage(d,f){ if(!d){showToast(translations[currentLang].warn_no_image,'error');return;} const l=document.createElement('a'); l.href=d; l.download=f; document.body.appendChild(l); l.click(); document.body.removeChild(l); showToast(translations[currentLang].msg_downloaded); }
-function downloadReportText(id){ const r=allReports.find(x=>x.id==id); if(!r){showToast(translations[currentLang].warn_not_found,'error');return;} const c=`بلاغ #${r.id}\nالعنوان: ${r.addr}\nGPS: ${r.gps}\nالتاريخ: ${r.date} ${r.time}\nالحالة: ${r.status}\nالسائق: ${r.driverName||'-'}`; const b=new Blob([c],{type:'text/plain'}); const l=document.createElement('a'); l.href=URL.createObjectURL(b); l.download='report_'+id+'.txt'; document.body.appendChild(l); l.click(); document.body.removeChild(l); showToast(translations[currentLang].msg_downloaded); }
-function loadDemoData(){ if(!confirm(translations[currentLang].confirm_demo))return; [{id:1001,addr:'حي الزيتون - شارع الشهداء - المدية',gps:'36.2642, 2.7545',image:'https://via.placeholder.com/300x200/f44336/fff?text=قبل',doneImage:'https://via.placeholder.com/300x200/4CAF50/fff?text=بعد',date:'2026-04-10',time:'09:30',doneTime:'2026-04-10 11:15',status:'done',driverName:'أحمد',wasteType:'plastic'},{id:1002,addr:'وسط المدينة - شارع الاستقلال - المدية',gps:'36.2650, 2.7550',image:'https://via.placeholder.com/300x200/f44336/fff?text=قبل',doneImage:null,date:'2026-04-11',time:'14:20',doneTime:null,status:'assigned',driverName:'محمد',wasteType:'organic'}].forEach(r=>saveReport(r)); showToast(translations[currentLang].msg_loaded||'✅ تم التحميل'); showReportsPage(); }
-
-function showReportsPage(){ try{ applyFilters(); }catch(e){} }
-function applyFilters(){ try{ const st=document.getElementById('filterStatus')?.value||'all', sr=document.getElementById('searchInput')?.value.toLowerCase()||''; let f=allReports; if(st!=='all')f=f.filter(r=>st==='pending'?r.status==='new'||r.status==='assigned':r.status===st); if(sr)f=f.filter(r=>r.addr.toLowerCase().includes(sr)||(r.driverName&&r.driverName.toLowerCase().includes(sr))); renderReportsList(f); }catch(e){} }
-function filterByStatus(s){ showPage('reportsPage'); if(document.getElementById('filterStatus')){ document.getElementById('filterStatus').value=s==='pending'?'assigned':s; applyFilters(); } }
-
-function renderReportsList(reps){ try{ const c=document.getElementById('reportsList'); if(!reps||reps.length===0){ c.innerHTML='<p style="text-align:center;color:#666;padding:40px">'+translations[currentLang].warn_no_reports+'</p>'; return; } c.innerHTML=''; c.innerHTML+=reps.slice(0,50).map(r=>{ if(!r)return ''; const d1=r.image?`<button class="download-btn" onclick="downloadImage('${r.image}','before_${r.id}.jpg')">⬇️ `+translations[currentLang].btn_download_before+`</button>`:''; const d2=r.doneImage?`<button class="download-btn" onclick="downloadImage('${r.doneImage}','after_${r.id}.jpg')">⬇️ `+translations[currentLang].btn_download_after+`</button>`:''; const d3=`<button class="download-btn download-all" onclick="downloadReportText(${r.id})">📄 `+translations[currentLang].btn_full_report+`</button>`; const q=`<button class="download-btn purple" onclick="showQR(${r.id})">📱 QR Code</button>`; const img1=r.image?`<div class="img-container"><img src="${r.image}"><div class="img-label">📷 `+translations[currentLang].lbl_before+` (${r.date})</div></div>${d1}`:''; const img2=r.doneImage?`<div class="img-container"><img src="${r.doneImage}"><div class="img-label done-label">✅ `+translations[currentLang].lbl_after+` (${r.doneTime||''})</div></div>${d2}`:''; let act=''; if(r.status==='new'||r.status==='assigned')act+=`<button class="btn bo" onclick="assignDriver(${r.id})" style="margin-bottom:8px">📤 `+translations[currentLang].btn_assign+`</button>`; act+=`<button class="btn br" onclick="deleteReport(${r.id})">🗑️ `+translations[currentLang].btn_delete+`</button>`; const rb=r.recurring?'<span style="background:#FF9800;color:#fff;padding:2px 8px;border-radius:10px;font-size:0.7rem;margin-right:5px">🔄 '+translations[currentLang].lbl_recurring+`</span>`:''; const wb=r.wasteType?`<span class="waste-badge waste-${r.wasteType}">${getWasteTypeName(r.wasteType)}</span>`:''; return`<div class="report-card ${r.status}"><div class="info-row"><b>📍 `+translations[currentLang].lbl_address+`:</b> ${rb}${wb} ${r.addr}</div><div class="info-row"><b>🌍 GPS:</b> ${r.gps}</div><div class="info-row"><b>📅 `+translations[currentLang].lbl_date+`:</b> ${r.date} ${r.time}</div>${r.driverName?`<div class="info-row"><b>👷 `+translations[currentLang].lbl_driver+`:</b> ${r.driverName}</div>`:''}<div class="info-row"><b>📊 `+translations[currentLang].lbl_status+`:</b> <span style="color:${r.status==='done'?'#4CAF50':r.status==='assigned'?'#FF9800':'#f44336'}">${r.status==='done'?'✅ '+translations[currentLang].lbl_done:r.status==='assigned'?'🚚 '+translations[currentLang].lbl_in_progress:'🆕 '+translations[currentLang].lbl_new}</span></div>${img1}${img2}<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px">${q}${d3}</div><div style="margin-top:10px">${act}</div></div>`; }).join(''); }catch(e){} }
-
-function showQR(id){ try{ const r=allReports.find(x=>x.id==id); if(!r){showToast(translations[currentLang].warn_not_found,'error');return;} document.getElementById('qrModal').style.display='flex'; document.getElementById('qrReportId').textContent=r.id; const qc=document.getElementById('qrcode'); qc.innerHTML=''; if(typeof QRCode!=='undefined'){ try{ new QRCode(qc,{text:String(r.id),width:200,height:200,colorDark:'#1B5E20',colorLight:'#ffffff',correctLevel:QRCode.CorrectLevel.M}); }catch(e){qc.innerHTML='<div style="color:red;padding:20px">⚠️ '+translations[currentLang].warn_qr_error+`</div>`;} }else{qc.innerHTML='<div style="color:red;padding:20px">⚠️ '+translations[currentLang].warn_qr_lib+`</div>`;} }catch(e){showToast(translations[currentLang].warn_qr_error,'error');} }
-function assignDriver(id){ try{ const n=prompt(translations[currentLang].ph_driver_name||'اسم السائق:'); if(!n)return; updateReport(id,{driverName:n,status:'assigned'}); showToast(translations[currentLang].msg_assigned||'✅ تم التوجيه لـ '+n); showReportsPage(); }catch(e){showToast(translations[currentLang].warn_assign_error,'error');} }
-function deleteReport(id){ if(!confirm(translations[currentLang].confirm_delete_report||'حذف البلاغ؟'))return; deleteFromCloud('reports',id); allReports=allReports.filter(r=>r.id!=id); showReportsPage(); updateStats(); showToast(translations[currentLang].msg_deleted); }
-
-function loadStaffList(){ try{ let s=[]; try{s=JSON.parse(localStorage.getItem('medea_staff')||'[]');}catch(e){} const c=document.getElementById('staffList'); if(!s.length){c.innerHTML='<p style="text-align:center;color:#666;padding:30px">'+translations[currentLang].warn_no_staff+`</p>`;return;} c.innerHTML=s.map((x,i)=>`<div class="staff-item"><div><b style="color:#1B5E20">${x.role}:</b> ${x.name}${x.phone?`<br><a href="tel:${x.phone}" class="phone-link">📞 ${x.phone}</a>`:''}</div><div class="action-btns"><button class="edit-btn" onclick="editStaff(${i})">✏️</button><button class="delete-btn" onclick="deleteStaff(${i})">✕</button></div></div>`).join(''); }catch(e){} }
-function addStaff(){ const n=document.getElementById('newStaffName').value.trim(), r=document.getElementById('newStaffRole').value.trim(), p=document.getElementById('newStaffPhone').value.trim(); if(!n||!r){showToast(translations[currentLang].warn_complete_fields,'error');return;} let s=[]; try{s=JSON.parse(localStorage.getItem('medea_staff')||'[]');}catch(e){} s.push({name:n,role:r,phone:p}); try{localStorage.setItem('medea_staff',JSON.stringify(s));}catch(e){} document.getElementById('newStaffName').value=''; document.getElementById('newStaffRole').value=''; document.getElementById('newStaffPhone').value=''; loadStaffList(); showToast(translations[currentLang].msg_added); }
-function editStaff(i){ let s=[]; try{s=JSON.parse(localStorage.getItem('medea_staff')||'[]');}catch(e){} const st=s[i]; const nn=prompt(translations[currentLang].ph_staff_name||'الاسم الجديد:',st.name); if(!nn)return; const nr=prompt(translations[currentLang].ph_staff_role||'المنصب الجديد:',st.role); if(!nr)return; const np=prompt(translations[currentLang].ph_staff_phone||'الهاتف الجديد:',st.phone||''); s[i]={name:nn,role:nr,phone:np}; try{localStorage.setItem('medea_staff',JSON.stringify(s));}catch(e){} loadStaffList(); showToast(translations[currentLang].msg_updated); }
-function deleteStaff(i){ if(!confirm(translations[currentLang].confirm_delete_staff||'حذف الموظف؟'))return; let s=[]; try{s=JSON.parse(localStorage.getItem('medea_staff')||'[]');}catch(e){} s.splice(i,1); try{localStorage.setItem('medea_staff',JSON.stringify(s));}catch(e){} loadStaffList(); }
-function manageStaffPage(){ showPage('staffPage'); loadStaffList(); }
-function backToAdmin(){ showPage('admin'); }
-
-function renderDriverTasks(){ try{ const t=allReports.filter(r=>r.driverName===currentDriver&&r.status!=='done'), c=document.getElementById('tasksList'); if(!t.length){c.innerHTML='<p style="text-align:center;color:#4CAF50;padding:40px">✓ '+translations[currentLang].no_tasks+`</p>`;return;} c.innerHTML=t.map(x=>{ const img=x.image?`<div class="img-container"><img src="${x.image}"><div class="img-label">📷 `+translations[currentLang].lbl_report_photo+` (${x.date} ${x.time})</div></div>`:''; const mp=x.gps?`<a href="https://www.google.com/maps/dir/?api=1&destination=${x.gps.split(',')[0]},${x.gps.split(',')[1]}" target="_blank" class="btn map-btn">🗺️ `+translations[currentLang].btn_open_map+`</a>`:''; return`<div class="report-card assigned"><div class="info-row"><b>📍 `+translations[currentLang].lbl_address+`:</b> ${x.addr}</div><div class="info-row"><b>🌍 GPS:</b> ${x.gps}</div>${img}${mp}<button class="btn bg" onclick="completeTask(${x.id})" style="margin-top:10px">✅ `+translations[currentLang].btn_confirm+`</button></div>`; }).join(''); }catch(e){} }
-function driverTakePhoto(id){ try{ const i=document.createElement('input'); i.type='file'; i.accept='image/*'; i.capture='environment'; i.onchange=e=>{ if(e.target.files[0]){ const r=new FileReader(); r.onload=ev=>{ tempAfterImage=ev.target.result; showToast(translations[currentLang].msg_photo_saved||'✓ تم حفظ الصورة'); }; r.readAsDataURL(e.target.files[0]); } }; i.click(); }catch(e){showToast(translations[currentLang].warn_camera_error,'error');} }
-function completeTask(id){ try{ if(!tempAfterImage&&!confirm(translations[currentLang].confirm_photo||'لم يتم التصوير. متابعة؟'))return; const u={status:'done',doneTime:new Date().toLocaleString('ar-DZ')}; if(tempAfterImage)u.doneImage=tempAfterImage; updateReport(id,u); tempAfterImage=null; showToast(translations[currentLang].msg_completed||'✅ تم الإنجاز!'); renderDriverTasks(); updateStats(); }catch(e){showToast(translations[currentLang].warn_complete_error,'error');} }
-
-function submitRequest(){ try{ const ty=document.getElementById('reqType').value, ds=document.getElementById('reqDesc').value.trim(), lc=document.getElementById('reqLocation').value.trim(); if(!ds||!lc){showToast(translations[currentLang].warn_complete_fields,'error');return;} const reqs=JSON.parse(localStorage.getItem('medea_requests')||'[]'); reqs.push({id:Date.now(),type:ty,desc:ds,location:lc,date:new Date().toLocaleDateString('ar-DZ'),time:new Date().toLocaleTimeString('ar-DZ'),status:'pending'}); localStorage.setItem('medea_requests',JSON.stringify(reqs)); showToast(translations[currentLang].msg_request_sent); document.getElementById('reqDesc').value=''; document.getElementById('reqLocation').value=''; loadMyRequests(); }catch(e){showToast(translations[currentLang].warn_request_error,'error');} }
-function loadMyRequests(){ try{ const reqs=JSON.parse(localStorage.getItem('medea_requests')||'[]'), list=document.getElementById('myRequestsList'); if(!reqs.length){list.innerHTML='<p style="text-align:center;color:#666;padding:20px">'+translations[currentLang].warn_no_requests+`</p>`;return;} list.innerHTML=reqs.slice().reverse().map(r=>`<div class="tonnage-card"><div class="tonnage-info"><b>📝 `+translations[currentLang].lbl_type+`:</b> ${r.type==='bin'?translations[currentLang].req_bin:r.type==='repair'?translations[currentLang].req_repair:r.type==='clean'?translations[currentLang].req_clean:translations[currentLang].req_other}</div><div class="tonnage-info"><b>📍 `+translations[currentLang].ph_location+`:</b> ${r.location}</div><div class="tonnage-info"><b>📅 `+translations[currentLang].lbl_date+`:</b> ${r.date} ${r.time}</div><div class="tonnage-info"><b>📊 `+translations[currentLang].lbl_status+`:</b> <span style="color:${r.status==='pending'?'#FF9800':'#4CAF50'}">${r.status==='pending'?translations[currentLang].lbl_pending:translations[currentLang].lbl_processed}</span></div></div>`).join(''); }catch(e){} }
-function loadAdminRequests(){ try{ const reqs=JSON.parse(localStorage.getItem('medea_requests')||'[]'), list=document.getElementById('adminRequestsList'); if(!reqs.length){list.innerHTML='<p style="text-align:center;color:#666;padding:20px">'+translations[currentLang].warn_no_requests+`</p>`;return;} list.innerHTML=reqs.slice().reverse().map(r=>`<div class="tonnage-card"><div class="tonnage-info"><b>📝 `+translations[currentLang].lbl_type+`:</b> ${r.type==='bin'?translations[currentLang].req_bin:r.type==='repair'?translations[currentLang].req_repair:r.type==='clean'?translations[currentLang].req_clean:translations[currentLang].req_other}</div><div class="tonnage-info"><b>📍 `+translations[currentLang].ph_location+`:</b> ${r.location}</div><div class="tonnage-info"><b>📝 `+translations[currentLang].ph_desc+`:</b> ${r.desc}</div><div class="tonnage-info"><b>📅 `+translations[currentLang].lbl_date+`:</b> ${r.date} ${r.time}</div><div class="tonnage-info"><b>📊 `+translations[currentLang].lbl_status+`:</b> <span style="color:${r.status==='pending'?'#FF9800':'#4CAF50'}">${r.status==='pending'?translations[currentLang].lbl_pending:translations[currentLang].lbl_processed}</span></div>${r.status==='pending'?`<button class="btn bg" style="margin-top:10px;padding:8px" onclick="processRequest(${r.id})">✅ `+translations[currentLang].btn_process+`</button>`:''}</div>`).join(''); }catch(e){} }
-function processRequest(id){ try{ let reqs=JSON.parse(localStorage.getItem('medea_requests')||'[]'); const i=reqs.findIndex(r=>r.id==id); if(i!==-1){ reqs[i].status='done'; localStorage.setItem('medea_requests',JSON.stringify(reqs)); showToast(translations[currentLang].msg_processed); loadAdminRequests(); } }catch(e){showToast(translations[currentLang].warn_process_error,'error');} }
-function loadRequests(){ loadMyRequests(); }
-
-function updatePublicStats(){ try{ const total=allReports.length, done=allReports.filter(r=>r.status==='done').length, rate=total>0?Math.round((done/total)*100):0; document.getElementById('publicTotal').textContent=total; document.getElementById('publicRate').textContent=rate+'%'; const drvs=JSON.parse(localStorage.getItem('medea_staff')||'[]').filter(s=>s.role.includes('سائق')).length; document.getElementById('activeDrivers').textContent=drvs; const rc=wasteTracking.filter(w=>w.status==='published').reduce((s,w)=>s+parseFloat(w.qty||0),0); document.getElementById('recycledTotal').textContent=rc.toFixed(1); const ch=document.getElementById('publicChart'); if(ch){ const dp=(done/total)*100||0; ch.style.background=`conic-gradient(#4CAF50 0deg ${dp*3.6}deg,#eee ${dp*3.6}deg 360deg)`; } }catch(e){} }
-function exportExcel(){ try{ if(!allReports.length){showToast(translations[currentLang].warn_no_data,'error');return;} let c='ID,'+translations[currentLang].lbl_date+','+translations[currentLang].lbl_time+','+translations[currentLang].lbl_address+',GPS,'+translations[currentLang].lbl_status+','+translations[currentLang].lbl_driver+','+translations[currentLang].lbl_type+','+translations[currentLang].lbl_recurring+'\n'; allReports.forEach(x=>c+=x.id+','+x.date+','+x.time+',"'+x.addr+'",'+x.gps+','+x.status+','+(x.driverName||'-')+','+x.wasteType+','+(x.recurring?translations[currentLang].yes:translations[currentLang].no)+'\n'); const b=new Blob([c],{type:'text/csv'}), a=document.createElement('a'); a.href=URL.createObjectURL(b); a.download='archive_'+Date.now()+'.csv'; a.click(); showToast(translations[currentLang].msg_exported); }catch(e){showToast(translations[currentLang].warn_export_error,'error');} }
-function exitApp(){ if(confirm(translations[currentLang].confirm_exit||'الخروج؟')){ window.close(); setTimeout(()=>{window.location.href='about:blank';},1000); } }
-
-function renderChart(){ try{ const done=allReports.filter(r=>r.status==='done').length, assigned=allReports.filter(r=>r.status==='assigned').length, nw=allReports.filter(r=>r.status==='new').length, total=allReports.length, vis=document.getElementById('chartVisual'), leg=document.getElementById('chartLegend'); if(!vis||!leg)return; if(total===0){ vis.innerHTML='<div style="display:flex;align-items:center;justify-content:center;height:100%;color:#999;font-size:1.1rem">'+translations[currentLang].warn_no_data+`</div>`; leg.innerHTML=''; return; } const dp=(done/total)*100, ap=(assigned/total)*100; vis.style.background=`conic-gradient(#4CAF50 0deg ${dp*3.6}deg,#FF9800 ${dp*3.6}deg ${(dp+ap)*3.6}deg,#f44336 ${(dp+ap)*3.6}deg 360deg)`; vis.style.borderRadius='50%'; vis.style.boxShadow='0 5px 20px rgba(0,0,0,0.2)'; leg.innerHTML=`<div class="legend-item"><div class="legend-color" style="background:#4CAF50"></div><span>${translations[currentLang].legend_done}: ${done}</span></div><div class="legend-item"><div class="legend-color" style="background:#FF9800"></div><span>${translations[currentLang].legend_assigned}: ${assigned}</span></div><div class="legend-item"><div class="legend-color" style="background:#f44336"></div><span>${translations[currentLang].legend_new}: ${nw}</span></div>`; }catch(e){} }
-function addPoints(am){ userPoints+=am; try{localStorage.setItem('medea_points',userPoints);}catch(e){} try{document.getElementById('userPoints').textContent=userPoints;}catch(e){} }
-function loadTonnageRecords(){ try{ const recs=JSON.parse(localStorage.getItem('medea_tonnage')||'[]'), list=document.getElementById('tonnageList'); if(!recs.length){list.innerHTML='<p style="text-align:center;color:#666;padding:20px">'+translations[currentLang].warn_no_tonnage+`</p>`;return;} let tw=recs.reduce((s,r)=>s+r.weight,0); list.innerHTML=recs.slice().reverse().map(r=>`<div class="tonnage-card"><div class="tonnage-info"><b>🚛 `+translations[currentLang].lbl_driver+`:</b> ${r.driver||translations[currentLang].not_specified}</div><div class="tonnage-info"><b>🏷️ `+translations[currentLang].lbl_sector+`:</b> ${r.sector||'-'}</div><div class="tonnage-info"><b>⚖️ `+translations[currentLang].ph_weight+`:</b> <span style="color:#FF9800;font-weight:bold">${r.weight} `+translations[currentLang].unit_tons+`</span></div><div class="tonnage-info"><b>🔢 `+translations[currentLang].ph_reg_num+`:</b> ${r.regNum}</div><div class="tonnage-info"><b>📅 `+translations[currentLang].lbl_date+`:</b> ${r.date}</div><div class="tonnage-info"><b>🕐 `+translations[currentLang].lbl_time+`:</b> ${r.time}</div><div class="tonnage-info"><b>🗑️ `+translations[currentLang].lbl_type+`:</b> ${getWasteTypeName(r.wasteType)}</div></div>`).join(''); list.innerHTML+=`<div class="cd" style="margin-top:15px;text-align:center;background:#e8f5e9"><b>📊 `+translations[currentLang].stat_total+`:</b> <span style="color:#1B5E20;font-size:1.2rem;font-weight:bold">${tw.toFixed(2)} `+translations[currentLang].unit_tons+`</span></div>`; }catch(e){} }
-function exportTonnageToExcel(){ try{ const recs=JSON.parse(localStorage.getItem('medea_tonnage')||'[]'); if(!recs.length){showToast(translations[currentLang].warn_no_tonnage,'error');return;} let c=translations[currentLang].lbl_driver+','+translations[currentLang].lbl_sector+','+translations[currentLang].ph_weight+'('+translations[currentLang].unit_tons+'),'+translations[currentLang].ph_reg_num+','+translations[currentLang].lbl_type+','+translations[currentLang].lbl_date+','+translations[currentLang].lbl_time+'\n'; recs.forEach(r=>c+=`${r.driver},${r.sector},${r.weight},${r.regNum},${r.wasteType},${r.date},${r.time}\n`); const b=new Blob([c],{type:'text/csv'}), a=document.createElement('a'); a.href=URL.createObjectURL(b); a.download='tonnage_'+Date.now()+'.csv'; a.click(); showToast(translations[currentLang].msg_exported); }catch(e){showToast(translations[currentLang].warn_export_error,'error');} }
-function printTonnage(){ openPrintDialog(); printSection('tonnage'); }
-
-function addScheduleSector(){ try{ const nm=document.getElementById('sectorNum').value.trim(), ty=document.getElementById('sectorType').value, na=document.getElementById('sectorName').value.trim(), dy=document.getElementById('sectorDays').value.trim(), tm=document.getElementById('sectorTime').value.trim(), ch=document.getElementById('sectorCatchup').value.trim(), dr=document.getElementById('sectorDriver').value.trim(), ph=document.getElementById('sectorPhone').value.trim(); if(!na||!dy||!tm){showToast(translations[currentLang].warn_complete_fields,'error');return;} const secs=JSON.parse(localStorage.getItem('medea_schedule')||'[]'); secs.push({id:Date.now(),num:nm,type:ty,name:na,days:dy,time:tm,catchup:ch,driver:dr,phone:ph}); localStorage.setItem('medea_schedule',JSON.stringify(secs)); showToast(translations[currentLang].msg_added); document.getElementById('sectorNum').value=''; document.getElementById('sectorName').value=''; document.getElementById('sectorDays').value=''; document.getElementById('sectorTime').value=''; document.getElementById('sectorCatchup').value=''; document.getElementById('sectorDriver').value=''; document.getElementById('sectorPhone').value=''; loadScheduleSectors(); }catch(e){showToast(translations[currentLang].warn_add_error,'error');} }
-function loadScheduleSectors(){ try{ const secs=JSON.parse(localStorage.getItem('medea_schedule')||'[]'), list=document.getElementById('scheduleList'); if(!secs.length){list.innerHTML='<p style="text-align:center;color:#666;padding:20px">'+translations[currentLang].warn_no_sectors+`</p>`;return;} list.innerHTML=secs.map(s=>`<div class="tonnage-card"><div class="tonnage-info"><b>🏷️ `+translations[currentLang].ph_sector_num+`:</b> ${s.num||'-'}</div><div class="tonnage-info"><b>🏛️ `+translations[currentLang].lbl_type+`:</b> ${s.type}</div><div class="tonnage-info"><b>📍 `+translations[currentLang].ph_sector_name+`:</b> ${s.name}</div><div class="tonnage-info"><b>📅 `+translations[currentLang].ph_days+`:</b> ${s.days}</div><div class="tonnage-info"><b>🕐 `+translations[currentLang].ph_time+`:</b> ${s.time}</div><div class="tonnage-info"><b>⏳ `+translations[currentLang].ph_catchup+`:</b> ${s.catchup||'-'}</div><div class="tonnage-info"><b>👤 `+translations[currentLang].ph_sector_driver+`:</b> ${s.driver||'-'} ${s.phone?`<a href="tel:${s.phone}" class="phone-link">📞 ${s.phone}</a>`:''}</div><button class="btn br" style="margin-top:10px;padding:8px" onclick="deleteScheduleSector(${s.id})">🗑️ `+translations[currentLang].btn_delete+`</button></div>`).join(''); }catch(e){} }
-function deleteScheduleSector(id){ if(!confirm(translations[currentLang].confirm_delete_sector||'حذف القطاع؟'))return; try{ let secs=JSON.parse(localStorage.getItem('medea_schedule')||'[]'); secs=secs.filter(s=>s.id!=id); localStorage.setItem('medea_schedule',JSON.stringify(secs)); showToast(translations[currentLang].msg_deleted); loadScheduleSectors(); }catch(e){showToast(translations[currentLang].warn_delete_error,'error');} }
-function loadSchedule(){ try{ const secs=JSON.parse(localStorage.getItem('medea_schedule')||'[]'), disp=document.getElementById('scheduleDisplay'); if(!secs.length){disp.innerHTML='<p style="text-align:center;color:#666;padding:20px">'+translations[currentLang].warn_no_schedule+`</p>`;return;} let html='<table class="schedule-table"><tr><th>'+translations[currentLang].ph_sector_name+`</th><th>`+translations[currentLang].ph_days+`</th><th>`+translations[currentLang].ph_time+`</th></tr>`; secs.forEach(s=>{html+=`<tr><td>${s.name}</td><td>${s.days}</td><td>${s.time}</td></tr>`;}); html+='</table>'; disp.innerHTML=html; }catch(e){} }
-function displaySchedule(){ loadSchedule(); }
-
-function registerWasteIn(){ try{ const src=document.getElementById('wasteSource').value.trim(), qty=parseFloat(document.getElementById('wasteQty').value), cat=document.getElementById('wasteCategory').value, qlt=document.getElementById('wasteQuality').value, trk=document.getElementById('truckNumber').value.trim(), nts=document.getElementById('wasteNotes').value.trim(); if(!src||!qty){showToast(translations[currentLang].warn_complete_fields,'error');return;} const now=new Date(), ws={id:Date.now(),source:src,category:cat,qty:qty,quality:qlt,truck:trk,notes:nts,date:now.toLocaleDateString('ar-DZ'),time:now.toLocaleTimeString('ar-DZ'),status:'sorted',marketPublished:false,requests:[]}; saveWasteTracking(ws); showToast(translations[currentLang].msg_registered||'✅ تم تسجيل الوارد بنجاح'); document.getElementById('wasteSource').value=''; document.getElementById('wasteQty').value=''; document.getElementById('truckNumber').value=''; document.getElementById('wasteNotes').value=''; loadSortedMaterials(); }catch(e){showToast(translations[currentLang].warn_register_error,'error');} }
-function loadSortedMaterials(){ try{ const list=document.getElementById('sortedMaterialsList'), mats=wasteTracking.filter(w=>w.status==='sorted'); if(!mats.length){list.innerHTML='<p style="text-align:center;color:#666;padding:20px">'+translations[currentLang].warn_no_sorted+`</p>`;return;} list.innerHTML=mats.map(m=>`<div class="material-card ${m.marketPublished?'reserved':'available'}"><div class="info-row"><b>📍 `+translations[currentLang].ph_source+`:</b> ${m.source}</div><div class="info-row"><b>🗑️ `+translations[currentLang].lbl_type+`:</b> <span class="waste-badge waste-${m.category}">${getWasteTypeName(m.category)}</span></div><div class="info-row"><b>⚖️ `+translations[currentLang].ph_qty+`:</b> <span style="font-weight:bold">${m.qty} `+translations[currentLang].unit_tons+`</span></div><div class="info-row"><b>⭐ `+translations[currentLang].lbl_quality+`:</b> <span class="quality-${m.quality}">${getQualityName(m.quality)}</span></div><div class="info-row"><b>🚚 `+translations[currentLang].ph_truck+`:</b> ${m.truck||'-'}</div><div class="info-row"><b>📅 `+translations[currentLang].lbl_date+`:</b> ${m.date} ${m.time}</div>${m.notes?`<div class="info-row"><b>📝 `+translations[currentLang].ph_notes+`:</b> ${m.notes}</div>`:''}${!m.marketPublished?`<button class="btn purple" style="margin-top:10px" onclick="publishMaterial(${m.id})">🚀 `+translations[currentLang].btn_publish+`</button>`:`<div style="margin-top:10px;padding:10px;background:#e8f5e9;border-radius:8px;text-align:center;color:#2E7D32">✓ `+translations[currentLang].lbl_published+`</div>`}</div>`).join(''); }catch(e){} }
-function getQualityName(q){ return{excellent:translations[currentLang].qlt_excellent,good:translations[currentLang].qlt_good,fair:translations[currentLang].qlt_fair,poor:translations[currentLang].qlt_poor}[q]||q; }
-function publishToMarket(){ try{ const unp=wasteTracking.filter(w=>w.status==='sorted'&&!w.marketPublished); if(!unp.length){showToast(translations[currentLang].warn_no_unpublished||'⚠️ لا توجد مواد غير منشورة','error');return;} unp.forEach(m=>{ updateWasteTracking(m.id,{marketPublished:true}); saveMarketMaterial({id:Date.now()+Math.random(),wasteId:m.id,category:m.category,qty:m.qty,quality:m.quality,source:m.source,date:new Date().toLocaleDateString('ar-DZ'),status:'available',requests:[]}); }); showToast(translations[currentLang].msg_published+' '+unp.length+' '+translations[currentLang].lbl_materials); loadSortedMaterials(); loadMarketMaterials(); }catch(e){showToast(translations[currentLang].warn_publish_error,'error');} }function publishMaterial(id){ try{ updateWasteTracking(id,{marketPublished:true}); const m=wasteTracking.find(w=>w.id==id); if(m){ saveMarketMaterial({id:Date.now()+Math.random(),wasteId:m.id,category:m.category,qty:m.qty,quality:m.quality,source:m.source,date:new Date().toLocaleDateString('ar-DZ'),status:'available',requests:[]}); } loadSortedMaterials(); loadMarketMaterials(); }catch(e){showToast(translations[currentLang].warn_publish_error,'error');} }
-function filterMarket(){ try{ loadMarketMaterials(); }catch(e){} }
-function loadMarketMaterials(){ try{ const list=document.getElementById('marketMaterialsList'), ft=document.getElementById('marketFilterType')?.value||'all', fq=document.getElementById('marketFilterQuality')?.value||'all'; let mats=marketMaterials.filter(m=>m.status==='available'); if(ft!=='all')mats=mats.filter(m=>m.category===ft); if(fq!=='all')mats=mats.filter(m=>m.quality===fq); if(!mats.length){list.innerHTML='<p style="text-align:center;color:#666;padding:20px">'+translations[currentLang].warn_no_materials+`</p>`;return;} list.innerHTML=mats.map(m=>`<div class="material-card available"><div class="info-row"><b>🗑️ `+translations[currentLang].lbl_type+`:</b> <span class="waste-badge waste-${m.category}">${getWasteTypeName(m.category)}</span></div><div class="info-row"><b>⚖️ `+translations[currentLang].ph_qty+`:</b> <span style="font-weight:bold">${m.qty} `+translations[currentLang].unit_tons+`</span></div><div class="info-row"><b>⭐ `+translations[currentLang].lbl_quality+`:</b> <span class="quality-${m.quality}">${getQualityName(m.quality)}</span></div><div class="info-row"><b>📍 `+translations[currentLang].ph_source+`:</b> ${m.source}</div><div class="info-row"><b>📅 `+translations[currentLang].lbl_date+`:</b> ${m.date}</div><button class="btn market-btn" style="margin-top:10px" onclick="openRequestForm(${m.id})">📝 `+translations[currentLang].btn_request+`</button></div>`).join(''); }catch(e){} }
-function openRequestForm(mid){ document.getElementById('requestForm').style.display='block'; document.getElementById('requestForm').dataset.materialId=mid; window.scrollTo(0,document.getElementById('requestForm').offsetTop-100); }
-function submitMarketRequest(){ try{ const mid=document.getElementById('requestForm').dataset.materialId, cn=document.getElementById('companyName').value.trim(), cl=document.getElementById('companyLicense').value.trim(), cp=document.getElementById('companyPhone').value.trim(), rq=parseFloat(document.getElementById('requestQty').value), rp=document.getElementById('requestPurpose').value.trim(); if(!cn||!cl||!cp||!rq){showToast(translations[currentLang].warn_complete_fields,'error');return;} const now=new Date(), rqst={id:Date.now(),materialId:mid,company:cn,license:cl,phone:cp,qty:rq,purpose:rp,date:now.toLocaleDateString('ar-DZ'),status:'pending'}; const reqs=JSON.parse(localStorage.getItem('medea_market_requests')||'[]'); reqs.push(rqst); localStorage.setItem('medea_market_requests',JSON.stringify(reqs)); showToast(translations[currentLang].msg_request_sent); document.getElementById('companyName').value=''; document.getElementById('companyLicense').value=''; document.getElementById('companyPhone').value=''; document.getElementById('requestQty').value=''; document.getElementById('requestPurpose').value=''; document.getElementById('requestForm').style.display='none'; }catch(e){showToast(translations[currentLang].warn_request_error,'error');} }
-
-let currentPrintType=null;
-function openPrintDialog(){ document.getElementById('printModal').classList.add('active'); document.getElementById('printPreviewContainer').style.display='none'; document.getElementById('printDialogActions').style.display='flex'; }
-function closePrintDialog(){ document.getElementById('printModal').classList.remove('active'); currentPrintType=null; }
-function backToPrintOptions(){ document.getElementById('printPreviewContainer').style.display='none'; document.getElementById('printDialogActions').style.display='flex'; currentPrintType=null; }
-function printSection(type){ currentPrintType=type; let title='',tableHTML=''; switch(type){ case'reports':title=translations[currentLang].opt_reports;tableHTML=generateReportsTable();break; case'tonnage':title=translations[currentLang].opt_tonnage;tableHTML=generateTonnageTable();break; case'sorting':title=translations[currentLang].opt_sorting;tableHTML=generateSortingTable();break; case'market':title=translations[currentLang].opt_market;tableHTML=generateMarketTable();break; case'stats':title=translations[currentLang].opt_stats;tableHTML=generateStatsTable();break; } const hdr=`<div class="print-preview-header"><h3>${title}</h3><p>`+translations[currentLang].footer_prepared+`</p><p>`+translations[currentLang].lbl_date+`: ${new Date().toLocaleDateString('ar-DZ')}</p><p>`+translations[currentLang].footer+`</p></div>`; document.getElementById('printContent').innerHTML=hdr+tableHTML; document.getElementById('printPreviewContainer').style.display='block'; document.getElementById('printDialogActions').style.display='none'; }
-function generateReportsTable(){ if(!allReports||allReports.length===0)return'<p style="text-align:center;padding:20px;color:#666">'+translations[currentLang].warn_no_reports+`</p>`; let html='<table><thead><tr><th>#</th><th>'+translations[currentLang].lbl_address+`</th><th>`+translations[currentLang].lbl_type+`</th><th>`+translations[currentLang].lbl_date+`</th><th>`+translations[currentLang].lbl_status+`</th></tr></thead><tbody>'; allReports.forEach((r,i)=>{html+=`<tr><td>${i+1}</td><td>${r.addr}</td><td>${getWasteTypeName(r.wasteType)}</td><td>${r.date}</td><td>${r.status==='done'?'✅ '+translations[currentLang].lbl_done:r.status==='assigned'?'🚚 '+translations[currentLang].lbl_in_progress:'🆕 '+translations[currentLang].lbl_new}</td></tr>`;}); html+='</tbody></table><div style="margin-top:15px;padding:10px;background:#f5f7fa;border-radius:8px;text-align:center"><b>'+translations[currentLang].stat_total+': '+allReports.length+' '+translations[currentLang].lbl_reports+`</b></div>`; return html; }
-function generateTonnageTable(){ const recs=JSON.parse(localStorage.getItem('medea_tonnage')||'[]'); if(!recs||recs.length===0)return'<p style="text-align:center;padding:20px;color:#666">'+translations[currentLang].warn_no_tonnage+`</p>`; let tw=recs.reduce((s,r)=>s+r.weight,0), html='<table><thead><tr><th>#</th><th>'+translations[currentLang].lbl_driver+`</th><th>`+translations[currentLang].lbl_type+`</th><th>`+translations[currentLang].ph_weight+' ('+translations[currentLang].unit_tons+`)</th><th>`+translations[currentLang].lbl_date+`</th></tr></thead><tbody>'; recs.forEach((r,i)=>{html+=`<tr><td>${i+1}</td><td>${r.driver||'-'}</td><td>${getWasteTypeName(r.wasteType)}</td><td><b>${r.weight}</b></td><td>${r.date}</td></tr>`;}); html+='</tbody></table><div style="margin-top:15px;padding:10px;background:#e8f5e9;border-radius:8px;text-align:center"><b>📊 '+translations[currentLang].stat_total+': '+tw.toFixed(2)+' '+translations[currentLang].unit_tons+`</b></div>`; return html; }
-function generateSortingTable(){ if(!wasteTracking||wasteTracking.length===0)return'<p style="text-align:center;padding:20px;color:#666">'+translations[currentLang].warn_no_sorted+`</p>`; let tq=wasteTracking.reduce((s,w)=>s+parseFloat(w.qty||0),0), html='<table><thead><tr><th>#</th><th>'+translations[currentLang].ph_source+`</th><th>`+translations[currentLang].lbl_type+`</th><th>`+translations[currentLang].ph_qty+' ('+translations[currentLang].unit_tons+`)</th><th>`+translations[currentLang].lbl_quality+`</th><th>`+translations[currentLang].lbl_status+`</th></tr></thead><tbody>'; wasteTracking.forEach((w,i)=>{html+=`<tr><td>${i+1}</td><td>${w.source}</td><td>${getWasteTypeName(w.category)}</td><td><b>${w.qty}</b></td><td>${getQualityName(w.quality)}</td><td>${w.marketPublished?'✅ '+translations[currentLang].lbl_published:'⏳ '+translations[currentLang].lbl_sorting}</td></tr>`;}); html+='</tbody></table><div style="margin-top:15px;padding:10px;background:#e8f5e9;border-radius:8px;text-align:center"><b>📊 '+translations[currentLang].stat_sorted+': '+tq.toFixed(2)+' '+translations[currentLang].unit_tons+`</b></div>`; return html; }
-function generateMarketTable(){ if(!marketMaterials||marketMaterials.length===0)return'<p style="text-align:center;padding:20px;color:#666">'+translations[currentLang].warn_no_materials+`</p>`; let html='<table><thead><tr><th>#</th><th>'+translations[currentLang].lbl_type+`</th><th>`+translations[currentLang].ph_qty+' ('+translations[currentLang].unit_tons+`)</th><th>`+translations[currentLang].lbl_quality+`</th><th>`+translations[currentLang].ph_source+`</th><th>`+translations[currentLang].lbl_status+`</th></tr></thead><tbody>'; marketMaterials.forEach((m,i)=>{html+=`<tr><td>${i+1}</td><td>${getWasteTypeName(m.category)}</td><td><b>${m.qty}</b></td><td>${getQualityName(m.quality)}</td><td>${m.source}</td><td>${m.status==='available'?'✅ '+translations[currentLang].lbl_available:'⏳ '+translations[currentLang].lbl_reserved}</td></tr>`;}); html+='</tbody></table>'; return html; }
-function generateStatsTable(){ const total=allReports.length, done=allReports.filter(r=>r.status==='done').length, rate=total>0?Math.round((done/total)*100):0, rc=wasteTracking.filter(w=>w.status==='published').reduce((s,w)=>s+parseFloat(w.qty||0),0); return `<div style="display:grid;grid-template-columns:1fr 1fr;gap:15px;margin:20px 0"><div style="background:#f5f7fa;padding:20px;border-radius:12px;text-align:center"><div style="font-size:2rem;font-weight:900;color:#1B5E20">${total}</div><div style="color:#666">${translations[currentLang].stat_total}</div></div><div style="background:#e8f5e9;padding:20px;border-radius:12px;text-align:center"><div style="font-size:2rem;font-weight:900;color:#4CAF50">${rate}%</div><div style="color:#666">${translations[currentLang].stat_rate}</div></div><div style="background:#e3f2fd;padding:20px;border-radius:12px;text-align:center"><div style="font-size:2rem;font-weight:900;color:#2196F3">${rc.toFixed(1)}</div><div style="color:#666">${translations[currentLang].stat_recycled}</div></div><div style="background:#f3e5f5;padding:20px;border-radius:12px;text-align:center"><div style="font-size:2rem;font-weight:900;color:#673ab7">${(rc*0.8).toFixed(1)}</div><div style="color:#666">${translations[currentLang].lbl_co2_saved}</div></div></div>`; }
-function printNow(){ const ct=document.getElementById('printContent').innerHTML, wn=window.open('','_blank','width=900,height=700'); wn.document.write(`<html dir="rtl"><head><meta charset="UTF-8"><title>`+translations[currentLang].btn_print+`</title><style>body{font-family:sans-serif;padding:20px}table{width:100%;border-collapse:collapse}th{background:#1B5E20;color:#fff;padding:8px}td{padding:8px;border:1px solid #ddd}@media print{.no-print{display:none}}</style></head><body>${ct}<script>window.print()<\/script></body></html>`); wn.document.close(); }
-function downloadPDF(){ const el=document.getElementById('printContent'); if(typeof html2pdf!=='undefined'){ showToast(translations[currentLang].msg_pdf_creating); html2pdf().from(el).set({margin:10,filename:`تقرير_${Date.now()}.pdf`,html2canvas:{scale:2},jsPDF:{format:'a4'}}).save().then(()=>{ showToast(translations[currentLang].msg_pdf_downloaded); closePrintDialog(); }); }else{ printNow(); } }
-
-function calculateConversion(){ const ty=document.getElementById('wasteType').value, wt=parseFloat(document.getElementById('wasteWeight').value); if(!wt||wt<=0){showToast(translations[currentLang].warn_enter_weight_only);return;} const fct={organic:{energy:2500,oil:0,co2:0.8},plastic:{energy:12000,oil:750,co2:1.5},metal:{energy:8000,oil:0,co2:2.0},mixed:{energy:800,oil:50,co2:0.4}}, f=fct[ty]; document.getElementById('resEnergy').textContent=(wt*f.energy).toLocaleString('ar-DZ'); document.getElementById('resOil').textContent=(wt*f.oil).toLocaleString('ar-DZ'); document.getElementById('resCO2').textContent=(wt*f.co2).toFixed(2); document.getElementById('conversionResult').style.display='block'; showToast(translations[currentLang].msg_calculated); }
-
-// === Truck Tracking ===
-function startTruckTracking(){ if(!currentDriver){showToast(translations[currentLang].warn_login_first,'error');return;} truckTrackingData={active:true,driver:currentDriver,sector:currentDriverSector,startTime:new Date().toISOString(),positions:[],collectedBins:[]}; saveToCloud('truckTracking',truckTrackingData); showPage('truckTracking'); updateTruckTrackingUI(); startGPSMonitoring(); showToast(translations[currentLang].msg_tracking_started); }
-function startGPSMonitoring(){ if(!navigator.geolocation){showToast(translations[currentLang].warn_gps_not_supported,'error');return;} window.trackingInterval=setInterval(()=>{ navigator.geolocation.getCurrentPosition(pos=>{ const posn={lat:pos.coords.latitude,lng:pos.coords.longitude,timestamp:new Date().toISOString(),accuracy:pos.coords.accuracy}; truckTrackingData.positions.push(posn); saveToCloud('truckTracking',truckTrackingData); updateTruckTrackingMap(posn); },err=>{},{enableHighAccuracy:true,timeout:10000,maximumAge:0}); },10000); }
-function recordBinCollection(){ if(!truckTrackingData.active){showToast(translations[currentLang].warn_tracking_inactive,'error');return;} navigator.geolocation.getCurrentPosition(pos=>{ const bn={id:Date.now(),lat:pos.coords.latitude,lng:pos.coords.longitude,timestamp:new Date().toISOString(),sector:currentDriverSector,driver:currentDriver}; truckTrackingData.collectedBins.push(bn); saveToCloud('truckTracking',truckTrackingData); updateTruckTrackingUI(); if(navigator.vibrate)navigator.vibrate([200,100,200]); showToast(translations[currentLang].msg_bin_recorded+' #'+truckTrackingData.collectedBins.length); addBinMarkerToMap(bn); },err=>{showToast(translations[currentLang].warn_location_failed,'error');},{enableHighAccuracy:true,timeout:10000}); }
-function stopTruckTracking(){ if(window.trackingInterval)clearInterval(window.trackingInterval); truckTrackingData.active=false; saveToCloud('truckTracking',truckTrackingData); showToast(translations[currentLang].msg_tracking_stopped); showPage('driver'); }
-function updateTruckTrackingUI(){ try{ if(!truckTrackingData.active){ document.getElementById('liveTrackingStatus').innerHTML='🔴 '+translations[currentLang].tracking_stopped; document.getElementById('liveTrackingStatus').style.background='#757575'; document.getElementById('binTrackingControls').style.display='none'; }else{ document.getElementById('liveTrackingStatus').innerHTML='🟢 '+translations[currentLang].tracking_on; document.getElementById('liveTrackingStatus').style.background='#4CAF50'; document.getElementById('binTrackingControls').style.display='block'; } document.getElementById('trackingDriverName').textContent=truckTrackingData.driver||'-'; document.getElementById('trackingSector').textContent=truckTrackingData.sector||'-'; document.getElementById('trackingDate').textContent=truckTrackingData.startTime?new Date(truckTrackingData.startTime).toLocaleDateString('ar-DZ'):'-'; document.getElementById('trackingTime').textContent=truckTrackingData.startTime?new Date(truckTrackingData.startTime).toLocaleTimeString('ar-DZ'):'-'; document.getElementById('collectedBinsCount').textContent=truckTrackingData.collectedBins.length; const bl=document.getElementById('collectedBinsList'); if(truckTrackingData.collectedBins.length===0){ bl.innerHTML='<p style="text-align:center;color:#666;padding:20px">'+translations[currentLang].no_bins_yet+`</p>`; }else{ bl.innerHTML=truckTrackingData.collectedBins.map((bn,idx)=>`<div class="bin-collected">🗑️ `+translations[currentLang].lbl_bin+` #${idx+1}<br><small>${bn.lat.toFixed(6)}, ${bn.lng.toFixed(6)}</small><br><small>🕐 ${new Date(bn.timestamp).toLocaleTimeString('ar-DZ')}</small></div>`).join(''); } }catch(e){} }
-function updateDriverPanel(){ try{ const ct=document.getElementById('binTrackingControls'); if(ct)ct.style.display=(currentDriver&&truckTrackingData.active)?'block':'none'; const eb=document.getElementById('endMissionBtn'); if(eb)eb.style.display=(currentDriver&&truckTrackingData.active)?'block':'none'; }catch(e){} }
-function initTruckTrackingMap(){ try{ if(map){map.remove();} map=L.map('map').setView([36.2642,2.7545],13); L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{attribution:'© OpenStreetMap contributors'}).addTo(map); if(truckTrackingData.positions.length>0){ const lp=truckTrackingData.positions[truckTrackingData.positions.length-1]; map.setView([lp.lat,lp.lng],15); trackingMarker=L.marker([lp.lat,lp.lng]).addTo(map).bindPopup(`<b>🚚 ${truckTrackingData.driver}</b><br>`+translations[currentLang].lbl_sector+`: ${truckTrackingData.sector}`); const lls=truckTrackingData.positions.map(p=>[p.lat,p.lng]); trackingPath=L.polyline(lls,{color:'#1B5E20',weight:4}).addTo(map); truckTrackingData.collectedBins.forEach(bn=>addBinMarkerToMap(bn)); } }catch(e){} }
-function updateTruckTrackingMap(pos){ try{ if(!map)return; if(trackingMarker){ trackingMarker.setLatLng([pos.lat,pos.lng]); trackingMarker.bindPopup(`<b>🚚 ${truckTrackingData.driver}</b><br>`+translations[currentLang].lbl_sector+`: ${truckTrackingData.sector}<br>🕐 ${new Date(pos.timestamp).toLocaleTimeString('ar-DZ')}`); }else{ trackingMarker=L.marker([pos.lat,pos.lng]).addTo(map).bindPopup(`<b>🚚 ${truckTrackingData.driver}</b><br>`+translations[currentLang].lbl_sector+`: ${truckTrackingData.sector}`); } const lls=truckTrackingData.positions.map(p=>[p.lat,p.lng]); if(trackingPath){trackingPath.setLatLngs(lls);}else{trackingPath=L.polyline(lls,{color:'#1B5E20',weight:4}).addTo(map);} map.fitBounds(trackingPath.getBounds()); }catch(e){} }
-function addBinMarkerToMap(bn){ try{ if(!map)return; L.circleMarker([bn.lat,bn.lng],{radius:8,fillColor:'#4CAF50',color:'#fff',weight:2,opacity:1,fillOpacity:0.8}).addTo(map).bindPopup(`🗑️ `+translations[currentLang].lbl_bin+` #${truckTrackingData.collectedBins.indexOf(bn)+1}<br>🕐 ${new Date(bn.timestamp).toLocaleTimeString('ar-DZ')}`); }catch(e){} }
-
-// === Route Tracking by Sector ===
-function loadSectorRoute(){ const sid=document.getElementById('sectorSelect').value; if(sid&&sectorRoutesData[sid]){ currentSectorData=sectorRoutesData[sid]; document.getElementById('routeInfo').style.display='block'; document.getElementById('routeSectorName').textContent=currentSectorData.name; document.getElementById('routeDate').textContent=currentSectorData.date; document.getElementById('routeDriver').textContent=currentSectorData.driver; document.getElementById('routeBinsCount').textContent=currentSectorData.bins.length; } }
-function showRouteOnMap(){ if(!currentSectorData){showToast(translations[currentLang].warn_select_sector,'error');return;} if(routeMap){routeMap.remove();} routeMap=L.map('routeMap').setView(currentSectorData.path[0],15); L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{attribution:'© OpenStreetMap contributors'}).addTo(routeMap); if(routeLayer)routeMap.removeLayer(routeLayer); routeLayer=L.polyline(currentSectorData.path,{color:'#1B5E20',weight:5,opacity:0.8}).addTo(routeMap); currentSectorData.path.forEach((pt,ix)=>{ const cl=ix===0?'#4CAF50':ix===currentSectorData.path.length-1?'#f44336':'#2196F3', lb=ix===0?'🚚 '+translations[currentLang].lbl_start:ix===currentSectorData.path.length-1?'🏁 '+translations[currentLang].lbl_end:`📍 `+translations[currentLang].lbl_point+` ${ix}`; L.circleMarker(pt,{radius:8,fillColor:cl,color:'#fff',weight:2,opacity:1,fillOpacity:0.9}).addTo(routeMap).bindPopup(lb); }); if(binsLayer)routeMap.removeLayer(binsLayer); binsLayer=L.layerGroup().addTo(routeMap); currentSectorData.bins.forEach(bn=>{ L.circleMarker([bn.lat,bn.lng],{radius:10,fillColor:'#FF9800',color:'#fff',weight:2,opacity:1,fillOpacity:0.9}).addTo(binsLayer).bindPopup(`🗑️ `+translations[currentLang].lbl_bin+` #${bn.id}<br>🕐 ${bn.time}`); }); routeMap.fitBounds(routeLayer.getBounds(),{padding:[50,50]}); document.getElementById('routeBinsList').style.display='block'; const blh=currentSectorData.bins.map(bn=>`<div class="tonnage-card" style="margin:8px 0"><div class="tonnage-info"><b>🗑️ `+translations[currentLang].lbl_bin+` #${bn.id}</b><span>🕐 ${bn.time}</span></div><div class="tonnage-info"><small>📍 ${bn.lat.toFixed(4)}, ${bn.lng.toFixed(4)}</small></div></div>`).join(''); document.getElementById('binsLocationsList').innerHTML=blh; showToast(translations[currentLang].msg_route_shown||'✅ تم عرض المسار بنجاح'); }
-
-// === PDF Export ===
-function exportRouteToPDF(){ if(!currentSectorData){showToast(translations[currentLang].warn_select_sector,'error');return;} document.getElementById('previewSector').textContent=currentSectorData.name; document.getElementById('previewDriver').textContent=currentSectorData.driver; document.getElementById('previewDate').textContent=currentSectorData.date; document.getElementById('previewBinsCount').textContent=currentSectorData.bins.length; document.getElementById('previewPrintDate').textContent=new Date().toLocaleDateString('ar-DZ'); const tb=document.getElementById('previewBinsTable'); tb.innerHTML=currentSectorData.bins.map((bn,ix)=>`<tr><td style="padding:8px;border:1px solid #ddd;text-align:center">${ix+1}</td><td style="padding:8px;border:1px solid #ddd;text-align:center">${bn.time}</td><td style="padding:8px;border:1px solid #ddd;text-align:center">${bn.lat.toFixed(6)}</td><td style="padding:8px;border:1px solid #ddd;text-align:center">${bn.lng.toFixed(6)}</td></tr>`).join(''); showPage('pdfPreviewPage'); showToast(translations[currentLang].msg_preview_opened||'✅ تم فتح المعاينة'); }
-function initPreviewMap(){ setTimeout(()=>{ if(!currentSectorData)return; if(previewMap){previewMap.remove();} previewMap=L.map('previewMap').setView(currentSectorData.path[0],15); L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{attribution:'© OpenStreetMap'}).addTo(previewMap); L.polyline(currentSectorData.path,{color:'#1B5E20',weight:4,opacity:0.8}).addTo(previewMap); currentSectorData.path.forEach((pt,ix)=>{ const cl=ix===0?'#4CAF50':ix===currentSectorData.path.length-1?'#f44336':'#2196F3', lb=ix===0?'🚚 '+translations[currentLang].lbl_start:ix===currentSectorData.path.length-1?'🏁 '+translations[currentLang].lbl_end:`📍 `+translations[currentLang].lbl_point+` ${ix}`; L.circleMarker(pt,{radius:6,fillColor:cl,color:'#fff',weight:2,opacity:1,fillOpacity:0.9}).addTo(previewMap).bindPopup(lb); }); currentSectorData.bins.forEach(bn=>{ L.circleMarker([bn.lat,bn.lng],{radius:8,fillColor:'#FF9800',color:'#fff',weight:2,opacity:1,fillOpacity:0.9}).addTo(previewMap).bindPopup(`🗑️ `+translations[currentLang].lbl_bin+` #${bn.id}<br>🕐 ${bn.time}`); }); previewMap.fitBounds(L.polyline(currentSectorData.path).getBounds(),{padding:[30,30]}); },100); }
-function printPreview(){ const ct=document.getElementById('pdfPreviewContent').innerHTML, wn=window.open('','_blank','width=900,height=700'); wn.document.write(`<html dir="rtl"><head><meta charset="UTF-8"><title>`+translations[currentLang].btn_print+`</title><style>body{font-family:sans-serif;padding:20px}table{width:100%;border-collapse:collapse}th{background:#1B5E20;color:#fff;padding:10px}td{padding:8px;border:1px solid #ddd}@media print{.no-print{display:none}}</style></head><body>${ct}<script>window.print();setTimeout(()=>window.close(),1000);<\/script></body></html>`); wn.document.close(); }
-function downloadPreviewPDF(){ const el=document.getElementById('pdfPreviewContent'); if(typeof html2pdf!=='undefined'){ showToast(translations[currentLang].msg_pdf_creating); html2pdf().from(el).set({margin:10,filename:`تقرير_مسار_${currentSectorData?.name||'unknown'}_${Date.now()}.pdf`,html2canvas:{scale:2,useCORS:true,logging:false},jsPDF:{unit:'mm',format:'a4',orientation:'portrait'}}).save().then(()=>{ showToast(translations[currentLang].msg_pdf_downloaded); }).catch((er)=>{ console.log('PDF error:',er); showToast(translations[currentLang].msg_pdf_error,'error'); printPreview(); }); }else{ printPreview(); } }
-function closePDFPreview(){ showPage('routeTracking'); }
-
-// ============================================
-// ✅ Initialization
-// ============================================
-window.addEventListener('DOMContentLoaded', function(){
-  const savedMode = localStorage.getItem('app_mode');
-  if (savedMode) {
-    document.body.className = savedMode + '-mode';    document.getElementById('deviceSelector').style.display = 'none';
-    // Show splash after selection
-    document.getElementById('splash').style.display = 'flex';
-    setTimeout(() => {
-      document.getElementById('splash').style.opacity = '0';
-      setTimeout(() => { document.getElementById('splash').style.display = 'none'; }, 500);
-    }, 3000);
+    showToast(currentLang === 'ar' ? '✅ تم تغيير اللغة' : currentLang === 'fr' ? '✅ Langue changée' : '✅ Language changed');
+  } catch(e) {
+    console.error('Lang error:', e);
   }
-  // Load saved language
-  const savedLang = localStorage.getItem('medea_lang') || 'ar';
-  currentLang = savedLang;
-  document.querySelectorAll('.lang-btn').forEach(b => { 
-    b.classList.remove('active');
-    if(b.onclick && b.onclick.toString().includes(savedLang)) b.classList.add('active');
-  });
-  changeLang(savedLang, document.querySelector(`.lang-btn[onclick*="'${savedLang}'"]`));
+}
+
+function updateTime() {
+  try {
+    const n = new Date();
+    const locale = currentLang === 'ar' ? 'ar-DZ' : currentLang === 'fr' ? 'fr-FR' : 'en-US';
+    const ck = document.getElementById('ck');
+    const cd = document.getElementById('cd');
+    if(ck) ck.textContent = n.toLocaleTimeString(locale);
+    if(cd) cd.textContent = n.toLocaleDateString(locale);
+  } catch(e) {}
+}
+setInterval(updateTime, 1000);
+// ==========================================
+// 5. دوال التنقل والصفحات
+// ==========================================
+function showPage(id) {
+  try {
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    const el = document.getElementById(id);
+    if(el) {
+      el.classList.add('active');
+      if(id === 'dashboard') renderChart();
+      if(id === 'reportsPage') showReportsPage();
+      if(id === 'truckTracking') initMap();
+    }
+    window.scrollTo(0,0);
+  } catch(e) {
+    console.error('ShowPage error:', e);
+  }
+}
+
+// ==========================================
+// 6. دوال التطبيق الرئيسية
+// ==========================================
+function takePhoto() {
+  try {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = 'image/*';
+    input.capture = 'environment';
+    input.onchange = e => {
+      if(e.target.files[0]) {
+        const reader = new FileReader();
+        reader.onload = ev => {
+          const img = document.getElementById('camImg');
+          img.src = ev.target.result;
+          img.style.display = 'block';
+        };
+        reader.readAsDataURL(e.target.files[0]);
+      }
+    };
+    input.click();
+  } catch(e) {
+    showToast('⚠️ خطأ في الكاميرا', 'error');
+  }
+}
+
+function getLocation() {
+  try {
+    const btn = document.getElementById('getLocationBtn');
+    if(!navigator.geolocation) {
+      showToast('⚠️ GPS غير مدعوم', 'error');      return;
+    }
+    btn.innerHTML = '⏳ جاري...';
+    btn.disabled = true;
+    navigator.geolocation.getCurrentPosition(pos => {
+      const lat = pos.coords.latitude.toFixed(6);
+      const lng = pos.coords.longitude.toFixed(6);
+      document.getElementById('gpsInput').value = lat + ', ' + lng;
+      btn.innerHTML = '📍 ' + (currentLang === 'ar' ? 'تحديد الموقع GPS' : currentLang === 'fr' ? 'Localiser GPS' : 'Get GPS');
+      btn.disabled = false;
+      showToast('✅ الموقع: ' + lat + ', ' + lng);
+    }, () => {
+      btn.innerHTML = '📍 ' + (currentLang === 'ar' ? 'تحديد الموقع GPS' : currentLang === 'fr' ? 'Localiser GPS' : 'Get GPS');
+      btn.disabled = false;
+      showToast('⚠️ فشل تحديد الموقع', 'error');
+    }, {enableHighAccuracy:true, timeout:15000});
+  } catch(e) {
+    showToast('⚠️ خطأ في الموقع', 'error');
+  }
+}
+
+function sendReport() {
+  try {
+    const addr = document.getElementById('addrInput').value.trim();
+    if(!addr) {
+      showToast(currentLang === 'ar' ? '⚠️ أدخل العنوان' : currentLang === 'fr' ? '⚠️ Entrez l\'adresse' : '⚠️ Enter address', 'error');
+      return;
+    }
+    
+    const btn = document.getElementById('sendBtn');
+    const orig = btn.innerHTML;
+    btn.innerHTML = '⏳...';
+    btn.disabled = true;
+    
+    const newReport = {
+      id: Date.now(),
+      addr: addr,
+      gps: document.getElementById('gpsInput').value || (currentLang === 'ar' ? 'غير محدد' : 'Not specified'),
+      date: new Date().toLocaleDateString(currentLang === 'ar' ? 'ar-DZ' : currentLang === 'fr' ? 'fr-FR' : 'en-US'),
+      time: new Date().toLocaleTimeString(currentLang === 'ar' ? 'ar-DZ' : currentLang === 'fr' ? 'fr-FR' : 'en-US'),
+      status: 'new',
+      wasteType: document.getElementById('wasteTypeSelect').value,
+      recurring: document.getElementById('recurringCheck').checked
+    };
+    
+    allReports.push(newReport);
+    updateStats();
+    
+    userPoints += 10;
+    document.getElementById('userPoints').textContent = userPoints;    
+    document.getElementById('addrInput').value = '';
+    document.getElementById('gpsInput').value = '';
+    document.getElementById('camImg').style.display = 'none';
+    document.getElementById('recurringCheck').checked = false;
+    
+    btn.innerHTML = orig;
+    btn.disabled = false;
+    
+    document.getElementById('thanksOverlay').style.display = 'flex';
+    showToast('✅ ' + (currentLang === 'ar' ? 'تم الإرسال! +10 نقاط' : currentLang === 'fr' ? 'Envoyé! +10 points' : 'Sent! +10 points'));
+  } catch(e) {
+    showToast('⚠️ خطأ في الإرسال', 'error');
+  }
+}
+
+function updateStats() {
+  try {
+    document.getElementById('statTotal').textContent = allReports.length;
+    document.getElementById('statDone').textContent = allReports.filter(r => r.status === 'done').length;
+  } catch(e) {}
+}
+
+function loadDemoData() {
+  if(!confirm(currentLang === 'ar' ? 'تحميل بيانات تجريبية؟' : currentLang === 'fr' ? 'Charger données démo?' : 'Load demo data?')) return;
   
-  // Initialize core functions
-  setupSync();
-  loadFromCloud('reports','reports',(d)=>{allReports=d?Object.values(d):[];updateStats();});
-  loadFromCloud('wasteTracking','wasteTracking',(d)=>{wasteTracking=d?Object.values(d):[];});
-  loadFromCloud('marketMaterials','marketMaterials',(d)=>{marketMaterials=d?Object.values(data):[];});
-  loadFromCloud('truckTracking','truckTracking',(d)=>{if(d)truckTrackingData=d;});
+  const demo = [
+    {id:1001, addr:'حي الزيتون - المدية', gps:'36.2642, 2.7545', date:'2026-04-10', time:'09:30', status:'done', wasteType:'plastic'},
+    {id:1002, addr:'وسط المدينة - المدية', gps:'36.2650, 2.7550', date:'2026-04-11', time:'14:20', status:'assigned', wasteType:'organic'}
+  ];
+  
+  demo.forEach(r => allReports.push(r));
+  updateStats();
+  showToast('✅ ' + (currentLang === 'ar' ? 'تم التحميل' : currentLang === 'fr' ? 'Chargé' : 'Loaded'));
+}
+
+function showReportsPage() {
+  applyFilters();
+}
+
+function applyFilters() {
+  try {
+    const status = document.getElementById('filterStatus')?.value || 'all';
+    const search = document.getElementById('searchInput')?.value.toLowerCase() || '';
+    
+    let filtered = allReports;
+    if(status !== 'all') filtered = filtered.filter(r => r.status === status);
+    if(search) filtered = filtered.filter(r => r.addr.toLowerCase().includes(search));
+    
+    renderReportsList(filtered);  } catch(e) {}
+}
+
+function renderReportsList(reports) {
+  try {
+    const container = document.getElementById('reportsList');
+    if(!reports || reports.length === 0) {
+      container.innerHTML = '<p style="text-align:center;color:#666;padding:40px">' + (currentLang === 'ar' ? 'لا توجد بلاغات' : currentLang === 'fr' ? 'Aucun signalement' : 'No reports') + '</p>';
+      return;
+    }
+    
+    container.innerHTML = reports.map(r => {
+      const statusColor = r.status === 'done' ? '#4CAF50' : r.status === 'assigned' ? '#FF9800' : '#f44336';
+      const statusText = r.status === 'done' ? (currentLang === 'ar' ? '✅ منجز' : currentLang === 'fr' ? '✅ Terminé' : '✅ Done') : 
+                        r.status === 'assigned' ? (currentLang === 'ar' ? '🚚 قيد التنفيذ' : currentLang === 'fr' ? '🚚 En cours' : '🚚 Active') : 
+                        (currentLang === 'ar' ? '🆕 جديد' : currentLang === 'fr' ? '🆕 Nouveau' : '🆕 New');
+      
+      return `<div class="report-card ${r.status}">
+        <div class="info-row"><b>📍 ${currentLang === 'ar' ? 'العنوان' : currentLang === 'fr' ? 'Adresse' : 'Address'}:</b> ${r.addr}</div>
+        <div class="info-row"><b>🌍 GPS:</b> ${r.gps}</div>
+        <div class="info-row"><b>📅 ${currentLang === 'ar' ? 'التاريخ' : currentLang === 'fr' ? 'Date' : 'Date'}:</b> ${r.date} ${r.time}</div>
+        <div class="info-row"><b>📊 ${currentLang === 'ar' ? 'الحالة' : currentLang === 'fr' ? 'Statut' : 'Status'}:</b> <span style="color:${statusColor}">${statusText}</span></div>
+      </div>`;
+    }).join('');
+  } catch(e) {}
+}
+
+// ==========================================
+// 7. دوال الخريطة والمسار
+// ==========================================
+function initMap() {
+  setTimeout(() => {
+    if(routeMap) return;
+    try {
+      routeMap = L.map('routeMap').setView([36.2642, 2.7545], 13);
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '© OpenStreetMap'
+      }).addTo(routeMap);
+    } catch(e) {
+      console.error('Map error:', e);
+    }
+  }, 500);
+}
+
+function loadSectorRoute() {
+  const secId = document.getElementById('sectorSelect').value;
+  if(secId && sectorRoutesData[secId]) {
+    currentSectorData = sectorRoutesData[secId];
+    document.getElementById('routeInfo').style.display = 'block';
+    document.getElementById('routeSectorName').textContent = currentSectorData.name;    document.getElementById('routeDate').textContent = currentSectorData.date;
+    document.getElementById('routeDriver').textContent = currentSectorData.driver;
+    document.getElementById('routeBinsCount').textContent = currentSectorData.bins.length;
+  }
+}
+
+function showRouteOnMap() {
+  if(!currentSectorData) {
+    showToast(currentLang === 'ar' ? '⚠️ اختر القطاع أولاً' : currentLang === 'fr' ? '⚠️ Choisissez un secteur' : '⚠️ Select a sector', 'error');
+    return;
+  }
+  
+  initMap();
+  setTimeout(() => {
+    try {
+      if(!routeMap) return;
+      routeMap.invalidateSize();
+      
+      // مسح الطبقات القديمة
+      routeMap.eachLayer(layer => {
+        if(layer instanceof L.Marker || layer instanceof L.Polyline) {
+          routeMap.removeLayer(layer);
+        }
+      });
+      
+      const path = currentSectorData.bins.map(b => [b.lat, b.lng]);
+      if(path.length > 0) {
+        L.polyline(path, {color: '#1B5E20', weight: 4}).addTo(routeMap);
+        L.marker(path[0]).addTo(routeMap).bindPopup(currentSectorData.name);
+        routeMap.fitBounds(path, {padding: [50, 50]});
+      } else {
+        showToast(currentLang === 'ar' ? 'لا توجد حاويات في هذا القطاع' : currentLang === 'fr' ? 'Aucun bac dans ce secteur' : 'No bins in this sector');
+      }
+    } catch(e) {
+      console.error('Show route error:', e);
+    }
+  }, 600);
+}
+
+// ==========================================
+// 8. دوال PDF والطباعة
+// ==========================================
+function exportRouteToPDF() {
+  if(!currentSectorData) {
+    showToast(currentLang === 'ar' ? '⚠️ اختر القطاع أولاً' : currentLang === 'fr' ? '⚠️ Choisissez un secteur' : '⚠️ Select a sector', 'error');
+    return;
+  }
+  
+  try {
+    if(typeof html2pdf === 'undefined') {      showToast('⚠️ مكتبة PDF غير محملة', 'error');
+      return;
+    }
+    
+    const content = `
+      <div style="padding:20px;font-family:sans-serif;direction:${currentLang === 'ar' ? 'rtl' : 'ltr'}">
+        <h2 style="color:#1B5E20;text-align:center">${currentSectorData.name}</h2>
+        <p><b>${currentLang === 'ar' ? 'السائق' : currentLang === 'fr' ? 'Chauffeur' : 'Driver'}:</b> ${currentSectorData.driver}</p>
+        <p><b>${currentLang === 'ar' ? 'التاريخ' : currentLang === 'fr' ? 'Date' : 'Date'}:</b> ${currentSectorData.date}</p>
+        <p><b>${currentLang === 'ar' ? 'عدد الحاويات' : currentLang === 'fr' ? 'Nombre de bacs' : 'Bins count'}:</b> ${currentSectorData.bins.length}</p>
+        <hr style="margin:20px 0">
+        <h3>${currentLang === 'ar' ? 'مواقع الحاويات' : currentLang === 'fr' ? 'Emplacements des bacs' : 'Bin locations'}</h3>
+        ${currentSectorData.bins.map((bin, i) => `<p>${i+1}. ${bin.lat}, ${bin.lng} - ${bin.time}</p>`).join('')}
+      </div>
+    `;
+    
+    const element = document.createElement('div');
+    element.innerHTML = content;
+    
+    html2pdf().set({
+      margin: 10,
+      filename: `Route_${currentSectorData.name}_${Date.now()}.pdf`,
+      html2canvas: {scale: 2},
+      jsPDF: {format: 'a4', orientation: 'portrait'}
+    }).from(element).save().then(() => {
+      showToast('✅ ' + (currentLang === 'ar' ? 'تم تحميل PDF' : currentLang === 'fr' ? 'PDF téléchargé' : 'PDF downloaded'));
+    }).catch(err => {
+      console.error('PDF error:', err);
+      showToast('⚠️ ' + (currentLang === 'ar' ? 'فشل التصدير' : currentLang === 'fr' ? 'Échec export' : 'Export failed'), 'error');
+    });
+  } catch(e) {
+    console.error('Export error:', e);
+    showToast('⚠️ خطأ', 'error');
+  }
+}
+
+function openPrintDialog() {
+  document.getElementById('printModal').classList.add('active');
+}
+
+function closePrintModal() {
+  document.getElementById('printModal').classList.remove('active');
+}
+
+function printSection(type) {
+  closePrintModal();
+  window.print();
+}
+
+// ==========================================// 9. دوال الإدارة
+// ==========================================
+function loginAdmin() {
+  const code = document.getElementById('adminCode').value;
+  if(code === '1234') {
+    document.getElementById('adminLogin').classList.add('hidden');
+    document.getElementById('adminPanel').classList.remove('hidden');
+    showToast('✓ ' + (currentLang === 'ar' ? 'دخول ناجح' : currentLang === 'fr' ? 'Connexion réussie' : 'Login successful'));
+  } else {
+    showToast('✗ ' + (currentLang === 'ar' ? 'رمز خاطئ' : currentLang === 'fr' ? 'Code incorrect' : 'Wrong code'), 'error');
+  }
+}
+
+function logoutAdmin() {
+  document.getElementById('adminLogin').classList.remove('hidden');
+  document.getElementById('adminPanel').classList.add('hidden');
+  document.getElementById('adminCode').value = '';
+  showPage('home');
+}
+
+// ==========================================
+// 10. دوال مساعدة
+// ==========================================
+function showToast(msg, type='success') {
+  try {
+    const container = document.getElementById('toast-container');
+    const toast = document.createElement('div');
+    toast.className = 'toast';
+    toast.style.borderRightColor = type === 'error' ? '#f44336' : '#1B5E20';
+    toast.textContent = msg;
+    container.appendChild(toast);
+    setTimeout(() => {
+      toast.style.opacity = '0';
+      setTimeout(() => toast.remove(), 300);
+    }, 3000);
+  } catch(e) {
+    alert(msg);
+  }
+}
+
+function renderChart() {
+  try {
+    const container = document.getElementById('chartContainer');
+    const text = document.getElementById('chartText');
+    if(allReports.length === 0) {
+      container.innerHTML = '<div style="text-align:center"><div style="font-size:3rem;margin-bottom:10px">📊</div><div data-i18n="noData">' + (currentLang === 'ar' ? 'لا توجد بيانات' : currentLang === 'fr' ? 'Aucune donnée' : 'No data') + '</div></div>';
+      return;
+    }
+    
+    const done = allReports.filter(r => r.status === 'done').length;    const assigned = allReports.filter(r => r.status === 'assigned').length;
+    const newRep = allReports.filter(r => r.status === 'new').length;
+    const total = allReports.length;
+    
+    container.innerHTML = `
+      <div style="text-align:center">
+        <div style="font-size:1.2rem;margin-bottom:10px">${currentLang === 'ar' ? 'إجمالي' : currentLang === 'fr' ? 'Total' : 'Total'}: ${total}</div>
+        <div style="margin:5px 0"><span style="color:#4CAF50">✅ ${currentLang === 'ar' ? 'منجز' : currentLang === 'fr' ? 'Terminé' : 'Done'}: ${done}</span></div>
+        <div style="margin:5px 0"><span style="color:#FF9800">🚚 ${currentLang === 'ar' ? 'قيد التنفيذ' : currentLang === 'fr' ? 'En cours' : 'Active'}: ${assigned}</span></div>
+        <div style="margin:5px 0"><span style="color:#f44336">🆕 ${currentLang === 'ar' ? 'جديد' : currentLang === 'fr' ? 'Nouveau' : 'New'}: ${newRep}</span></div>
+      </div>
+    `;
+  } catch(e) {}
+}
+
+// ==========================================
+// 11. تهيئة التطبيق
+// ==========================================
+window.addEventListener('load', function() {
+  // إخفاء شاشة الترحيب بعد 2 ثانية
+  setTimeout(function() {
+    const splash = document.getElementById('splash');
+    if(splash) {
+      splash.style.opacity = '0';
+      setTimeout(() => {
+        splash.style.display = 'none';
+      }, 800);
+    }
+  }, 2000);
+  
+  // تحميل اللغة المحفوظة
+  const savedLang = localStorage.getItem('medea_lang') || 'ar';
+  const btn = document.querySelector(`.lang-btn[onclick*="'${savedLang}'"]`);
+  if(btn) changeLang(savedLang, btn);
+  
+  updateTime();
+  
+  // تحميل البيانات من Firebase
+  try {
+    if(db) {
+      db.ref('reports').once('value').then(snapshot => {
+        const data = snapshot.val();
+        if(data) {
+          allReports = Object.values(data);
+          updateStats();
+        }
+      }).catch(() => {
+        console.log('Using local storage');
+        const local = localStorage.getItem('medea_reports');
+        if(local) {          allReports = JSON.parse(local);
+          updateStats();
+        }
+      });
+    }
+  } catch(e) {
+    console.error('Load error:', e);
+  }
 });
 </script>
 </body>
