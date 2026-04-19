@@ -249,7 +249,31 @@ html,body{overflow-x:hidden;width:100%;background:#f5f7fa;min-height:100vh}
 <button class="btn bb sb2" onclick="showPage('admin')">🛡️ الإدارة</button>
 </div>  </div>
 </div>
-
+// عرض صفحة اختيار الجهاز إذا لم تكن موجودة
+window.addEventListener('DOMContentLoaded', function() {
+    const savedMode = localStorage.getItem('app_mode');
+    const selector = document.getElementById('deviceSelector');
+    const splash = document.getElementById('splash');
+    const main = document.getElementById('mainContent');
+    const savedLang = localStorage.getItem('medea_lang');
+    
+    if(savedLang) {
+        currentLang = savedLang;
+        updateLanguageUI();
+    }
+    
+    if (savedMode) {
+        // إذا كان هناك وضع محفوظ، اعرض التطبيق مباشرة
+        selector.style.display = 'none';
+        if(savedMode === 'desktop') document.body.classList.add('desktop-mode');
+        showSplashAndMain(splash, main);
+    } else {
+        // إذا لم يكن هناك وضع محفوظ، اعرض صفحة اختيار الجهاز
+        selector.style.display = 'flex';
+        splash.style.display = 'none';
+        main.style.display = 'none';
+    }
+});
 [... باقي الكود كما هو ...]
 
 </body>
