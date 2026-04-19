@@ -10,59 +10,92 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+
 <style>
 *{box-sizing:border-box;margin:0;padding:0;font-family:'Segoe UI',Tahoma,sans-serif;-webkit-tap-highlight-color:transparent}
 html,body{overflow-x:hidden;width:100%;background:#f5f7fa;min-height:100vh}
-#splash{position:fixed;top:0;left:0;width:100%;height:100%;background:linear-gradient(135deg,#1B5E20,#2E7D32);z-index:99999;display:flex;flex-direction:column;align-items:center;justify-content:center;transition:opacity 0.5s}
-#splash .logo-box{width:250px;height:250px;background:#fff;border-radius:50%;margin-bottom:25px;display:flex;align-items:center;justify-content:center;box-shadow:0 10px 40px rgba(0,0,0,0.3);animation:pulse 2s infinite}
-@keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.05)}}
-#splash .logo-box span{font-size:8rem}
-#splash h1{font-size:2.2rem;color:#fff;margin-bottom:10px;font-weight:800;text-shadow:2px 2px 4px rgba(0,0,0,0.3)}
-#splash p{color:rgba(255,255,255,0.9);margin-bottom:30px;font-size:1rem;text-align:center;padding:0 20px}
-.loader{width:50px;height:50px;border:5px solid rgba(255,255,255,0.3);border-top:5px solid #FFD700;border-radius:50%;animation:spin 1s linear infinite}@keyframes spin{to{transform:rotate(360deg)}}
-.conn{position:fixed;top:0;left:0;right:0;padding:8px;text-align:center;font-size:0.85rem;font-weight:700;z-index:10000;background:linear-gradient(90deg,#1B5E20,#2E7D32);color:#fff}
-.sync-indicator{position:fixed;bottom:10px;left:10px;padding:6px 12px;border-radius:15px;font-size:0.75rem;font-weight:700;z-index:1000;transition:all 0.3s}
-.sync-online{background:#4CAF50;color:#fff}
-.sync-offline{background:#f44336;color:#fff}
-.hdr{background:#fff;padding:15px 10px;text-align:center;border-bottom:3px solid #D4AF37;margin-top:36px}
-.hdr .flag-container{display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:8px}
-.algerian-flag{width:40px;height:26px;object-fit:cover;border-radius:3px;box-shadow:0 2px 5px rgba(0,0,0,0.2)}
-.hdr .c{font-size:0.75rem;color:#14213D;margin:5px 0}
-.hdr .d{font-size:0.9rem;color:#2E7D32;margin:5px 0;font-weight:700}
-.hdr .t{font-size:1.8rem;color:#1B5E20;margin:10px 0;font-weight:900}
-.lang-container{display:flex;gap:8px;justify-content:center;margin-top:15px;flex-wrap:wrap}
-.lang-btn{background:#fff;border:2px solid #D4AF37;padding:8px 16px;border-radius:25px;cursor:pointer;font-size:0.9rem;font-weight:700;color:#1B5E20;transition:all 0.3s}
-.lang-btn:hover{transform:scale(1.05)}
-.lang-btn.active{background:#D4AF37;color:#fff}
-.ib{display:flex;justify-content:space-around;padding:10px;background:#fff8e1;border-bottom:2px solid #D4AF37;font-size:0.9rem}
+:root{--red:#C41E3A;--white:#FFFFFF;--green:#006233;--gold:#D4AF37}
+
+/* شاشة اختيار الجهاز */
+#deviceSelector{position:fixed;top:0;left:0;width:100%;height:100%;background:linear-gradient(135deg,var(--green) 0%,var(--white) 50%,var(--red) 100%);z-index:99999;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px}
+.device-header{background:var(--white);padding:30px;border-radius:20px;box-shadow:0 10px 40px rgba(0,0,0,0.3);text-align:center;max-width:500px;width:100%;margin-bottom:30px;border:4px solid var(--green)}
+.device-header h1{color:var(--green);font-size:2.2rem;margin-bottom:15px;font-weight:900}
+.device-header h2{color:var(--red);font-size:1.8rem;margin-bottom:20px}
+.device-header p{color:#333;font-size:1.1rem;margin-bottom:25px}
+.device-buttons{display:flex;flex-direction:column;gap:20px;align-items:center}
+.device-btn{width:280px;padding:25px;font-size:1.3rem;border:none;border-radius:15px;cursor:pointer;font-weight:bold;transition:all 0.3s;display:flex;align-items:center;justify-content:center;gap:15px;box-shadow:0 5px 20px rgba(0,0,0,0.2)}
+.device-btn.computer{background:var(--green);color:var(--white)}
+.device-btn.phone{background:var(--red);color:var(--white)}
+.device-btn:hover{transform:translateY(-5px);box-shadow:0 8px 25px rgba(0,0,0,0.3)}
+.device-btn:active{transform:translateY(-2px)}
+.footer-text{color:var(--white);text-align:center;margin-top:20px;font-size:0.95rem;text-shadow:1px 1px 2px rgba(0,0,0,0.5)}
+
+/* شاشة الترحيب */
+#splash{position:fixed;top:0;left:0;width:100%;height:100%;background:linear-gradient(135deg,var(--green),var(--white),var(--red));z-index:99998;display:none;flex-direction:column;align-items:center;justify-content:center}
+.splash-content{background:var(--white);padding:40px;border-radius:20px;text-align:center;box-shadow:0 10px 40px rgba(0,0,0,0.3);border:5px solid var(--green)}
+.splash-content .logo{font-size:5rem;margin-bottom:20px}
+.splash-content h1{color:var(--green);font-size:2rem;margin-bottom:10px}
+.splash-content p{color:#666;margin-bottom:20px}
+.loader{width:50px;height:50px;border:5px solid #f3f3f3;border-top:5px solid var(--red);border-radius:50%;animation:spin 1s linear infinite;margin:20px auto}
+@keyframes spin{0%{transform:rotate(0deg)}100%{transform:rotate(360deg)}}
+
+/* المحتوى الرئيسي */
+.main-content{display:none;padding:15px;max-width:100%;min-height:100vh}
+.main-content.active{display:block}
+.top-bar{position:fixed;top:0;left:0;right:0;height:50px;background:linear-gradient(90deg,var(--green),var(--red));color:var(--white);display:flex;align-items:center;justify-content:space-between;padding:0 20px;z-index:10000;box-shadow:0 2px 10px rgba(0,0,0,0.2)}
+.top-bar .status{font-size:0.9rem;font-weight:bold}
+.top-bar .time{font-size:0.95rem}
+.header{background:var(--white);padding:25px 20px;text-align:center;margin-top:50px;border-bottom:4px solid var(--gold);box-shadow:0 2px 10px rgba(0,0,0,0.1)}
+.header h1{color:var(--green);font-size:2rem;margin-bottom:10px;font-weight:900}
+.header p{color:#666;margin:5px 0;font-size:0.95rem}
+.lang-container{display:flex;gap:10px;justify-content:center;margin-top:15px;flex-wrap:wrap}
+.lang-btn{padding:10px 25px;border:2px solid var(--green);border-radius:25px;cursor:pointer;font-size:0.95rem;font-weight:bold;background:var(--white);color:var(--green);transition:all 0.3s}
+.lang-btn:hover{background:var(--green);color:var(--white);transform:scale(1.05)}
+.lang-btn.active{background:var(--red);color:var(--white);border-color:var(--red)}
+.stats-bar{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin:20px 0}
+.stat-box{background:var(--white);padding:20px 10px;border-radius:15px;text-align:center;cursor:pointer;transition:all 0.3s;border:3px solid var(--green);box-shadow:0 3px 10px rgba(0,0,0,0.1)}
+.stat-box:hover{transform:translateY(-5px);box-shadow:0 5px 20px rgba(0,0,0,0.2)}
+.stat-num{font-size:2rem;font-weight:900;color:var(--green);display:block}
+.stat-label{font-size:0.85rem;color:#666;margin-top:5px;display:block}
 .page{display:none;padding:20px;max-width:600px;margin:auto;min-height:80vh;animation:fadeIn 0.3s}
 .page.active{display:block}
-@keyframes fadeIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
-.btn{width:100%;padding:14px;border:none;border-radius:12px;font-size:1rem;font-weight:700;cursor:pointer;margin:8px 0;color:#fff;display:flex;align-items:center;justify-content:center;gap:8px;transition:transform 0.1s}
+@keyframes fadeIn{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+.btn{width:100%;padding:16px;border:none;border-radius:12px;font-size:1.05rem;font-weight:bold;cursor:pointer;margin:10px 0;color:var(--white);display:flex;align-items:center;justify-content:center;gap:10px;transition:all 0.3s;box-shadow:0 4px 15px rgba(0,0,0,0.2)}
 .btn:active{transform:scale(0.98)}
-.bg{background:linear-gradient(135deg,#1B5E20,#2E7D32)}
-.bb{background:#14213D}
-.by{background:#f39c12}
-.br{background:#d21034}
-.bx{background:#757575}
-.bo{background:#FF9800}
-.purple{background:#673ab7}
-.green-recycle{background:linear-gradient(135deg,#2E7D32,#4CAF50)}
-.market-btn{background:linear-gradient(135deg,#673ab7,#9c27b0)}.map-btn{background:#14213D;margin-bottom:8px}
-.voice-btn{background:#e91e63}
-.cd{background:#fff;border-radius:15px;padding:15px;margin:15px 0;box-shadow:0 4px 15px rgba(0,0,0,0.08);border:1px solid #eee}
-.mb{height:140px;font-size:1.4rem;flex-direction:column}
-.g2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-.sb2{height:60px}
-.ft{background:#fff;padding:15px;text-align:center;border-top:3px solid #D4AF37;margin-top:20px;font-size:0.85rem;color:#666}
-.in{width:100%;padding:12px;border:2px solid #e0e0e0;border-radius:10px;margin:10px 0;text-align:center;font-size:1rem}
-.in:focus{border-color:#1B5E20;outline:none}
-.in:disabled{background:#f0f0f0;color:#666}
-.cam-box{height:200px;background:#f9f9f9;border:2px dashed #ccc;border-radius:12px;display:flex;align-items:center;justify-content:center;margin-bottom:15px;cursor:pointer;position:relative;overflow:hidden}
-.cam-box img{width:100%;height:100%;object-fit:cover;position:absolute}
-.cam-icon{font-size:3rem;color:#aaa}
-#thanksOverlay{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(27,94,32,0.95);color:#fff;flex-direction:column;align-items:center;justify-content:center;z-index:10001;text-align:center;animation:fadeIn 0.5s}
-@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+.btn-green{background:linear-gradient(135deg,var(--green),#008040)}
+.btn-red{background:linear-gradient(135deg,var(--red),#ff3355)}
+.btn-white{background:var(--white);color:var(--green);border:2px solid var(--green)}
+.btn-gold{background:var(--gold);color:var(--white)}
+.btn-purple{background:#673ab7}
+.btn-orange{background:#ff9800}
+.btn-gray{background:#757575}
+.card{background:var(--white);border-radius:15px;padding:20px;margin:15px 0;box-shadow:0 4px 15px rgba(0,0,0,0.1);border-right:5px solid var(--green)}
+.card h3{color:var(--green);margin-bottom:15px;text-align:center}
+.input{width:100%;padding:14px;border:2px solid #ddd;border-radius:10px;margin:10px 0;text-align:center;font-size:1rem;transition:border 0.3s}
+.input:focus{border-color:var(--green);outline:none}
+.input:disabled{background:#f0f0f0;color:#666}
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+body.desktop-mode .main-content{max-width:1200px;padding:30px}
+body.desktop-mode .grid-2{grid-template-columns:repeat(4,1fr)}
+body.desktop-mode .stats-bar{grid-template-columns:repeat(4,1fr)}
+body.desktop-mode .page{max-width:1000px}
+body.desktop-mode .btn{padding:20px;font-size:1.1rem}
+#modeToggle{position:fixed;bottom:20px;left:20px;padding:12px 20px;border:none;border-radius:30px;background:var(--green);color:var(--white);cursor:pointer;font-weight:bold;box-shadow:0 4px 15px rgba(0,0,0,0.3);z-index:9999;transition:all 0.3s}
+#modeToggle:hover{transform:scale(1.05);background:var(--red)}
+.footer{background:var(--white);padding:15px;text-align:center;border-top:4px solid var(--gold);margin-top:30px;color:#666;font-size:0.9rem}
+#map,#routeMap{height:300px;width:100%;border-radius:12px;margin:15px 0}
+.table{width:100%;border-collapse:collapse;margin:15px 0}
+.table th{background:var(--green);color:var(--white);padding:12px}
+.table td{padding:10px;border:1px solid #ddd;text-align:center}
+.table tr:nth-child(even){background:#f9f9f9}
+.info-card{background:linear-gradient(135deg,var(--green),#008040);color:var(--white);padding:15px;border-radius:10px;margin:10px 0}
+.warning-card{background:linear-gradient(135deg,var(--red),#ff3355);color:var(--white);padding:15px;border-radius:10px;margin:10px 0}
+.success-card{background:linear-gradient(135deg,#4CAF50,#45a049);color:var(--white);padding:15px;border-radius:10px;margin:10px 0}
+
+/* الوظائف الإضافية من الكود الأول */
+#toast-container{position:fixed;top:40px;left:10px;right:10px;z-index:10001;display:flex;flex-direction:column;gap:5px;pointer-events:none}
+.toast{background:rgba(255,255,255,0.95);padding:12px 15px;border-radius:10px;box-shadow:0 4px 15px rgba(0,0,0,0.2);border-right:4px solid var(--green);animation:slideIn 0.3s;font-size:0.9rem;color:#333;display:flex;align-items:center;gap:10px}
+@keyframes slideIn{from{transform:translateY(-20px);opacity:0}to{transform:translateY(0);opacity:1}}
 .hidden{display:none!important}
 .report-card{background:#fff;border-radius:12px;padding:15px;margin-bottom:15px;box-shadow:0 2px 10px rgba(0,0,0,0.05);border-right:5px solid #f44336}
 .report-card.assigned{border-right-color:#FF9800}
@@ -74,16 +107,9 @@ html,body{overflow-x:hidden;width:100%;background:#f5f7fa;min-height:100vh}
 .img-container img{width:100%;height:150px;object-fit:cover}
 .img-label{position:absolute;bottom:0;left:0;right:0;background:rgba(0,0,0,0.7);color:#fff;padding:5px;text-align:center;font-size:0.8rem}
 .info-row{display:flex;justify-content:space-between;margin:5px 0;padding:5px 0;border-bottom:1px solid #f0f0f0}
-.info-row b{color:#1B5E20}
+.info-row b{color:var(--green)}
 .download-btn{display:inline-block;width:100%;padding:10px;background:#2196F3;color:#fff;text-decoration:none;border-radius:8px;margin:5px 0;font-weight:bold;text-align:center;cursor:pointer;border:none;font-size:0.9rem}
 .download-all{background:#4CAF50;margin-top:10px}
-.stats-bar{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:15px 0}
-.stat-box{background:#fff;padding:12px 5px;border-radius:12px;text-align:center;border:1px solid #eee;cursor:pointer}
-.stat-num{font-size:1.5rem;font-weight:900;color:#1B5E20;display:block}
-.stat-label{font-size:0.75rem;color:#666;margin-top:4px}
-.demo-btn{background:linear-gradient(135deg,#667eea,#764ba2);margin-top:10px}
-.print-btn{background:#607d8b;margin-top:10px}
-.exit-btn{background:linear-gradient(135deg,#d21034,#a00d28);margin-top:10px}
 .chart-container{height:300px;margin:15px 0;background:#fafafa;border-radius:12px;padding:20px;display:flex;align-items:center;justify-content:center}
 .chart-visual{width:200px;height:200px;border-radius:50%;box-shadow:0 5px 15px rgba(0,0,0,0.1)}
 .chart-legend{display:flex;gap:20px;flex-wrap:wrap;justify-content:center;margin-top:20px}
@@ -91,49 +117,44 @@ html,body{overflow-x:hidden;width:100%;background:#f5f7fa;min-height:100vh}
 .legend-color{width:20px;height:20px;border-radius:50%}
 .qr-modal{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.8);z-index:10002;align-items:center;justify-content:center}
 .qr-content{background:#fff;padding:25px;border-radius:20px;text-align:center;max-width:90%;width:320px;animation:fadeIn 0.3s}
-.qr-content h3{color:#1B5E20;margin-bottom:20px;font-size:1.3rem}
+.qr-content h3{color:var(--green);margin-bottom:20px;font-size:1.3rem}
 #qrcode{margin:20px auto;display:flex;justify-content:center;align-items:center;min-height:220px;background:#fff;padding:15px;border-radius:10px}
-#qrcode img{max-width:100%;height:auto}
 .report-number{margin-top:15px;padding:12px;background:#f5f7fa;border-radius:10px}
 .report-number .label{font-size:0.9rem;color:#666;margin-bottom:5px}
-.report-number .number{font-size:1.8rem;font-weight:900;color:#1B5E20;letter-spacing:1px}
-.filter-bar{display:flex;gap:10px;margin-bottom:15px;flex-wrap:wrap}.filter-bar select,.filter-bar input{flex:1;min-width:100px;padding:8px;border:1px solid #ddd;border-radius:8px}
+.report-number .number{font-size:1.8rem;font-weight:900;color:var(--green);letter-spacing:1px}
+.filter-bar{display:flex;gap:10px;margin-bottom:15px;flex-wrap:wrap}
+.filter-bar select,.filter-bar input{flex:1;min-width:100px;padding:8px;border:1px solid #ddd;border-radius:8px}
 .staff-item{background:#f8f9fa;padding:12px;border-radius:10px;margin-bottom:10px;display:flex;justify-content:space-between;align-items:center}
 .action-btns{display:flex;gap:8px}
 .edit-btn{background:#f39c12;color:#fff;border:none;width:30px;height:30px;border-radius:50%;cursor:pointer;font-size:1rem;display:flex;align-items:center;justify-content:center}
 .delete-btn{background:#d21034;color:#fff;border:none;width:30px;height:30px;border-radius:50%;cursor:pointer;font-size:1rem;display:flex;align-items:center;justify-content:center}
-#toast-container{position:fixed;top:40px;left:10px;right:10px;z-index:10001;display:flex;flex-direction:column;gap:5px;pointer-events:none}
-.toast{background:rgba(255,255,255,0.95);padding:12px 15px;border-radius:10px;box-shadow:0 4px 15px rgba(0,0,0,0.2);border-right:4px solid #1B5E20;animation:slideIn 0.3s;font-size:0.9rem;color:#333;display:flex;align-items:center;gap:10px}
-@keyframes slideIn{from{transform:translateY(-20px);opacity:0}to{transform:translateY(0);opacity:1}}
-.star-rating{display:flex;justify-content:center;gap:5px;font-size:1.5rem;color:#ddd;cursor:pointer;margin:10px 0}
-.star-rating .star.active{color:#FFD700}
 .points-badge{background:linear-gradient(135deg,#FFD700,#FFA500);color:#fff;padding:5px 15px;border-radius:20px;font-weight:bold;font-size:0.9rem;display:inline-flex;align-items:center;gap:5px}
 .tip-card{background:#e8f5e9;padding:12px;border-radius:10px;margin-bottom:10px;border-right:3px solid #4CAF50;font-size:0.9rem}
 .voice-wave{display:flex;align-items:center;justify-content:center;gap:3px;height:25px;margin-top:5px}
 .voice-bar{width:4px;height:10px;background:#e91e63;border-radius:2px;animation:wave 0.8s infinite alternate}
 @keyframes wave{0%{height:10px}100%{height:25px}}
 .schedule-table{width:100%;border-collapse:collapse;font-size:0.9rem}
-.schedule-table th{background:#1B5E20;color:#fff;padding:10px;text-align:right}
+.schedule-table th{background:var(--green);color:#fff;padding:10px;text-align:right}
 .schedule-table td{padding:10px;border-bottom:1px solid #eee}
 .tonnage-card{background:#fff3e0;padding:15px;border-radius:12px;margin:10px 0;border-right:4px solid #FF9800}
 .tonnage-info{display:flex;justify-content:space-between;margin:5px 0;padding:8px;background:#fff;border-radius:8px}
-.phone-link{color:#1B5E20;text-decoration:none;font-weight:bold;display:inline-flex;align-items:center;gap:5px}
+.phone-link{color:var(--green);text-decoration:none;font-weight:bold;display:inline-flex;align-items:center;gap:5px}
 .phone-link:hover{text-decoration:underline}
 .print-modal{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.85);z-index:10003;align-items:center;justify-content:center}
 .print-modal.active{display:flex}
 .print-dialog{background:#fff;border-radius:20px;padding:30px;max-width:90%;width:500px;max-height:90vh;overflow-y:auto;animation:fadeIn 0.3s}
-.print-dialog h2{text-align:center;color:#1B5E20;margin-bottom:20px}
+.print-dialog h2{text-align:center;color:var(--green);margin-bottom:20px}
 .print-option{display:flex;align-items:center;justify-content:space-between;padding:15px;margin:8px 0;background:#f8f9fa;border-radius:12px;cursor:pointer;transition:all 0.3s;border:2px solid transparent}
-.print-option:hover{background:#e8f5e9;border-color:#1B5E20;transform:translateX(-5px)}
+.print-option:hover{background:#e8f5e9;border-color:var(--green);transform:translateX(-5px)}
 .print-option .label{font-size:1.1rem;font-weight:600}
 .print-option .icon{font-size:1.5rem}
 .print-preview{display:none;background:#fff;padding:20px;border-radius:10px;margin:15px 0}
 .print-preview table{width:100%;border-collapse:collapse;margin:15px 0}
-.print-preview th{background:#1B5E20;color:#fff;padding:12px;font-size:14px}
+.print-preview th{background:var(--green);color:#fff;padding:12px;font-size:14px}
 .print-preview td{padding:10px;border:1px solid #ddd;font-size:13px}
 .print-preview tr:nth-child(even){background:#f8f9fa}
-.print-preview-header{text-align:center;margin-bottom:15px;padding-bottom:10px;border-bottom:2px solid #1B5E20}
-.print-preview-header h3{color:#1B5E20;font-size:20px}
+.print-preview-header{text-align:center;margin-bottom:15px;padding-bottom:10px;border-bottom:2px solid var(--green)}
+.print-preview-header h3{color:var(--green);font-size:20px}
 .print-preview-header p{color:#666;font-size:12px}
 .print-actions{display:flex;gap:10px;margin-top:15px}
 .print-actions .btn{flex:1}
@@ -146,134 +167,1104 @@ html,body{overflow-x:hidden;width:100%;background:#f5f7fa;min-height:100vh}
 .waste-glass{background:#e0f7fa;color:#00838F}
 .waste-mixed{background:#ffebee;color:#C62828}
 .quality-excellent{color:#4CAF50;font-weight:bold}
-.quality-good{color:#FF9800;font-weight:bold}.quality-fair{color:#F44336;font-weight:bold}
+.quality-good{color:#FF9800;font-weight:bold}
+.quality-fair{color:#F44336;font-weight:bold}
 .track-timeline{position:relative;padding-left:30px;margin:15px 0}
 .track-timeline::before{content:'';position:absolute;left:8px;top:0;bottom:0;width:2px;background:#ddd}
 .track-step{position:relative;padding:10px 0;padding-left:25px}
-.track-step::before{content:'';position:absolute;left:-4px;top:15px;width:12px;height:12px;border-radius:50%;background:#1B5E20;border:3px solid #fff;box-shadow:0 0 0 2px #1B5E20}
+.track-step::before{content:'';position:absolute;left:-4px;top:15px;width:12px;height:12px;border-radius:50%;background:var(--green);border:3px solid #fff;box-shadow:0 0 0 2px var(--green)}
 .track-step.done::before{background:#4CAF50}
 .track-step.pending::before{background:#FF9800}
-#map,#routeMap,#previewMap{height:400px;width:100%;border-radius:12px;margin:15px 0;z-index:1}
-.truck-marker{background:#1B5E20;color:#fff;padding:5px 10px;border-radius:8px;font-weight:bold;box-shadow:0 2px 8px rgba(0,0,0,0.3)}
+#previewMap{height:300px;width:100%;border-radius:12px;margin:15px 0}
+.truck-marker{background:var(--green);color:#fff;padding:5px 10px;border-radius:8px;font-weight:bold;box-shadow:0 2px 8px rgba(0,0,0,0.3)}
 .bin-collected{background:#4CAF50;color:#fff;padding:8px 15px;border-radius:20px;margin:5px 0;text-align:center;font-weight:bold}
 .live-tracking{background:#ff5722;color:#fff;padding:10px;border-radius:10px;text-align:center;margin:10px 0;animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.8}}
 .end-mission-btn{background:linear-gradient(135deg,#d21034,#a00d28);margin-top:15px;font-size:1.2rem;padding:18px;box-shadow:0 4px 15px rgba(210,16,52,0.4)}
 .mission-summary{background:#f5f7fa;padding:15px;border-radius:12px;margin:15px 0;border-right:4px solid #4CAF50}
-.mission-summary h3{color:#1B5E20;margin-bottom:10px}
+.mission-summary h3{color:var(--green);margin-bottom:10px}
 .pdf-action-buttons{margin-top:30px;padding:20px;background:#f5f7fa;border-radius:15px;text-align:center}
 .pdf-action-buttons .btn{margin:10px 0;padding:18px;font-size:1.1rem}
 </style>
 </head>
 <body>
-<div id="splash">
-<div class="logo-box"><span>🗑️</span></div>
-<h1>المدية نظيفة</h1>
-<p>مصلحة النظافة والوقاية الصحية<br>بلدية المدية 2026</p>
-<div class="loader"></div>
-</div>
-<div id="toast-container"></div>
-<div class="conn">✓ متصل - النظام جاهز</div>
-<div id="syncIndicator" class="sync-indicator sync-online">🔄 متصل</div>
-<div class="hdr">
-<div class="flag-container">
-<svg class="algerian-flag" viewBox="0 0 900 600" xmlns="http://www.w3.org/2000/svg">
-<rect width="900" height="600" fill="#fff"/>
-<rect width="450" height="600" fill="#006233"/>
-<circle cx="450" cy="300" r="150" fill="#D21034"/>
-<circle cx="495" cy="300" r="120" fill="#fff"/>
-<path d="M450 210 L467.6 265.8 L525 265.8 L478.7 300 L496.3 355.8 L450 321.6 L403.7 355.8 L421.3 300 L375 265.8 L432.4 265.8 Z" fill="#D21034"/>
-</svg>
-</div>
-<div class="c">🇩🇿 الجمهورية الجزائرية الديمقراطية الشعبية</div>
-<div class="d">🧹 مصلحة النظافة والوقاية الصحية لبلدية المدية</div>
-<div class="t">المدية نظيفة</div>
-<div class="lang-container">
-<button class="lang-btn" onclick="changeLang('en', this)">English</button>
-<button class="lang-btn" onclick="changeLang('fr', this)">Français</button>
-<button class="lang-btn active" onclick="changeLang('ar', this)">العربية</button>
-</div>
-</div>
-<div class="ib">
-<div>🕐 <span id="ck">00:00:00</span></div>
-<div>📅 <span id="cd">--/--/----</span></div>
-<div style="display:flex;align-items:center;gap:10px">
-<span class="points-badge">⭐ <span id="userPoints">0</span></span>
-</div>
-</div>
-<div class="stats-bar">
-<div class="stat-box" onclick="filterByStatus('all')"><span class="stat-num" id="statTotal">0</span><span class="stat-label">إجمالي البلاغات</span></div>
-<div class="stat-box" onclick="filterByStatus('done')" style="border-color:#4CAF50"><span class="stat-num" style="color:#4CAF50" id="statDone">0</span><span class="stat-label">تم الإنجاز</span></div>
-<div class="stat-box" onclick="showPage('sortingCenter')" style="border-color:#673ab7"><span class="stat-num" style="color:#673ab7" id="statSorted">0</span><span class="stat-label">تم الفرز</span></div>
-</div>
-<div id="thanksOverlay">
-<div style="font-size:4rem;margin-bottom:15px">❤️</div>
-<h1 style="font-size:2rem;margin-bottom:10px">شكراً لكم!</h1>
-<p style="font-size:1rem;margin-bottom:20px">تم إرسال بلاغكم بنجاح</p>
-<div style="padding:10px 30px;border:2px solid #FFD700;border-radius:30px;font-weight:700;background:rgba(255,255,255,0.2)">♻️ معاً لمدية خضراء 2026</div>
-</div>
-<div id="home" class="page active">
-<button class="btn bg mb" onclick="showPage('report')"><span style="font-size:2.5rem">🚚</span><br><span>إرسال تبليغ</span></button>
-<div class="cd" style="border-color:#667eea;background:#f8f9ff">
-<h3 style="text-align:center;margin-bottom:10px;color:#667eea">🎬 أدوات العرض</h3>
-<div class="g2">
-<button class="btn demo-btn" onclick="loadDemoData()">🎲 بيانات تجريبية</button>
-<button class="btn print-btn" onclick="openPrintDialog()">🖨️ طباعة PDF</button>
-</div>
-<button class="btn purple" onclick="showPage('dashboard')" style="margin-top:10px">📊 لوحة الإحصائيات</button>
-<button class="btn exit-btn" onclick="exitApp()">🚪 الخروج</button>
-</div>
-<div class="cd">
-<h3 style="text-align:center;margin-bottom:12px">✨ الخدمات</h3>
-<div class="g2">
-<button class="btn by" onclick="showPage('schedule')">📅 جدول الجمع</button>
-<button class="btn purple" onclick="showPage('tips')">💡 توعية</button>
-<button class="btn bo" onclick="showPage('requests')">🛠️ طلباتي</button>
-<button class="btn green-recycle" onclick="showPage('recycling')">♻️ حاسبة التدوير</button>
-</div>
-</div>
-<div class="cd">
-<h3 style="text-align:center;margin-bottom:12px">🔄 الاقتصاد الدائري</h3>
-<div class="g2">
-<button class="btn green-recycle" onclick="showPage('sortingCenter')">🏭 مركز الفرز</button>
-<button class="btn market-btn" onclick="showPage('recyclingMarket')">🛒 سوق التدوير</button>
-</div>
-</div>
-<div class="cd" style="margin-top:15px">
-<h3 style="text-align:center;margin-bottom:12px">🚚 التتبع المباشر</h3>
-<button class="btn bg" onclick="showPage('truckTracking')" style="background:linear-gradient(135deg,#ff5722,#f44336)">📍 تتبع مسار الشاحنات</button>
-</div>
-<div class="cd" style="margin-top:15px">
-<h3 style="text-align:center;margin-bottom:12px">👥 الرواق</h3>
-<div class="g2">
-<button class="btn by sb2" onclick="showPage('driver')">🚚 السائقين</button>
-<button class="btn bb sb2" onclick="showPage('admin')">🛡️ الإدارة</button>
-</div>  </div>
-</div>
-// عرض صفحة اختيار الجهاز إذا لم تكن موجودة
-window.addEventListener('DOMContentLoaded', function() {
-    const savedMode = localStorage.getItem('app_mode');
-    const selector = document.getElementById('deviceSelector');
-    const splash = document.getElementById('splash');
-    const main = document.getElementById('mainContent');
-    const savedLang = localStorage.getItem('medea_lang');
-    
-    if(savedLang) {
-        currentLang = savedLang;
-        updateLanguageUI();
-    }
-    
-    if (savedMode) {
-        selector.style.display = 'none';
-        if(savedMode === 'desktop') document.body.classList.add('desktop-mode');
-        showSplashAndMain(splash, main);
-    } else {
-        // عرض صفحة اختيار الجهاز
-        selector.style.display = 'flex';
-        splash.style.display = 'none';
-        main.style.display = 'none';
-    }
-});
-    [... باقي الكود كما هو ...]
 
+<!-- شاشة اختيار الجهاز -->
+<div id="deviceSelector">
+  <div class="device-header">
+    <h1>النظافة من الإيمان</h1>
+    <h2>المدية نظيفة</h2>
+    <p>اختر نوع الجهاز</p>
+    <div class="device-buttons">
+      <button class="device-btn computer" onclick="selectDevice('desktop')">💻 الكمبيوتر</button>
+      <button class="device-btn phone" onclick="selectDevice('mobile')">📱 الهاتف</button>
+    </div>
+  </div>
+  <div class="footer-text">
+    <p>مصلحة النظافة والوقاية الصحية - بلدية المدية</p>
+    <p>التطبيق من إعداد د.رابحي فتحي</p>
+    <p style="margin-top:10px;font-size:0.85rem">سيتم حفظ اختيارك للزيارات القادمة</p>
+  </div>
+</div>
+
+<!-- شاشة الترحيب -->
+<div id="splash">
+  <div class="splash-content">
+    <div class="logo">🗑️</div>
+    <h1>المدية نظيفة</h1>
+    <p>مصلحة النظافة والوقاية الصحية<br>بلدية المدية 2026</p>
+    <div class="loader"></div>
+  </div>
+</div>
+
+<!-- المحتوى الرئيسي -->
+<div class="main-content" id="mainContent">
+  <div class="top-bar">
+    <div class="status">✓ متصل - النظام جاهز</div>
+    <div class="time" id="timeDisplay">00:00:00</div>
+  </div>
+
+  <div class="header">
+    <h1>المدية نظيفة</h1>
+    <p>🇩🇿 الجمهورية الجزائرية الديمقراطية الشعبية</p>
+    <p>🧹 مصلحة النظافة والوقاية الصحية لبلدية المدية</p>
+    <div class="lang-container">
+      <button class="lang-btn" onclick="changeLang('ar')">🇩 العربية</button>
+      <button class="lang-btn" onclick="changeLang('fr')">🇫🇷 Français</button>
+      <button class="lang-btn" onclick="changeLang('en')">🇬 English</button>
+    </div>
+  </div>
+
+  <div class="stats-bar">
+    <div class="stat-box" onclick="filterByStatus('all')"><span class="stat-num" id="statTotal">0</span><span class="stat-label">إجمالي البلاغات</span></div>
+    <div class="stat-box" style="border-color:#4CAF50" onclick="filterByStatus('done')"><span class="stat-num" style="color:#4CAF50" id="statDone">0</span><span class="stat-label">تم الإنجاز</span></div>
+    <div class="stat-box" style="border-color:var(--gold)" onclick="filterByStatus('pending')"><span class="stat-num" style="color:var(--gold)" id="statPending">0</span><span class="stat-label">قيد التنفيذ</span></div>
+  </div>
+
+  <!-- الصفحة الرئيسية -->
+  <div id="home" class="page active">
+    <button class="btn btn-green" onclick="showPage('report')" style="height:140px;font-size:1.5rem"><span style="font-size:3rem">🚚</span><br><span>إرسال تبليغ</span></button>
+    
+    <div class="card" style="border-color:#667eea;background:#f8f9ff">
+      <h3>🎬 أدوات العرض</h3>
+      <div class="grid-2">
+        <button class="btn btn-purple" onclick="loadDemoData()">🎲 بيانات تجريبية</button>
+        <button class="btn btn-gray" onclick="openPrintDialog()">🖨️ طباعة PDF</button>
+      </div>
+      <button class="btn btn-purple" onclick="showPage('dashboard')" style="margin-top:10px">📊 لوحة الإحصائيات</button>
+      <button class="btn btn-red" onclick="exitApp()" style="margin-top:10px">🚪 الخروج</button>
+    </div>
+    
+    <div class="card">
+      <h3>✨ الخدمات</h3>
+      <div class="grid-2">
+        <button class="btn btn-orange" onclick="showPage('schedule')">📅 جدول الجمع</button>
+        <button class="btn btn-purple" onclick="showPage('tips')">💡 توعية</button>
+        <button class="btn btn-orange" onclick="showPage('requests')">🛠️ طلباتي</button>
+        <button class="btn btn-green" onclick="showPage('recycling')">♻️ حاسبة التدوير</button>
+      </div>
+    </div>
+    
+    <div class="card">
+      <h3>🔄 الاقتصاد الدائري</h3>
+      <div class="grid-2">
+        <button class="btn btn-green" onclick="showPage('sortingCenter')">🏭 مركز الفرز</button>
+        <button class="btn" style="background:linear-gradient(135deg,#673ab7,#9c27b0)" onclick="showPage('recyclingMarket')">🛒 سوق التدوير</button>
+      </div>
+    </div>
+    
+    <div class="card" style="margin-top:15px">
+      <h3>🚚 التتبع المباشر</h3>
+      <button class="btn" style="background:linear-gradient(135deg,#ff5722,#f44336)" onclick="showPage('truckTracking')">📍 تتبع مسار الشاحنات</button>
+    </div>
+    
+    <div class="card" style="margin-top:15px">
+      <h3>👥 الرواق</h3>
+      <div class="grid-2">
+        <button class="btn btn-orange" onclick="showPage('driver')">🚚 السائقين</button>
+        <button class="btn" style="background:#14213D" onclick="showPage('admin')">🛡️ الإدارة</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- صفحة إرسال تبليغ -->
+  <div id="report" class="page">
+    <h2 style="margin-bottom:20px;color:var(--green);text-align:center">📝 بلاغ جديد</h2>
+    <div class="card">
+      <div style="height:200px;background:#f5f5f5;border:2px dashed #ccc;border-radius:12px;display:flex;align-items:center;justify-content:center;margin-bottom:15px;cursor:pointer" onclick="takePhoto()">
+        <span style="font-size:4rem;color:#aaa">📷</span>
+        <img id="camImg" style="display:none;max-width:100%;max-height:100%">
+      </div>
+      <button class="btn btn-green" onclick="takePhoto()">📷 التقاط الصورة</button>
+      <input type="text" class="input" id="addrInput" placeholder="📍 اسم الحي أو الشارع">
+      <div style="display:flex;gap:10px">
+        <input type="text" class="input" id="gpsInput" placeholder="🌍 إحداثيات GPS" readonly style="background:#f0f0f0;flex:2">
+        <button class="btn btn-red" style="flex:1;margin:0" onclick="getLocation()">📍 GPS</button>
+      </div>
+      <button class="btn btn-green" onclick="sendReport()">✉️ إرسال البلاغ الآن</button>
+      <button class="btn btn-gray" onclick="showPage('home')">← رجوع</button>
+    </div>
+  </div>
+
+  <!-- صفحة تتبع الشاحنات -->
+  <div id="truckTracking" class="page">
+    <h2 style="margin-bottom:20px;color:var(--green);text-align:center">🚚 تتبع مسار الشاحنة</h2>
+    <div class="card">
+      <h3>📍 المعلومات الحالية</h3>
+      <div style="padding:10px 0;border-bottom:1px solid #eee"><b>👤 السائق:</b> <span id="trackingDriverName">-</span></div>
+      <div style="padding:10px 0;border-bottom:1px solid #eee"><b>🏷️ رقم القطاع:</b> <span id="trackingSector">-</span></div>
+      <div style="padding:10px 0;border-bottom:1px solid #eee"><b>📅 التاريخ:</b> <span id="trackingDate">-</span></div>
+      <div style="padding:10px 0;border-bottom:1px solid #eee"><b>🕐 الوقت:</b> <span id="trackingTime">-</span></div>
+      <div style="padding:10px 0"><b>🗑️ الحاويات:</b> <span id="collectedBinsCount" style="color:#4CAF50;font-weight:bold">0</span></div>
+    </div>
+    <div class="warning-card" id="liveTrackingStatus">🔴 التتبع المباشر نشط</div>
+    <div id="map"></div>
+    <div class="card">
+      <h3>🎯 سجل الحاويات</h3>
+      <div id="collectedBinsList"></div>
+    </div>
+    <button class="btn btn-gray" onclick="showPage('driver')">← رجوع لمساحة السائقين</button>
+  </div>
+
+  <!-- صفحة السائقين -->
+  <div id="driver" class="page">
+    <h2 style="margin-bottom:20px;color:var(--green);text-align:center">🚚 مساحة السائقين</h2>
+    <div id="driverLogin" class="card">
+      <h3>🔐 دخول السائق</h3>
+      <input type="text" id="driverName" class="input" placeholder="👤 أدخل اسمك">
+      <button class="btn btn-orange" onclick="loginDriver()">✓ دخول</button>
+    </div>
+    <div id="driverPanel" style="display:none">
+      <div class="success-card">✓ مرحباً - مهامك جاهزة</div>
+      <button class="btn" style="background:linear-gradient(135deg,#ff5722,#f44336);margin-bottom:15px" onclick="startTruckTracking()">📍 بدء تتبع المسار</button>
+      <div id="binTrackingControls" style="display:none;margin-bottom:15px">
+        <div class="success-card">🟢 التتبع نشط - سجل الحاويات</div>
+        <button class="btn btn-green" onclick="recordBinCollection()" style="font-size:1.2rem;padding:20px">🗑️ تسجيل موقع الحاوية</button>
+      </div>
+      <button class="btn btn-green" onclick="showPage('tonnageRecords')" style="margin-bottom:15px">⚖️ تسجيل كميات</button>
+      <button class="btn btn-red" onclick="logoutDriver()">✕ خروج</button>
+    </div>
+    <button class="btn btn-gray" onclick="showPage('home')">← رجوع</button>
+  </div>
+
+  <!-- صفحة الإدارة -->
+  <div id="admin" class="page">
+    <h2 style="margin-bottom:20px;color:var(--green);text-align:center">⚙️ لوحة التحكم</h2>
+    <div id="adminLogin" class="card">
+      <h3>🔐 الدخول للمشرفين</h3>
+      <input type="text" id="adminName" class="input" placeholder="👤 الاسم">
+      <input type="password" id="adminCode" class="input" placeholder="🔑 الرمز (1234)">
+      <button class="btn" style="background:#14213D" onclick="loginAdmin()">✓ دخول</button>
+    </div>
+    <div id="adminPanel" style="display:none">
+      <div class="success-card">✓ وضع المشرف مفعل</div>
+      <button class="btn btn-green" onclick="showPage('truckTracking')">🚚 تتبع الشاحنات</button>
+      <button class="btn btn-purple" onclick="showPage('tonnageRecords')">⚖️ سجل الكميات</button>
+      <button class="btn btn-orange" onclick="manageStaffPage()">👥 إدارة الموظفين</button>
+      <button class="btn btn-orange" onclick="showPage('scheduleManager')">📅 إدارة الجدول</button>
+      <button class="btn btn-green" onclick="showPage('sortingCenter')">🏭 مركز الفرز</button>
+      <button class="btn" style="background:linear-gradient(135deg,#673ab7,#9c27b0)" onclick="showPage('recyclingMarket')">🛒 سوق التدوير</button>
+      <button class="btn btn-red" onclick="logoutAdmin()">✕ خروج</button>
+    </div>
+    <button class="btn btn-gray" onclick="showPage('home')">← رجوع</button>
+  </div>
+
+  <!-- صفحة لوحة الإحصائيات -->
+  <div id="dashboard" class="page">
+    <h2 style="margin-bottom:20px;color:var(--green);text-align:center">📈 لوحة الإحصائيات</h2>
+    <div class="card">
+      <div class="grid-2">
+        <div style="text-align:center;padding:20px;background:#f5f5f5;border-radius:10px">
+          <div style="font-size:3rem;font-weight:900;color:var(--green)" id="dashTotal">0</div>
+          <div>إجمالي البلاغات</div>
+        </div>
+        <div style="text-align:center;padding:20px;background:#e8f5e9;border-radius:10px">
+          <div style="font-size:3rem;font-weight:900;color:#4CAF50" id="dashDone">0</div>
+          <div>تم الإنجاز</div>
+        </div>
+      </div>
+    </div>
+    <button class="btn btn-gray" onclick="showPage('home')">← رجوع</button>
+  </div>
+
+  <!-- صفحة جدول الجمع -->
+  <div id="schedule" class="page">
+    <h2 style="margin-bottom:20px;color:var(--green);text-align:center">📅 جدول جمع النفايات</h2>
+    <div class="card">
+      <h3>📋 أوقات الجمع حسب الأحياء</h3>
+      <table class="table">
+        <tr><th>الحي</th><th>اليوم</th><th>الوقت</th></tr>
+        <tr><td>وسط المدينة</td><td>الأحد - الثلاثاء - الخميس</td><td>06:00 - 08:00</td></tr>
+        <tr><td>حي الزيتون</td><td>الإثنين - الأربعاء - السبت</td><td>07:00 - 09:00</td></tr>
+        <tr><td>حي النصر</td><td>الإثنين - الخميس</td><td>06:30 - 08:30</td></tr>
+        <tr><td>حي الأمل</td><td>الثلاثاء - الجمعة</td><td>07:00 - 09:00</td></tr>
+        <tr><td>حي السلام</td><td>الأربعاء - السبت</td><td>06:00 - 08:00</td></tr>
+      </table>
+    </div>
+    <button class="btn btn-gray" onclick="showPage('home')">← رجوع</button>
+  </div>
+
+  <!-- صفحة التوعية -->
+  <div id="tips" class="page">
+    <h2 style="margin-bottom:20px;color:var(--green);text-align:center">💡 نصائح بيئية</h2>
+    <div class="success-card">♻️ <b>الفرز من المصدر:</b> افصل البلاستيك عن الورق لتسهيل إعادة التدوير وتقليل التلوث.</div>
+    <div class="warning-card">🚫 <b>لا للرمي العشوائي:</b> حافظ على نظافة شوارعك، النظافة من الإيمان.</div>
+    <div class="info-card">📦 <b>تقليل الأكياس:</b> استخدم أكياس قماشية قابلة لإعادة الاستخدام بدلاً من الأكياس البلاستيكية.</div>
+    <div class="success-card">🗑️ <b>استخدام الحاويات:</b> ارمِ النفايات في الأماكن المخصصة فقط للمحافظة على بيئة صحية.</div>
+    <div class="info-card">💧 <b>ترشيد المياه:</b> قلل من استهلاك المياه واحرص على عدم تلويثها بالنفايات.</div>
+    <div class="success-card">🌱 <b>الزراعة المنزلية:</b> ازرع نباتات منزلية لتحسين جودة الهواء وجمال محيطك.</div>
+    <button class="btn btn-gray" onclick="showPage('home')">← رجوع</button>
+  </div>
+
+  <!-- صفحة طلباتي -->
+  <div id="requests" class="page">
+    <h2 style="margin-bottom:20px;color:var(--green);text-align:center">🛠️ طلباتي</h2>
+    <div class="card">
+      <h3>📝 تقديم طلب جديد</h3>
+      <select class="input" id="reqType">
+        <option value="bin">🗑️ طلب حاوية جديدة</option>
+        <option value="repair">🔧 صيانة حاوية تالفة</option>
+        <option value="clean">🧹 طلب تنظيف استثنائي</option>
+        <option value="other">❓ طلب آخر</option>
+      </select>
+      <input type="text" class="input" id="reqDesc" placeholder="📝 تفاصيل الطلب">
+      <input type="text" class="input" id="reqLocation" placeholder="📍 موقع الطلب">
+      <button class="btn btn-green" onclick="submitRequest()">📤 إرسال الطلب</button>
+    </div>
+    <div class="card" style="margin-top:15px">
+      <h3>📋 طلباتي السابقة</h3>
+      <div id="myRequestsList"></div>
+    </div>
+    <button class="btn btn-gray" onclick="showPage('home')">← رجوع</button>
+  </div>
+
+  <!-- صفحة حاسبة التدوير -->
+  <div id="recycling" class="page">
+    <h2 style="margin-bottom:20px;color:var(--green);text-align:center">♻️ حاسبة التدوير وإنتاج الطاقة</h2>
+    <div class="card">
+      <h3>🔋 حاسبة التحويل التقديرية</h3>
+      <div class="grid-2">
+        <select class="input" id="wasteType">
+          <option value="organic">🍂 نفايات عضوية (سماد/بيوغاز)</option>
+          <option value="plastic">🧴 بلاستيك (تحويل لوقود)</option>
+          <option value="metal">⚙️ معادن (إعادة تدوير)</option>
+          <option value="mixed">🗑️ نفايات مختلطة</option>
+        </select>
+        <input type="number" class="input" id="wasteWeight" placeholder="الوزن بالطن" step="0.1">
+      </div>
+      <button class="btn btn-green" onclick="calculateConversion()">⚡ حساب التحويل</button>
+      <div id="conversionResult" style="display:none;margin-top:15px">
+        <div class="grid-2">
+          <div class="card" style="background:#e8f5e9;text-align:center;border:none">
+            <div style="font-size:1.8rem;font-weight:900;color:var(--green)" id="resEnergy">0</div>
+            <div style="font-size:0.8rem;color:#555">كيلوواط ساعة طاقة</div>
+          </div>
+          <div class="card" style="background:#fff3e0;text-align:center;border:none">
+            <div style="font-size:1.8rem;font-weight:900;color:var(--red)" id="resOil">0</div>
+            <div style="font-size:0.8rem;color:#555">لتر وقود حيوي/زيت</div>
+          </div>
+        </div>
+        <div class="card" style="background:#e3f2fd;text-align:center;margin-top:10px;border:none">
+          <div style="font-size:1.5rem;font-weight:900;color:#1976D2" id="resCO2">0</div>
+          <div style="font-size:0.8rem;color:#555">طن CO₂ مُوفرة</div>
+        </div>
+      </div>
+    </div>
+    <button class="btn btn-gray" onclick="showPage('home')">← رجوع</button>
+  </div>
+
+  <!-- صفحة مركز الفرز -->
+  <div id="sortingCenter" class="page">
+    <h2 style="margin-bottom:20px;color:var(--green);text-align:center">🏭 مركز الفرز التقني</h2>
+    <div class="card">
+      <h3>🔗 سلسلة قيمة التدوير</h3>
+      <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px">
+        <div style="text-align:center;padding:15px;flex:1;background:#f5f5f5;border-radius:10px"><div style="font-size:2rem">📍</div><div>جمع</div></div>
+        <div style="font-size:1.5rem;color:var(--green)">→</div>
+        <div style="text-align:center;padding:15px;flex:1;background:#f5f5f5;border-radius:10px"><div style="font-size:2rem">🚚</div><div>نقل</div></div>
+        <div style="font-size:1.5rem;color:var(--green)">→</div>
+        <div style="text-align:center;padding:15px;flex:1;background:#f5f5f5;border-radius:10px"><div style="font-size:2rem">🏭</div><div>فرز</div></div>
+        <div style="font-size:1.5rem;color:var(--green)">→</div>
+        <div style="text-align:center;padding:15px;flex:1;background:#f5f5f5;border-radius:10px"><div style="font-size:2rem">♻️</div><div>تدوير</div></div>
+      </div>
+    </div>
+    <div class="card">
+      <h3>📊 إحصائيات الفرز</h3>
+      <div class="grid-2">
+        <div class="card" style="border-right-color:#4CAF50;background:#e8f5e9"><div style="font-size:1.5rem;font-weight:900;color:#4CAF50" id="sortOrganic">0</div><div>نفايات عضوية (طن)</div></div>
+        <div class="card" style="border-right-color:#2196F3;background:#e3f2fd"><div style="font-size:1.5rem;font-weight:900;color:#2196F3" id="sortPlastic">0</div><div>بلاستيك (طن)</div></div>
+        <div class="card" style="border-right-color:var(--red);background:#ffebee"><div style="font-size:1.5rem;font-weight:900;color:var(--red)" id="sortMetal">0</div><div>معادن (طن)</div></div>
+        <div class="card" style="border-right-color:#9C27B0;background:#f3e5f5"><div style="font-size:1.5rem;font-weight:900;color:#9C27B0" id="sortPaper">0</div><div>ورق (طن)</div></div>
+      </div>
+    </div>
+    <button class="btn btn-gray" onclick="showPage('home')">← رجوع</button>
+  </div>
+
+  <!-- صفحة سوق التدوير -->
+  <div id="recyclingMarket" class="page">
+    <h2 style="margin-bottom:20px;color:var(--green);text-align:center">♻️ سوق التدوير</h2>
+    <div class="card">
+      <h3>💰 أسعار المواد المعاد تدويرها</h3>
+      <table class="table">
+        <tr><th>المادة</th><th>السعر (دج/طن)</th><th>الطلب</th></tr>
+        <tr><td>بلاستيك</td><td>15,000 دج</td><td style="color:#4CAF50">عالي</td></tr>
+        <tr><td>ورق/كرتون</td><td>8,000 دج</td><td style="color:#4CAF50">عالي</td></tr>
+        <tr><td>معادن</td><td>25,000 دج</td><td style="color:#4CAF50">عالي</td></tr>
+        <tr><td>زجاج</td><td>5,000 دج</td><td style="color:var(--red)">متوسط</td></tr>
+        <tr><td>عضوي</td><td>3,000 دج</td><td style="color:#4CAF50">عالي</td></tr>
+      </table>
+    </div>
+    <button class="btn btn-gray" onclick="showPage('home')">← رجوع</button>
+  </div>
+
+  <!-- صفحة سجل الكميات -->
+  <div id="tonnageRecords" class="page">
+    <h2 style="margin-bottom:20px;color:var(--green);text-align:center">⚖️ سجل الكميات</h2>
+    <div id="driverTonnageForm" class="card" style="display:none">
+      <h3>➕ إضافة كمية جديدة</h3>
+      <input type="text" class="input" id="tonnageDriver" placeholder="🚛 اسم السائق">
+      <input type="number" class="input" id="tonnageWeight" placeholder="⚖️ الوزن بالطن" step="0.1">
+      <select class="input" id="tonnageType">
+        <option value="mixed">🗑️ نفايات عامة</option>
+        <option value="organic">🍂 نفايات عضوية</option>
+        <option value="plastic">🧴 بلاستيك</option>
+        <option value="metal">⚙️ معادن</option>
+        <option value="paper">📄 ورق</option>
+      </select>
+      <button class="btn btn-green" onclick="addTonnage()">💾 حفظ</button>
+    </div>
+    <div class="card">
+      <h3>📋 السجلات</h3>
+      <div id="tonnageList"></div>
+    </div>
+    <button class="btn btn-gray" onclick="showPage('home')">← رجوع</button>
+  </div>
+
+  <!-- صفحة إدارة الموظفين -->
+  <div id="staffPage" class="page">
+    <h2 style="margin-bottom:20px;color:var(--green);text-align:center">👥 إدارة الموظفين</h2>
+    <div class="card">
+      <h3>➕ إضافة موظف</h3>
+      <input type="text" id="staffName" class="input" placeholder="👤 الاسم الكامل">
+      <select id="staffRole" class="input">
+        <option value="driver">🚚 سائق</option>
+        <option value="worker">👷 عامل نظافة</option>
+        <option value="supervisor">👔 مشرف</option>
+        <option value="admin">🛡️ مدير</option>
+      </select>
+      <input type="tel" id="staffPhone" class="input" placeholder="📞 رقم الهاتف">
+      <button class="btn btn-green" onclick="addStaff()">💾 حفظ</button>
+    </div>
+    <div class="card">
+      <h3>👥 قائمة الموظفين</h3>
+      <div id="staffList"></div>
+    </div>
+    <button class="btn btn-gray" onclick="showPage('admin')">← رجوع</button>
+  </div>
+
+  <!-- صفحة إدارة الجدول -->
+  <div id="scheduleManager" class="page">
+    <h2 style="margin-bottom:20px;color:var(--green);text-align:center">📅 إدارة جدول الجمع</h2>
+    <div class="card">
+      <h3>➕ إضافة جدول جديد</h3>
+      <input type="text" id="sectorName" class="input" placeholder="📍 اسم الحي/القطاع">
+      <input type="text" id="sectorDays" class="input" placeholder="📅 الأيام (مثال: الأحد-الثلاثاء)">
+      <input type="text" id="sectorTime" class="input" placeholder="🕐 وقت الجمع (مثال: 06:00-08:00)">
+      <input type="text" id="sectorDriver" class="input" placeholder="🚛 السائق المسؤول">
+      <button class="btn btn-green" onclick="addSchedule()">💾 حفظ</button>
+    </div>
+    <div class="card">
+      <h3>📋 الجداول المسجلة</h3>
+      <div id="scheduleList"></div>
+    </div>
+    <button class="btn btn-gray" onclick="showPage('admin')">← رجوع</button>
+  </div>
+
+  <div class="footer">
+    🛡️ إعداد د. رابحي فتحي - مصلحة النظافة والوقاية الصحية - بلدية المدية 2026 ©
+  </div>
+  <button id="modeToggle" onclick="switchMode()">🔄 تبديل الوضع</button>
+</div>
+
+<script>
+// Firebase Config
+const firebaseConfig = {
+  apiKey: "AIzaSyBMao4dJL_2YQjibDvcTIMw1vHHytpVqs0",
+  authDomain: "medea-clean-2026.firebaseapp.com",
+  databaseURL: "https://medea-clean-2026-default-rtdb.firebaseio.com",
+  projectId: "medea-clean-2026",
+  storageBucket: "medea-clean-2026.firebasestorage.app",
+  messagingSenderId: "215503269481",
+  appId: "1:215503269481:web:fa0d4c81ac1081b648fcf8",
+  measurementId: "G-W10RQWLJ54"
+};
+
+// المتغيرات العامة
+let db, currentLang = 'ar', currentDriver = '', tempImage = null;
+let allReports = [], allStaff = [], allRequests = [], allTonnage = [], allSchedules = [];
+let truckData = { active: false, collectedBins: [], positions: [] };
+let map;
+
+// قاموس الترجمة
+const translations = {
+  ar: {
+    totalReports: 'إجمالي البلاغات', completed: 'تم الإنجاز', pending: 'قيد التنفيذ',
+    sendReport: 'إرسال تبليغ', demoData: 'بيانات تجريبية', printPDF: 'طباعة PDF',
+    dashboard: 'لوحة الإحصائيات', exit: 'الخروج', services: 'الخدمات',
+    schedule: 'جدول الجمع', awareness: 'توعية', myRequests: 'طلباتي',
+    recyclingCalc: 'حاسبة التدوير', circularEconomy: 'الاقتصاد الدائري',
+    sortingCenter: 'مركز الفرز', recyclingMarket: 'سوق التدوير',
+    tracking: 'التتبع المباشر', trackTrucks: 'تتبع مسار الشاحنات',
+    drivers: 'السائقين', admin: 'الإدارة', newReport: 'بلاغ جديد',
+    takePhoto: 'التقاط الصورة', address: 'اسم الحي أو الشارع',
+    gps: 'إحداثيات GPS', sendNow: 'إرسال البلاغ الآن', back: 'رجوع',
+    truckTracking: 'تتبع مسار الشاحنة', currentInfo: 'المعلومات الحالية',
+    driver: 'السائق', sector: 'رقم القطاع', date: 'التاريخ', time: 'الوقت',
+    bins: 'الحاويات', trackingActive: 'التتبع المباشر نشط',
+    binsLog: 'سجل الحاويات', driverSpace: 'مساحة السائقين',
+    login: 'دخول', welcome: 'مرحباً - مهامك جاهزة',
+    startTracking: 'بدء تتبع المسار', trackingOn: 'التتبع نشط - سجل الحاويات',
+    recordBin: 'تسجيل موقع الحاوية', tonnage: 'تسجيل كميات',
+    logout: 'خروج', controlPanel: 'لوحة التحكم',
+    adminLogin: 'الدخول للمشرفين', name: 'الاسم', code: 'الرمز (1234)',
+    adminMode: 'وضع المشرف مفعل', statsPanel: 'لوحة الإحصائيات',
+    collectionSchedule: 'جدول جمع النفايات', environmentalTips: 'نصائح بيئية',
+    submitRequest: 'تقديم طلب جديد', requestDetails: 'تفاصيل الطلب',
+    location: 'موقع الطلب', submit: 'إرسال الطلب',
+    previousRequests: 'طلباتي السابقة', recyclingEnergy: 'حاسبة التدوير وإنتاج الطاقة',
+    conversionCalc: 'حاسبة التحويل التقديرية', organic: 'نفايات عضوية (سماد/بيوغاز)',
+    plastic: 'بلاستيك (تحويل لوقود)', metal: 'معادن (إعادة تدوير)',
+    mixed: 'نفايات مختلطة', weight: 'الوزن بالطن', calculate: 'حساب التحويل',
+    energy: 'كيلوواط ساعة طاقة', oil: 'لتر وقود حيوي/زيت', co2: 'طن CO₂ مُوفرة',
+    valueChain: 'سلسلة قيمة التدوير', collection: 'جمع', transport: 'نقل',
+    sorting: 'فرز', recycling: 'تدوير', sortingStats: 'إحصائيات الفرز',
+    organicWaste: 'نفايات عضوية (طن)', plasticWaste: 'بلاستيك (طن)',
+    metalWaste: 'معادن (طن)', paperWaste: 'ورق (طن)',
+    recyclingMarketTitle: 'سوق التدوير', prices: 'أسعار المواد المعاد تدويرها',
+    material: 'المادة', price: 'السعر (دج/طن)', demand: 'الطلب',
+    tonnageRecords: 'سجل الكميات', addTonnage: 'إضافة كمية جديدة',
+    records: 'السجلات', staffManagement: 'إدارة الموظفين',
+    addStaff: 'إضافة موظف', fullName: 'الاسم الكامل', role: 'الوظيفة',
+    phone: 'رقم الهاتف', save: 'حفظ', staffList: 'قائمة الموظفين',
+    scheduleManagement: 'إدارة جدول الجمع', addSchedule: 'إضافة جدول جديد',
+    sectorName: 'اسم الحي/القطاع', days: 'الأيام (مثال: الأحد-الثلاثاء)',
+    collectionTime: 'وقت الجمع (مثال: 06:00-08:00)',
+    responsibleDriver: 'السائق المسؤول', registeredSchedules: 'الجداول المسجلة',
+    msgLangChanged: '✅ تم تغيير اللغة', msgReportSent: '✅ تم إرسال البلاغ بنجاح!',
+    msgTrackingStarted: '✅ تم بدء التتبع', msgBinRecorded: '✅ تم تسجيل حاوية',
+    msgLoginSuccess: '✓ دخول ناجح', msgWrongCode: '✗ رمز خاطئ',
+    msgSaved: '✅ تم الحفظ', msgDeleted: '✅ تم الحذف',
+    warnEnterAddress: '⚠️ أدخل العنوان', warnGPSNotSupported: '⚠️ GPS غير مدعوم',
+    warnCompleteFields: '⚠️ أكمل جميع الحقول', confirmDelete: 'حذف هذا العنصر؟',
+    confirmExit: 'هل تريد الخروج؟'
+  },
+  fr: {
+    totalReports: 'Total signalements', completed: 'Terminés', pending: 'En cours',
+    sendReport: 'Envoyer signalement', demoData: 'Données démo', printPDF: 'Imprimer PDF',
+    dashboard: 'Tableau de bord', exit: 'Quitter', services: 'Services',
+    schedule: 'Calendrier', awareness: 'Sensibilisation', myRequests: 'Mes demandes',
+    recyclingCalc: 'Calculateur recyclage', circularEconomy: 'Économie circulaire',
+    sortingCenter: 'Centre de tri', recyclingMarket: 'Marché recyclage',
+    tracking: 'Suivi direct', trackTrucks: 'Suivi camions',
+    drivers: 'Chauffeurs', admin: 'Admin', newReport: 'Nouveau signalement',
+    takePhoto: 'Prendre photo', address: 'Nom du quartier ou rue',
+    gps: 'Coordonnées GPS', sendNow: 'Envoyer maintenant', back: 'Retour',
+    truckTracking: 'Suivi camion', currentInfo: 'Infos actuelles',
+    driver: 'Chauffeur', sector: 'Secteur', date: 'Date', time: 'Heure',
+    bins: 'Bacs', trackingActive: 'Suivi actif', binsLog: 'Journal des bacs',
+    driverSpace: 'Espace chauffeurs', login: 'Connexion',
+    welcome: 'Bonjour - Vos tâches sont prêtes', startTracking: 'Démarrer suivi',
+    trackingOn: 'Suivi actif - Enregistrer bacs', recordBin: 'Enregistrer position bac',
+    tonnage: 'Enregistrer tonnages', logout: 'Déconnexion',
+    controlPanel: 'Tableau de bord admin', adminLogin: 'Connexion administrateurs',
+    name: 'Nom', code: 'Code (1234)', adminMode: 'Mode admin activé',
+    statsPanel: 'Tableau de bord stats', collectionSchedule: 'Calendrier collecte',
+    environmentalTips: 'Conseils écologiques', submitRequest: 'Soumettre demande',
+    requestDetails: 'Détails demande', location: 'Lieu demande', submit: 'Envoyer',
+    previousRequests: 'Mes demandes précédentes',
+    recyclingEnergy: 'Calculateur recyclage et énergie',
+    conversionCalc: 'Calculateur conversion estimé',
+    organic: 'Déchets organiques (compost/biogaz)',
+    plastic: 'Plastique (conversion carburant)', metal: 'Métal (recyclage)',
+    mixed: 'Déchets mélangés', weight: 'Poids en tonnes', calculate: 'Calculer conversion',
+    energy: 'kWh énergie', oil: 'Litre biocarburant/huile', co2: 'Tonnes CO₂ économisées',
+    valueChain: 'Chaîne de valeur', collection: 'Collecte', transport: 'Transport',
+    sorting: 'Tri', recycling: 'Recyclage', sortingStats: 'Statistiques de tri',
+    organicWaste: 'Déchets organiques (tonnes)', plasticWaste: 'Plastique (tonnes)',
+    metalWaste: 'Métal (tonnes)', paperWaste: 'Papier (tonnes)',
+    recyclingMarketTitle: 'Marché recyclage', prices: 'Prix des matériaux recyclés',
+    material: 'Matériau', price: 'Prix (DZD/tonne)', demand: 'Demande',
+    tonnageRecords: 'Journal tonnages', addTonnage: 'Ajouter tonnage',
+    records: 'Enregistrements', staffManagement: 'Gestion personnel',
+    addStaff: 'Ajouter personnel', fullName: 'Nom complet', role: 'Poste',
+    phone: 'Téléphone', save: 'Enregistrer', staffList: 'Liste du personnel',
+    scheduleManagement: 'Gestion calendrier', addSchedule: 'Ajouter calendrier',
+    sectorName: 'Nom quartier/secteur', days: 'Jours (ex: Dim-Mar-Jeu)',
+    collectionTime: 'Heure collecte (ex: 06:00-08:00)',
+    responsibleDriver: 'Chauffeur responsable', registeredSchedules: 'Calendriers enregistrés',
+    msgLangChanged: '✅ Langue changée', msgReportSent: '✅ Signalement envoyé!',
+    msgTrackingStarted: '✅ Suivi démarré', msgBinRecorded: '✅ Bac enregistré',
+    msgLoginSuccess: '✓ Connexion réussie', msgWrongCode: '✗ Code incorrect',
+    msgSaved: '✅ Enregistré', msgDeleted: '✅ Supprimé',
+    warnEnterAddress: '⚠️ Entrez l\'adresse', warnGPSNotSupported: '⚠️ GPS non supporté',
+    warnCompleteFields: '⚠️ Complétez tous les champs', confirmDelete: 'Supprimer cet élément?',
+    confirmExit: 'Voulez-vous quitter?'
+  },
+  en: {
+    totalReports: 'Total Reports', completed: 'Completed', pending: 'In Progress',
+    sendReport: 'Send Report', demoData: 'Demo Data', printPDF: 'Print PDF',
+    dashboard: 'Dashboard', exit: 'Exit', services: 'Services',
+    schedule: 'Schedule', awareness: 'Awareness', myRequests: 'My Requests',
+    recyclingCalc: 'Recycling Calculator', circularEconomy: 'Circular Economy',
+    sortingCenter: 'Sorting Center', recyclingMarket: 'Recycling Market',
+    tracking: 'Live Tracking', trackTrucks: 'Track Trucks',
+    drivers: 'Drivers', admin: 'Admin', newReport: 'New Report',
+    takePhoto: 'Take Photo', address: 'Neighborhood or street',
+    gps: 'GPS Coordinates', sendNow: 'Send Report Now', back: 'Back',
+    truckTracking: 'Truck Tracking', currentInfo: 'Current Info',
+    driver: 'Driver', sector: 'Sector', date: 'Date', time: 'Time',
+    bins: 'Bins', trackingActive: 'Live Tracking Active',
+    binsLog: 'Bins Log', driverSpace: 'Drivers Area',
+    login: 'Login', welcome: 'Welcome - Your tasks are ready',
+    startTracking: 'Start Tracking', trackingOn: 'Tracking Active - Record Bins',
+    recordBin: 'Record Bin Location', tonnage: 'Record Tonnage',
+    logout: 'Logout', controlPanel: 'Admin Dashboard',
+    adminLogin: 'Admin Login', name: 'Name', code: 'Code (1234)',
+    adminMode: 'Admin mode active', statsPanel: 'Statistics Dashboard',
+    collectionSchedule: 'Collection Schedule', environmentalTips: 'Environmental Tips',
+    submitRequest: 'Submit Request', requestDetails: 'Request details',
+    location: 'Request location', submit: 'Submit',
+    previousRequests: 'My previous requests',
+    recyclingEnergy: 'Recycling & Energy Calculator',
+    conversionCalc: 'Estimated Conversion Calculator',
+    organic: 'Organic waste (compost/biogas)', plastic: 'Plastic (fuel conversion)',
+    metal: 'Metal (recycling)', mixed: 'Mixed waste', weight: 'Weight in tons',
+    calculate: 'Calculate Conversion', energy: 'kWh energy',
+    oil: 'Liters biofuel/oil', co2: 'Tons CO₂ saved',
+    valueChain: 'Value Chain', collection: 'Collection', transport: 'Transport',
+    sorting: 'Sorting', recycling: 'Recycling', sortingStats: 'Sorting Statistics',
+    organicWaste: 'Organic waste (tons)', plasticWaste: 'Plastic (tons)',
+    metalWaste: 'Metal (tons)', paperWaste: 'Paper (tons)',
+    recyclingMarketTitle: 'Recycling Market', prices: 'Recycled materials prices',
+    material: 'Material', price: 'Price (DZD/ton)', demand: 'Demand',
+    tonnageRecords: 'Tonnage Records', addTonnage: 'Add Tonnage',
+    records: 'Records', staffManagement: 'Staff Management',
+    addStaff: 'Add Staff', fullName: 'Full name', role: 'Position',
+    phone: 'Phone', save: 'Save', staffList: 'Staff List',
+    scheduleManagement: 'Schedule Management', addSchedule: 'Add Schedule',
+    sectorName: 'Neighborhood/Sector name', days: 'Days (e.g., Sun-Tue-Thu)',
+    collectionTime: 'Collection time (e.g., 06:00-08:00)',
+    responsibleDriver: 'Responsible driver', registeredSchedules: 'Registered schedules',
+    msgLangChanged: '✅ Language changed', msgReportSent: '✅ Report sent successfully!',
+    msgTrackingStarted: '✅ Tracking started', msgBinRecorded: '✅ Bin recorded',
+    msgLoginSuccess: '✓ Login successful', msgWrongCode: '✗ Wrong code',
+    msgSaved: '✅ Saved', msgDeleted: '✅ Deleted',
+    warnEnterAddress: '⚠️ Enter address', warnGPSNotSupported: '⚠️ GPS not supported',
+    warnCompleteFields: '⚠️ Complete all fields', confirmDelete: 'Delete this item?',
+    confirmExit: 'Do you want to exit?'
+  }
+};
+
+// تهيئة Firebase
+try {
+  firebase.initializeApp(firebaseConfig);
+  db = firebase.database();
+  db.ref('reports').on('value', snap => { if(snap.val()) { allReports = Object.values(snap.val()); updateStats(); }});
+  db.ref('staff').on('value', snap => { if(snap.val()) { allStaff = Object.values(snap.val()); renderStaffList(); }});
+  db.ref('tonnage').on('value', snap => { if(snap.val()) { allTonnage = Object.values(snap.val()); renderTonnageList(); }});
+  db.ref('schedules').on('value', snap => { if(snap.val()) { allSchedules = Object.values(snap.val()); renderScheduleList(); }});
+  db.ref('requests').on('value', snap => { if(snap.val()) { allRequests = Object.values(snap.val()); renderRequestsList(); }});
+} catch(e) { console.log("Firebase: ", e); }
+
+// ==========================================
+// شاشة اختيار الجهاز
+// ==========================================
+window.addEventListener('DOMContentLoaded', function() {
+  const savedMode = localStorage.getItem('app_mode');
+  const selector = document.getElementById('deviceSelector');
+  const splash = document.getElementById('splash');
+  const main = document.getElementById('mainContent');
+  const savedLang = localStorage.getItem('medea_lang');
+  if(savedLang) { currentLang = savedLang; updateLanguageUI(); }
+  if (savedMode) {
+    selector.style.display = 'none';
+    if(savedMode === 'desktop') document.body.classList.add('desktop-mode');
+    showSplashAndMain(splash, main);
+  }
+});
+
+function selectDevice(mode) {
+  localStorage.setItem('app_mode', mode);
+  const selector = document.getElementById('deviceSelector');
+  const splash = document.getElementById('splash');
+  const main = document.getElementById('mainContent');
+  selector.style.opacity = '0';
+  setTimeout(() => {
+    selector.style.display = 'none';
+    if (mode === 'desktop') document.body.classList.add('desktop-mode');
+    showSplashAndMain(splash, main);
+  }, 500);
+}
+
+function showSplashAndMain(splash, main) {
+  splash.style.display = 'flex';
+  setTimeout(() => {
+    splash.style.opacity = '0';
+    setTimeout(() => {
+      splash.style.display = 'none';
+      main.style.display = 'block';
+      setTimeout(() => { main.classList.add('active'); }, 100);
+      updateTime();
+    }, 500);
+  }, 3000);
+}
+
+function switchMode() {
+  const current = document.body.classList.contains('desktop-mode') ? 'desktop' : 'mobile';
+  const next = current === 'mobile' ? 'desktop' : 'mobile';
+  localStorage.setItem('app_mode', next);
+  location.reload();
+}
+
+// ==========================================
+// نظام الترجمة
+// ==========================================
+function changeLang(lang) {
+  currentLang = lang;
+  localStorage.setItem('medea_lang', lang);
+  updateLanguageUI();
+  showToast(translations[lang].msgLangChanged);
+}
+
+function updateLanguageUI() {
+  document.querySelectorAll('.lang-btn').forEach((btn, index) => {
+    btn.classList.remove('active');
+    if((index === 0 && currentLang === 'ar') || (index === 1 && currentLang === 'fr') || (index === 2 && currentLang === 'en')) {
+      btn.classList.add('active');
+    }
+  });
+  const t = translations[currentLang];
+  document.querySelector('.stat-box:nth-child(1) .stat-label').textContent = t.totalReports;
+  document.querySelector('.stat-box:nth-child(2) .stat-label').textContent = t.completed;
+  document.querySelector('.stat-box:nth-child(3) .stat-label').textContent = t.pending;
+}
+
+// ==========================================
+// التنقل بين الصفحات
+// ==========================================
+function showPage(id) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  const el = document.getElementById(id);
+  if(el) el.classList.add('active');
+  window.scrollTo(0,0);
+  if(id === 'truckTracking') setTimeout(initMap, 200);
+  if(id === 'tonnageRecords') {
+    document.getElementById('driverTonnageForm').style.display = currentDriver ? 'block' : 'none';
+  }
+}
+
+// ==========================================
+// الوقت
+// ==========================================
+function updateTime() {
+  const n = new Date();
+  const timeDisplay = document.getElementById('timeDisplay');
+  if(timeDisplay) timeDisplay.textContent = n.toLocaleTimeString(currentLang === 'ar' ? 'ar-DZ' : currentLang === 'fr' ? 'fr-FR' : 'en-US');
+}
+setInterval(updateTime, 1000);
+
+function showToast(msg) { alert(msg); }
+function exitApp() { if(confirm(translations[currentLang].confirmExit)) window.close(); }
+
+// ==========================================
+// البلاغات
+// ==========================================
+function takePhoto() {
+  const input = document.createElement('input');
+  input.type = 'file'; input.accept = 'image/*'; input.capture = 'environment';
+  input.onchange = e => {
+    if(e.target.files[0]) {
+      const reader = new FileReader();
+      reader.onload = ev => {
+        tempImage = ev.target.result;
+        const img = document.getElementById('camImg');
+        img.src = tempImage; img.style.display = 'block';
+        img.parentElement.querySelector('span').style.display = 'none';
+      };
+      reader.readAsDataURL(e.target.files[0]);
+    }
+  };
+  input.click();
+}
+
+function getLocation() {
+  if(!navigator.geolocation) return showToast(translations[currentLang].warnGPSNotSupported);
+  navigator.geolocation.getCurrentPosition(pos => {
+    document.getElementById('gpsInput').value = pos.coords.latitude.toFixed(6) + ', ' + pos.coords.longitude.toFixed(6);
+    showToast('✅ ' + (currentLang === 'ar' ? 'تم تحديد الموقع' : currentLang === 'fr' ? 'Localisation déterminée' : 'Location determined'));
+  }, () => showToast('⚠️ ' + (currentLang === 'ar' ? 'فشل تحديد الموقع' : currentLang === 'fr' ? 'Échec de localisation' : 'Location failed')), {enableHighAccuracy: true, timeout: 15000});
+}
+
+function sendReport() {
+  const addr = document.getElementById('addrInput').value.trim();
+  if(!addr) return showToast(translations[currentLang].warnEnterAddress);
+  const report = {
+    id: Date.now(), address: addr, gps: document.getElementById('gpsInput').value,
+    image: tempImage, date: new Date().toLocaleDateString(currentLang === 'ar' ? 'ar-DZ' : currentLang === 'fr' ? 'fr-FR' : 'en-US'),
+    time: new Date().toLocaleTimeString(currentLang === 'ar' ? 'ar-DZ' : currentLang === 'fr' ? 'fr-FR' : 'en-US'),
+    status: 'new', driver: ''
+  };
+  if(db) db.ref('reports/' + report.id).set(report);
+  allReports.push(report);
+  updateStats();
+  showToast(translations[currentLang].msgReportSent);
+  document.getElementById('addrInput').value = '';
+  document.getElementById('gpsInput').value = '';
+  tempImage = null;
+  const img = document.getElementById('camImg');
+  if(img) { img.style.display = 'none'; img.parentElement.querySelector('span').style.display = 'block'; }
+  showPage('home');
+}
+
+function updateStats() {
+  document.getElementById('statTotal').textContent = allReports.length;
+  document.getElementById('statDone').textContent = allReports.filter(r => r.status === 'done').length;
+  document.getElementById('statPending').textContent = allReports.filter(r => r.status === 'pending').length;
+  document.getElementById('dashTotal').textContent = allReports.length;
+  document.getElementById('dashDone').textContent = allReports.filter(r => r.status === 'done').length;
+}
+
+function filterByStatus(status) { showPage('home'); }
+
+function loadDemoData() {
+  document.getElementById('statTotal').textContent = "15";
+  document.getElementById('statDone').textContent = "12";
+  document.getElementById('statPending').textContent = "3";
+  showToast(currentLang === 'ar' ? '✅ تم تحميل بيانات تجريبية' : currentLang === 'fr' ? '✅ Données démo chargées' : '✅ Demo data loaded');
+}
+
+// ==========================================
+// السائقين
+// ==========================================
+function loginDriver() {
+  const name = document.getElementById('driverName').value.trim();
+  if(!name) return showToast(currentLang === 'ar' ? '⚠️ أدخل الاسم' : currentLang === 'fr' ? '⚠️ Entrez le nom' : '⚠️ Enter name');
+  currentDriver = name;
+  document.getElementById('driverLogin').style.display = 'none';
+  document.getElementById('driverPanel').style.display = 'block';
+  showToast(translations[currentLang].msgLoginSuccess.replace('✓', '✓ ') + name);
+}
+
+function logoutDriver() {
+  currentDriver = '';
+  document.getElementById('driverLogin').style.display = 'block';
+  document.getElementById('driverPanel').style.display = 'none';
+  document.getElementById('driverName').value = '';
+  document.getElementById('binTrackingControls').style.display = 'none';
+  truckData.active = false;
+  showToast(translations[currentLang].logout);
+}
+
+function startTruckTracking() {
+  truckData.active = true;
+  document.getElementById('binTrackingControls').style.display = 'block';
+  document.getElementById('liveTrackingStatus').style.background = '#4CAF50';
+  document.getElementById('liveTrackingStatus').textContent = '🟢 ' + translations[currentLang].trackingOn;
+  showToast(translations[currentLang].msgTrackingStarted);
+  showPage('truckTracking');
+  document.getElementById('trackingDriverName').textContent = currentDriver;
+  setTimeout(initMap, 200);
+}
+
+function recordBinCollection() {
+  truckData.collectedBins.push({
+    time: new Date().toLocaleTimeString(currentLang === 'ar' ? 'ar-DZ' : currentLang === 'fr' ? 'fr-FR' : 'en-US'),
+    lat: (36.26 + Math.random() * 0.01).toFixed(6),
+    lng: (2.75 + Math.random() * 0.01).toFixed(6)
+  });
+  document.getElementById('collectedBinsCount').textContent = truckData.collectedBins.length;
+  renderCollectedBins();
+  showToast(translations[currentLang].msgBinRecorded);
+}
+
+function renderCollectedBins() {
+  const list = document.getElementById('collectedBinsList');
+  list.innerHTML = truckData.collectedBins.map((bin, i) => `
+    <div class="info-card" style="margin:5px 0">
+      <b>${currentLang === 'ar' ? 'حاوية' : currentLang === 'fr' ? 'Bac' : 'Bin'} #${i+1}</b>
+      <span style="float:left">${bin.time}</span>
+    </div>
+  `).join('');
+}
+
+// ==========================================
+// الإدارة
+// ==========================================
+function loginAdmin() {
+  if(document.getElementById('adminCode').value === '1234') {
+    document.getElementById('adminLogin').style.display = 'none';
+    document.getElementById('adminPanel').style.display = 'block';
+    showToast(translations[currentLang].msgLoginSuccess);
+  } else {
+    showToast(translations[currentLang].msgWrongCode);
+  }
+}
+
+function logoutAdmin() {
+  document.getElementById('adminLogin').style.display = 'block';
+  document.getElementById('adminPanel').style.display = 'none';
+  document.getElementById('adminCode').value = '';
+}
+
+// ==========================================
+// الموظفون
+// ==========================================
+function addStaff() {
+  const name = document.getElementById('staffName').value.trim();
+  const role = document.getElementById('staffRole').value;
+  const phone = document.getElementById('staffPhone').value.trim();
+  if(!name) return showToast(translations[currentLang].warnCompleteFields);
+  const staff = { id: Date.now(), name, role, phone };
+  if(db) db.ref('staff/' + staff.id).set(staff);
+  allStaff.push(staff);
+  document.getElementById('staffName').value = '';
+  document.getElementById('staffPhone').value = '';
+  showToast(translations[currentLang].msgSaved);
+}
+
+function renderStaffList() {
+  const list = document.getElementById('staffList');
+  if(!list) return;
+  if(!allStaff.length) {
+    list.innerHTML = '<p style="text-align:center;color:#999">' + (currentLang === 'ar' ? 'لا يوجد موظفون' : currentLang === 'fr' ? 'Aucun personnel' : 'No staff') + '</p>';
+    return;
+  }
+  const roleNames = {
+    ar: { driver: '🚚 سائق', worker: '👷 عامل نظافة', supervisor: '👔 مشرف', admin: '🛡️ مدير' },
+    fr: { driver: '🚚 Chauffeur', worker: '👷 Agent', supervisor: '👔 Superviseur', admin: '🛡️ Admin' },
+    en: { driver: '🚚 Driver', worker: '👷 Worker', supervisor: '👔 Supervisor', admin: '🛡️ Admin' }
+  };
+  list.innerHTML = allStaff.map(s => `
+    <div class="info-card" style="margin:8px 0">
+      <b>${s.name}</b> - ${roleNames[currentLang][s.role] || s.role}<br>
+      ${s.phone ? '<small>📞 ' + s.phone + '</small>' : ''}
+      <button class="btn btn-red" style="float:left;width:auto;padding:5px 10px;font-size:0.8rem" onclick="deleteStaff(${s.id})">🗑️</button>
+    </div>
+  `).join('');
+}
+
+function deleteStaff(id) {
+  if(!confirm(translations[currentLang].confirmDelete)) return;
+  if(db) db.ref('staff/' + id).remove();
+  allStaff = allStaff.filter(s => s.id !== id);
+  showToast(translations[currentLang].msgDeleted);
+}
+
+function manageStaffPage() {
+  renderStaffList();
+  showPage('staffPage');
+}
+
+// ==========================================
+// الكميات
+// ==========================================
+function addTonnage() {
+  const driver = document.getElementById('tonnageDriver').value.trim();
+  const weight = document.getElementById('tonnageWeight').value;
+  const type = document.getElementById('tonnageType').value;
+  if(!weight) return showToast(translations[currentLang].warnCompleteFields);
+  const record = { id: Date.now(), driver, weight: parseFloat(weight), type, date: new Date().toLocaleDateString(currentLang === 'ar' ? 'ar-DZ' : currentLang === 'fr' ? 'fr-FR' : 'en-US'), time: new Date().toLocaleTimeString(currentLang === 'ar' ? 'ar-DZ' : currentLang === 'fr' ? 'fr-FR' : 'en-US') };
+  if(db) db.ref('tonnage/' + record.id).set(record);
+  allTonnage.push(record);
+  document.getElementById('tonnageWeight').value = '';
+  renderTonnageList();
+  showToast(translations[currentLang].msgSaved);
+}
+
+function renderTonnageList() {
+  const list = document.getElementById('tonnageList');
+  if(!list) return;
+  if(!allTonnage.length) {
+    list.innerHTML = '<p style="text-align:center;color:#999">' + (currentLang === 'ar' ? 'لا توجد سجلات' : currentLang === 'fr' ? 'Aucun enregistrement' : 'No records') + '</p>';
+    return;
+  }
+  list.innerHTML = allTonnage.map(r => `
+    <div class="info-card" style="margin:8px 0">
+      <b>🚛 ${r.driver}</b> | ⚖️ ${r.weight} طن | ${r.type}
+      <span style="float:left;font-size:0.8rem;color:#fff">${r.date}</span>
+    </div>
+  `).join('');
+  document.getElementById('sortOrganic').textContent = allTonnage.filter(r=>r.type==='organic').reduce((s,r)=>s+r.weight,0).toFixed(1);
+  document.getElementById('sortPlastic').textContent = allTonnage.filter(r=>r.type==='plastic').reduce((s,r)=>s+r.weight,0).toFixed(1);
+  document.getElementById('sortMetal').textContent = allTonnage.filter(r=>r.type==='metal').reduce((s,r)=>s+r.weight,0).toFixed(1);
+  document.getElementById('sortPaper').textContent = allTonnage.filter(r=>r.type==='paper').reduce((s,r)=>s+r.weight,0).toFixed(1);
+}
+
+// ==========================================
+// الجدول
+// ==========================================
+function addSchedule() {
+  const name = document.getElementById('sectorName').value.trim();
+  const days = document.getElementById('sectorDays').value.trim();
+  const time = document.getElementById('sectorTime').value.trim();
+  const driver = document.getElementById('sectorDriver').value.trim();
+  if(!name || !days || !time) return showToast(translations[currentLang].warnCompleteFields);
+  const schedule = { id: Date.now(), name, days, time, driver };
+  if(db) db.ref('schedules/' + schedule.id).set(schedule);
+  allSchedules.push(schedule);
+  document.getElementById('sectorName').value = '';
+  document.getElementById('sectorDays').value = '';
+  document.getElementById('sectorTime').value = '';
+  document.getElementById('sectorDriver').value = '';
+  renderScheduleList();
+  showToast(translations[currentLang].msgSaved);
+}
+
+function renderScheduleList() {
+  const list = document.getElementById('scheduleList');
+  if(!list) return;
+  if(!allSchedules.length) {
+    list.innerHTML = '<p style="text-align:center;color:#999">' + (currentLang === 'ar' ? 'لا توجد جداول' : currentLang === 'fr' ? 'Aucun calendrier' : 'No schedules') + '</p>';
+    return;
+  }
+  list.innerHTML = allSchedules.map(s => `
+    <div class="success-card" style="margin:8px 0">
+      <b>📍 ${s.name}</b><br>
+      📅 ${s.days} | 🕐 ${s.time} | 🚛 ${s.driver}
+      <button class="btn btn-red" style="float:left;width:auto;padding:5px 10px;font-size:0.8rem" onclick="deleteSchedule(${s.id})">🗑️</button>
+    </div>
+  `).join('');
+}
+
+function deleteSchedule(id) {
+  if(!confirm(translations[currentLang].confirmDelete)) return;
+  if(db) db.ref('schedules/' + id).remove();
+  allSchedules = allSchedules.filter(s => s.id !== id);
+  renderScheduleList();
+}
+
+// ==========================================
+// الطلبات
+// ==========================================
+function submitRequest() {
+  const type = document.getElementById('reqType').value;
+  const desc = document.getElementById('reqDesc').value.trim();
+  const location = document.getElementById('reqLocation').value.trim();
+  if(!desc || !location) return showToast(translations[currentLang].warnCompleteFields);
+  const request = { id: Date.now(), type, desc, location, date: new Date().toLocaleDateString(currentLang === 'ar' ? 'ar-DZ' : currentLang === 'fr' ? 'fr-FR' : 'en-US'), status: 'pending' };
+  if(db) db.ref('requests/' + request.id).set(request);
+  allRequests.push(request);
+  document.getElementById('reqDesc').value = '';
+  document.getElementById('reqLocation').value = '';
+  renderRequestsList();
+  showToast(currentLang === 'ar' ? '✅ تم إرسال الطلب' : currentLang === 'fr' ? '✅ Demande envoyée' : '✅ Request sent');
+}
+
+function renderRequestsList() {
+  const list = document.getElementById('myRequestsList');
+  if(!list) return;
+  if(!allRequests.length) {
+    list.innerHTML = '<p style="text-align:center;color:#999">' + (currentLang === 'ar' ? 'لا توجد طلبات' : currentLang === 'fr' ? 'Aucune demande' : 'No requests') + '</p>';
+    return;
+  }
+  const typeNames = {
+    ar: { bin: '🗑️ حاوية جديدة', repair: '🔧 صيانة', clean: '🧹 تنظيف', other: '❓ أخرى' },
+    fr: { bin: '🗑️ Nouveau bac', repair: '🔧 Réparation', clean: '🧹 Nettoyage', other: '❓ Autre' },
+    en: { bin: '🗑️ New bin', repair: '🔧 Repair', clean: '🧹 Cleaning', other: '❓ Other' }
+  };
+  const statusNames = {
+    ar: { pending: '⏳ قيد المراجعة', done: '✅ تمت المعالجة' },
+    fr: { pending: '⏳ En révision', done: '✅ Traitée' },
+    en: { pending: '⏳ Under review', done: '✅ Processed' }
+  };
+  list.innerHTML = allRequests.map(r => `
+    <div class="info-card" style="margin:8px 0;border-right:${r.status==='done'?'5px solid #4CAF50':'5px solid #FF9800'}">
+      <b>${typeNames[currentLang][r.type] || r.type}</b><br>
+      📝 ${r.desc} | 📍 ${r.location}<br>
+      <span style="float:left;color:#fff">${statusNames[currentLang][r.status] || r.status}</span>
+    </div>
+  `).join('');
+}
+
+// ==========================================
+// حاسبة التدوير
+// ==========================================
+function calculateConversion() {
+  const type = document.getElementById('wasteType').value;
+  const weight = parseFloat(document.getElementById('wasteWeight').value);
+  if(!weight || weight <= 0) return showToast(currentLang === 'ar' ? '⚠️ أدخل الوزن' : currentLang === 'fr' ? '⚠️ Entrez le poids' : '⚠️ Enter weight');
+  const factors = {
+    organic: { energy: 2500, oil: 0, co2: 0.8 },
+    plastic: { energy: 12000, oil: 750, co2: 1.5 },
+    metal: { energy: 8000, oil: 0, co2: 2.0 },
+    mixed: { energy: 800, oil: 50, co2: 0.4 }
+  };
+  const f = factors[type];
+  document.getElementById('resEnergy').textContent = (weight * f.energy).toLocaleString(currentLang === 'ar' ? 'ar-DZ' : currentLang === 'fr' ? 'fr-FR' : 'en-US');
+  document.getElementById('resOil').textContent = (weight * f.oil).toLocaleString(currentLang === 'ar' ? 'ar-DZ' : currentLang === 'fr' ? 'fr-FR' : 'en-US');
+  document.getElementById('resCO2').textContent = (weight * f.co2).toFixed(2);
+  document.getElementById('conversionResult').style.display = 'block';
+  showToast(currentLang === 'ar' ? '✅ تم الحساب' : currentLang === 'fr' ? '✅ Calcul effectué' : '✅ Calculated');
+}
+
+// ==========================================
+// الخريطة
+// ==========================================
+function initMap() {
+  if(map) { map.invalidateSize(); return; }
+  try {
+    map = L.map('map').setView([36.26, 2.75], 13);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '© OpenStreetMap' }).addTo(map);
+    L.marker([36.26, 2.75]).addTo(map).bindPopup('📍 ' + (currentLang === 'ar' ? 'المدية - مركز البلدية' : currentLang === 'fr' ? 'Médéa - Centre ville' : 'Médéa - City Center'));
+  } catch(e) { console.log("Map error:", e); }
+}
+
+// ==========================================
+// الطباعة
+// ==========================================
+function openPrintDialog() {
+  showToast(currentLang === 'ar' ? '📥 جاري إنشاء التقرير...' : currentLang === 'fr' ? '📥 Création du rapport...' : '📥 Creating report...');
+  setTimeout(() => {
+    const printWindow = window.open('', '_blank');
+    const t = translations[currentLang];
+    printWindow.document.write(`
+      <html dir="${currentLang === 'ar' ? 'rtl' : 'ltr'}"><head><meta charset="UTF-8"><title>${currentLang === 'ar' ? 'تقرير المدية نظيفة' : currentLang === 'fr' ? 'Rapport Médéa Propre' : 'Clean Médéa Report'}</title>
+      <style>body{font-family:sans-serif;padding:30px}table{width:100%;border-collapse:collapse}th{background:#006233;color:#fff;padding:12px}td{padding:10px;border:1px solid #ddd}h1{color:#006233}</style>
+      </head><body>
+      <h1>🏛️ ${currentLang === 'ar' ? 'المدية نظيفة 2026' : currentLang === 'fr' ? 'Médéa Propre 2026' : 'Clean Médéa 2026'}</h1>
+      <p>${currentLang === 'ar' ? 'مصلحة النظافة والوقاية الصحية - بلدية المدية' : currentLang === 'fr' ? 'Service de propreté - Commune de Médéa' : 'Sanitation Service - Médéa Municipality'}</p>
+      <p>${currentLang === 'ar' ? 'تاريخ التقرير:' : currentLang === 'fr' ? 'Date du rapport:' : 'Report date:'} ${new Date().toLocaleDateString(currentLang === 'ar' ? 'ar-DZ' : currentLang === 'fr' ? 'fr-FR' : 'en-US')}</p>
+      <hr>
+      <h2>${t.dashboard}</h2>
+      <p>${t.totalReports}: ${allReports.length}</p>
+      <p>${t.completed}: ${allReports.filter(r=>r.status==='done').length}</p>
+      <h2>${t.sendReport.replace('إرسال ', '').replace('Envoyer ', '').replace('Send ', '')}</h2>
+      <table><tr><th>#</th><th>${t.address}</th><th>${t.date}</th><th>${t.completed.replace('تم ', '').replace('Terminés', 'Statut').replace('Completed', 'Status')}</th></tr>
+      ${allReports.map((r,i)=>`<tr><td>${i+1}</td><td>${r.address}</td><td>${r.date}</td><td>${r.status==='done'?'✅ '+t.completed:'⏳ '+t.pending}</td></tr>`).join('')}
+      </table>
+      <hr>
+      <h2>${t.drivers}</h2>
+      <table><tr><th>#</th><th>${t.name}</th><th>${t.role}</th><th>${t.phone}</th></tr>
+      ${allStaff.map((s,i)=>`<tr><td>${i+1}</td><td>${s.name}</td><td>${s.role}</td><td>${s.phone||'-'}</td></tr>`).join('')}
+      </table>
+      <hr>
+      <h2>${t.tonnage}</h2>
+      <table><tr><th>#</th><th>${t.driver}</th><th>${t.weight}</th><th>${currentLang === 'ar' ? 'النوع' : currentLang === 'fr' ? 'Type' : 'Type'}</th><th>${t.date}</th></tr>
+      ${allTonnage.map((r,i)=>`<tr><td>${i+1}</td><td>${r.driver}</td><td>${r.weight} ${currentLang === 'ar' ? 'طن' : currentLang === 'fr' ? 'tonnes' : 'tons'}</td><td>${r.type}</td><td>${r.date}</td></tr>`).join('')}
+      </table>
+      <hr>
+      <h2>${t.schedule}</h2>
+      <table><tr><th>${t.sector}</th><th>${t.days}</th><th>${t.time}</th><th>${t.driver}</th></tr>
+      ${allSchedules.map(s=>`<tr><td>${s.name}</td><td>${s.days}</td><td>${s.time}</td><td>${s.driver}</td></tr>`).join('')}
+      </table>
+      <hr>
+      <p style="text-align:center;margin-top:30px">🛡️ ${currentLang === 'ar' ? 'إعداد د. رابحي فتحي - بلدية المدية 2026' : currentLang === 'fr' ? 'Préparé par Dr. Rabhi Fathi - Commune de Médéa 2026' : 'Prepared by Dr. Rabhi Fathi - Médéa Municipality 2026'}</p>
+      <script>window.print();<\/script>
+      </body></html>
+    `);
+    printWindow.document.close();
+  }, 500);
+}
+</script>
 </body>
 </html>
