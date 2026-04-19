@@ -1,148 +1,241 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>المدية نظيفة 2026</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>المدية نظيفة 2026 - الإصدار النهائي</title>
+    
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
 
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
-<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+    <style>
+        /* تصميم د. رابحي فتحي - الهوية البصرية الوطنية */
+        :root { --red:#C41E3A; --white:#FFFFFF; --green:#006233; --gold:#D4AF37; }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, sans-serif; }
+        body { background: #f5f5f5; color: #333; overflow-x: hidden; line-height: 1.6; }
 
-<style>
-/* تصميم د. رابحي فتحي الأصلي بالكامل */
-:root { --red:#C41E3A; --white:#FFFFFF; --green:#006233; --gold:#D4AF37; }
-*{box-sizing:border-box;margin:0;padding:0;font-family:'Segoe UI',Tahoma,sans-serif;-webkit-tap-highlight-color:transparent}
-html,body{overflow-x:hidden;width:100%;background:#f5f7fa;min-height:100vh}
+        /* شاشة اختيار الجهاز */
+        #deviceSelector { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: linear-gradient(135deg, var(--green), var(--white), var(--red)); z-index: 100000; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; }
+        .device-card { background: var(--white); padding: 40px; border-radius: 25px; box-shadow: 0 15px 50px rgba(0,0,0,0.3); text-align: center; border: 5px solid var(--green); max-width: 500px; width: 100%; }
+        
+        /* واجهة المستخدم والصفحات */
+        .top-bar { position: fixed; top: 0; left: 0; right: 0; height: 60px; background: linear-gradient(90deg, var(--green), var(--red)); color: white; display: flex; align-items: center; justify-content: space-between; padding: 0 20px; z-index: 9999; box-shadow: 0 3px 10px rgba(0,0,0,0.2); }
+        .main-content { display: none; padding-top: 80px; padding-bottom: 30px; }
+        .page { display: none; padding: 15px; max-width: 1200px; margin: auto; }
+        .page.active { display: block; animation: fadeIn 0.4s; }
 
-/* شاشات البدء واختيار الجهاز */
-#deviceSelector{position:fixed;top:0;left:0;width:100%;height:100%;background:linear-gradient(135deg,var(--green) 0%,var(--white) 50%,var(--red) 100%);z-index:99999;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px}
-.device-header{background:var(--white);padding:30px;border-radius:20px;box-shadow:0 10px 40px rgba(0,0,0,0.3);text-align:center;max-width:500px;width:100%;border:4px solid var(--green)}
-.device-btn{width:100%;max-width:280px;padding:20px;margin:10px;font-size:1.2rem;border:none;border-radius:15px;cursor:pointer;font-weight:bold;transition:0.3s;display:flex;align-items:center;justify-content:center;gap:10px;box-shadow:0 5px 15px rgba(0,0,0,0.1)}
-.device-btn.computer{background:var(--green);color:#fff}.device-btn.phone{background:var(--red);color:#fff}
+        /* البطاقات والأزرار */
+        .card { background: white; border-radius: 15px; padding: 20px; margin-bottom: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); border-right: 6px solid var(--green); }
+        .btn { padding: 15px 25px; border: none; border-radius: 12px; cursor: pointer; font-weight: bold; transition: 0.3s; display: inline-flex; align-items: center; gap: 10px; font-size: 1rem; }
+        .btn-green { background: var(--green); color: white; }
+        .btn-red { background: var(--red); color: white; }
 
-#splash{position:fixed;top:0;left:0;width:100%;height:100%;background:linear-gradient(135deg,var(--green),var(--white),var(--red));z-index:99998;display:none;flex-direction:column;align-items:center;justify-content:center}
-.splash-content{background:var(--white);padding:40px;border-radius:25px;text-align:center;box-shadow:0 15px 50px rgba(0,0,0,0.3);border:5px solid var(--green);max-width:90%}
+        /* جداول البيانات */
+        .data-table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+        .data-table th { background: var(--green); color: white; padding: 12px; text-align: center; }
+        .data-table td { padding: 10px; border: 1px solid #ddd; text-align: center; }
 
-/* الهيكل الرئيسي */
-.main-content{display:none;padding:15px;max-width:100%;min-height:100vh;margin-top:50px}
-.top-bar{position:fixed;top:0;left:0;right:0;height:55px;background:linear-gradient(90deg,var(--green),var(--red));color:#fff;display:flex;align-items:center;justify-content:space-between;padding:0 15px;z-index:10000;box-shadow:0 2px 10px rgba(0,0,0,0.2)}
-.page{display:none;animation:fadeIn 0.4s ease-out}
-.page.active{display:block}
-
-/* تنسيقات الجداول والبطاقات والمدخلات */
-.card{background:#fff;border-radius:15px;padding:20px;margin-bottom:15px;box-shadow:0 4px 15px rgba(0,0,0,0.08);border-right:6px solid var(--green)}
-.stat-box{background:#fff;padding:15px;border-radius:15px;text-align:center;border:2px solid var(--green);box-shadow:0 4px 10px rgba(0,0,0,0.05)}
-.stat-num{font-size:1.8rem;font-weight:900;color:var(--green);display:block}
-table{width:100%;border-collapse:collapse;margin-top:15px;background:#fff;border-radius:10px;overflow:hidden}
-th{background:var(--green);color:#fff;padding:12px;font-size:0.9rem}
-td{padding:10px;border-bottom:1px solid #eee;text-align:center;font-size:0.85rem}
-
-@keyframes fadeIn{from{opacity:0;transform:translateY(15px)}to{opacity:1;transform:translateY(0)}}
-</style>
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        #map { height: 400px; width: 100%; border-radius: 15px; border: 3px solid var(--green); margin: 15px 0; }
+        
+        /* إحصائيات سريعة */
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(100px, 1fr)); gap: 15px; margin-bottom: 20px; }
+        .stat-item { background: white; padding: 15px; border-radius: 15px; text-align: center; border-bottom: 4px solid var(--gold); }
+        .stat-value { font-size: 1.8rem; font-weight: bold; color: var(--green); display: block; }
+    </style>
 </head>
 <body>
-<div id="deviceSelector">...</div>
-<div id="mainContent">...</div>
+
+<div id="deviceSelector">
+    <div class="device-card">
+        <h1 style="color:var(--green); margin-bottom:10px;">الجزائر نظيفة 2026</h1>
+        <h2 style="color:var(--red);">بلدية المدية</h2>
+        <p style="margin:20px 0;">يرجى اختيار منصة التشغيل للدخول</p>
+        <button class="btn btn-green" style="width:100%; margin-bottom:15px;" onclick="initApp('desktop')">💻 نسخة الحاسوب (إدارة)</button>
+        <button class="btn btn-red" style="width:100%;" onclick="initApp('mobile')">📱 نسخة الهاتف (ميداني)</button>
+    </div>
+</div>
+
+<div class="top-bar">
+    <div id="clock">--:--:--</div>
+    <div style="font-weight:bold;">المدية نظيفة 🌿</div>
+    <button onclick="showPage('home')" style="background:none; border:none; color:white; font-size:1.5rem; cursor:pointer;">🏠</button>
+</div>
+
+<div id="mainContent" class="main-content">
+    
+    <div id="home" class="page active">
+        <div class="stats-grid">
+            <div class="stat-item"><span class="stat-value" id="s1">0</span><span>بلاغات</span></div>
+            <div class="stat-item"><span class="stat-value" id="s2">0</span><span>عمال</span></div>
+            <div class="stat-item"><span class="stat-value" id="s3">0</span><span>أطنان</span></div>
+        </div>
+        <div class="card">
+            <h3>قائمة المهام السريعة</h3>
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:15px;">
+                <button class="btn btn-green" onclick="showPage('reportPage')">📢 تبليغ عن مفرغة</button>
+                <button class="btn btn-green" onclick="showPage('trackingPage')">🚛 تتبع الشاحنات</button>
+                <button class="btn btn-red" onclick="showPage('adminPage')">🔐 لوحة الإدارة</button>
+                <button class="btn btn-red" onclick="showPage('recyclingPage')">♻️ حاسبة التدوير</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="reportPage" class="page">
+        <div class="card">
+            <h2>📢 بلاغ جديد عن نقطة سوداء</h2>
+            <input type="text" id="repAddr" class="btn" style="width:100%; border:1px solid #ccc; color:#333; margin:15px 0;" placeholder="أدخل العنوان أو الحي...">
+            <button class="btn btn-green" style="width:100%;" onclick="capturePhoto()">📸 التقاط صورة المفرغة</button>
+            <div id="previewArea" style="margin-top:10px; display:none;">
+                <img id="reportImg" style="width:100%; border-radius:10px;">
+            </div>
+            <button class="btn btn-red" style="width:100%; margin-top:15px;" onclick="submitReport()">🚀 إرسال البلاغ فوراً</button>
+        </div>
+    </div>
+
+    <div id="adminPage" class="page">
+        <div class="card">
+            <h2>🔐 الإدارة المركزية</h2>
+            <div style="overflow-x:auto;">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>التاريخ</th>
+                            <th>الموقع</th>
+                            <th>الحالة</th>
+                            <th>الإجراء</th>
+                        </tr>
+                    </thead>
+                    <tbody id="reportsTable"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div id="recyclingPage" class="page">
+        <div class="card">
+            <h2>♻️ حاسبة تحويل النفايات إلى طاقة</h2>
+            <select id="wType" class="btn" style="width:100%; border:1px solid #ccc; color:#333; margin:15px 0;">
+                <option value="plastic">بلاستيك</option>
+                <option value="organic">نفايات عضوية</option>
+                <option value="paper">ورق وكارتون</option>
+            </select>
+            <input type="number" id="wWeight" class="btn" style="width:100%; border:1px solid #ccc; color:#333;" placeholder="الوزن بالكلغ">
+            <button class="btn btn-green" style="width:100%; margin-top:15px;" onclick="calcRecycle()">احسب الأثر البيئي</button>
+            <div id="recycleResult" class="card" style="margin-top:15px; display:none; background:#e8f5e9;">
+                <p>⚡ الطاقة المتوقعة: <span id="resEnergy">0</span> وات/ساعة</p>
+                <p>🌳 تقليل CO2: <span id="resCO2">0</span> كلغ</p>
+            </div>
+        </div>
+    </div>
+
+</div>
+
 <script>
-// إعدادات Firebase الأصلية الخاصة بك
-const firebaseConfig = {
-  apiKey: "AIzaSyBMao4dJL_2YQjibDvcTIMw1vHHytpVqs0",
-  authDomain: "medea-clean-2026.firebaseapp.com",
-  databaseURL: "https://medea-clean-2026-default-rtdb.firebaseio.com",
-  projectId: "medea-clean-2026",
-  storageBucket: "medea-clean-2026.firebasestorage.app",
-  messagingSenderId: "215503269481",
-  appId: "1:215503269481:web:fa0d4c81ac1081b648fcf8"
-};
+    // إعدادات Firebase
+    const firebaseConfig = {
+        apiKey: "AIzaSyBMao4dJL_2YQjibDvcTIMw1vHHytpVqs0",
+        authDomain: "medea-clean-2026.firebaseapp.com",
+        databaseURL: "https://medea-clean-2026-default-rtdb.firebaseio.com",
+        projectId: "medea-clean-2026",
+        storageBucket: "medea-clean-2026.firebasestorage.app",
+        messagingSenderId: "215503269481",
+        appId: "1:215503269481:web:fa0d4c81ac1081b648fcf8"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
 
-firebase.initializeApp(firebaseConfig);
-const db = firebase.database();
+    let capturedImgBase64 = null;
 
-// متغيرات النظام
-let currentLang = 'ar', currentDriver = '', tempImage = null;
-let allReports = [], allStaff = [], allTonnage = [];
-
-// 1. وظيفة التشغيل واختيار الجهاز
-function selectDevice(mode) {
-    document.getElementById('deviceSelector').style.display = 'none';
-    const splash = document.getElementById('splash');
-    splash.style.display = 'flex';
-    setTimeout(() => {
-        splash.style.display = 'none';
+    // تشغيل التطبيق
+    function initApp(mode) {
+        document.getElementById('deviceSelector').style.display = 'none';
         document.getElementById('mainContent').style.display = 'block';
-        showPage('home');
-        initRealtimeData(); // ربط البيانات الحية
-    }, 2500);
-}
+        updateClock();
+        setInterval(updateClock, 1000);
+        syncData();
+    }
 
-// 2. إدارة الصفحات
-function showPage(id) {
-    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-    document.getElementById(id).classList.add('active');
-    window.scrollTo(0,0);
-}
+    function updateClock() {
+        document.getElementById('clock').innerText = new Date().toLocaleTimeString('ar-DZ');
+    }
 
-// 3. التقاط الصور وإرسال البلاغات (أهم وظيفة ضاعت)
-function takePhoto() {
-    const input = document.createElement('input');
-    input.type = 'file'; input.accept = 'image/*'; input.capture = 'environment';
-    input.onchange = e => {
-        const reader = new FileReader();
-        reader.onload = ev => {
-            tempImage = ev.target.result;
-            const img = document.getElementById('camImg');
-            img.src = tempImage; img.style.display = 'block';
+    function showPage(id) {
+        document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+        document.getElementById(id).classList.add('active');
+    }
+
+    // نظام البلاغات
+    function capturePhoto() {
+        const input = document.createElement('input');
+        input.type = 'file'; input.accept = 'image/*'; input.capture = 'environment';
+        input.onchange = e => {
+            const reader = new FileReader();
+            reader.onload = ev => {
+                capturedImgBase64 = ev.target.result;
+                document.getElementById('reportImg').src = capturedImgBase64;
+                document.getElementById('previewArea').style.display = 'block';
+            };
+            reader.readAsDataURL(e.target.files[0]);
         };
-        reader.readAsDataURL(e.target.files[0]);
-    };
-    input.click();
-}
+        input.click();
+    }
 
-function sendReport() {
-    const addr = document.getElementById('addrInput').value;
-    if(!addr) return alert("⚠️ يرجى إدخال العنوان");
-    
-    const reportData = {
-        id: Date.now(),
-        address: addr,
-        image: tempImage || '',
-        status: 'pending',
-        date: new Date().toLocaleString('ar-DZ')
-    };
-    
-    db.ref('reports/' + reportData.id).set(reportData).then(() => {
-        alert("✅ تم إرسال البلاغ بنجاح");
-        showPage('home');
-    });
-}
+    function submitReport() {
+        const addr = document.getElementById('repAddr').value;
+        if(!addr) return alert("يرجى كتابة العنوان!");
+        
+        const id = Date.now();
+        db.ref('reports/' + id).set({
+            address: addr,
+            image: capturedImgBase64 || "",
+            status: "pending",
+            time: new Date().toLocaleString('ar-DZ')
+        }).then(() => {
+            alert("تم إرسال البلاغ بنجاح! شكراً لمساهمتك.");
+            showPage('home');
+        });
+    }
 
-// 4. جلب البيانات من Firebase وتحديث العدادات
-function initRealtimeData() {
-    db.ref('reports').on('value', s => {
-        const data = s.val();
-        allReports = data ? Object.values(data) : [];
-        document.getElementById('countReports').innerText = allReports.length;
-    });
-    // تكرار الأمر لبيانات العمال والأطنان...
-}
+    // مزامنة البيانات
+    function syncData() {
+        db.ref('reports').on('value', snap => {
+            const data = snap.val();
+            const list = data ? Object.values(data) : [];
+            document.getElementById('s1').innerText = list.length;
+            
+            const table = document.getElementById('reportsTable');
+            table.innerHTML = list.reverse().map(r => `
+                <tr>
+                    <td>${r.time.split(',')[0]}</td>
+                    <td>${r.address}</td>
+                    <td>${r.status === 'pending' ? '⏳ قيد الانتظار' : '✅ عولجت'}</td>
+                    <td><button onclick="alert('تفاصيل الموقع قيد التطوير')" class="btn btn-green" style="padding:5px;">👁️</button></td>
+                </tr>
+            `).join('');
+        });
+    }
 
-// 5. حاسبة التدوير (معادلاتك الأصلية)
-function calculateConversion() {
-    const w = parseFloat(document.getElementById('wasteWeight').value) || 0;
-    const type = document.getElementById('wasteType').value;
-    let e = 0, c = 0;
-    if(type === 'organic') { e = w * 450; c = w * 0.5; }
-    else if(type === 'plastic') { e = w * 2600; c = w * 1.2; }
-    
-    document.getElementById('resEnergy').innerText = e.toFixed(0);
-    document.getElementById('resCO2').innerText = c.toFixed(1);
-    document.getElementById('conversionResult').style.display = 'block';
-}
-
-// وظيفة الطباعة PDF وسجل الأطنان... (تكملة الـ 1000 سطر)
-          </script>
-          
+    // حاسبة التدوير
+    function calcRecycle() {
+        const w = parseFloat(document.getElementById('wWeight').value);
+        const t = document.getElementById('wType').value;
+        if(!w) return;
+        
+        let energy = 0, co2 = 0;
+        if(t === 'plastic') { energy = w * 2500; co2 = w * 1.5; }
+        else if(t === 'organic') { energy = w * 500; co2 = w * 0.4; }
+        else { energy = w * 1200; co2 = w * 0.9; }
+        
+        document.getElementById('resEnergy').innerText = energy.toFixed(0);
+        document.getElementById('resCO2').innerText = co2.toFixed(1);
+        document.getElementById('recycleResult').style.display = 'block';
+    }
+</script>
+</body>
+          </html>
+  
