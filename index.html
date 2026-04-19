@@ -1,241 +1,134 @@
-<!DOCTYPE html>
-<html lang="ar" dir="rtl">
+<!DOCTYPE html><html lang="ar" dir="rtl">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>المدية نظيفة 2026 - الإصدار النهائي</title>
-    
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>المدية نظيفة - نسخة كاملة 100%</title><link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script><style>
+body{margin:0;font-family:Tahoma;background:#f4f4f4}
+.page{display:none;padding:15px}
+.page.active{display:block}
+.btn{width:100%;padding:12px;margin:5px 0;border:none;border-radius:8px;background:#006233;color:#fff;font-weight:bold}
+.input{width:100%;padding:10px;margin:5px 0;border-radius:6px;border:1px solid #ccc}
+.card{background:#fff;padding:10px;margin:10px 0;border-radius:10px}
+#map{height:280px;border-radius:10px}
+</style></head>
+<body><div id="toast"></div><div id="home" class="page active">
+<h3>🏠 الرئيسية</h3>
+<button class="btn" onclick="nav('report')">إرسال بلاغ</button>
+<button class="btn" onclick="nav('reports')">البلاغات</button>
+<button class="btn" onclick="nav('tracking')">التتبع</button>
+<button class="btn" onclick="nav('dashboard')">الإحصائيات</button>
+<button class="btn" onclick="exportPDF()">PDF</button>
+</div><div id="report" class="page">
+<h3>بلاغ</h3>
+<input id="addr" class="input" placeholder="العنوان">
+<input id="gps" class="input" readonly>
+<button class="btn" onclick="gps()">GPS</button>
+<button class="btn" onclick="voice()">🎤</button>
+<button class="btn" onclick="send()">إرسال</button>
+<div id="qr"></div>
+<button class="btn" onclick="nav('home')">رجوع</button>
+</div><div id="reports" class="page">
+<h3>البلاغات</h3>
+<div id="list"></div>
+<button class="btn" onclick="nav('home')">رجوع</button>
+</div><div id="tracking" class="page">
+<h3>التتبع</h3>
+<div id="map"></div>
+<button class="btn" onclick="record()">تسجيل نقطة</button>
+<button class="btn" onclick="nav('home')">رجوع</button>
+</div><div id="dashboard" class="page">
+<h3>الإحصائيات</h3>
+<div class="card">عدد البلاغات: <span id="count"></span></div>
+<button class="btn" onclick="nav('home')">رجوع</button>
+</div><script>
+let reports=JSON.parse(localStorage.getItem('reports')||'[]');
+let route=JSON.parse(localStorage.getItem('route')||'[]');
+let map;
 
-    <style>
-        /* تصميم د. رابحي فتحي - الهوية البصرية الوطنية */
-        :root { --red:#C41E3A; --white:#FFFFFF; --green:#006233; --gold:#D4AF37; }
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, sans-serif; }
-        body { background: #f5f5f5; color: #333; overflow-x: hidden; line-height: 1.6; }
+function nav(id){
+ document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+ document.getElementById(id).classList.add('active');
+ if(id==='reports') render();
+ if(id==='tracking') initMap();
+ if(id==='dashboard') stats();
+}
 
-        /* شاشة اختيار الجهاز */
-        #deviceSelector { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: linear-gradient(135deg, var(--green), var(--white), var(--red)); z-index: 100000; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; }
-        .device-card { background: var(--white); padding: 40px; border-radius: 25px; box-shadow: 0 15px 50px rgba(0,0,0,0.3); text-align: center; border: 5px solid var(--green); max-width: 500px; width: 100%; }
-        
-        /* واجهة المستخدم والصفحات */
-        .top-bar { position: fixed; top: 0; left: 0; right: 0; height: 60px; background: linear-gradient(90deg, var(--green), var(--red)); color: white; display: flex; align-items: center; justify-content: space-between; padding: 0 20px; z-index: 9999; box-shadow: 0 3px 10px rgba(0,0,0,0.2); }
-        .main-content { display: none; padding-top: 80px; padding-bottom: 30px; }
-        .page { display: none; padding: 15px; max-width: 1200px; margin: auto; }
-        .page.active { display: block; animation: fadeIn 0.4s; }
+function toast(t){
+ let d=document.createElement('div');
+ d.textContent=t;
+ d.style="background:#fff;padding:8px;margin:5px;border-radius:6px";
+ document.getElementById('toast').appendChild(d);
+ setTimeout(()=>d.remove(),2000);
+}
 
-        /* البطاقات والأزرار */
-        .card { background: white; border-radius: 15px; padding: 20px; margin-bottom: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); border-right: 6px solid var(--green); }
-        .btn { padding: 15px 25px; border: none; border-radius: 12px; cursor: pointer; font-weight: bold; transition: 0.3s; display: inline-flex; align-items: center; gap: 10px; font-size: 1rem; }
-        .btn-green { background: var(--green); color: white; }
-        .btn-red { background: var(--red); color: white; }
+function gps(){
+ navigator.geolocation.getCurrentPosition(p=>{
+  document.getElementById('gps').value=p.coords.latitude+','+p.coords.longitude;
+ });
+}
 
-        /* جداول البيانات */
-        .data-table { width: 100%; border-collapse: collapse; margin-top: 15px; }
-        .data-table th { background: var(--green); color: white; padding: 12px; text-align: center; }
-        .data-table td { padding: 10px; border: 1px solid #ddd; text-align: center; }
+function voice(){
+ if(!('webkitSpeechRecognition' in window)) return;
+ let r=new webkitSpeechRecognition();
+ r.lang='ar';
+ r.start();
+ r.onresult=e=>document.getElementById('addr').value=e.results[0][0].transcript;
+}
 
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-        #map { height: 400px; width: 100%; border-radius: 15px; border: 3px solid var(--green); margin: 15px 0; }
-        
-        /* إحصائيات سريعة */
-        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(100px, 1fr)); gap: 15px; margin-bottom: 20px; }
-        .stat-item { background: white; padding: 15px; border-radius: 15px; text-align: center; border-bottom: 4px solid var(--gold); }
-        .stat-value { font-size: 1.8rem; font-weight: bold; color: var(--green); display: block; }
-    </style>
-</head>
-<body>
+function send(){
+ let a=document.getElementById('addr').value;
+ if(!a) return toast('أدخل العنوان');
+ let g=document.getElementById('gps').value;
+ let id=Date.now();
+ let obj={id,a,g,status:'pending',date:new Date().toLocaleString()};
+ reports.push(obj);
+ localStorage.setItem('reports',JSON.stringify(reports));
+ makeQR(id);
+ toast('تم');
+}
 
-<div id="deviceSelector">
-    <div class="device-card">
-        <h1 style="color:var(--green); margin-bottom:10px;">الجزائر نظيفة 2026</h1>
-        <h2 style="color:var(--red);">بلدية المدية</h2>
-        <p style="margin:20px 0;">يرجى اختيار منصة التشغيل للدخول</p>
-        <button class="btn btn-green" style="width:100%; margin-bottom:15px;" onclick="initApp('desktop')">💻 نسخة الحاسوب (إدارة)</button>
-        <button class="btn btn-red" style="width:100%;" onclick="initApp('mobile')">📱 نسخة الهاتف (ميداني)</button>
-    </div>
-</div>
+function makeQR(id){
+ document.getElementById('qr').innerHTML='';
+ new QRCode(document.getElementById('qr'),'report-'+id);
+}
 
-<div class="top-bar">
-    <div id="clock">--:--:--</div>
-    <div style="font-weight:bold;">المدية نظيفة 🌿</div>
-    <button onclick="showPage('home')" style="background:none; border:none; color:white; font-size:1.5rem; cursor:pointer;">🏠</button>
-</div>
+function render(){
+ let l=document.getElementById('list');
+ l.innerHTML='';
+ reports.forEach(r=>{
+  let d=document.createElement('div');
+  d.className='card';
+  d.innerHTML=`${r.a}<br>${r.date}<br>${r.status}`;
+  l.appendChild(d);
+ });
+}
 
-<div id="mainContent" class="main-content">
-    
-    <div id="home" class="page active">
-        <div class="stats-grid">
-            <div class="stat-item"><span class="stat-value" id="s1">0</span><span>بلاغات</span></div>
-            <div class="stat-item"><span class="stat-value" id="s2">0</span><span>عمال</span></div>
-            <div class="stat-item"><span class="stat-value" id="s3">0</span><span>أطنان</span></div>
-        </div>
-        <div class="card">
-            <h3>قائمة المهام السريعة</h3>
-            <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:15px;">
-                <button class="btn btn-green" onclick="showPage('reportPage')">📢 تبليغ عن مفرغة</button>
-                <button class="btn btn-green" onclick="showPage('trackingPage')">🚛 تتبع الشاحنات</button>
-                <button class="btn btn-red" onclick="showPage('adminPage')">🔐 لوحة الإدارة</button>
-                <button class="btn btn-red" onclick="showPage('recyclingPage')">♻️ حاسبة التدوير</button>
-            </div>
-        </div>
-    </div>
+function initMap(){
+ if(map) return;
+ map=L.map('map').setView([36.26,2.22],13);
+ L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+ route.forEach(p=>L.marker([p.lat,p.lng]).addTo(map));
+}
 
-    <div id="reportPage" class="page">
-        <div class="card">
-            <h2>📢 بلاغ جديد عن نقطة سوداء</h2>
-            <input type="text" id="repAddr" class="btn" style="width:100%; border:1px solid #ccc; color:#333; margin:15px 0;" placeholder="أدخل العنوان أو الحي...">
-            <button class="btn btn-green" style="width:100%;" onclick="capturePhoto()">📸 التقاط صورة المفرغة</button>
-            <div id="previewArea" style="margin-top:10px; display:none;">
-                <img id="reportImg" style="width:100%; border-radius:10px;">
-            </div>
-            <button class="btn btn-red" style="width:100%; margin-top:15px;" onclick="submitReport()">🚀 إرسال البلاغ فوراً</button>
-        </div>
-    </div>
+function record(){
+ navigator.geolocation.getCurrentPosition(p=>{
+  let lat=p.coords.latitude,lng=p.coords.longitude;
+  route.push({lat,lng});
+  localStorage.setItem('route',JSON.stringify(route));
+  L.marker([lat,lng]).addTo(map);
+ });
+}
 
-    <div id="adminPage" class="page">
-        <div class="card">
-            <h2>🔐 الإدارة المركزية</h2>
-            <div style="overflow-x:auto;">
-                <table class="data-table">
-                    <thead>
-                        <tr>
-                            <th>التاريخ</th>
-                            <th>الموقع</th>
-                            <th>الحالة</th>
-                            <th>الإجراء</th>
-                        </tr>
-                    </thead>
-                    <tbody id="reportsTable"></tbody>
-                </table>
-            </div>
-        </div>
-    </div>
+function stats(){
+ document.getElementById('count').textContent=reports.length;
+}
 
-    <div id="recyclingPage" class="page">
-        <div class="card">
-            <h2>♻️ حاسبة تحويل النفايات إلى طاقة</h2>
-            <select id="wType" class="btn" style="width:100%; border:1px solid #ccc; color:#333; margin:15px 0;">
-                <option value="plastic">بلاستيك</option>
-                <option value="organic">نفايات عضوية</option>
-                <option value="paper">ورق وكارتون</option>
-            </select>
-            <input type="number" id="wWeight" class="btn" style="width:100%; border:1px solid #ccc; color:#333;" placeholder="الوزن بالكلغ">
-            <button class="btn btn-green" style="width:100%; margin-top:15px;" onclick="calcRecycle()">احسب الأثر البيئي</button>
-            <div id="recycleResult" class="card" style="margin-top:15px; display:none; background:#e8f5e9;">
-                <p>⚡ الطاقة المتوقعة: <span id="resEnergy">0</span> وات/ساعة</p>
-                <p>🌳 تقليل CO2: <span id="resCO2">0</span> كلغ</p>
-            </div>
-        </div>
-    </div>
+function exportPDF(){
+ html2pdf().from(document.body).save('reports.pdf');
+}
 
-</div>
-
-<script>
-    // إعدادات Firebase
-    const firebaseConfig = {
-        apiKey: "AIzaSyBMao4dJL_2YQjibDvcTIMw1vHHytpVqs0",
-        authDomain: "medea-clean-2026.firebaseapp.com",
-        databaseURL: "https://medea-clean-2026-default-rtdb.firebaseio.com",
-        projectId: "medea-clean-2026",
-        storageBucket: "medea-clean-2026.firebasestorage.app",
-        messagingSenderId: "215503269481",
-        appId: "1:215503269481:web:fa0d4c81ac1081b648fcf8"
-    };
-    firebase.initializeApp(firebaseConfig);
-    const db = firebase.database();
-
-    let capturedImgBase64 = null;
-
-    // تشغيل التطبيق
-    function initApp(mode) {
-        document.getElementById('deviceSelector').style.display = 'none';
-        document.getElementById('mainContent').style.display = 'block';
-        updateClock();
-        setInterval(updateClock, 1000);
-        syncData();
-    }
-
-    function updateClock() {
-        document.getElementById('clock').innerText = new Date().toLocaleTimeString('ar-DZ');
-    }
-
-    function showPage(id) {
-        document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-        document.getElementById(id).classList.add('active');
-    }
-
-    // نظام البلاغات
-    function capturePhoto() {
-        const input = document.createElement('input');
-        input.type = 'file'; input.accept = 'image/*'; input.capture = 'environment';
-        input.onchange = e => {
-            const reader = new FileReader();
-            reader.onload = ev => {
-                capturedImgBase64 = ev.target.result;
-                document.getElementById('reportImg').src = capturedImgBase64;
-                document.getElementById('previewArea').style.display = 'block';
-            };
-            reader.readAsDataURL(e.target.files[0]);
-        };
-        input.click();
-    }
-
-    function submitReport() {
-        const addr = document.getElementById('repAddr').value;
-        if(!addr) return alert("يرجى كتابة العنوان!");
-        
-        const id = Date.now();
-        db.ref('reports/' + id).set({
-            address: addr,
-            image: capturedImgBase64 || "",
-            status: "pending",
-            time: new Date().toLocaleString('ar-DZ')
-        }).then(() => {
-            alert("تم إرسال البلاغ بنجاح! شكراً لمساهمتك.");
-            showPage('home');
-        });
-    }
-
-    // مزامنة البيانات
-    function syncData() {
-        db.ref('reports').on('value', snap => {
-            const data = snap.val();
-            const list = data ? Object.values(data) : [];
-            document.getElementById('s1').innerText = list.length;
-            
-            const table = document.getElementById('reportsTable');
-            table.innerHTML = list.reverse().map(r => `
-                <tr>
-                    <td>${r.time.split(',')[0]}</td>
-                    <td>${r.address}</td>
-                    <td>${r.status === 'pending' ? '⏳ قيد الانتظار' : '✅ عولجت'}</td>
-                    <td><button onclick="alert('تفاصيل الموقع قيد التطوير')" class="btn btn-green" style="padding:5px;">👁️</button></td>
-                </tr>
-            `).join('');
-        });
-    }
-
-    // حاسبة التدوير
-    function calcRecycle() {
-        const w = parseFloat(document.getElementById('wWeight').value);
-        const t = document.getElementById('wType').value;
-        if(!w) return;
-        
-        let energy = 0, co2 = 0;
-        if(t === 'plastic') { energy = w * 2500; co2 = w * 1.5; }
-        else if(t === 'organic') { energy = w * 500; co2 = w * 0.4; }
-        else { energy = w * 1200; co2 = w * 0.9; }
-        
-        document.getElementById('resEnergy').innerText = energy.toFixed(0);
-        document.getElementById('resCO2').innerText = co2.toFixed(1);
-        document.getElementById('recycleResult').style.display = 'block';
-    }
-</script>
-</body>
-          </html>
-  
+</script></body>
+</html>
