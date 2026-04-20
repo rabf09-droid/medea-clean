@@ -2075,11 +2075,36 @@ select.input {
         <div class="info-card" style="text-align:center;margin-bottom:10px;font-weight:bold">
           <i class="fas fa-signal"></i> التتبع نشط - سجل الحاويات
         </div>
-        <button class="btn btn-success ripple" onclick="recordBinCollection()" style="font-size:1.1rem;padding:18px">
+        <button class="btn btn-success ripple" onclick="recordBinCollection()" style="font-size:1.1rem;padding:18px" id="recordBinBtn">
           <i class="fas fa-trash-alt"></i> تسجيل موقع الحاوية
         </button>
-        <div style="text-align:center;margin-top:10px;color:var(--text-light);font-size:0.85rem">
-          اضغط عند كل حاوية ترفعها
+        <div style="text-align:center;margin-top:8px;color:var(--text-light);font-size:0.85rem">
+          اضغط عند كل موقع حاوية ترفعها
+        </div>
+        <!-- نتيجة التسجيل -->
+        <div id="binRecordResult" style="display:none;margin-top:12px;background:var(--bg-card);border-radius:var(--radius-sm);padding:14px;border:2px solid var(--success)">
+          <div style="font-weight:700;color:var(--primary);margin-bottom:8px;text-align:center">
+            <i class="fas fa-map-marker-alt"></i> تفاصيل الموقع المسجل
+          </div>
+          <div class="info-row"><b>📍 العنوان:</b> <span id="binAddr">-</span></div>
+          <div class="info-row"><b>🌍 الإحداثيات:</b> <span id="binCoords">-</span></div>
+          <div style="margin-top:12px">
+            <label style="font-weight:700;color:var(--text);display:block;margin-bottom:6px">
+              <i class="fas fa-trash"></i> عدد الحاويات في هذا الموقع:
+            </label>
+            <div style="display:flex;gap:10px;align-items:center">
+              <button onclick="changeBinCount(-1)" style="width:44px;height:44px;border-radius:50%;border:none;background:var(--danger);color:#fff;font-size:1.3rem;cursor:pointer;font-weight:900;flex-shrink:0">−</button>
+              <input type="number" id="binCountInput" value="1" min="1" max="50" 
+                style="flex:1;text-align:center;font-size:1.4rem;font-weight:900;border:2px solid var(--primary);border-radius:var(--radius-sm);padding:8px;color:var(--primary);font-family:Cairo,sans-serif">
+              <button onclick="changeBinCount(1)" style="width:44px;height:44px;border-radius:50%;border:none;background:var(--success);color:#fff;font-size:1.3rem;cursor:pointer;font-weight:900;flex-shrink:0">+</button>
+            </div>
+          </div>
+          <button class="btn btn-primary ripple" onclick="confirmBinCollection()" style="margin-top:12px;font-size:1rem">
+            <i class="fas fa-check-circle"></i> تثبيت وحفظ الحاوية
+          </button>
+          <button class="btn ripple" onclick="cancelBinCollection()" style="background:#757575;margin-top:6px;font-size:0.9rem">
+            <i class="fas fa-times"></i> إلغاء
+          </button>
         </div>
       </div>
       <button class="btn btn-primary ripple" style="margin-bottom:12px" onclick="showPage('driverTonnage')">
@@ -3083,28 +3108,141 @@ function changeLang(lang, btn) {
 }
 
 function updateLanguageUI() {
-  // تحديث أزرار اللغة
-  document.querySelectorAll('.lang-btn').forEach((btn, index) => {
+  const t = translations[currentLang];
+  if(!t) return;
+
+  // 1) اتجاه الصفحة
+  document.documentElement.lang = currentLang;
+  document.documentElement.dir = currentLang === 'ar' ? 'rtl' : 'ltr';
+
+  // 2) أزرار اللغة
+  document.querySelectorAll('.lang-btn').forEach((btn) => {
     btn.classList.remove('active');
-    if((index === 0 && currentLang === 'ar') ||
-       (index === 1 && currentLang === 'fr') ||
-       (index === 2 && currentLang === 'en')) {
+    const bl = btn.textContent.trim();
+    if((currentLang==='ar' && (bl==='العربية'||bl.includes('العربية'))) ||
+       (currentLang==='fr' && (bl==='Français'||bl.includes('Français'))) ||
+       (currentLang==='en' && (bl==='English'||bl.includes('English')))) {
       btn.classList.add('active');
     }
   });
-  
-  // تحديث النصوص
-  const t = translations[currentLang];
-  
-  // تحديث الإحصائيات
+
+  // 3) الإحصائيات
   const statLabels = document.querySelectorAll('.stat-label');
   if(statLabels.length >= 3) {
     statLabels[0].textContent = t.totalReports;
     statLabels[1].textContent = t.completed;
     statLabels[2].textContent = t.pending;
   }
-  
-  // تحديث الوقت
+
+  // 4) جميع العناصر التي تحمل data-i18n
+  document.querySelectorAll('[data-i18n]').forEach(el => {
+    const key = el.getAttribute('data-i18n');
+    if(t[key] !== undefined) {
+      if(el.tagName === 'INPUT' || el.tagName === 'TEXTAREA') {
+        el.placeholder = t[key];
+      } else {
+        el.textContent = t[key];
+      }
+    }
+  });
+
+  // 5) ترجمة نصوص الأزرار الرئيسية
+  const btnMap = {
+    'btn-send-report':    t.sendReport,
+    'btn-demo-data':      t.demoData,
+    'btn-print-pdf':      t.printPDF,
+    'btn-dashboard':      t.dashboard,
+    'btn-exit':           t.exit,
+    'btn-schedule':       t.schedule,
+    'btn-awareness':      t.awareness,
+    'btn-requests':       t.myRequests,
+    'btn-recycling':      t.recyclingCalc,
+    'btn-sorting':        t.sortingCenter,
+    'btn-market':         t.recyclingMarket,
+    'btn-truck-track':    t.trackTrucks,
+    'btn-drivers':        t.drivers,
+    'btn-admin':          t.admin,
+  };
+  Object.entries(btnMap).forEach(([id, text]) => {
+    const el = document.getElementById(id);
+    if(el) el.textContent = text;
+  });
+
+  // 6) Placeholders حقول الإدخال المهمة
+  const phMap = {
+    'addrInput':          t.address,
+    'gpsInput':           t.gps,
+    'driverName':         t.name || (currentLang==='ar'?'👤 أدخل اسمك': currentLang==='fr'?'👤 Votre nom':'👤 Your name'),
+    'adminName':          t.name || (currentLang==='ar'?'👤 الاسم':'👤 Nom'),
+    'adminCode':          t.code,
+    'newStaffName':       t.fullName,
+    'newStaffRole':       t.role,
+    'sectorName':         t.sectorName,
+    'sectorDays':         t.days,
+    'sectorTime':         t.collectionTime,
+    'sectorDriver':       t.responsibleDriver,
+    'reqDesc':            t.requestDetails,
+    'reqLocation':        t.location,
+  };
+  Object.entries(phMap).forEach(([id, ph]) => {
+    const el = document.getElementById(id);
+    if(el && ph) el.placeholder = ph;
+  });
+
+  // 7) عناوين الصفحات h2 الرئيسية
+  const h2Map = {
+    'report':           t.newReport,
+    'truckTracking':    t.truckTracking,
+    'driver':           t.driverSpace,
+    'admin':            t.controlPanel,
+    'dashboard':        t.statsPanel,
+    'schedule':         t.collectionSchedule,
+    'tips':             t.environmentalTips,
+    'requests':         t.myRequests,
+    'recycling':        t.recyclingEnergy,
+    'sortingCenter':    t.sortingCenter,
+    'recyclingMarket':  t.recyclingMarketTitle,
+    'reportsPage':      currentLang==='ar'?'📋 قائمة البلاغات':currentLang==='fr'?'📋 Liste signalements':'📋 Reports List',
+    'staffPage':        t.staffManagement,
+    'tonnageRecords':   t.tonnageRecords,
+    'scheduleManager':  t.scheduleManagement,
+  };
+  Object.entries(h2Map).forEach(([pageId, title]) => {
+    const page = document.getElementById(pageId);
+    if(page) {
+      const h2 = page.querySelector('h2');
+      if(h2 && title) {
+        // حفظ الأيقونة إن وُجدت
+        const icon = h2.querySelector('i');
+        if(icon) {
+          h2.innerHTML = '';
+          h2.appendChild(icon);
+          h2.appendChild(document.createTextNode(' ' + title));
+        } else {
+          h2.textContent = title;
+        }
+      }
+    }
+  });
+
+  // 8) زر إرسال البلاغ الكبير
+  const sendBtn = document.getElementById('sendBtn');
+  if(sendBtn) sendBtn.innerHTML = `<i class="fas fa-paper-plane"></i> ${t.sendNow}`;
+
+  // 9) زر تحديد الموقع
+  const locBtn = document.getElementById('getLocationBtn');
+  if(locBtn && !locBtn.disabled) {
+    locBtn.innerHTML = `<i class="fas fa-map-pin"></i> ${currentLang==='ar'?'تحديد الموقع GPS':currentLang==='fr'?'Localisation GPS':'GPS Location'}`;
+  }
+
+  // 10) رسائل الإدارة والسائق
+  const driverWelcome = document.querySelector('#driverPanel .success-card');
+  if(driverWelcome) driverWelcome.innerHTML = `<i class="fas fa-check-circle"></i> ${t.welcome}`;
+
+  const adminMode = document.querySelector('#adminPanel .success-card');
+  if(adminMode) adminMode.innerHTML = `<i class="fas fa-shield-alt"></i> ${t.adminMode}`;
+
+  // 11) تحديث الوقت
   updateTime();
 }
 
@@ -4514,32 +4652,98 @@ function startGPSMonitoring() {
   }, 10000);
 }
 
+// بيانات مؤقتة للحاوية قيد التسجيل
+let pendingBinData = null;
+
 function recordBinCollection() {
   if(!truckTrackingData.active) {
     showToast('⚠️ التتبع غير نشط', 'error');
     return;
   }
-  
-  navigator.geolocation.getCurrentPosition(pos => {
-    const bin = {
-      id: Date.now(),
-      lat: pos.coords.latitude,
-      lng: pos.coords.longitude,
-      timestamp: new Date().toISOString(),
-      sector: currentDriverSector,      driver: currentDriver
-    };
-    
-    truckTrackingData.collectedBins.push(bin);
-    saveToCloud('truckTracking', truckTrackingData);
-    updateTruckTrackingUI();
-    
-    if(navigator.vibrate) navigator.vibrate([200, 100, 200]);
-    
-    showToast('✅ تم تسجيل الحاوية #' + truckTrackingData.collectedBins.length, 'success');
-    addBinMarkerToMap(bin);
+
+  const btn = document.getElementById('recordBinBtn');
+  if(btn) { btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري تحديد الموقع...'; btn.disabled = true; }
+  document.getElementById('binRecordResult').style.display = 'none';
+
+  navigator.geolocation.getCurrentPosition(async pos => {
+    const lat = pos.coords.latitude;
+    const lng = pos.coords.longitude;
+
+    // حفظ البيانات مؤقتاً
+    pendingBinData = { lat, lng, timestamp: new Date().toISOString() };
+
+    // عرض الإحداثيات فوراً
+    document.getElementById('binCoords').textContent = lat.toFixed(6) + ', ' + lng.toFixed(6);
+    document.getElementById('binAddr').textContent = '⏳ جاري تحديد العنوان...';
+
+    // تفعيل اهتزاز
+    if(navigator.vibrate) navigator.vibrate([100, 50, 100]);
+
+    // إظهار لوحة التأكيد
+    document.getElementById('binRecordResult').style.display = 'block';
+    document.getElementById('binCountInput').value = 1;
+
+    // إعادة الزر
+    if(btn) { btn.innerHTML = '<i class="fas fa-trash-alt"></i> تسجيل موقع حاوية جديد'; btn.disabled = false; }
+
+    // تحديد العنوان بالاسم (لا نوقف الواجهة)
+    try {
+      const addr = await getAddressFromCoords(lat, lng);
+      document.getElementById('binAddr').textContent = addr;
+      pendingBinData.address = addr;
+    } catch(e) {
+      document.getElementById('binAddr').textContent = lat.toFixed(4) + ', ' + lng.toFixed(4);
+    }
+
+    showToast('📍 تم تحديد الموقع - أدخل عدد الحاويات', 'info');
   }, err => {
-    showToast('⚠️ فشل في تحديد الموقع', 'error');
-  }, {enableHighAccuracy: true, timeout: 10000});
+    if(btn) { btn.innerHTML = '<i class="fas fa-trash-alt"></i> تسجيل موقع الحاوية'; btn.disabled = false; }
+    showToast('⚠️ فشل في تحديد الموقع، حاول مجدداً', 'error');
+  }, {enableHighAccuracy: true, timeout: 15000, maximumAge: 0});
+}
+
+function changeBinCount(delta) {
+  const inp = document.getElementById('binCountInput');
+  if(!inp) return;
+  let val = parseInt(inp.value) + delta;
+  if(val < 1) val = 1;
+  if(val > 50) val = 50;
+  inp.value = val;
+}
+
+function confirmBinCollection() {
+  if(!pendingBinData) { showToast('⚠️ لا يوجد موقع محدد', 'error'); return; }
+
+  const count = parseInt(document.getElementById('binCountInput').value) || 1;
+
+  const bin = {
+    id: Date.now(),
+    lat: pendingBinData.lat,
+    lng: pendingBinData.lng,
+    address: pendingBinData.address || '',
+    count: count,
+    timestamp: pendingBinData.timestamp,
+    sector: currentDriverSector,
+    driver: currentDriver
+  };
+
+  truckTrackingData.collectedBins.push(bin);
+  saveToCloud('truckTracking', truckTrackingData);
+  updateTruckTrackingUI();
+  addBinMarkerToMap(bin);
+
+  // إغلاق اللوحة وإعادة الضبط
+  document.getElementById('binRecordResult').style.display = 'none';
+  pendingBinData = null;
+
+  showToast(`✅ تم تسجيل ${count} حاوية في الموقع #${truckTrackingData.collectedBins.length}`, 'success');
+  if(navigator.vibrate) navigator.vibrate([200, 100, 200]);
+}
+
+function cancelBinCollection() {
+  pendingBinData = null;
+  document.getElementById('binRecordResult').style.display = 'none';
+  showToast('تم إلغاء التسجيل', 'info');
 }
 
 function stopTruckTracking() {
@@ -4574,8 +4778,10 @@ function updateTruckTrackingUI() {
     } else {
       binsList.innerHTML = truckTrackingData.collectedBins.map((bin, idx) => `
         <div class="bin-collected">
-          🗑️ حاوية #${idx+1}<br>
-          <small>${bin.lat.toFixed(6)}, ${bin.lng.toFixed(6)}</small><br>          <small>🕐 ${new Date(bin.timestamp).toLocaleTimeString('ar-DZ')}</small>
+          🗑️ موقع #${idx+1} — <b>${bin.count || 1}</b> حاوية<br>
+          ${bin.address ? `<small>📍 ${bin.address}</small><br>` : ''}
+          <small>🌍 ${bin.lat.toFixed(5)}, ${bin.lng.toFixed(5)}</small><br>
+          <small>🕐 ${new Date(bin.timestamp).toLocaleTimeString('ar-DZ')}</small>
         </div>
       `).join('');
     }
@@ -4641,14 +4847,20 @@ function updateTruckTrackingMap(position) {
 function addBinMarkerToMap(bin) {
   try {
     if(!map) return;
+    const idx = truckTrackingData.collectedBins.indexOf(bin) + 1;
+    const count = bin.count || 1;
     L.circleMarker([bin.lat, bin.lng], {
-      radius: 8,
+      radius: 9,
       fillColor: '#4CAF50',
       color: '#fff',
       weight: 2,
       opacity: 1,
-      fillOpacity: 0.8
-    }).addTo(map).bindPopup(`🗑️ حاوية #${truckTrackingData.collectedBins.indexOf(bin)+1}<br>🕐 ${new Date(bin.timestamp).toLocaleTimeString('ar-DZ')}`);
+      fillOpacity: 0.85
+    }).addTo(map).bindPopup(
+      `🗑️ موقع #${idx} — <b>${count}</b> حاوية<br>` +
+      (bin.address ? `📍 ${bin.address}<br>` : '') +
+      `🕐 ${new Date(bin.timestamp).toLocaleTimeString('ar-DZ')}`
+    );
   } catch(e) {}
 }
 
