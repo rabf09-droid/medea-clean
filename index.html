@@ -1749,6 +1749,14 @@ select.input {
     <p>مصلحة النظافة والوقاية الصحية - بلدية المدية</p>
     <p>التطبيق من إعداد د. رابحي فتحي</p>
     <p style="margin-top:8px;font-size:0.8rem">سيتم حفظ اختيارك للزيارات القادمة</p>
+    <p style="margin-top:12px">
+      <button onclick="selectDevice('mobile')" style="background:none;border:1px solid rgba(255,255,255,0.5);color:rgba(255,255,255,0.8);padding:6px 14px;border-radius:20px;cursor:pointer;font-size:0.75rem;font-family:Cairo,sans-serif">
+        🔄 متابعة كهاتف
+      </button>
+      <button onclick="selectDevice('desktop')" style="background:none;border:1px solid rgba(255,255,255,0.5);color:rgba(255,255,255,0.8);padding:6px 14px;border-radius:20px;cursor:pointer;font-size:0.75rem;font-family:Cairo,sans-serif;margin-right:8px">
+        💻 متابعة ككمبيوتر
+      </button>
+    </p>
   </div>
 </div>
 
@@ -2657,66 +2665,79 @@ const sectorRoutesData = {
 };
 
 // ===== اختيار الجهاز =====
+function initApp() {
+  updateTime();
+  setupSync();
+  loadFromCloud('reports', 'reports', (data) => { allReports = data ? Object.values(data) : []; updateStats(); });
+  loadFromCloud('wasteTracking', 'wasteTracking', (data) => { wasteTracking = data ? Object.values(data) : []; });
+  loadFromCloud('marketMaterials', 'marketMaterials', (data) => { marketMaterials = data ? Object.values(data) : []; });
+  loadFromCloud('truckTracking', 'truckTracking', (data) => { if(data) truckTrackingData = data; });
+  const savedLang = localStorage.getItem('medea_lang') || 'ar';
+  currentLang = savedLang;
+  updateLanguageUI();
+}
+
+function showMainContent(mode) {
+  if(mode === 'desktop') {
+    document.body.classList.add('desktop-mode');
+  } else {
+    document.body.classList.remove('desktop-mode');
+  }
+  // إخفاء كل شاشات التحميل
+  const sel = document.getElementById('deviceSelector');
+  const spl = document.getElementById('splash');
+  const main = document.getElementById('mainContent');
+  if(sel) sel.style.display = 'none';
+  if(spl) spl.style.display = 'none';
+  if(main) { main.style.display = 'block'; main.classList.add('active'); }
+  initApp();
+}
+
 function selectDevice(mode) {
-  localStorage.setItem('medea_device', mode);
-  
-  // تأثير انتقالي
+  try { localStorage.setItem('medea_device', mode); } catch(e) {}
+
   const selector = document.getElementById('deviceSelector');
-  selector.style.opacity = '0';
-  selector.style.transition = 'opacity 0.5s';
-  
+  if(selector) {
+    selector.style.opacity = '0';
+    selector.style.transition = 'opacity 0.4s';
+  }
+
   setTimeout(() => {
-    selector.style.display = 'none';
-    
-    if(mode === 'desktop') {
-      document.body.classList.add('desktop-mode');
-    }
-    
-    // إظهار شاشة الترحيب
+    if(selector) selector.style.display = 'none';
+
     const splash = document.getElementById('splash');
-    splash.style.display = 'flex';
-    
-    setTimeout(() => {
-      splash.style.opacity = '0';      splash.style.transition = 'opacity 0.5s';
-      
-      setTimeout(() => {
-        splash.style.display = 'none';
-        
-        const main = document.getElementById('mainContent');
-        main.style.display = 'block';
-        setTimeout(() => { main.classList.add('active'); }, 100);
-        
-        // تهيئة النظام
-        updateTime();
-        setupSync();
-        loadFromCloud('reports', 'reports', (data) => { allReports = data ? Object.values(data) : []; updateStats(); });
-        loadFromCloud('wasteTracking', 'wasteTracking', (data) => { wasteTracking = data ? Object.values(data) : []; });
-        loadFromCloud('marketMaterials', 'marketMaterials', (data) => { marketMaterials = data ? Object.values(data) : []; });
-        loadFromCloud('truckTracking', 'truckTracking', (data) => { if(data) truckTrackingData = data; });
-        
-        // تحميل اللغة المحفوظة
-        const savedLang = localStorage.getItem('medea_lang');
-        if(savedLang) {
-          currentLang = savedLang;
-          updateLanguageUI();
-        }
-      }, 500);
+    if(splash) {
+      splash.style.display = 'flex';
+      splash.style.opacity = '1';
+    }
+
+    // ضمان إخفاء السبلاش بعد 2.5 ثانية مهما حدث
+    const splashTimer = setTimeout(() => {
+      showMainContent(mode);
     }, 2500);
-  }, 500);
+
+    // احتياط: إذا فشل أي شيء بعد 5 ثوانٍ، نفتح التطبيق قسراً
+    setTimeout(() => {
+      const main = document.getElementById('mainContent');
+      if(main && !main.classList.contains('active')) {
+        clearTimeout(splashTimer);
+        showMainContent(mode);
+      }
+    }, 5000);
+
+  }, 400);
 }
 
 // ===== تبديل الوضع =====
 function switchMode() {
   const current = document.body.classList.contains('desktop-mode') ? 'desktop' : 'mobile';
   const next = current === 'mobile' ? 'desktop' : 'mobile';
-  localStorage.setItem('medea_device', next);
-  
+  try { localStorage.setItem('medea_device', next); } catch(e) {}
   if(next === 'desktop') {
     document.body.classList.add('desktop-mode');
   } else {
     document.body.classList.remove('desktop-mode');
   }
-  
   showToast(next === 'desktop' ? '💻 وضع الكمبيوتر' : '📱 وضع الهاتف', 'info');
 }
 
@@ -5415,27 +5436,40 @@ function loadDemoData() {
 
 // ===== تهيئة الصفحة =====
 window.addEventListener('DOMContentLoaded', function() {
-  // تحميل الوضع المحفوظ
-  const savedDevice = localStorage.getItem('medea_device');
-  if(savedDevice) {
-    selectDevice(savedDevice);
-  }
-  
-  // تحميل الثيم المحفوظ
-  const savedTheme = localStorage.getItem('medea_theme');  if(savedTheme) {
-    document.documentElement.setAttribute('data-theme', savedTheme);
-    const icon = document.querySelector('.theme-toggle i');
-    if(icon) {
-      icon.className = savedTheme === 'dark' ? 'fas fa-sun' : 'fas fa-moon';
-    }
-  }
-  
-  // تحميل النقاط المحفوظة
+
+  // تحميل الثيم المحفوظ أولاً (قبل أي شيء لتجنب الوميض)
   try {
+    const savedTheme = localStorage.getItem('medea_theme');
+    if(savedTheme) {
+      document.documentElement.setAttribute('data-theme', savedTheme);
+      const icon = document.querySelector('.theme-toggle i');
+      if(icon) icon.className = savedTheme === 'dark' ? 'fas fa-sun' : 'fas fa-moon';
+    }
     const savedPoints = localStorage.getItem('medea_points');
     if(savedPoints) userPoints = parseInt(savedPoints);
   } catch(e) {}
+
+  // تحميل الجهاز المحفوظ
+  try {
+    const savedDevice = localStorage.getItem('medea_device');
+    if(savedDevice) {
+      // تخطي شاشة الاختيار مباشرة والانطلاق
+      const sel = document.getElementById('deviceSelector');
+      if(sel) sel.style.display = 'none';
+      showMainContent(savedDevice);
+    }
+    // إذا لم يكن هناك جهاز محفوظ، تبقى شاشة الاختيار ظاهرة
+  } catch(e) {
+    // في حالة خطأ، إظهار التطبيق مباشرة
+    showMainContent('mobile');
+  }
 });
+
+// زر إعادة التعيين للمستخدمين العالقين (يظهر فقط عند الضرورة)
+function resetApp() {
+  try { localStorage.removeItem('medea_device'); } catch(e) {}
+  location.reload();
+}
 </script>
 </body>
 </html>
