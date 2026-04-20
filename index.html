@@ -2075,7 +2075,7 @@ select.input {
         <div class="info-card" style="text-align:center;margin-bottom:10px;font-weight:bold">
           <i class="fas fa-signal"></i> التتبع نشط - سجل الحاويات
         </div>
-        <button class="btn btn-success ripple" onclick="recordBinCollection()" style="font-size:1.1rem;padding:18px">
+        <button class="btn btn-success ripple" onclick="selectContainers()" style="font-size:1.1rem;padding:18px">
           <i class="fas fa-trash-alt"></i> تسجيل موقع الحاوية
         </button>
         <div style="text-align:center;margin-top:10px;color:var(--text-light);font-size:0.85rem">
@@ -3093,22 +3093,20 @@ function updateLanguageUI() {
     }
   });
   
-  // تحديث النصوص
   const t = translations[currentLang];
   
-  // تحديث جميع العناصر التي لها data-translate
-  document.querySelectorAll('[data-translate]').forEach(el => {
-    const key = el.getAttribute('data-translate');
-    if(t[key]) {
-      el.textContent = t[key];
-    }
-  });
-  
-  // تحديث placeholders
-  document.querySelectorAll('[data-placeholder]').forEach(el => {
-    const key = el.getAttribute('data-placeholder');
-    if(t[key]) {
-      el.placeholder = t[key];
+  // ترجمة جميع النصوص في الصفحة
+  document.querySelectorAll('*').forEach(el => {
+    // ترجمة placeholder
+    if(el.placeholder) {
+      const placeholders = {
+        'ar': { '👤 أدخل اسمك': 'أدخل اسمك', '📍 اسم الحي أو الشارع': t.address, '🌍 إحداثيات GPS': t.gps },
+        'fr': { '👤 أدخل اسمك': 'Entrez votre nom', '📍 اسم الحي أو الشارع': 'Quartier ou rue', '🌍 إحداثيات GPS': 'Coordonnées GPS' },
+        'en': { '👤 أدخل اسمك': 'Enter your name', '📍 اسم الحي أو الشارع': 'Neighborhood or street', '🌍 إحداثيات GPS': 'GPS Coordinates' }
+      };
+      if(placeholders[currentLang] && placeholders[currentLang][el.placeholder]) {
+        el.placeholder = placeholders[currentLang][el.placeholder];
+      }
     }
   });
   
@@ -3117,7 +3115,7 @@ function updateLanguageUI() {
   if(statLabels.length >= 3) {
     statLabels[0].textContent = t.totalReports;
     statLabels[1].textContent = t.completed;
-    statLabels[2].textContent = t.pending;
+    statLabels[2].textContent = 'تم الفرز';
   }
   
   // تحديث الاتجاه
@@ -4562,80 +4560,6 @@ function recordBinCollection() {
   }, {enableHighAccuracy: true, timeout: 10000});
 }
 
-// ===== تحديد الحاويات (الميزة الجديدة) =====
-function selectContainers() {
-  if(!truckTrackingData.active) {
-    showToast('⚠️ التتبع غير نشط', 'error');
-    return;
-  }
-  
-  // تحديد الموقع الحالي تلقائياً
-  navigator.geolocation.getCurrentPosition(pos => {
-    const lat = pos.coords.latitude;
-    const lng = pos.coords.longitude;
-    
-    // محاولة الحصول على اسم العنوان
-    fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`)
-      .then(r => r.json())
-      .then(data => {
-        const addr = data.address?.suburb || data.address?.city || data.address?.town || 'موقع محدد';
-        
-        // ملء بيانات النافذة
-        document.getElementById('modalAddress').textContent = addr;
-        document.getElementById('modalGPS').textContent = `${lat.toFixed(6)}, ${lng.toFixed(6)}`;
-        document.getElementById('containerCount').value = '1';
-        
-        // إظهار النافذة
-        document.getElementById('containerModal').classList.add('active');
-      })
-      .catch(() => {
-        document.getElementById('modalAddress').textContent = 'موقع محدد';
-        document.getElementById('modalGPS').textContent = `${lat.toFixed(6)}, ${lng.toFixed(6)}`;
-        document.getElementById('containerCount').value = '1';
-        document.getElementById('containerModal').classList.add('active');
-      });
-  }, err => {
-    showToast('⚠️ فشل في تحديد الموقع', 'error');
-  }, {enableHighAccuracy: true, timeout: 10000});
-}
-
-// ===== إغلاق نافذة الحاويات =====
-function closeContainerModal() {
-  document.getElementById('containerModal').classList.remove('active');
-}
-
-// ===== تأكيد الحاويات =====
-function confirmContainers() {
-  const count = parseInt(document.getElementById('containerCount').value);
-  
-  if(!count || count < 1) {
-    showToast('⚠️ أدخل عدد صحيح من الحاويات', 'error');
-    return;
-  }
-  
-  // إضافة الحاويات المحددة
-  for(let i = 0; i < count; i++) {
-    const bin = {
-      id: Date.now() + i,
-      lat: parseFloat(document.getElementById('modalGPS').textContent.split(',')[0]),
-      lng: parseFloat(document.getElementById('modalGPS').textContent.split(',')[1]),
-      timestamp: new Date().toISOString(),
-      driver: currentDriver,
-      sector: currentDriverSector,
-      address: document.getElementById('modalAddress').textContent
-    };
-    
-    truckTrackingData.collectedBins.push(bin);
-  }
-  
-  saveToCloud('truckTracking', truckTrackingData);
-  showToast(`✅ تم تسجيل ${count} حاوية بنجاح`, 'success');
-  updateTruckTrackingUI();
-  closeContainerModal();
-  
-  if(navigator.vibrate) navigator.vibrate([200, 100, 200]);
-}
-
 function stopTruckTracking() {
   if(window.trackingInterval) clearInterval(window.trackingInterval);
   truckTrackingData.active = false;
@@ -5253,34 +5177,100 @@ window.addEventListener('DOMContentLoaded', function() {
     if(savedPoints) userPoints = parseInt(savedPoints);
   } catch(e) {}
 });
+
+// ===== تحديد الحاويات (الميزة الجديدة) =====
+function selectContainers() {
+  if(!truckTrackingData.active) {
+    showToast('⚠️ التتبع غير نشط', 'error');
+    return;
+  }
+  
+  navigator.geolocation.getCurrentPosition(pos => {
+    const lat = pos.coords.latitude;
+    const lng = pos.coords.longitude;
+    
+    fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`)
+      .then(r => r.json())
+      .then(data => {
+        const addr = data.address?.suburb || data.address?.city || data.address?.town || 'موقع محدد';
+        document.getElementById('modalAddress').textContent = addr;
+        document.getElementById('modalGPS').textContent = `${lat.toFixed(6)}, ${lng.toFixed(6)}`;
+        document.getElementById('containerCount').value = '1';
+        document.getElementById('containerModal').style.display = 'flex';
+      })
+      .catch(() => {
+        document.getElementById('modalAddress').textContent = 'موقع محدد';
+        document.getElementById('modalGPS').textContent = `${lat.toFixed(6)}, ${lng.toFixed(6)}`;
+        document.getElementById('containerCount').value = '1';
+        document.getElementById('containerModal').style.display = 'flex';
+      });
+  }, err => {
+    showToast('⚠️ فشل في تحديد الموقع', 'error');
+  }, {enableHighAccuracy: true, timeout: 10000});
+}
+
+function closeContainerModal() {
+  document.getElementById('containerModal').style.display = 'none';
+}
+
+function confirmContainers() {
+  const count = parseInt(document.getElementById('containerCount').value);
+  
+  if(!count || count < 1) {
+    showToast('⚠️ أدخل عدد صحيح من الحاويات', 'error');
+    return;
+  }
+  
+  for(let i = 0; i < count; i++) {
+    const bin = {
+      id: Date.now() + i,
+      lat: parseFloat(document.getElementById('modalGPS').textContent.split(',')[0]),
+      lng: parseFloat(document.getElementById('modalGPS').textContent.split(',')[1]),
+      timestamp: new Date().toISOString(),
+      driver: currentDriver,
+      sector: currentDriverSector,
+      address: document.getElementById('modalAddress').textContent
+    };
+    
+    truckTrackingData.collectedBins.push(bin);
+  }
+  
+  saveToCloud('truckTracking', truckTrackingData);
+  showToast(`✅ تم تسجيل ${count} حاوية بنجاح`, 'success');
+  updateTruckTrackingUI();
+  closeContainerModal();
+  
+  if(navigator.vibrate) navigator.vibrate([200, 100, 200]);
+}
+
 </script>
 
 <!-- نافذة تحديد الحاويات -->
 <div id="containerModal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);z-index:9000;align-items:center;justify-content:center;padding:20px">
-  <div style="background:var(--bg-card);border-radius:var(--radius-lg);padding:30px;max-width:500px;width:100%;box-shadow:0 20px 60px rgba(0,0,0,0.3);animation:slideUp 0.3s ease">
+  <div style="background:var(--bg-card);border-radius:var(--radius-lg);padding:30px;max-width:500px;width:100%;box-shadow:0 20px 60px rgba(0,0,0,0.3)">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;border-bottom:2px solid var(--border);padding-bottom:15px">
       <h2 style="color:var(--primary);font-size:1.5rem;margin:0">تحديد الحاويات</h2>
-      <button style="background:none;border:none;font-size:1.5rem;cursor:pointer;color:var(--text-light);transition:var(--transition)" onclick="closeContainerModal()">×</button>
+      <button style="background:none;border:none;font-size:1.5rem;cursor:pointer;color:var(--text-light)" onclick="closeContainerModal()">×</button>
     </div>
     
     <div style="margin-bottom:20px">
       <p style="margin-bottom:10px;font-weight:600">تم تحديد الموقع بنجاح:</p>
-      <div style="background:linear-gradient(135deg, #e3f2fd, #f3e5f5);border-left:4px solid var(--primary);padding:15px;border-radius:var(--radius-sm);margin-bottom:10px">
+      <div style="background:linear-gradient(135deg, #e3f2fd, #f3e5f5);border-left:4px solid var(--primary);padding:15px;border-radius:10px;margin-bottom:10px">
         <b>العنوان:</b> <span id="modalAddress">-</span>
       </div>
-      <div style="background:linear-gradient(135deg, #e3f2fd, #f3e5f5);border-left:4px solid var(--primary);padding:15px;border-radius:var(--radius-sm)">
+      <div style="background:linear-gradient(135deg, #e3f2fd, #f3e5f5);border-left:4px solid var(--primary);padding:15px;border-radius:10px">
         <b>الإحداثيات:</b> <span id="modalGPS">-</span>
       </div>
     </div>
     
     <div style="margin-bottom:20px">
       <label style="display:block;margin-bottom:10px;font-weight:600">عدد الحاويات:</label>
-      <input type="number" id="containerCount" class="input" min="1" max="100" value="1" placeholder="أدخل عدد الحاويات" style="width:100%;padding:12px 15px;border:2px solid var(--border);border-radius:var(--radius-sm);font-size:0.95rem;font-family:'Cairo',sans-serif;background:var(--bg-card);color:var(--text);transition:var(--transition)">
+      <input type="number" id="containerCount" class="input" min="1" max="100" value="1" placeholder="أدخل عدد الحاويات">
     </div>
     
     <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:20px;border-top:1px solid var(--border);padding-top:15px">
-      <button class="btn" style="background:#757575;color:white;padding:12px 20px;border:none;border-radius:var(--radius);cursor:pointer;font-size:0.95rem;font-weight:600;font-family:'Cairo',sans-serif;transition:var(--transition)" onclick="closeContainerModal()">إلغاء</button>
-      <button class="btn" style="background:var(--success);color:white;padding:12px 20px;border:none;border-radius:var(--radius);cursor:pointer;font-size:0.95rem;font-weight:600;font-family:'Cairo',sans-serif;transition:var(--transition)" onclick="confirmContainers()">تأكيد</button>
+      <button class="btn" style="background:#757575;color:white;padding:12px 20px;border:none;border-radius:var(--radius);cursor:pointer" onclick="closeContainerModal()">إلغاء</button>
+      <button class="btn" style="background:var(--success);color:white;padding:12px 20px;border:none;border-radius:var(--radius);cursor:pointer" onclick="confirmContainers()">تأكيد</button>
     </div>
   </div>
 </div>
