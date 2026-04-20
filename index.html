@@ -2051,8 +2051,9 @@ select.input {
         <i class="fas fa-sign-in-alt"></i> <span data-i18n="login">دخول</span>
       </button>
     </div>
-    <div id="adminPanel" class="hidden">      <div class="success-card" style="margin-bottom:12px">
-        <i class="fas fa-shield-alt"></i> وضع المشرف مفعل
+    <div id="adminPanel" class="hidden">
+      <div class="success-card" style="margin-bottom:12px">
+        <i class="fas fa-shield-alt"></i> <span id="adminCurrentUser">وضع المشرف مفعل</span>
       </div>
       <button class="btn btn-primary ripple" onclick="safeShowReports()">
         <i class="fas fa-list-alt"></i> <span data-i18n="showReports">عرض البلاغات</span>
@@ -3364,8 +3365,8 @@ function loginAdmin() {
   if(adminName === 'فتحي' && adminCode === '280876') {
     document.getElementById('adminLogin').classList.add('hidden');
     document.getElementById('adminPanel').classList.remove('hidden');
-    document.getElementById('adminCurrentUser').textContent = 'فتحي (المشرف الرئيسي)';
     currentAdminName = 'فتحي';
+    document.getElementById('adminCurrentUser').textContent = 'المشرف الرئيسي: فتحي';
     updateStats();
     showToast('✓ دخول ناجح - أنت المشرف الرئيسي', 'success');
   }
@@ -3375,8 +3376,8 @@ function loginAdmin() {
     if(isApprovedAdmin) {
       document.getElementById('adminLogin').classList.add('hidden');
       document.getElementById('adminPanel').classList.remove('hidden');
-      document.getElementById('adminCurrentUser').textContent = adminName + ' (مشرف)';
       currentAdminName = adminName;
+      document.getElementById('adminCurrentUser').textContent = 'المشرف: ' + adminName;
       updateStats();
       showToast('✓ دخول ناجح - مرحباً ' + adminName, 'success');
     } else {
@@ -4993,9 +4994,9 @@ function loadStaffList() {
 }
 
 function addStaff() {
-  // فقط فتحي يمكنه إضافة موظفين
+  // التحقق من أن فتحي هو من يقوم بالإضافة
   if(currentAdminName !== 'فتحي') {
-    showToast('⚠️ فقط فتحي يمكنه إضافة موظفين جدد', 'error');
+    showToast('⚠️ عذراً، المشرف فتحي هو الوحيد المخول بإضافة الموظفين', 'error');
     return;
   }
   
@@ -5005,20 +5006,36 @@ function addStaff() {
   
   if(!n || !r) {
     showToast('⚠️ الاسم والمنصب مطلوبان', 'error');
-    return;  }
+    return;
+  }
   
   let s = [];
-  try { s = JSON.parse(localStorage.getItem('medea_staff') || '[]'); } catch(e) {}
+  try { 
+    const stored = localStorage.getItem('medea_staff');
+    s = stored ? JSON.parse(stored) : []; 
+  } catch(e) { s = []; }
   
-  s.push({name: n, role: r, phone: p, addedBy: 'فتحي', addedDate: new Date().toLocaleDateString('ar-DZ')});
-  try { localStorage.setItem('medea_staff', JSON.stringify(s)); } catch(e) {}
+  s.push({
+    name: n, 
+    role: r, 
+    phone: p, 
+    addedBy: 'فتحي', 
+    addedDate: new Date().toLocaleDateString('ar-DZ')
+  });
   
-  document.getElementById('newStaffName').value = '';
-  document.getElementById('newStaffRole').value = '';
-  document.getElementById('newStaffPhone').value = '';
-  
-  loadStaffList();
-  showToast('✅ تم الإضافة بواسطة فتحي', 'success');
+  try { 
+    localStorage.setItem('medea_staff', JSON.stringify(s)); 
+    
+    // تصفير الخانات بعد الحفظ الناجح
+    document.getElementById('newStaffName').value = '';
+    document.getElementById('newStaffRole').value = '';
+    document.getElementById('newStaffPhone').value = '';
+    
+    loadStaffList();
+    showToast('✅ تم إضافة ' + n + ' بنجاح', 'success');
+  } catch(e) {
+    showToast('⚠️ فشل حفظ البيانات في المتصفح', 'error');
+  }
 }
 
 function editStaff(i) {
@@ -5074,7 +5091,7 @@ function backToAdmin() {
 }
 
 // ===== متغير عام لتتبع المشرف الحالي =====
-let currentAdminName = '';
+var currentAdminName = '';
 
 // ===== بيانات تجريبية =====
 function loadDemoData() {
