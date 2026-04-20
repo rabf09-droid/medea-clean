@@ -2046,7 +2046,7 @@ select.input {
     <div id="adminLogin" class="card">
       <h3><i class="fas fa-lock"></i> <span data-i18n="adminLogin">الدخول للمشرفين</span></h3>
       <input type="text" id="adminName" class="input" placeholder="👤 الاسم" data-i18n-ph="nameFullPh">
-      <input type="password" id="adminCode" class="input" placeholder="🔑 الرمز (1234)" data-i18n-ph="codePh">
+      <input type="password" id="adminCode" class="input" placeholder="🔑 الرمز (280876)" data-i18n-ph="codePh">
       <button class="btn btn-dark ripple" onclick="loginAdmin()">
         <i class="fas fa-sign-in-alt"></i> <span data-i18n="login">دخول</span>
       </button>
@@ -2679,7 +2679,7 @@ const UI_TEXTS = {
         recordBin:'تسجيل موقع الحاوية', recordTip:'اضغط عند كل موقع حاوية ترفعها', recDet:'تفاصيل الموقع المسجل',
         addr:'العنوان', coords:'الإحداثيات', binCountLabel:'عدد الحاويات في هذا الموقع:', confirm:'تثبيت وحفظ', cancel:'إلغاء',
         newTonnage:'تسجيل نفايات جديدة', tasks:'مهامك', endMission:'إنهاء المهمة', logout:'خروج',
-        controlPanel:'لوحة التحكم', adminLogin:'الدخول للمشرفين', codePh:'🔑 الرمز (1234)', adminMode:'وضع المشرف مفعل',
+        controlPanel:'لوحة التحكم', adminLogin:'الدخول للمشرفين', codePh:'🔑 الرمز (280876)', adminMode:'وضع المشرف مفعل',
         showReports:'عرض البلاغات', trackRoute:'تتبع مسار الشاحنات', staffMng:'إدارة الموظفين', tonnageLog:'سجل الكميات',
         scheduleMng:'إدارة الجدول', exportExcel:'تصدير Excel', printPDFBtn:'طباعة PDF', clearData:'مسح البيانات',
         statsPanel:'لوحة الإحصائيات', distStatus:'توزيع حالات البلاغات',
@@ -2739,7 +2739,7 @@ const UI_TEXTS = {
         recordBin:'Enregistrer position bac', recordTip:'Appuyez à chaque bac collecté', recDet:'Détails du site enregistré',
         addr:'Adresse', coords:'Coordonnées', binCountLabel:'Nombre de bacs sur ce site:', confirm:'Valider et enregistrer', cancel:'Annuler',
         newTonnage:'Enregistrer nouveau tonnage', tasks:'Vos tâches', endMission:'Terminer la mission', logout:'Déconnexion',
-        controlPanel:'Tableau de bord admin', adminLogin:'Connexion administrateurs', codePh:'🔑 Code (1234)', adminMode:'Mode admin activé',
+        controlPanel:'Tableau de bord admin', adminLogin:'Connexion administrateurs', codePh:'🔑 Code (280876)', adminMode:'Mode admin activé',
         showReports:'Voir signalements', trackRoute:'Suivi itinéraire camions', staffMng:'Gestion personnel', tonnageLog:'Journal tonnages',
         scheduleMng:'Gestion calendrier', exportExcel:'Exporter Excel', printPDFBtn:'Imprimer PDF', clearData:'Effacer données',
         statsPanel:'Tableau de bord stats', distStatus:'Répartition des statuts',
@@ -2799,7 +2799,7 @@ const UI_TEXTS = {
         recordBin:'Record Bin Location', recordTip:'Press at each collected bin site', recDet:'Recorded Site Details',
         addr:'Address', coords:'Coordinates', binCountLabel:'Number of bins at this site:', confirm:'Confirm & Save', cancel:'Cancel',
         newTonnage:'Record New Tonnage', tasks:'Your Tasks', endMission:'End Mission', logout:'Logout',
-        controlPanel:'Admin Dashboard', adminLogin:'Admin Login', codePh:'🔑 Code (1234)', adminMode:'Admin mode active',
+        controlPanel:'Admin Dashboard', adminLogin:'Admin Login', codePh:'🔑 Code (280876)', adminMode:'Admin mode active',
         showReports:'View Reports', trackRoute:'Track Truck Routes', staffMng:'Staff Management', tonnageLog:'Tonnage Records',
         scheduleMng:'Schedule Management', exportExcel:'Export Excel', printPDFBtn:'Print PDF', clearData:'Clear Data',
         statsPanel:'Statistics Dashboard', distStatus:'Report Status Distribution',
@@ -3355,13 +3355,35 @@ function sendReport() {
 
 // ===== الإدارة =====
 function loginAdmin() {
-  if(document.getElementById('adminCode').value === '1234') {
+  // فتحي هو المشرف الرئيسي الوحيد الذي يمكنه تغيير الرمز
+  const adminName = document.getElementById('adminName').value.trim();
+  const adminCode = document.getElementById('adminCode').value;
+  const staff = JSON.parse(localStorage.getItem('medea_staff') || '[]');
+  
+  // إذا أدخل فتحي الرمز الصحيح
+  if(adminName === 'فتحي' && adminCode === '280876') {
     document.getElementById('adminLogin').classList.add('hidden');
     document.getElementById('adminPanel').classList.remove('hidden');
+    document.getElementById('adminCurrentUser').textContent = 'فتحي (المشرف الرئيسي)';
+    currentAdminName = 'فتحي';
     updateStats();
-    showToast('✓ دخول ناجح', 'success');
+    showToast('✓ دخول ناجح - أنت المشرف الرئيسي', 'success');
+  }
+  // إذا أدخل مشرف مضاف من قبل فتحي باسمه فقط (بدون رمز)
+  else if(adminName && !adminCode) {
+    const isApprovedAdmin = staff.some(s => s.name === adminName && s.role.includes('مشرف'));
+    if(isApprovedAdmin) {
+      document.getElementById('adminLogin').classList.add('hidden');
+      document.getElementById('adminPanel').classList.remove('hidden');
+      document.getElementById('adminCurrentUser').textContent = adminName + ' (مشرف)';
+      currentAdminName = adminName;
+      updateStats();
+      showToast('✓ دخول ناجح - مرحباً ' + adminName, 'success');
+    } else {
+      showToast('✗ لا توجد صلاحيات - يجب أن يضيفك فتحي أولاً', 'error');
+    }
   } else {
-    showToast('✗ رمز خاطئ', 'error');
+    showToast('✗ بيانات دخول خاطئة', 'error');
   }
 }
 
@@ -3369,7 +3391,9 @@ function logoutAdmin() {
   document.getElementById('adminLogin').classList.remove('hidden');
   document.getElementById('adminPanel').classList.add('hidden');
   document.getElementById('adminName').value = '';
-  document.getElementById('adminCode').value = '';  showToast('✓ خروج', 'info');
+  document.getElementById('adminCode').value = '';
+  currentAdminName = '';
+  showToast('✓ خروج', 'info');
 }
 
 function safeShowReports() {
@@ -3408,6 +3432,16 @@ function loginDriver() {
     showToast('⚠️ أدخل الاسم', 'error');
     return;
   }
+  
+  // التحقق من أن السائق مضاف من قبل فتحي
+  const staff = JSON.parse(localStorage.getItem('medea_staff') || '[]');
+  const isApprovedDriver = staff.some(s => s.name === n && s.role.includes('سائق'));
+  
+  if(!isApprovedDriver) {
+    showToast('⚠️ أنت لست مسجلاً كسائق - يجب أن يضيفك فتحي أولاً', 'error');
+    return;
+  }
+  
   currentDriver = n;
   currentDriverSector = 'غير محدد';
   document.getElementById('driverLogin').classList.add('hidden');
@@ -4959,6 +4993,12 @@ function loadStaffList() {
 }
 
 function addStaff() {
+  // فقط فتحي يمكنه إضافة موظفين
+  if(currentAdminName !== 'فتحي') {
+    showToast('⚠️ فقط فتحي يمكنه إضافة موظفين جدد', 'error');
+    return;
+  }
+  
   const n = document.getElementById('newStaffName').value.trim();
   const r = document.getElementById('newStaffRole').value.trim();
   const p = document.getElementById('newStaffPhone').value.trim();
@@ -4970,7 +5010,7 @@ function addStaff() {
   let s = [];
   try { s = JSON.parse(localStorage.getItem('medea_staff') || '[]'); } catch(e) {}
   
-  s.push({name: n, role: r, phone: p});
+  s.push({name: n, role: r, phone: p, addedBy: 'فتحي', addedDate: new Date().toLocaleDateString('ar-DZ')});
   try { localStorage.setItem('medea_staff', JSON.stringify(s)); } catch(e) {}
   
   document.getElementById('newStaffName').value = '';
@@ -4978,10 +5018,16 @@ function addStaff() {
   document.getElementById('newStaffPhone').value = '';
   
   loadStaffList();
-  showToast('✅ تم الإضافة', 'success');
+  showToast('✅ تم الإضافة بواسطة فتحي', 'success');
 }
 
 function editStaff(i) {
+  // فقط فتحي يمكنه تعديل الموظفين
+  if(currentAdminName !== 'فتحي') {
+    showToast('⚠️ فقط فتحي يمكنه تعديل الموظفين', 'error');
+    return;
+  }
+  
   let s = [];
   try { s = JSON.parse(localStorage.getItem('medea_staff') || '[]'); } catch(e) {}
   
@@ -4994,14 +5040,20 @@ function editStaff(i) {
   
   const np = prompt('الهاتف الجديد:', st.phone || '');
   
-  s[i] = {name: nn, role: nr, phone: np};
+  s[i] = {name: nn, role: nr, phone: np, addedBy: st.addedBy || 'فتحي', addedDate: st.addedDate || new Date().toLocaleDateString('ar-DZ')};
   try { localStorage.setItem('medea_staff', JSON.stringify(s)); } catch(e) {}
   
   loadStaffList();
-  showToast('✅ تم التعديل', 'success');
+  showToast('✅ تم التعديل بواسطة فتحي', 'success');
 }
 
 function deleteStaff(i) {
+  // فقط فتحي يمكنه حذف الموظفين
+  if(currentAdminName !== 'فتحي') {
+    showToast('⚠️ فقط فتحي يمكنه حذف الموظفين', 'error');
+    return;
+  }
+  
   if(!confirm('حذف الموظف؟')) return;
   
   let s = [];
@@ -5010,6 +5062,7 @@ function deleteStaff(i) {
   try { localStorage.setItem('medea_staff', JSON.stringify(s)); } catch(e) {}
   
   loadStaffList();
+  showToast('✅ تم الحذف بواسطة فتحي', 'success');
 }
 
 function manageStaffPage() {
@@ -5019,6 +5072,9 @@ function manageStaffPage() {
 function backToAdmin() {
   showPage('admin');
 }
+
+// ===== متغير عام لتتبع المشرف الحالي =====
+let currentAdminName = '';
 
 // ===== بيانات تجريبية =====
 function loadDemoData() {
