@@ -3095,17 +3095,88 @@ function updateLanguageUI() {
   
   const t = translations[currentLang];
   
-  // ترجمة جميع النصوص في الصفحة
+  // ترجمة شاملة لجميع النصوص
+  function translateText(text) {
+    if(!text) return text;
+    
+    const arTranslations = {
+      'إجمالي البلاغات': t.totalReports || 'إجمالي البلاغات',
+      'تم الإنجاز': t.completed || 'تم الإنجاز',
+      'تم الفرز': t.pending || 'تم الفرز',
+      'إرسال تبليغ': t.sendReport || 'إرسال تبليغ',
+      'بيانات تجريبية': t.demoData || 'بيانات تجريبية',
+      'طباعة PDF': t.printPDF || 'طباعة PDF',
+      'لوحة الإحصائيات': t.dashboard || 'لوحة الإحصائيات',
+      'مساحة السائقين': t.driverSpace || 'مساحة السائقين',
+      'الخدمات': t.services || 'الخدمات',
+      'جدول الجمع': t.schedule || 'جدول الجمع',
+      'توعية': t.awareness || 'توعية',
+      'طلباتي': t.myRequests || 'طلباتي',
+      'حاسبة التدوير': t.recyclingCalc || 'حاسبة التدوير',
+      'الاقتصاد الدائري': t.circularEconomy || 'الاقتصاد الدائري',
+      'مركز الفرز': t.sortingCenter || 'مركز الفرز',
+      'سوق التدوير': t.recyclingMarket || 'سوق التدوير',
+      'التتبع المباشر': t.tracking || 'التتبع المباشر',
+      'تتبع مسار الشاحنات': t.trackTrucks || 'تتبع مسار الشاحنات',
+      'الإدارة': t.admin || 'الإدارة',
+      'بلاغ جديد': t.newReport || 'بلاغ جديد',
+      'التقاط الصورة': t.takePhoto || 'التقاط الصورة',
+      'تحديد الموقع GPS': 'تحديد الموقع GPS',
+      'إدخال يدوي': 'إدخال يدوي',
+      'اسم الحي أو الشارع': t.address || 'اسم الحي أو الشارع',
+      'إحداثيات GPS': t.gps || 'إحداثيات GPS',
+      'إرسال البلاغ الآن': t.sendNow || 'إرسال البلاغ الآن',
+      'رجوع': t.back || 'رجوع',
+      'دخول السائق': 'دخول السائق',
+      'أدخل اسمك': 'أدخل اسمك',
+      'دخول': t.login || 'دخول',
+      'مرحباً - مهامك جاهزة': t.welcome || 'مرحباً - مهامك جاهزة',
+      'بدء تتبع المسار': t.startTracking || 'بدء تتبع المسار',
+      'التتبع نشط - سجل الحاويات': t.trackingOn || 'التتبع نشط - سجل الحاويات',
+      'تسجيل موقع الحاوية': t.recordBin || 'تسجيل موقع الحاوية',
+      'اضغط عند كل حاوية ترفعها': 'اضغط عند كل حاوية ترفعها',
+      'تسجيل نفايات جديدة': t.tonnage || 'تسجيل نفايات جديدة',
+      'مهامك': 'مهامك',
+      'إنهاء المهمة': 'إنهاء المهمة',
+      'خروج': t.logout || 'خروج',
+      'تحديد الحاويات': 'تحديد الحاويات'
+    };
+    
+    return arTranslations[text] || text;
+  }
+  
+  // ترجمة جميع العناصر
   document.querySelectorAll('*').forEach(el => {
     // ترجمة placeholder
     if(el.placeholder) {
-      const placeholders = {
-        'ar': { '👤 أدخل اسمك': 'أدخل اسمك', '📍 اسم الحي أو الشارع': t.address, '🌍 إحداثيات GPS': t.gps },
-        'fr': { '👤 أدخل اسمك': 'Entrez votre nom', '📍 اسم الحي أو الشارع': 'Quartier ou rue', '🌍 إحداثيات GPS': 'Coordonnées GPS' },
-        'en': { '👤 أدخل اسمك': 'Enter your name', '📍 اسم الحي أو الشارع': 'Neighborhood or street', '🌍 إحداثيات GPS': 'GPS Coordinates' }
+      const placeholderMap = {
+        '👤 أدخل اسمك': 'أدخل اسمك',
+        '📍 اسم الحي أو الشارع': t.address || 'اسم الحي أو الشارع',
+        '🌍 إحداثيات GPS': t.gps || 'إحداثيات GPS',
+        '📝 ملاحظات': 'ملاحظات'
       };
-      if(placeholders[currentLang] && placeholders[currentLang][el.placeholder]) {
-        el.placeholder = placeholders[currentLang][el.placeholder];
+      if(placeholderMap[el.placeholder]) {
+        el.placeholder = placeholderMap[el.placeholder];
+      }
+    }
+    
+    // ترجمة النصوص المباشرة للعناصر التي تحتوي على نص واحد فقط
+    if(el.childNodes.length === 1 && el.childNodes[0].nodeType === 3) {
+      const originalText = el.textContent.trim();
+      if(originalText) {
+        const translated = translateText(originalText);
+        if(translated !== originalText) {
+          el.textContent = translated;
+        }
+      }
+    }
+    
+    // ترجمة الخيارات في select
+    if(el.tagName === 'OPTION') {
+      const originalText = el.textContent.trim();
+      const translated = translateText(originalText);
+      if(translated !== originalText) {
+        el.textContent = translated;
       }
     }
   });
@@ -3115,7 +3186,7 @@ function updateLanguageUI() {
   if(statLabels.length >= 3) {
     statLabels[0].textContent = t.totalReports;
     statLabels[1].textContent = t.completed;
-    statLabels[2].textContent = 'تم الفرز';
+    statLabels[2].textContent = t.pending;
   }
   
   // تحديث الاتجاه
@@ -5189,21 +5260,37 @@ function selectContainers() {
     const lat = pos.coords.latitude;
     const lng = pos.coords.longitude;
     
-    fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`)
-      .then(r => r.json())
-      .then(data => {
-        const addr = data.address?.suburb || data.address?.city || data.address?.town || 'موقع محدد';
-        document.getElementById('modalAddress').textContent = addr;
-        document.getElementById('modalGPS').textContent = `${lat.toFixed(6)}, ${lng.toFixed(6)}`;
-        document.getElementById('containerCount').value = '1';
-        document.getElementById('containerModal').style.display = 'flex';
-      })
-      .catch(() => {
-        document.getElementById('modalAddress').textContent = 'موقع محدد';
-        document.getElementById('modalGPS').textContent = `${lat.toFixed(6)}, ${lng.toFixed(6)}`;
-        document.getElementById('containerCount').value = '1';
-        document.getElementById('containerModal').style.display = 'flex';
-      });
+    // محاولة الحصول على العنوان من Google Maps
+    const geocoder = new google.maps.Geocoder();
+    const latlng = {lat: lat, lng: lng};
+    
+    geocoder.geocode({location: latlng}, (results, status) => {
+      let addr = 'موقع محدد';
+      
+      if(status === 'OK' && results[0]) {
+        // محاولة الحصول على اسم الحي أو الشارع
+        const addressComponents = results[0].address_components;
+        
+        for(let component of addressComponents) {
+          if(component.types.includes('neighborhood')) {
+            addr = component.long_name;
+            break;
+          } else if(component.types.includes('administrative_area_level_2')) {
+            addr = component.long_name;
+          } else if(component.types.includes('route')) {
+            addr = component.long_name;
+          }
+        }
+      }
+      
+      // ملء بيانات النافذة
+      document.getElementById('modalAddress').textContent = addr;
+      document.getElementById('modalGPS').textContent = `${lat.toFixed(6)}, ${lng.toFixed(6)}`;
+      document.getElementById('containerCount').value = '1';
+      
+      // إظهار النافذة
+      document.getElementById('containerModal').style.display = 'flex';
+    });
   }, err => {
     showToast('⚠️ فشل في تحديد الموقع', 'error');
   }, {enableHighAccuracy: true, timeout: 10000});
