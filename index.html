@@ -3581,7 +3581,10 @@ function loadFromCloud(path, localKey, callback) {
 }
 
 function updateCloudItem(path, itemId, updates) {
-  try { db.ref(path + '/' + itemId).set(updates).catch(()=>{}); } catch(e) {}
+  try {
+    // استخدام update() بدل set() لدمج الحقول وليس استبدال البلاغ كاملاً
+    db.ref(path + '/' + itemId).update(updates).catch(()=>{});
+  } catch(e) {}
 }
 
 function addToCloud(path, item) {
@@ -3631,17 +3634,26 @@ function saveReport(r) {
 }
 
 function updateReport(id, upd) {
-  updateCloudItem('reports', id, upd);
-  const index = allReports.findIndex(x => x.id == id);
-  if(index !== -1) {
-    allReports[index] = normalizeReport({...allReports[index], ...upd});
-    updateStats();
-    if(document.getElementById('reportsPage').classList.contains('active')) {
-      showReportsPage();
+  try {
+    const index = allReports.findIndex(x => x.id == id);
+    if(index !== -1) {
+      // دمج البيانات محلياً أولاً
+      const merged = normalizeReport({...allReports[index], ...upd});
+      allReports[index] = merged;
+
+      // حفظ البلاغ كاملاً في Firebase (ليس فقط الحقول المحدّثة)
+      // هذا يمنع تصفير البيانات القديمة
+      try { db.ref('reports/' + id).set(merged).catch(()=>{}); } catch(e) {}
+
+      updateStats();
+      if(document.getElementById('reportsPage') &&
+         document.getElementById('reportsPage').classList.contains('active')) {
+        showReportsPage();
+      }
+      // تحديث مهام السائق فوراً
+      if(currentDriver) renderDriverTasks();
     }
-    // تحديث مهام السائق فوراً لو كان مسجل دخول
-    if(currentDriver) renderDriverTasks();
-  }
+  } catch(e) {}
 }
 
 function saveWasteTracking(w) {
