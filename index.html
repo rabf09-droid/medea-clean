@@ -2213,6 +2213,13 @@ select.input {
       <input type="text" class="input" id="sectorDays" placeholder="📅 الأيام (مثال: أحد-ثلاثاء-خميس)" data-i18n-ph="daysPh">
       <input type="text" class="input" id="sectorTime" placeholder="🕐 وقت المرور (مثال: 07:00 - 09:00)" data-i18n-ph="timePh">
       <input type="text" class="input" id="sectorCatchup" placeholder="⏳ أوقات الاستدراك (اختياري)" data-i18n-ph="catchupPh">
+      <select class="in input" id="sectorTruckType">
+        <option value="">🚛 نوع الشاحنة (اختر)</option>
+        <option value="شاحنة ضاغطة">🗜️ شاحنة ضاغطة</option>
+        <option value="شاحنة بقلاب">🪣 شاحنة بقلاب</option>
+        <option value="شاحنة كبيرة مع رافعة">🏗️ شاحنة كبيرة مع رافعة</option>
+        <option value="شاحنة رفع حاويات حديدية">📦 شاحنة رفع حاويات حديدية</option>
+      </select>
       <input type="text" class="input" id="sectorDriver" placeholder="👤 اسم السائق" data-i18n-ph="driverPh2">
       <input type="tel" class="input" id="sectorPhone" placeholder="📞 هاتف السائق" data-i18n-ph="phonePh2">
       <button class="btn btn-primary ripple" onclick="addScheduleSector()">
@@ -3891,6 +3898,7 @@ function addScheduleSector() {
     const catchup = document.getElementById('sectorCatchup').value.trim();
     const driver = document.getElementById('sectorDriver').value.trim();
     const phone = document.getElementById('sectorPhone').value.trim();
+    const truckType = document.getElementById('sectorTruckType').value;
     
     if(!name || !days || !time) {
       showToast('⚠️ أكمل الحقول الأساسية', 'error');
@@ -3906,7 +3914,8 @@ function addScheduleSector() {
       time: time,
       catchup: catchup,
       driver: driver,
-      phone: phone
+      phone: phone,
+      truckType: truckType
     });
     
     localStorage.setItem('medea_schedule', JSON.stringify(sectors));
@@ -3919,6 +3928,7 @@ function addScheduleSector() {
     document.getElementById('sectorCatchup').value = '';
     document.getElementById('sectorDriver').value = '';
     document.getElementById('sectorPhone').value = '';
+    document.getElementById('sectorTruckType').value = '';
     
     loadScheduleSectors();
   } catch(e) {
@@ -3944,7 +3954,8 @@ function loadScheduleSectors() {
         <div class="tonnage-info"><b>📅 الأيام:</b> ${s.days}</div>
         <div class="tonnage-info"><b>🕐 وقت المرور:</b> ${s.time}</div>
         <div class="tonnage-info"><b>⏳ الاستدراك:</b> ${s.catchup || '-'}</div>
-        <div class="tonnage-info"><b>👤 السائق:</b> ${s.driver || '-'} ${s.phone ? `<a href="tel:${s.phone}" class="phone-link">📞 ${s.phone}</a>` : ''}</div>        <button class="btn btn-danger ripple" style="margin-top:10px;padding:8px" onclick="deleteScheduleSector(${s.id})">
+        <div class="tonnage-info"><b>👤 السائق:</b> ${s.driver || '-'} ${s.phone ? `<a href="tel:${s.phone}" class="phone-link">📞 ${s.phone}</a>` : ''}</div>
+        ${s.truckType ? `<div class="tonnage-info"><b>🚛 نوع الشاحنة:</b> ${s.truckType}</div>` : ''}        <button class="btn btn-danger ripple" style="margin-top:10px;padding:8px" onclick="deleteScheduleSector(${s.id})">
           <i class="fas fa-trash"></i> حذف
         </button>
       </div>
