@@ -1947,9 +1947,10 @@ select.input {
       <div id="previewMap"></div>
       <h3 style="color:var(--primary);margin:15px 0 10px 0;font-size:16px">📋 جدول الحاويات</h3>
       <table style="width:100%;border-collapse:collapse;margin-top:12px;font-size:13px">
-        <thead><tr style="background:var(--primary);color:white"><th style="padding:9px">#</th><th style="padding:9px">الوقت</th><th style="padding:9px">خط العرض</th><th style="padding:9px">خط الطول</th></tr></thead>
+        <thead><tr style="background:var(--primary);color:white"><th style="padding:9px">#</th><th style="padding:9px">الوقت</th><th style="padding:9px">العنوان</th><th style="padding:9px">الإحداثيات</th><th style="padding:9px">العدد</th></tr></thead>
         <tbody id="previewBinsTable"></tbody>
       </table>
+      <div id="previewTotalBins" style="margin-top:10px;padding:10px 15px;background:var(--primary);color:white;border-radius:var(--radius-sm);font-weight:700;font-size:15px;text-align:center"></div>
       <div style="margin-top:18px;text-align:center;border-top:2px solid var(--primary);padding-top:10px;color:var(--text-light);font-size:11px">
         <p>إعداد: مصلحة النظافة والوقاية الصحية - بلدية المدية</p>
         <p>تاريخ الطباعة: <span id="previewPrintDate"></span></p>
@@ -2212,13 +2213,6 @@ select.input {
       <input type="text" class="input" id="sectorDays" placeholder="📅 الأيام (مثال: أحد-ثلاثاء-خميس)" data-i18n-ph="daysPh">
       <input type="text" class="input" id="sectorTime" placeholder="🕐 وقت المرور (مثال: 07:00 - 09:00)" data-i18n-ph="timePh">
       <input type="text" class="input" id="sectorCatchup" placeholder="⏳ أوقات الاستدراك (اختياري)" data-i18n-ph="catchupPh">
-      <select class="in input" id="sectorTruckType">
-        <option value="">🚛 نوع الشاحنة (اختر)</option>
-        <option value="شاحنة ضاغطة">🗜️ شاحنة ضاغطة</option>
-        <option value="شاحنة بقلاب">🪣 شاحنة بقلاب</option>
-        <option value="شاحنة كبيرة مع رافعة">🏗️ شاحنة كبيرة مع رافعة</option>
-        <option value="شاحنة رفع حاويات حديدية">📦 شاحنة رفع حاويات حديدية</option>
-      </select>
       <input type="text" class="input" id="sectorDriver" placeholder="👤 اسم السائق" data-i18n-ph="driverPh2">
       <input type="tel" class="input" id="sectorPhone" placeholder="📞 هاتف السائق" data-i18n-ph="phonePh2">
       <button class="btn btn-primary ripple" onclick="addScheduleSector()">
@@ -3897,7 +3891,6 @@ function addScheduleSector() {
     const catchup = document.getElementById('sectorCatchup').value.trim();
     const driver = document.getElementById('sectorDriver').value.trim();
     const phone = document.getElementById('sectorPhone').value.trim();
-    const truckType = document.getElementById('sectorTruckType').value;
     
     if(!name || !days || !time) {
       showToast('⚠️ أكمل الحقول الأساسية', 'error');
@@ -3913,8 +3906,7 @@ function addScheduleSector() {
       time: time,
       catchup: catchup,
       driver: driver,
-      phone: phone,
-      truckType: truckType
+      phone: phone
     });
     
     localStorage.setItem('medea_schedule', JSON.stringify(sectors));
@@ -3927,7 +3919,6 @@ function addScheduleSector() {
     document.getElementById('sectorCatchup').value = '';
     document.getElementById('sectorDriver').value = '';
     document.getElementById('sectorPhone').value = '';
-    document.getElementById('sectorTruckType').value = '';
     
     loadScheduleSectors();
   } catch(e) {
@@ -3953,8 +3944,7 @@ function loadScheduleSectors() {
         <div class="tonnage-info"><b>📅 الأيام:</b> ${s.days}</div>
         <div class="tonnage-info"><b>🕐 وقت المرور:</b> ${s.time}</div>
         <div class="tonnage-info"><b>⏳ الاستدراك:</b> ${s.catchup || '-'}</div>
-        <div class="tonnage-info"><b>👤 السائق:</b> ${s.driver || '-'} ${s.phone ? `<a href="tel:${s.phone}" class="phone-link">📞 ${s.phone}</a>` : ''}</div>
-        ${s.truckType ? `<div class="tonnage-info"><b>🚛 نوع الشاحنة:</b> ${s.truckType}</div>` : ''}        <button class="btn btn-danger ripple" style="margin-top:10px;padding:8px" onclick="deleteScheduleSector(${s.id})">
+        <div class="tonnage-info"><b>👤 السائق:</b> ${s.driver || '-'} ${s.phone ? `<a href="tel:${s.phone}" class="phone-link">📞 ${s.phone}</a>` : ''}</div>        <button class="btn btn-danger ripple" style="margin-top:10px;padding:8px" onclick="deleteScheduleSector(${s.id})">
           <i class="fas fa-trash"></i> حذف
         </button>
       </div>
@@ -4696,10 +4686,14 @@ function exportRouteToPDF() {
     <tr>
       <td style="padding:8px;border:1px solid var(--border);text-align:center">${idx+1}</td>
       <td style="padding:8px;border:1px solid var(--border);text-align:center">${bin.time}</td>
-      <td style="padding:8px;border:1px solid var(--border);text-align:center">${bin.lat.toFixed(6)}</td>
-      <td style="padding:8px;border:1px solid var(--border);text-align:center">${bin.lng.toFixed(6)}</td>
+      <td style="padding:8px;border:1px solid var(--border);text-align:center">${bin.address || '-'}</td>
+      <td style="padding:8px;border:1px solid var(--border);text-align:center">${bin.lat.toFixed(6)}, ${bin.lng.toFixed(6)}</td>
+      <td style="padding:8px;border:1px solid var(--border);text-align:center;font-weight:bold;color:var(--primary)">${bin.count || 1}</td>
     </tr>
   `).join('');
+  
+  const totalBins = currentSectorData.bins.reduce((sum, b) => sum + (parseInt(b.count) || 1), 0);
+  document.getElementById('previewTotalBins').textContent = '🗑️ إجمالي الحاويات المجمعة: ' + totalBins + ' حاوية';
   
   showPage('pdfPreviewPage');
   showToast('✅ تم فتح المعاينة', 'success');
@@ -4748,7 +4742,7 @@ function initPreviewMap() {
 function printPreview() {
   const content = document.getElementById('pdfPreviewContent').innerHTML;
   const win = window.open('', '_blank', 'width=900,height=700');
-  win.document.write(`<html dir="rtl"><head><meta charset="UTF-8"><title>طباعة التقرير</title><style>body{font-family:'Cairo',sans-serif;padding:20px}table{width:100%;border-collapse:collapse}th{background:#1B5E20;color:#fff;padding:10px}td{padding:8px;border:1px solid #ddd}@media print{.no-print{display:none}}</style></head><body>${content}<script>window.print();setTimeout(()=>window.close(),1000);<\/script></body></html>`);
+  win.document.write(`<html dir="rtl"><head><meta charset="UTF-8"><title>طباعة التقرير</title><style>body{font-family:'Cairo',sans-serif;padding:20px}table{width:100%;border-collapse:collapse}th{background:#1B5E20;color:#fff;padding:8px;font-size:12px}td{padding:7px;border:1px solid #ddd;font-size:11px}.total-bar{margin-top:10px;padding:10px;background:#1B5E20;color:#fff;border-radius:6px;font-weight:700;text-align:center}@media print{.no-print{display:none}}</style></head><body>${content}<script>window.print();setTimeout(()=>window.close(),1000);<\/script></body></html>`);
   win.document.close();
 }
 
@@ -4787,10 +4781,11 @@ async function downloadPreviewPDF() {
         '<div style="margin-bottom:16px"><h3 style="color:#006233;margin-bottom:8px;font-size:14px;border-right:4px solid #006233;padding-right:8px">🗺️ خريطة المسار</h3><img src="' + mapImgDataUrl + '" style="width:100%;border-radius:8px;border:1px solid #ddd"/></div>' :
         '<div style="background:#fff3cd;padding:10px;border-radius:8px;margin-bottom:14px;text-align:center;color:#856404">⚠️ تعذر تصوير الخريطة</div>') +
       '<h3 style="color:#006233;margin-bottom:8px;font-size:14px;border-right:4px solid #006233;padding-right:8px">📋 جدول مواقع الحاويات</h3>' +
-      '<table style="width:100%;border-collapse:collapse;font-size:12px">' +
-        '<thead><tr style="background:#006233;color:#fff"><th style="padding:8px;text-align:center">#</th><th style="padding:8px;text-align:center">الوقت</th><th style="padding:8px;text-align:center">خط العرض</th><th style="padding:8px;text-align:center">خط الطول</th></tr></thead>' +
+      '<table style="width:100%;border-collapse:collapse;font-size:11px">' +
+        '<thead><tr style="background:#006233;color:#fff"><th style="padding:7px;text-align:center">#</th><th style="padding:7px;text-align:center">الوقت</th><th style="padding:7px;text-align:center">العنوان</th><th style="padding:7px;text-align:center">الإحداثيات</th><th style="padding:7px;text-align:center">العدد</th></tr></thead>' +
         '<tbody>' + binsRows + '</tbody>' +
       '</table>' +
+      '<div style="margin-top:10px;padding:10px 15px;background:#006233;color:#fff;border-radius:8px;font-weight:700;font-size:14px;text-align:center">' + document.getElementById('previewTotalBins').textContent + '</div>'  +
       '<div style="margin-top:18px;text-align:center;border-top:2px solid #006233;padding-top:10px;color:#666;font-size:10px">' +
         '<p>إعداد: مصلحة النظافة والوقاية الصحية - بلدية المدية</p>' +
         '<p>تاريخ الطباعة: ' + new Date().toLocaleDateString('ar-DZ') + '</p>' +
