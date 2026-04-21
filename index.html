@@ -3023,6 +3023,18 @@ const sectorRoutesData = {
 };
 
 // ===== اختيار الجهاز =====
+// ===== تطبيع بيانات البلاغات (يجب أن تكون قبل _startApp) =====
+function normalizeReport(r) {
+  if(!r) return r;
+  // توحيد أسماء الحقول — يضمن عمل البلاغات القديمة والجديدة معاً
+  r.addr  = r.addr  || r.address   || r.location   || r.title        || '—';
+  r.gps   = r.gps   || r.coords    || r.gpsCoords  || r.coordinates  || '';
+  r.date  = r.date  || r.reportDate|| r.createdDate || '—';
+  r.time  = r.time  || r.reportTime|| r.createdTime || '—';
+  r.image = r.image || r.photo     || r.img         || r.beforeImage  || null;
+  return r;
+}
+
 function _startApp(mode) {
   try { if(mode === 'desktop') document.body.classList.add('desktop-mode'); else document.body.classList.remove('desktop-mode'); } catch(e) {}
   var sel = document.getElementById('deviceSelector');
@@ -3033,7 +3045,7 @@ function _startApp(mode) {
   if(main) { main.style.display = 'block'; main.classList.add('active'); }
   try { updateTime(); } catch(e) {}
   try { setupSync(); } catch(e) {}
-  try { loadFromCloud('reports','reports',(d)=>{allReports=d?Object.values(d):[];updateStats();}); } catch(e) {}
+  try { loadFromCloud('reports','reports',(d)=>{allReports=d?Object.values(d).map(normalizeReport):[];updateStats();}); } catch(e) {}
   try { loadFromCloud('wasteTracking','wasteTracking',(d)=>{wasteTracking=d?Object.values(d):[];}); } catch(e) {}
   try { loadFromCloud('marketMaterials','marketMaterials',(d)=>{marketMaterials=d?Object.values(d):[];}); } catch(e) {}
   try { loadFromCloud('truckTracking','truckTracking',(d)=>{if(d)truckTrackingData=d;}); } catch(e) {}
@@ -3509,17 +3521,6 @@ function showToast(msg, type='success') {
 }
 
 // ===== Firebase Sync =====
-function normalizeReport(r) {
-  // توحيد أسماء الحقول — يضمن عمل البلاغات القديمة والجديدة
-  if(!r) return r;
-  r.addr  = r.addr  || r.address  || r.location  || r.title  || '—';
-  r.gps   = r.gps   || r.coords   || r.gpsCoords || r.coordinates || '';
-  r.date  = r.date  || r.reportDate || r.createdDate || '—';
-  r.time  = r.time  || r.reportTime || r.createdTime || '—';
-  r.image = r.image || r.photo    || r.img        || r.beforeImage || null;
-  return r;
-}
-
 function setupSync() {
   try {
     const connectedRef = db.ref('.info/connected');
@@ -3633,11 +3634,13 @@ function updateReport(id, upd) {
   updateCloudItem('reports', id, upd);
   const index = allReports.findIndex(x => x.id == id);
   if(index !== -1) {
-    allReports[index] = {...allReports[index], ...upd};
+    allReports[index] = normalizeReport({...allReports[index], ...upd});
     updateStats();
     if(document.getElementById('reportsPage').classList.contains('active')) {
       showReportsPage();
     }
+    // تحديث مهام السائق فوراً لو كان مسجل دخول
+    if(currentDriver) renderDriverTasks();
   }
 }
 
