@@ -101,7 +101,7 @@ body {
   background: var(--primary-dark);
 }
 
-/* ===== شاشة اختيار الجهاز ===== */
+/* ===== شاشة اختيار الدور ===== */
 #deviceSelector {
   position: fixed;
   top: 0; left: 0;
@@ -111,14 +111,17 @@ body {
   display: none;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
-  padding: 20px;
+  justify-content: flex-start;
+  padding: 14px 14px 24px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
 }
 #deviceSelector.active { display: flex; }
 
 .device-card {
   background: var(--bg-card);
-  padding: 40px 35px;
+  padding: 16px 15px 14px;
   border-radius: var(--radius-lg);
   box-shadow: 0 20px 60px rgba(0,0,0,0.3);
   text-align: center;
@@ -126,8 +129,9 @@ body {
   width: 100%;
   border: 3px solid var(--primary);
   position: relative;
-  overflow: hidden;
   animation: slideUp 0.6s ease;
+  flex-shrink: 0;
+  margin-top: 8px;
 }
 
 @keyframes slideUp {
@@ -141,13 +145,15 @@ body {
   top: 0; left: 0; right: 0;
   height: 5px;
   background: linear-gradient(90deg, var(--primary), var(--accent), var(--secondary));
+  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
 }
 
 .device-card .flag-icon {
-  font-size: 4rem;
-  margin-bottom: 15px;
+  font-size: 2.4rem;
+  margin-bottom: 5px;
   display: inline-block;
-  animation: wave 2s ease-in-out infinite;  filter: drop-shadow(0 4px 8px rgba(0,0,0,0.2));
+  animation: wave 2s ease-in-out infinite;
+  filter: drop-shadow(0 4px 8px rgba(0,0,0,0.2));
 }
 
 @keyframes wave {
@@ -157,99 +163,161 @@ body {
 
 .device-card h1 {
   color: var(--primary);
-  font-size: 2.2rem;
-  margin-bottom: 8px;
+  font-size: 1.55rem;
+  margin-bottom: 3px;
   font-weight: 900;
   letter-spacing: -0.5px;
 }
 
 .device-card h2 {
   color: var(--secondary);
-  font-size: 1.6rem;
-  margin-bottom: 20px;
+  font-size: 1.2rem;
+  margin-bottom: 6px;
   font-weight: 700;
 }
 
 .device-card p {
   color: var(--text-light);
-  font-size: 1rem;
-  margin-bottom: 25px;
+  font-size: 0.85rem;
+  margin-bottom: 12px;
 }
 
 .device-buttons {
   display: flex;
   flex-direction: column;
-  gap: 15px;
+  gap: 7px;
   align-items: center;
 }
 
-.device-btn {
+/* ===== أزرار الأدوار ===== */
+.role-btn {
   width: 100%;
-  padding: 18px;
   border: none;
-  border-radius: var(--radius);
+  border-radius: var(--radius-sm);
   cursor: pointer;
-  font-size: 1.1rem;
-  font-weight: 700;
   font-family: 'Cairo', sans-serif;
   transition: var(--transition);
+  color: white;
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  align-items: stretch;
+  text-align: right;
+  box-shadow: 0 3px 10px rgba(0,0,0,0.15);
+  min-height: 60px;
+}
+.role-btn:hover { transform: translateY(-2px); box-shadow: 0 6px 18px rgba(0,0,0,0.22); }
+.role-btn:active { transform: translateY(0); opacity: 0.9; }
+.role-btn-icon {
+  width: 54px;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 12px;  color: white;
-  position: relative;
-  overflow: hidden;
+  font-size: 1.5rem;
+  background: rgba(0,0,0,0.15);
+  flex-shrink: 0;
 }
-
-.device-btn::after {
-  content: '';
-  position: absolute;
-  top: 50%; left: 50%;
-  width: 0; height: 0;
-  background: rgba(255,255,255,0.2);
-  border-radius: 50%;
-  transition: width 0.6s, height 0.6s, top 0.6s, left 0.6s;
+.role-btn-body {
+  flex: 1;
+  padding: 9px 12px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
 }
-
-.device-btn:active::after {
-  width: 300px;
-  height: 300px;
-  top: calc(50% - 150px);
-  left: calc(50% - 150px);
+.role-btn-title { font-size: 0.98rem; font-weight: 800; display: block; margin-bottom: 2px; }
+.role-btn-desc  { font-size: 0.67rem; opacity: 0.88; display: block; line-height: 1.35; }
+.role-btn-arrow {
+  width: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.8rem;
+  opacity: 0.7;
+  flex-shrink: 0;
 }
+.role-btn.citizen { background: linear-gradient(135deg,#006233,#008040); }
+.role-btn.driver  { background: linear-gradient(135deg,#e65100,#ff6d00); }
+.role-btn.admin   { background: linear-gradient(135deg,#1a237e,#283593); }
 
-.device-btn.computer {
-  background: linear-gradient(135deg, var(--primary), var(--primary-light));
-  box-shadow: 0 6px 20px rgba(0,98,51,0.4);
+/* فاصل الكمبيوتر/الهاتف */
+.device-divider {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 5px 0 3px;
+  color: var(--text-muted);
+  font-size: 0.72rem;
 }
-
-.device-btn.phone {
-  background: linear-gradient(135deg, var(--secondary), var(--secondary-light));
-  box-shadow: 0 6px 20px rgba(196,30,58,0.4);
+.device-divider::before,.device-divider::after {
+  content:''; flex:1; height:1px; background:var(--border);
 }
-
-.device-btn:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+.device-sub-row { display:flex; gap:8px; width:100%; }
+.device-sub-btn {
+  flex:1; padding:9px 6px;
+  border:2px solid var(--border);
+  border-radius:var(--radius-sm);
+  background:var(--bg-card);
+  color:var(--text);
+  font-family:'Cairo',sans-serif;
+  font-size:0.82rem; font-weight:700;
+  cursor:pointer;
+  display:flex; align-items:center; justify-content:center; gap:6px;
+  transition:var(--transition);
 }
+.device-sub-btn:hover { border-color:var(--primary); color:var(--primary); }
+.device-sub-btn i { font-size:0.95rem; }
 
-.device-btn:active {
-  transform: translateY(-1px);
+/* شارة الدور بالشريط العلوي */
+.role-badge {
+  display:inline-flex; align-items:center; gap:4px;
+  padding:2px 9px;
+  border-radius:12px; font-size:0.72rem; font-weight:700;
+  cursor:pointer; transition:var(--transition);
+  border:2px solid rgba(255,255,255,0.4);
+  background:rgba(255,255,255,0.2);
+  white-space:nowrap;
 }
+.role-badge:hover { background:rgba(255,255,255,0.35); }
 
-.device-btn i {
-  font-size: 1.4rem;
+/* زر تغيير الدور */
+.change-role-btn {
+  width:100%; padding:11px;
+  border:2px dashed var(--border);
+  border-radius:var(--radius-sm);
+  background:transparent; color:var(--text-light);
+  font-family:'Cairo',sans-serif; font-size:0.88rem; font-weight:600;
+  cursor:pointer; transition:var(--transition);
+  display:flex; align-items:center; justify-content:center; gap:8px;
+  margin-top:8px;
+}
+.change-role-btn:hover { border-color:var(--primary); color:var(--primary); background:rgba(0,98,51,0.05); }
+
+/* قسم مهام السائق */
+.driver-task-card {
+  background:var(--bg-card);
+  border-radius:var(--radius-sm);
+  padding:12px 14px;
+  margin-bottom:10px;
+  border-right:4px solid var(--warning);
+  box-shadow:0 2px 8px var(--shadow);
+}
+.driver-task-card.urgent { border-right-color:var(--danger); }
+.driver-task-card.done   { border-right-color:var(--success); opacity:0.7; }
+.driver-sector-badge {
+  display:inline-block; padding:4px 12px;
+  background:linear-gradient(135deg,var(--primary),var(--primary-light));
+  color:white; border-radius:20px; font-size:0.8rem; font-weight:700;
+  margin-bottom:12px;
 }
 
 .footer-text {
   color: var(--text-light);
   text-align: center;
-  margin-top: 20px;
-  font-size: 0.85rem;}
-
-.footer-text p {
-  margin: 4px 0;
+  margin-top: 12px;
+  font-size: 0.82rem;
 }
+.footer-text p { margin: 3px 0; }
 
 /* ===== شاشة الترحيب ===== */
 #splash {
@@ -1883,28 +1951,58 @@ select.input {
 </head>
 <body>
 
-<!-- شاشة اختيار الجهاز -->
+<!-- شاشة اختيار الدور -->
 <div id="deviceSelector">
   <div class="device-card">
     <div class="flag-icon">🇩🇿</div>
     <h1 data-i18n="devTitle">النظافة من الإيمان</h1>
     <h2 data-i18n="devSubtitle">المدية نظيفة</h2>
-    <p data-i18n="devDesc">اختر نوع الجهاز للمتابعة</p>
+    <p data-i18n="devDesc">اختر دورك للمتابعة</p>
     <div class="device-buttons">
-      <button class="device-btn computer" onclick="selectDevice('desktop')">
-        <i class="fas fa-laptop"></i>
-        <span data-i18n="btnComputer">الكمبيوتر</span>
+
+      <button class="role-btn citizen" onclick="selectRole('citizen')">
+        <div class="role-btn-icon">👤</div>
+        <div class="role-btn-body">
+          <span class="role-btn-title">مواطن</span>
+          <span class="role-btn-desc">إرسال تبليغ • طلباتي • الجدول • التوعية • الإحصائيات</span>
+        </div>
+        <div class="role-btn-arrow"><i class="fas fa-chevron-left"></i></div>
       </button>
-      <button class="device-btn phone" onclick="selectDevice('mobile')">
-        <i class="fas fa-mobile-alt"></i>
-        <span data-i18n="btnPhone">الهاتف المحمول</span>
+
+      <button class="role-btn driver" onclick="selectRole('driver')">
+        <div class="role-btn-icon">🚛</div>
+        <div class="role-btn-body">
+          <span class="role-btn-title">سائق</span>
+          <span class="role-btn-desc">صفحتك الخاصة — قطاعك ومهامك المرسلة من الإدارة</span>
+        </div>
+        <div class="role-btn-arrow"><i class="fas fa-chevron-left"></i></div>
       </button>
+
+      <button class="role-btn admin" onclick="selectRole('admin')">
+        <div class="role-btn-icon">🏛️</div>
+        <div class="role-btn-body">
+          <span class="role-btn-title">الإدارة</span>
+          <span class="role-btn-desc">كامل الصلاحيات — جميع الأقسام والأدوات</span>
+        </div>
+        <div class="role-btn-arrow"><i class="fas fa-chevron-left"></i></div>
+      </button>
+
+      <div class="device-divider">أو اختر نوع الجهاز مباشرة</div>
+      <div class="device-sub-row">
+        <button class="device-sub-btn" onclick="selectDevice('desktop')">
+          <i class="fas fa-laptop"></i> الكمبيوتر
+        </button>
+        <button class="device-sub-btn" onclick="selectDevice('mobile')">
+          <i class="fas fa-mobile-alt"></i> الهاتف
+        </button>
+      </div>
+
     </div>
   </div>
   <div class="footer-text">
     <p data-i18n="ft1">مصلحة النظافة والوقاية الصحية - بلدية المدية</p>
     <p data-i18n="ft2">التطبيق من إعداد د. رابحي فتحي</p>
-    <p style="margin-top:8px;font-size:0.8rem" data-i18n="ft3">سيتم حفظ اختيارك للزيارات القادمة</p>
+    <p style="margin-top:6px;font-size:0.78rem">سيتم حفظ اختيارك للزيارات القادمة</p>
   </div>
 </div>
 
@@ -1922,10 +2020,14 @@ select.input {
 <div class="main-content" id="mainContent">
   <!-- الشريط العلوي -->
   <div class="top-bar">
-    <div class="status">
-      <span class="dot"></span>
-      <span data-i18n="topStatus">متصل - النظام جاهز</span>
-    </div>    <div style="display:flex;align-items:center;gap:10px">
+    <div style="display:flex;align-items:center;gap:8px">
+      <div class="status">
+        <span class="dot"></span>
+        <span data-i18n="topStatus">متصل</span>
+      </div>
+      <span id="roleBadgeTop" class="role-badge" onclick="changeRole()" title="تغيير الدور" style="display:none"></span>
+    </div>
+    <div style="display:flex;align-items:center;gap:10px">
       <div class="time-date">
         <span id="timeDisplay">00:00:00</span>
       </div>
@@ -2235,22 +2337,49 @@ select.input {
 
   <!-- ========== صفحة السائقين ========== -->
   <div id="driver" class="page">
-    <h2 style="margin-bottom:15px;color:var(--primary);text-align:center">
-      <i class="fas fa-truck-loading"></i> <span data-i18n="driverSpace">مساحة السائقين</span>
-    </h2>
-    <div id="driverLogin" class="card">
-      <h3><i class="fas fa-sign-in-alt"></i> <span data-i18n="loginTitle">دخول السائق</span></h3>
-      <input type="text" id="driverName" class="input" placeholder="👤 أدخل اسمك" data-i18n-ph="namePh">
-      <button class="btn btn-warning ripple" onclick="loginDriver()">
-        <i class="fas fa-check"></i> <span data-i18n="login">دخول</span>
-      </button>    </div>
-    <div id="driverPanel" class="hidden">
-      <div class="success-card">
-        <i class="fas fa-check-circle"></i> مرحباً - مهامك جاهزة
+    <!-- ===== شاشة تسجيل الدخول ===== -->
+    <div id="driverLogin">
+      <h2 style="margin-bottom:14px;color:var(--primary);text-align:center">
+        <i class="fas fa-truck-loading"></i> دخول السائق
+      </h2>
+      <div class="card">
+        <h3><i class="fas fa-sign-in-alt"></i> أدخل اسمك للمتابعة</h3>
+        <input type="text" id="driverName" class="input" placeholder="👤 اسمك الكامل" data-i18n-ph="namePh">
+        <button class="btn btn-warning ripple" onclick="loginDriver()">
+          <i class="fas fa-check"></i> دخول
+        </button>
       </div>
-      <button class="btn btn-secondary ripple" style="margin-bottom:12px" onclick="startTruckTracking()">
+      <button class="btn ripple" style="background:#757575" onclick="showPage('home')">
+        <i class="fas fa-arrow-right"></i> رجوع
+      </button>
+    </div>
+
+    <!-- ===== لوحة السائق الخاصة ===== -->
+    <div id="driverPanel" class="hidden">
+
+      <!-- بطاقة هوية السائق -->
+      <div style="background:linear-gradient(135deg,var(--primary),var(--primary-light));color:#fff;border-radius:var(--radius);padding:14px 16px;margin-bottom:12px;display:flex;align-items:center;gap:12px">
+        <div style="font-size:2.4rem">🚛</div>
+        <div>
+          <div style="font-weight:900;font-size:1.1rem" id="driverWelcomeName">السائق</div>
+          <div style="font-size:0.82rem;opacity:0.9;margin-top:2px">
+            <span>القطاع: </span><span id="driverSectorDisplay" style="font-weight:700;background:rgba(255,255,255,0.25);padding:2px 8px;border-radius:10px">—</span>
+          </div>
+          <div style="font-size:0.75rem;opacity:0.8;margin-top:3px" id="driverSectorZones">—</div>
+        </div>
+      </div>
+
+      <!-- بطاقة الجدول الخاص بالسائق -->
+      <div class="card" id="driverScheduleCard" style="padding:12px;margin-bottom:10px">
+        <h3 style="font-size:0.95rem;margin-bottom:8px;color:var(--primary)"><i class="fas fa-calendar-check"></i> جدولك لهذا اليوم</h3>
+        <div id="driverTodaySchedule"></div>
+      </div>
+
+      <!-- أزرار التتبع والتسجيل -->
+      <button class="btn btn-secondary ripple" style="margin-bottom:10px" onclick="startTruckTracking()">
         <i class="fas fa-play"></i> <span data-i18n="startTrack">بدء تتبع المسار</span>
       </button>
+
       <div id="binTrackingControls" style="display:none;margin-bottom:12px">
         <div class="info-card" style="text-align:center;margin-bottom:10px;font-weight:bold">
           <i class="fas fa-signal"></i> التتبع نشط - سجل الحاويات
@@ -2258,19 +2387,13 @@ select.input {
         <button class="btn btn-success ripple" onclick="recordBinCollection()" style="font-size:1.1rem;padding:18px" id="recordBinBtn">
           <i class="fas fa-trash-alt"></i> <span data-i18n="recordBin">تسجيل موقع الحاوية</span>
         </button>
-        <div style="text-align:center;margin-top:8px;color:var(--text-light);font-size:0.85rem">
-          اضغط عند كل موقع حاوية ترفعها
-        </div>
+        <div style="text-align:center;margin-top:8px;color:var(--text-light);font-size:0.85rem">اضغط عند كل موقع حاوية ترفعها</div>
         <div id="binRecordResult" style="display:none;margin-top:12px;background:var(--bg-card);border-radius:var(--radius-sm);padding:14px;border:2px solid var(--success)">
-          <div style="font-weight:700;color:var(--primary);margin-bottom:8px;text-align:center">
-            <i class="fas fa-map-marker-alt"></i> تفاصيل الموقع المسجل
-          </div>
+          <div style="font-weight:700;color:var(--primary);margin-bottom:8px;text-align:center"><i class="fas fa-map-marker-alt"></i> تفاصيل الموقع المسجل</div>
           <div class="info-row"><b>📍 العنوان:</b> <span id="binAddr">-</span></div>
           <div class="info-row"><b>🌍 الإحداثيات:</b> <span id="binCoords">-</span></div>
           <div style="margin-top:12px">
-            <label style="font-weight:700;color:var(--text);display:block;margin-bottom:6px">
-              <i class="fas fa-trash"></i> عدد الحاويات في هذا الموقع:
-            </label>
+            <label style="font-weight:700;color:var(--text);display:block;margin-bottom:6px"><i class="fas fa-trash"></i> عدد الحاويات في هذا الموقع:</label>
             <div style="display:flex;gap:10px;align-items:center">
               <button onclick="changeBinCount(-1)" style="width:44px;height:44px;border-radius:50%;border:none;background:var(--danger);color:#fff;font-size:1.3rem;cursor:pointer;font-weight:900;flex-shrink:0">−</button>
               <input type="number" id="binCountInput" value="1" min="1" max="50"
@@ -2279,28 +2402,31 @@ select.input {
             </div>
           </div>
           <button class="btn btn-primary ripple" onclick="confirmBinCollection()" style="margin-top:12px">
-            <i class="fas fa-check-circle"></i> <span data-i18n="confirm">تثبيت وحفظ</span>
+            <i class="fas fa-check-circle"></i> تثبيت وحفظ
           </button>
           <button class="btn ripple" onclick="cancelBinCollection()" style="background:#757575;margin-top:6px;font-size:0.9rem">
-            <i class="fas fa-times"></i> <span data-i18n="cancel">إلغاء</span>
+            <i class="fas fa-times"></i> إلغاء
           </button>
         </div>
       </div>
+
       <button class="btn btn-primary ripple" style="margin-bottom:12px" onclick="showPage('driverTonnage')">
         <i class="fas fa-plus"></i> <span data-i18n="newTonnage">تسجيل نفايات جديدة</span>
       </button>
-      <h3 style="margin-bottom:10px;color:var(--primary)"><i class="fas fa-tasks"></i> مهامك</h3>
-      <div id="tasksList"></div>
-      <button class="btn btn-secondary ripple" onclick="endMission()" id="endMissionBtn" style="display:none">
-        <i class="fas fa-flag-checkered"></i> <span data-i18n="endMission">إنهاء المهمة</span>
+
+      <!-- قسم المهام الخاصة بالسائق -->
+      <div class="card" style="padding:12px">
+        <h3 style="color:var(--primary);margin-bottom:8px;font-size:0.95rem"><i class="fas fa-tasks"></i> مهامك من الإدارة <span id="tasksCountBadge" style="background:var(--danger);color:#fff;border-radius:10px;padding:1px 8px;font-size:0.75rem;margin-right:4px"></span></h3>
+        <div id="tasksList"></div>
+      </div>
+
+      <button class="btn btn-secondary ripple" onclick="endMission()" id="endMissionBtn" style="display:none;margin-top:10px">
+        <i class="fas fa-flag-checkered"></i> إنهاء المهمة
       </button>
-      <button class="btn btn-danger ripple" onclick="logoutDriver()">
-        <i class="fas fa-sign-out-alt"></i> <span data-i18n="logout">خروج</span>
+      <button class="btn btn-danger ripple" style="margin-top:8px" onclick="logoutDriver()">
+        <i class="fas fa-sign-out-alt"></i> خروج
       </button>
     </div>
-    <button class="btn ripple" style="background:#757575" onclick="showPage('home')">
-      <i class="fas fa-arrow-right"></i> <span data-i18n="back">رجوع</span>
-    </button>
   </div>
 
   <!-- ========== صفحة الإدارة ========== -->
@@ -3035,14 +3161,67 @@ function normalizeReport(r) {
   return r;
 }
 
-function _startApp(mode) {
-  try { if(mode === 'desktop') document.body.classList.add('desktop-mode'); else document.body.classList.remove('desktop-mode'); } catch(e) {}
+// ===== نظام الأدوار =====
+var currentRole = 'citizen';
+
+function selectRole(role) {
+  currentRole = role;
+  try { localStorage.setItem('medea_role', role); } catch(e) {}
+  try { localStorage.removeItem('medea_device'); } catch(e) {}
+  var deviceMode = (role === 'admin') ? 'desktop' : 'mobile';
   var sel = document.getElementById('deviceSelector');
-  var spl = document.getElementById('splash');
+  if(sel) { sel.style.opacity='0'; sel.style.transition='opacity 0.4s'; }
+  setTimeout(function() {
+    if(sel) { sel.style.display='none'; sel.classList.remove('active'); }
+    if(role === 'driver') {
+      _startApp('mobile');
+      setTimeout(function(){ showPage('driver'); }, 500);
+    } else {
+      var spl = document.getElementById('splash');
+      if(spl) { spl.style.display='flex'; spl.style.opacity='1'; }
+      setTimeout(function(){ _startApp(deviceMode); showPage('home'); }, 1800);
+      setTimeout(function(){
+        var m = document.getElementById('mainContent');
+        if(m && !m.classList.contains('active')){ _startApp(deviceMode); showPage('home'); }
+      }, 5000);
+    }
+  }, 300);
+}
+
+function applyRoleUI() {
+  try {
+    // شارة الدور في الشريط
+    var badge = document.getElementById('roleBadgeTop');
+    if(badge) {
+      var labels = {citizen:'👤 مواطن', driver:'🚛 سائق', admin:'🏛️ إدارة'};
+      badge.textContent = labels[currentRole] || '';
+      badge.style.display = 'inline-flex';
+    }
+    // إخفاء/إظهار الأقسام
+    document.querySelectorAll('.role-section').forEach(function(sec){
+      var roles = (sec.getAttribute('data-roles')||'').split(',').map(function(r){return r.trim();});
+      sec.style.display = (roles.indexOf(currentRole) !== -1) ? 'block' : 'none';
+    });
+  } catch(e) {}
+}
+
+function changeRole() {
+  try { localStorage.removeItem('medea_role'); } catch(e) {}
+  currentRole = 'citizen';
   var main = document.getElementById('mainContent');
-  if(sel) { sel.style.display = 'none'; sel.classList.remove('active'); }
-  if(spl) { spl.style.display = 'none'; }
-  if(main) { main.style.display = 'block'; main.classList.add('active'); }
+  var sel  = document.getElementById('deviceSelector');
+  if(main){ main.style.display='none'; main.classList.remove('active'); }
+  if(sel){ sel.style.opacity='1'; sel.style.display='flex'; sel.classList.add('active'); }
+}
+
+function _startApp(mode) {
+  try { if(mode==='desktop') document.body.classList.add('desktop-mode'); else document.body.classList.remove('desktop-mode'); } catch(e) {}
+  var sel  = document.getElementById('deviceSelector');
+  var spl  = document.getElementById('splash');
+  var main = document.getElementById('mainContent');
+  if(sel)  { sel.style.display='none'; sel.classList.remove('active'); }
+  if(spl)  { spl.style.display='none'; }
+  if(main) { main.style.display='block'; main.classList.add('active'); }
   try { updateTime(); } catch(e) {}
   try { setupSync(); } catch(e) {}
   try { loadFromCloud('reports','reports',(d)=>{allReports=d?Object.values(d).map(normalizeReport):[];updateStats();}); } catch(e) {}
@@ -3050,6 +3229,7 @@ function _startApp(mode) {
   try { loadFromCloud('marketMaterials','marketMaterials',(d)=>{marketMaterials=d?Object.values(d):[];}); } catch(e) {}
   try { loadFromCloud('truckTracking','truckTracking',(d)=>{if(d)truckTrackingData=d;}); } catch(e) {}
   try { var lang=localStorage.getItem('medea_lang')||'ar'; currentLang=lang; updateLanguageUI(); } catch(e) {}
+  try { applyRoleUI(); } catch(e) {}
 }
 
 function selectDevice(mode) {
@@ -3060,11 +3240,10 @@ function selectDevice(mode) {
     if(sel) { sel.style.display='none'; sel.classList.remove('active'); }
     var spl = document.getElementById('splash');
     if(spl) { spl.style.display='flex'; spl.style.opacity='1'; }
-    setTimeout(function() { _startApp(mode); }, 2000);
-    // Safety timeout
+    setTimeout(function() { _startApp(mode); showPage('home'); }, 2000);
     setTimeout(function() {
       var m = document.getElementById('mainContent');
-      if(m && !m.classList.contains('active')) { _startApp(mode); }
+      if(m && !m.classList.contains('active')) { _startApp(mode); showPage('home'); }
     }, 5000);
   }, 300);
 }
@@ -3924,35 +4103,91 @@ function emergencyClearData() {
 // ===== السائق =====
 function loginDriver() {
   const n = document.getElementById('driverName').value.trim();
-  if(!n) {
-    showToast('⚠️ أدخل الاسم', 'error');
-    return;
-  }
+  if(!n) { showToast('⚠️ أدخل الاسم', 'error'); return; }
   
-  // التحقق من أن السائق مضاف من قبل فتحي
+  // التحقق من أن السائق مضاف في قائمة الموظفين
   const staff = JSON.parse(localStorage.getItem('medea_staff') || '[]');
-  const isApprovedDriver = staff.some(s => s.name === n && s.role.includes('سائق'));
-  
+  const isApprovedDriver = staff.some(s => s.name === n && s.role && s.role.includes('سائق'));
   if(!isApprovedDriver) {
-    showToast('⚠️ أنت لست مسجلاً كسائق - يجب أن يضيفك فتحي أولاً', 'error');
+    showToast('⚠️ أنت لست مسجلاً كسائق - يجب أن تضافك الإدارة أولاً', 'error');
     return;
   }
   
   currentDriver = n;
-  currentDriverSector = 'غير محدد';
-  document.getElementById('driverLogin').classList.add('hidden');
+  
+  // البحث عن قطاع السائق في جدول الجمع
+  const sectors = JSON.parse(localStorage.getItem('medea_schedule') || '[]');
+  const driverSectors = sectors.filter(s => s.driver && s.driver.trim() === n);
+  
+  if(driverSectors.length > 0) {
+    const s = driverSectors[0];
+    currentDriverSector = s.num || s.name || 'غير محدد';
+    // عرض بطاقة هوية السائق
+    const welcomeEl = document.getElementById('driverWelcomeName');
+    const sectorEl  = document.getElementById('driverSectorDisplay');
+    const zonesEl   = document.getElementById('driverSectorZones');
+    if(welcomeEl) welcomeEl.textContent = '🚛 ' + n;
+    if(sectorEl)  sectorEl.textContent = 'القطاع ' + currentDriverSector;
+    if(zonesEl)   zonesEl.textContent = '📍 ' + driverSectors.map(x=>x.name).join(' | ');
+    // عرض جدول اليوم للسائق
+    renderDriverTodaySchedule(driverSectors);
+  } else {
+    currentDriverSector = 'غير محدد';
+    const welcomeEl = document.getElementById('driverWelcomeName');
+    if(welcomeEl) welcomeEl.textContent = '🚛 ' + n;
+    const sectorEl = document.getElementById('driverSectorDisplay');
+    if(sectorEl) sectorEl.textContent = 'لم يُحدد قطاع بعد';
+    const todayEl = document.getElementById('driverTodaySchedule');
+    if(todayEl) todayEl.innerHTML = '<p style="color:var(--text-light);font-size:0.85rem;text-align:center">لم تُضف إلى أي قطاع بعد — راجع الإدارة</p>';
+  }
+  
+  document.getElementById('driverLogin').classList.remove('hidden');
+  document.getElementById('driverLogin').style.display = 'none';
   document.getElementById('driverPanel').classList.remove('hidden');
   showToast('✓ مرحباً ' + n, 'success');
+  renderDriverTasks();
+}
+
+function renderDriverTodaySchedule(driverSectors) {
+  try {
+    const days = ['الأحد','الاثنين','الثلاثاء','الأربعاء','الخميس','الجمعة','السبت'];
+    const today = days[new Date().getDay()];
+    const el = document.getElementById('driverTodaySchedule');
+    if(!el) return;
+    
+    let html = '';
+    driverSectors.forEach(s => {
+      const isToday = s.days && s.days.includes(today);
+      html += `
+        <div style="background:${isToday?'#e8f5e9':'var(--bg)'};border-radius:8px;padding:10px;margin-bottom:7px;border-right:4px solid ${isToday?'var(--success)':'var(--border)'}">
+          <div style="font-weight:700;font-size:0.88rem;color:${isToday?'var(--success)':'var(--text)'}">
+            ${isToday?'✅':'📅'} قطاع ${s.num||''} — ${s.name}
+          </div>
+          <div style="font-size:0.78rem;color:var(--text-light);margin-top:4px">
+            📅 ${s.days} &nbsp;|&nbsp; 🕐 ${s.time}
+            ${s.truckType ? `&nbsp;|&nbsp; 🚛 ${s.truckType}` : ''}
+          </div>
+          ${s.catchup ? `<div style="font-size:0.75rem;color:var(--warning);margin-top:2px">⏳ استدراك: ${s.catchup}</div>` : ''}
+          ${isToday ? `<div style="font-size:0.78rem;font-weight:700;color:var(--success);margin-top:4px">📌 اليوم هو يوم مرورك!</div>` : ''}
+        </div>`;
+    });
+    el.innerHTML = html || '<p style="color:var(--text-light);text-align:center;font-size:0.85rem">لا توجد قطاعات</p>';
+  } catch(e) {}
 }
 
 function logoutDriver() {
   if(window.trackingInterval) clearInterval(window.trackingInterval);
   truckTrackingData.active = false;
-  saveToCloud('truckTracking', truckTrackingData);  currentDriver = '';
+  saveToCloud('truckTracking', truckTrackingData);
+  currentDriver = '';
   currentDriverSector = '';
-  document.getElementById('driverLogin').classList.remove('hidden');
-  document.getElementById('driverPanel').classList.add('hidden');
-  document.getElementById('driverName').value = '';
+  // إعادة شاشة الدخول
+  var loginDiv  = document.getElementById('driverLogin');
+  var panelDiv  = document.getElementById('driverPanel');
+  var nameInput = document.getElementById('driverName');
+  if(loginDiv)  { loginDiv.style.display=''; loginDiv.classList.remove('hidden'); }
+  if(panelDiv)  { panelDiv.classList.add('hidden'); }
+  if(nameInput) { nameInput.value = ''; }
   tempAfterImage = null;
   showToast('✓ خروج', 'info');
 }
@@ -4016,9 +4251,15 @@ function renderDriverTasks() {
   try {
     const t = allReports.filter(r => r.driverName === currentDriver && r.status !== 'done');
     const c = document.getElementById('tasksList');
+    // تحديث شارة العدد
+    const badge = document.getElementById('tasksCountBadge');
+    if(badge) badge.textContent = t.length ? t.length : '';
+    // زر إنهاء المهمة
+    const endBtn = document.getElementById('endMissionBtn');
+    if(endBtn) endBtn.style.display = (currentDriver && truckTrackingData && truckTrackingData.active) ? 'block' : 'none';
     
     if(!t.length) {
-      c.innerHTML = '<div class="empty-state"><i class="fas fa-check-circle"></i><p>لا توجد مهام</p></div>';
+      c.innerHTML = '<div class="empty-state"><i class="fas fa-check-circle"></i><p>لا توجد مهام حالية</p></div>';
       return;
     }
     
@@ -4536,7 +4777,7 @@ function loadScheduleSectors() {
     }
     
     list.innerHTML = sectors.map(s => `
-      <div class="tonnage-card">
+      <div class="tonnage-card" id="sector-card-${s.id}">
         <div class="tonnage-info"><b>🏷️ رقم القطاع:</b> ${s.num || '-'}</div>
         <div class="tonnage-info"><b>🏛️ النوع:</b> ${s.type}</div>
         <div class="tonnage-info"><b>📍 الأحياء:</b> ${s.name}</div>
@@ -4544,12 +4785,79 @@ function loadScheduleSectors() {
         <div class="tonnage-info"><b>🕐 وقت المرور:</b> ${s.time}</div>
         <div class="tonnage-info"><b>⏳ الاستدراك:</b> ${s.catchup || '-'}</div>
         <div class="tonnage-info"><b>👤 السائق:</b> ${s.driver || '-'} ${s.phone ? `<a href="tel:${s.phone}" class="phone-link">📞 ${s.phone}</a>` : ''}</div>
-        ${s.truckType ? `<div class="tonnage-info"><b>🚛 نوع الشاحنة:</b> ${s.truckType}</div>` : ''}        <button class="btn btn-danger ripple" style="margin-top:10px;padding:8px" onclick="deleteScheduleSector(${s.id})">
-          <i class="fas fa-trash"></i> حذف
-        </button>
+        ${s.truckType ? `<div class="tonnage-info"><b>🚛 نوع الشاحنة:</b> ${s.truckType}</div>` : ''}
+        <div style="display:flex;gap:8px;margin-top:10px">
+          <button class="btn btn-warning ripple" style="flex:1;padding:8px;font-size:0.85rem" onclick="editScheduleSector(${s.id})">
+            <i class="fas fa-edit"></i> تعديل
+          </button>
+          <button class="btn btn-danger ripple" style="flex:1;padding:8px;font-size:0.85rem" onclick="deleteScheduleSector(${s.id})">
+            <i class="fas fa-trash"></i> حذف
+          </button>
+        </div>
       </div>
     `).join('');
   } catch(e) {}
+}
+
+function editScheduleSector(id) {
+  try {
+    const sectors = JSON.parse(localStorage.getItem('medea_schedule') || '[]');
+    const s = sectors.find(x => x.id == id);
+    if(!s) return;
+    // ملء حقول النموذج بالبيانات الحالية
+    document.getElementById('sectorNum').value    = s.num || '';
+    document.getElementById('sectorType').value   = s.type || 'بلدية';
+    document.getElementById('sectorName').value   = s.name || '';
+    document.getElementById('sectorDays').value   = s.days || '';
+    document.getElementById('sectorTime').value   = s.time || '';
+    document.getElementById('sectorCatchup').value= s.catchup || '';
+    document.getElementById('sectorDriver').value = s.driver || '';
+    document.getElementById('sectorPhone').value  = s.phone || '';
+    document.getElementById('sectorTruckType').value = s.truckType || '';
+    // تغيير زر الحفظ ليصبح "تحديث"
+    const saveBtn = document.querySelector('#scheduleManager .btn-primary');
+    if(saveBtn) {
+      saveBtn.innerHTML = '<i class="fas fa-sync"></i> تحديث القطاع';
+      saveBtn.setAttribute('onclick', `updateScheduleSector(${id})`);
+    }
+    // التمرير لأعلى الصفحة
+    document.getElementById('scheduleManager').scrollTop = 0;
+    showToast('✏️ جاري تعديل القطاع ' + (s.num||s.name), 'info');
+  } catch(e) {}
+}
+
+function updateScheduleSector(id) {
+  try {
+    const sectors = JSON.parse(localStorage.getItem('medea_schedule') || '[]');
+    const idx = sectors.findIndex(x => x.id == id);
+    if(idx === -1) return;
+    sectors[idx] = {
+      ...sectors[idx],
+      num:       document.getElementById('sectorNum').value.trim(),
+      type:      document.getElementById('sectorType').value,
+      name:      document.getElementById('sectorName').value.trim(),
+      days:      document.getElementById('sectorDays').value.trim(),
+      time:      document.getElementById('sectorTime').value.trim(),
+      catchup:   document.getElementById('sectorCatchup').value.trim(),
+      driver:    document.getElementById('sectorDriver').value.trim(),
+      phone:     document.getElementById('sectorPhone').value.trim(),
+      truckType: document.getElementById('sectorTruckType').value,
+    };
+    localStorage.setItem('medea_schedule', JSON.stringify(sectors));
+    showToast('✅ تم تحديث القطاع', 'success');
+    // إعادة زر الحفظ لحالته الأصلية
+    const saveBtn = document.querySelector('#scheduleManager .btn-primary');
+    if(saveBtn) {
+      saveBtn.innerHTML = '<i class="fas fa-save"></i> حفظ القطاع';
+      saveBtn.setAttribute('onclick', 'addScheduleSector()');
+    }
+    // مسح الحقول
+    ['sectorNum','sectorName','sectorDays','sectorTime','sectorCatchup','sectorDriver','sectorPhone'].forEach(id => {
+      document.getElementById(id).value = '';
+    });
+    document.getElementById('sectorTruckType').value = '';
+    loadScheduleSectors();
+  } catch(e) { showToast('⚠️ خطأ في التحديث', 'error'); }
 }
 
 function deleteScheduleSector(id) {
@@ -6441,17 +6749,24 @@ window.addEventListener('DOMContentLoaded', function() {
     if(savedPoints) userPoints = parseInt(savedPoints);
   } catch(e) {}
 
-  // تحديد الجهاز
-  var savedDevice = null;
-  try { savedDevice = localStorage.getItem('medea_device'); } catch(e) {}
+  // تحديد الدور المحفوظ
+  var savedRole = null;
+  try { savedRole = localStorage.getItem('medea_role'); } catch(e) {}
 
-  if(savedDevice) {
-    // جهاز محفوظ: تشغيل مباشر بدون شاشة اختيار
-    _startApp(savedDevice);
+  if(savedRole && ['citizen','driver','admin'].indexOf(savedRole) !== -1) {
+    // دور محفوظ: تشغيل مباشر
+    currentRole = savedRole;
+    var devMode = (savedRole === 'admin') ? 'desktop' : 'mobile';
+    _startApp(devMode);
+    if(savedRole === 'driver') {
+      setTimeout(function(){ showPage('driver'); }, 400);
+    } else {
+      setTimeout(function(){ showPage('home'); }, 200);
+    }
   } else {
-    // لا جهاز محفوظ: إظهار شاشة الاختيار
+    // لا دور محفوظ: شاشة الاختيار
     var sel = document.getElementById('deviceSelector');
-    if(sel) { sel.style.display = 'flex'; sel.classList.add('active'); }
+    if(sel) { sel.style.display='flex'; sel.classList.add('active'); }
   }
 
   // [1] شريط إنجاز اليوم — تحديث فوري وكل دقيقة
