@@ -2170,7 +2170,8 @@ select.input {
       </button>
     </div>
 
-    <div class="card hover-lift" style="margin-top:12px">
+    <!-- الرواق: للإدارة فقط -->
+    <div class="card hover-lift role-section" data-roles="admin" style="margin-top:12px">
       <h3 data-i18n="hallTitle">👥 الرواق</h3>
       <div class="grid-2">
         <button class="btn btn-warning sb2 ripple" onclick="showPage('driver')">
@@ -2349,7 +2350,7 @@ select.input {
           <i class="fas fa-check"></i> دخول
         </button>
       </div>
-      <button class="btn ripple" style="background:#757575" onclick="showPage('home')">
+      <button class="btn ripple" style="background:#757575" onclick="goBackToSelector()">
         <i class="fas fa-arrow-right"></i> رجوع
       </button>
     </div>
@@ -2376,10 +2377,46 @@ select.input {
       </div>
 
       <!-- أزرار التتبع والتسجيل -->
-      <button class="btn btn-secondary ripple" style="margin-bottom:10px" onclick="startTruckTracking()">
-        <i class="fas fa-play"></i> <span data-i18n="startTrack">بدء تتبع المسار</span>
-      </button>
+      <!-- زر التتبع -->
+      <div id="trackingOffPanel">
+        <button class="btn btn-secondary ripple" style="margin-bottom:10px" onclick="startDriverTracking()">
+          <i class="fas fa-play"></i> بدء تتبع المسار
+        </button>
+      </div>
 
+      <!-- لوحة التتبع المضمنة داخل صفحة السائق -->
+      <div id="driverTrackingPanel" style="display:none;margin-bottom:12px">
+        <div style="background:linear-gradient(135deg,#1b5e20,#2e7d32);color:#fff;border-radius:var(--radius-sm);padding:10px 14px;margin-bottom:8px;display:flex;align-items:center;justify-content:space-between">
+          <span style="font-weight:700;font-size:0.9rem"><i class="fas fa-signal"></i> التتبع نشط</span>
+          <span id="trackingTimer" style="font-size:0.82rem;opacity:0.9">00:00:00</span>
+        </div>
+        <!-- خريطة مصغرة -->
+        <div id="driverInlineMap" style="width:100%;height:220px;border-radius:var(--radius-sm);overflow:hidden;margin-bottom:10px;border:2px solid var(--primary);background:#e8f5e9;display:flex;align-items:center;justify-content:center">
+          <div style="text-align:center;color:var(--primary)">
+            <i class="fas fa-map-marker-alt" style="font-size:2rem;margin-bottom:6px;display:block"></i>
+            <span style="font-size:0.82rem">جاري تحديد موقعك...</span>
+          </div>
+        </div>
+        <!-- إحصاء سريع -->
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">
+          <div style="background:var(--bg-card);border-radius:var(--radius-sm);padding:10px;text-align:center;border:2px solid var(--success)">
+            <div style="font-size:1.6rem;font-weight:900;color:var(--success)" id="driverBinCount">0</div>
+            <div style="font-size:0.72rem;color:var(--text-light)">حاوية مجمّعة</div>
+          </div>
+          <div style="background:var(--bg-card);border-radius:var(--radius-sm);padding:10px;text-align:center;border:2px solid var(--primary)">
+            <div style="font-size:1.6rem;font-weight:900;color:var(--primary)" id="driverDistCount">0</div>
+            <div style="font-size:0.72rem;color:var(--text-light)">نقطة مسجّلة</div>
+          </div>
+        </div>
+        <button class="btn btn-success ripple" onclick="recordBinFromDriver()" style="font-size:1rem;padding:14px;margin-bottom:8px">
+          <i class="fas fa-trash-alt"></i> تسجيل موقع حاوية
+        </button>
+        <button class="btn btn-danger ripple" style="font-size:0.9rem;padding:10px" onclick="stopDriverTracking()">
+          <i class="fas fa-stop-circle"></i> إيقاف التتبع وإنهاء المهمة
+        </button>
+      </div>
+
+      <!-- تفاصيل تسجيل حاوية (تظهر عند الضغط) -->
       <div id="binTrackingControls" style="display:none;margin-bottom:12px">
         <div class="info-card" style="text-align:center;margin-bottom:10px;font-weight:bold">
           <i class="fas fa-signal"></i> التتبع نشط - سجل الحاويات
@@ -2443,82 +2480,118 @@ select.input {
       </button>
     </div>
     <div id="adminPanel" class="hidden">
-      <div class="success-card" style="margin-bottom:12px">
+
+      <!-- بطاقة المشرف -->
+      <div class="success-card" style="margin-bottom:14px">
         <i class="fas fa-shield-alt"></i> <span id="adminCurrentUser">وضع المشرف مفعل</span>
       </div>
 
-      <!-- [3] لوحة التنبيهات الذكية -->
-      <div id="alertsPanel">
-        <h3 style="color:var(--danger);margin-bottom:8px;font-size:1rem"><i class="fas fa-bell"></i> تنبيهات المناطق</h3>
+      <!-- تنبيهات + السائقون الآن -->
+      <div id="alertsPanel" style="margin-bottom:10px">
+        <h3 style="color:var(--danger);margin-bottom:8px;font-size:0.92rem"><i class="fas fa-bell"></i> تنبيهات المناطق</h3>
         <div id="alertsList"></div>
       </div>
-
-      <!-- [4] حالة السائقين المباشرة -->
-      <div id="driversLivePanel">
-        <h3 style="color:var(--primary);margin-bottom:8px;font-size:1rem"><i class="fas fa-circle" style="color:var(--success)"></i> السائقون الآن</h3>
+      <div id="driversLivePanel" style="margin-bottom:12px">
+        <h3 style="color:var(--primary);margin-bottom:8px;font-size:0.92rem"><i class="fas fa-circle" style="color:var(--success)"></i> السائقون الآن</h3>
         <div id="driversLiveList"></div>
       </div>
-      <button class="btn btn-primary ripple" onclick="safeShowReports()">
-        <i class="fas fa-list-alt"></i> <span data-i18n="showReports">عرض البلاغات</span>
-      </button>
-      <button class="btn btn-secondary ripple" onclick="showPage('routeTracking')">
-        <i class="fas fa-route"></i> <span data-i18n="trackRoute">تتبع مسار الشاحنات</span>
-      </button>
-      <button class="btn btn-warning ripple" onclick="manageStaffPage()">
-        <i class="fas fa-users"></i> <span data-i18n="staffMng">إدارة الموظفين</span>
-      </button>
-      <button class="btn btn-purple ripple" onclick="showPage('tonnageRecords')">
-        <i class="fas fa-weight-hanging"></i> <span data-i18n="tonnageLog">سجل الكميات</span>
-      </button>
-      <button class="btn btn-info ripple" onclick="showPage('scheduleManager')">
-        <i class="fas fa-calendar-check"></i> <span data-i18n="scheduleMng">إدارة الجدول</span>
-      </button>
-      <button class="btn btn-success ripple" onclick="showPage('sortingCenter')">
-        <i class="fas fa-industry"></i> مركز الفرز
-      </button>
-      <button class="btn btn-purple ripple" onclick="showPage('recyclingMarket')">
-        <i class="fas fa-store"></i> سوق التدوير
-      </button>
-      <button class="btn btn-dark ripple" onclick="exportExcel()">
-        <i class="fas fa-file-excel"></i> <span data-i18n="exportExcel">تصدير Excel</span>
-      </button>
-      <button class="btn btn-dark ripple" style="margin-top:10px" onclick="openPrintDialog()">
-        <i class="fas fa-print"></i> طباعة PDF
-      </button>
-      <button class="btn btn-danger ripple" onclick="logoutAdmin()">
-        <i class="fas fa-sign-out-alt"></i> خروج
-      </button>
-      <!-- [5] تقرير يومي -->
-      <button class="btn btn-report-daily ripple" onclick="generateDailyReport()">
-        <i class="fas fa-file-invoice"></i> تقرير يومي تلقائي PDF
-      </button>
-      <!-- [7] QR السائقين -->
-      <button class="btn btn-gold ripple" onclick="showDriversQRPanel()">
-        <i class="fas fa-qrcode"></i> QR كود السائقين
-      </button>
-      <!-- [A] مقارنة أسبوعية -->
-      <button class="btn btn-info ripple" onclick="showPage('weeklyCompare')">
-        <i class="fas fa-chart-line"></i> مقارنة أسبوعية
-      </button>
-      <!-- [B] ترتيب السائقين -->
-      <button class="btn btn-gold ripple" onclick="showPage('driversRanking')">
-        <i class="fas fa-trophy"></i> ترتيب السائقين
-      </button>
-      <!-- [D] أرشيف -->
-      <button class="btn btn-dark ripple" onclick="openArchive()">
-        <i class="fas fa-archive"></i> أرشيف البلاغات
-      </button>
-      <!-- [E] وضع العرض التقديمي -->
-      <button class="btn ripple" style="background:linear-gradient(135deg,#006233,#004d29)" onclick="openPresentationMode()">
-        <i class="fas fa-desktop"></i> وضع العرض التقديمي
-      </button>
-      <!-- [G] بطاقة إنجاز شهرية -->
-      <button class="btn btn-gold ripple" onclick="showMonthlyAchievement()">
-        <i class="fas fa-medal"></i> إنجازات الشهر
-      </button>
-      <button class="btn ripple" style="margin-top:10px;font-size:0.8rem;background:#ff5722" onclick="emergencyClearData()">
-        <i class="fas fa-exclamation-triangle"></i> <span data-i18n="clearData">مسح البيانات</span>
-      </button>
+
+      <!-- ===== القسم 1: المتابعة الميدانية ===== -->
+      <div style="background:var(--bg);border-radius:var(--radius-sm);padding:12px;margin-bottom:10px;border:2px solid #e3f2fd">
+        <div style="font-weight:800;color:#1565c0;margin-bottom:10px;font-size:0.9rem">
+          <i class="fas fa-map-marked-alt"></i> المتابعة الميدانية
+        </div>
+        <button class="btn btn-primary ripple" onclick="safeShowReports()">
+          <i class="fas fa-list-alt"></i> عرض البلاغات
+        </button>
+        <button class="btn btn-secondary ripple" onclick="showPage('routeTracking')">
+          <i class="fas fa-route"></i> تتبع مسار الشاحنات
+        </button>
+        <button class="btn btn-info ripple" onclick="showPage('scheduleManager')">
+          <i class="fas fa-calendar-check"></i> إدارة الجدول
+        </button>
+        <button class="btn btn-warning ripple" onclick="manageStaffPage()">
+          <i class="fas fa-users"></i> إدارة الموظفين
+        </button>
+      </div>
+
+      <!-- ===== القسم 2: السجلات والإحصاء ===== -->
+      <div style="background:var(--bg);border-radius:var(--radius-sm);padding:12px;margin-bottom:10px;border:2px solid #e8f5e9">
+        <div style="font-weight:800;color:var(--primary);margin-bottom:10px;font-size:0.9rem">
+          <i class="fas fa-chart-bar"></i> السجلات والإحصاء
+        </div>
+        <button class="btn btn-purple ripple" onclick="showPage('tonnageRecords')">
+          <i class="fas fa-weight-hanging"></i> سجل الكميات
+        </button>
+        <button class="btn btn-info ripple" onclick="showPage('weeklyCompare')">
+          <i class="fas fa-chart-line"></i> مقارنة أسبوعية
+        </button>
+        <button class="btn btn-gold ripple" onclick="showPage('driversRanking')">
+          <i class="fas fa-trophy"></i> ترتيب السائقين
+        </button>
+        <button class="btn btn-gold ripple" onclick="showMonthlyAchievement()">
+          <i class="fas fa-medal"></i> إنجازات الشهر
+        </button>
+      </div>
+
+      <!-- ===== القسم 3: الاقتصاد الدائري ===== -->
+      <div style="background:var(--bg);border-radius:var(--radius-sm);padding:12px;margin-bottom:10px;border:2px solid #f3e5f5">
+        <div style="font-weight:800;color:#7b1fa2;margin-bottom:10px;font-size:0.9rem">
+          <i class="fas fa-recycle"></i> الاقتصاد الدائري
+        </div>
+        <div class="grid-2">
+          <button class="btn btn-success ripple" onclick="showPage('sortingCenter')">
+            <i class="fas fa-industry"></i> مركز الفرز
+          </button>
+          <button class="btn btn-purple ripple" onclick="showPage('recyclingMarket')">
+            <i class="fas fa-store"></i> سوق التدوير
+          </button>
+        </div>
+      </div>
+
+      <!-- ===== القسم 4: التقارير والتصدير ===== -->
+      <div style="background:var(--bg);border-radius:var(--radius-sm);padding:12px;margin-bottom:10px;border:2px solid #fbe9e7">
+        <div style="font-weight:800;color:#bf360c;margin-bottom:10px;font-size:0.9rem">
+          <i class="fas fa-file-alt"></i> التقارير والتصدير
+        </div>
+        <button class="btn btn-report-daily ripple" onclick="generateDailyReport()">
+          <i class="fas fa-file-invoice"></i> تقرير يومي PDF
+        </button>
+        <div class="grid-2">
+          <button class="btn btn-dark ripple" onclick="exportExcel()">
+            <i class="fas fa-file-excel"></i> تصدير Excel
+          </button>
+          <button class="btn btn-dark ripple" onclick="openPrintDialog()">
+            <i class="fas fa-print"></i> طباعة PDF
+          </button>
+        </div>
+        <button class="btn btn-dark ripple" onclick="openArchive()">
+          <i class="fas fa-archive"></i> أرشيف البلاغات
+        </button>
+        <button class="btn btn-gold ripple" onclick="showDriversQRPanel()">
+          <i class="fas fa-qrcode"></i> QR كود السائقين
+        </button>
+      </div>
+
+      <!-- ===== القسم 5: أدوات متقدمة ===== -->
+      <div style="background:var(--bg);border-radius:var(--radius-sm);padding:12px;margin-bottom:10px;border:2px solid #e8eaf6">
+        <div style="font-weight:800;color:#283593;margin-bottom:10px;font-size:0.9rem">
+          <i class="fas fa-tools"></i> أدوات متقدمة
+        </div>
+        <button class="btn ripple" style="background:linear-gradient(135deg,#006233,#004d29)" onclick="openPresentationMode()">
+          <i class="fas fa-desktop"></i> وضع العرض التقديمي
+        </button>
+      </div>
+
+      <!-- خروج + مسح -->
+      <div class="grid-2" style="margin-top:6px">
+        <button class="btn btn-danger ripple" onclick="logoutAdmin()">
+          <i class="fas fa-sign-out-alt"></i> خروج
+        </button>
+        <button class="btn ripple" style="font-size:0.8rem;background:#ff5722" onclick="emergencyClearData()">
+          <i class="fas fa-exclamation-triangle"></i> مسح البيانات
+        </button>
+      </div>
     </div>
     <button class="btn ripple" style="background:#757575" onclick="showPage('home')">
       <i class="fas fa-arrow-right"></i> <span data-i18n="back">رجوع</span>
@@ -3176,6 +3249,18 @@ function selectRole(role) {
     if(role === 'driver') {
       _startApp('mobile');
       setTimeout(function(){ showPage('driver'); }, 500);
+    } else if(role === 'admin') {
+      // الإدارة: توجيه لصفحة تسجيل الدخول أولاً وليس الصفحة الرئيسية مباشرة
+      _startApp(deviceMode);
+      var adminLoginDiv = document.getElementById('adminLogin');
+      var adminPanelDiv = document.getElementById('adminPanel');
+      if(adminLoginDiv) adminLoginDiv.classList.remove('hidden');
+      if(adminPanelDiv) adminPanelDiv.classList.add('hidden');
+      var an = document.getElementById('adminName');
+      var ac = document.getElementById('adminCode');
+      if(an) an.value = '';
+      if(ac) ac.value = '';
+      setTimeout(function(){ showPage('admin'); }, 500);
     } else {
       var spl = document.getElementById('splash');
       if(spl) { spl.style.display='flex'; spl.style.opacity='1'; }
@@ -4189,6 +4274,13 @@ function logoutDriver() {
   if(panelDiv)  { panelDiv.classList.add('hidden'); }
   if(nameInput) { nameInput.value = ''; }
   tempAfterImage = null;
+  // العودة إلى شاشة الاختيار الأولى
+  try { localStorage.removeItem('medea_role'); } catch(e) {}
+  currentRole = '';
+  var main = document.getElementById('mainContent');
+  var sel  = document.getElementById('deviceSelector');
+  if(main){ main.style.display='none'; main.classList.remove('active'); }
+  if(sel){ sel.style.opacity='1'; sel.style.display='flex'; sel.classList.add('active'); }
   showToast('✓ خروج', 'info');
 }
 
@@ -4577,8 +4669,17 @@ function exportExcel() {
 
 function exitApp() {
   if(confirm('هل تريد الخروج؟')) {
-    window.close();
-    setTimeout(() => { window.location.href = 'about:blank'; }, 1000);
+    // محاولة إغلاق النافذة أولاً (يعمل إذا فُتح التطبيق من رابط)
+    try { window.close(); } catch(e) {}
+    // العودة إلى شاشة الاختيار الأولى في جميع الحالات
+    setTimeout(function() {
+      try { localStorage.removeItem('medea_role'); } catch(e) {}
+      currentRole = '';
+      var main = document.getElementById('mainContent');
+      var sel  = document.getElementById('deviceSelector');
+      if(main){ main.style.display='none'; main.classList.remove('active'); }
+      if(sel){ sel.style.opacity='1'; sel.style.display='flex'; sel.classList.add('active'); }
+    }, 300);
   }
 }
 
@@ -5293,25 +5394,155 @@ function calculateConversion() {
 
 // ===== تتبع الشاحنة =====
 function startTruckTracking() {
-  if(!currentDriver) {
-    showToast('⚠️ يجب تسجيل الدخول أولاً', 'error');
-    return;
-  }
-  
+  // نبقي هذه الدالة للتوافق الخلفي (تستخدمها صفحة التتبع المستقلة)
+  if(!currentDriver) { showToast('⚠️ يجب تسجيل الدخول أولاً', 'error'); return; }
   truckTrackingData = {
-    active: true,    driver: currentDriver,
+    active: true, driver: currentDriver,
     sector: currentDriverSector,
     startTime: new Date().toISOString(),
-    positions: [],
-    collectedBins: []
+    positions: [], collectedBins: []
   };
-  
   saveToCloud('truckTracking', truckTrackingData);
   showPage('truckTracking');
   updateTruckTrackingUI();
   startGPSMonitoring();
-  
   showToast('✅ تم بدء التتبع المباشر', 'success');
+}
+
+// ===== التتبع المضمن في صفحة السائق =====
+var driverTrackingInterval = null;
+var driverTrackingStartTime = null;
+var driverTrackingMap = null;
+var driverTrackingMarker = null;
+var driverTrackingPolyline = null;
+var driverTrackingPositions = [];
+
+function startDriverTracking() {
+  if(!currentDriver) { showToast('⚠️ يجب تسجيل الدخول أولاً', 'error'); return; }
+  truckTrackingData = {
+    active: true, driver: currentDriver,
+    sector: currentDriverSector,
+    startTime: new Date().toISOString(),
+    positions: [], collectedBins: []
+  };
+  driverTrackingPositions = [];
+  driverTrackingStartTime = Date.now();
+  saveToCloud('truckTracking', truckTrackingData);
+
+  // إظهار اللوحة المضمنة وإخفاء زر البداية
+  document.getElementById('trackingOffPanel').style.display = 'none';
+  document.getElementById('driverTrackingPanel').style.display = 'block';
+  document.getElementById('driverBinCount').textContent = '0';
+  document.getElementById('driverDistCount').textContent = '0';
+
+  // تشغيل مؤقت العرض
+  driverTrackingInterval = setInterval(function() {
+    var elapsed = Math.floor((Date.now() - driverTrackingStartTime) / 1000);
+    var h = Math.floor(elapsed/3600), m = Math.floor((elapsed%3600)/60), s = elapsed%60;
+    var timer = document.getElementById('trackingTimer');
+    if(timer) timer.textContent =
+      String(h).padStart(2,'0')+':'+String(m).padStart(2,'0')+':'+String(s).padStart(2,'0');
+  }, 1000);
+
+  // تشغيل GPS
+  startInlineGPS();
+  showToast('✅ التتبع نشط — يمكنك تسجيل الحاويات', 'success');
+}
+
+function startInlineGPS() {
+  if(!navigator.geolocation) { showToast('⚠️ GPS غير مدعوم', 'error'); return; }
+
+  // تهيئة الخريطة Leaflet داخل السائق
+  try {
+    var mapDiv = document.getElementById('driverInlineMap');
+    if(mapDiv && !driverTrackingMap) {
+      mapDiv.innerHTML = '';
+      driverTrackingMap = L.map('driverInlineMap').setView([36.264, 2.754], 14);
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '© OpenStreetMap', maxZoom: 19
+      }).addTo(driverTrackingMap);
+    }
+  } catch(e) {}
+
+  window.driverGPSWatch = navigator.geolocation.watchPosition(function(pos) {
+    var lat = pos.coords.latitude, lng = pos.coords.longitude;
+    var position = { lat:lat, lng:lng, timestamp: new Date().toISOString() };
+    driverTrackingPositions.push(position);
+    truckTrackingData.positions = driverTrackingPositions;
+    saveToCloud('truckTracking', truckTrackingData);
+
+    var countEl = document.getElementById('driverDistCount');
+    if(countEl) countEl.textContent = driverTrackingPositions.length;
+
+    // تحديث الخريطة
+    try {
+      if(driverTrackingMap) {
+        if(driverTrackingMarker) driverTrackingMap.removeLayer(driverTrackingMarker);
+        driverTrackingMarker = L.marker([lat,lng]).addTo(driverTrackingMap);
+        driverTrackingMap.setView([lat,lng], 16);
+        if(driverTrackingPolyline) driverTrackingMap.removeLayer(driverTrackingPolyline);
+        if(driverTrackingPositions.length > 1) {
+          driverTrackingPolyline = L.polyline(
+            driverTrackingPositions.map(function(p){return [p.lat,p.lng];}),
+            {color:'#006233', weight:4}
+          ).addTo(driverTrackingMap);
+        }
+      } else {
+        // بدون Leaflet: عرض نصي
+        var mapDiv2 = document.getElementById('driverInlineMap');
+        if(mapDiv2) mapDiv2.innerHTML = '<div style="text-align:center;padding:20px;color:var(--primary)"><i class="fas fa-map-marker-alt" style="font-size:2rem;margin-bottom:8px;display:block"></i><b>موقعك الحالي</b><br><small>'+lat.toFixed(5)+', '+lng.toFixed(5)+'</small></div>';
+      }
+    } catch(e) {}
+  }, function(err) {
+    showToast('⚠️ تعذر تحديد الموقع', 'error');
+  }, {enableHighAccuracy:true, timeout:15000, maximumAge:0});
+}
+
+function recordBinFromDriver() {
+  if(!navigator.geolocation) { showToast('⚠️ GPS غير مدعوم', 'error'); return; }
+  showToast('📍 جاري تحديد الموقع...', 'info');
+  navigator.geolocation.getCurrentPosition(function(pos) {
+    var lat = pos.coords.latitude, lng = pos.coords.longitude;
+    var bin = {
+      lat:lat, lng:lng,
+      count:1,
+      timestamp: new Date().toISOString(),
+      driver: currentDriver,
+      sector: currentDriverSector
+    };
+    if(!truckTrackingData.collectedBins) truckTrackingData.collectedBins = [];
+    truckTrackingData.collectedBins.push(bin);
+    saveToCloud('truckTracking', truckTrackingData);
+    var countEl = document.getElementById('driverBinCount');
+    if(countEl) countEl.textContent = truckTrackingData.collectedBins.length;
+    // رسم على الخريطة
+    try {
+      if(driverTrackingMap) {
+        L.circle([lat,lng], {color:'#ff6d00',fillColor:'#ff6d00',fillOpacity:0.7,radius:8})
+          .addTo(driverTrackingMap)
+          .bindPopup('🗑️ حاوية ' + new Date().toLocaleTimeString('ar'));
+      }
+    } catch(e) {}
+    showToast('✅ تم تسجيل الحاوية رقم ' + truckTrackingData.collectedBins.length, 'success');
+  }, function() { showToast('⚠️ تعذر تحديد الموقع', 'error'); },
+  {enableHighAccuracy:true, timeout:10000});
+}
+
+function stopDriverTracking() {
+  if(driverTrackingInterval) { clearInterval(driverTrackingInterval); driverTrackingInterval = null; }
+  if(window.driverGPSWatch) { navigator.geolocation.clearWatch(window.driverGPSWatch); }
+  if(driverTrackingMap) { try { driverTrackingMap.remove(); } catch(e) {} driverTrackingMap = null; }
+  driverTrackingMarker = null; driverTrackingPolyline = null; driverTrackingPositions = [];
+
+  truckTrackingData.active = false;
+  truckTrackingData.endTime = new Date().toISOString();
+  saveToCloud('truckTracking', truckTrackingData);
+
+  document.getElementById('driverTrackingPanel').style.display = 'none';
+  document.getElementById('trackingOffPanel').style.display = 'block';
+
+  var bins = (truckTrackingData.collectedBins || []).length;
+  showToast('✅ انتهى التتبع — ' + bins + ' حاوية مسجّلة', 'success');
 }
 
 function startGPSMonitoring() {
@@ -6735,6 +6966,16 @@ function sendEmergencyReport() {
   }, {enableHighAccuracy:true, timeout:10000});
 }
 
+// ===== العودة لشاشة الاختيار الأولى =====
+function goBackToSelector() {
+  try { localStorage.removeItem('medea_role'); } catch(e) {}
+  currentRole = '';
+  var main = document.getElementById('mainContent');
+  var sel  = document.getElementById('deviceSelector');
+  if(main){ main.style.display='none'; main.classList.remove('active'); }
+  if(sel){ sel.style.opacity='1'; sel.style.display='flex'; sel.classList.add('active'); }
+}
+
 // ===== تهيئة الصفحة =====
 window.addEventListener('DOMContentLoaded', function() {
   // تحميل الثيم
@@ -6760,6 +7001,17 @@ window.addEventListener('DOMContentLoaded', function() {
     _startApp(devMode);
     if(savedRole === 'driver') {
       setTimeout(function(){ showPage('driver'); }, 400);
+    } else if(savedRole === 'admin') {
+      // الإدارة: دائماً تطلب تسجيل الدخول حتى لو كان الدور محفوظاً
+      var adminLoginDiv = document.getElementById('adminLogin');
+      var adminPanelDiv = document.getElementById('adminPanel');
+      if(adminLoginDiv) adminLoginDiv.classList.remove('hidden');
+      if(adminPanelDiv) adminPanelDiv.classList.add('hidden');
+      var an = document.getElementById('adminName');
+      var ac = document.getElementById('adminCode');
+      if(an) an.value = '';
+      if(ac) ac.value = '';
+      setTimeout(function(){ showPage('admin'); }, 200);
     } else {
       setTimeout(function(){ showPage('home'); }, 200);
     }
