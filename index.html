@@ -2408,7 +2408,7 @@ select.input {
             <div style="font-size:0.72rem;color:var(--text-light)">نقطة مسجّلة</div>
           </div>
         </div>
-        <button class="btn btn-success ripple" onclick="recordBinFromDriver()" style="font-size:1rem;padding:14px;margin-bottom:8px">
+        <button class="btn btn-success ripple" id="mainRecordBinBtn" onclick="recordBinFromDriver()" style="font-size:1rem;padding:14px;margin-bottom:8px">
           <i class="fas fa-trash-alt"></i> تسجيل موقع حاوية
         </button>
         <button class="btn btn-danger ripple" style="font-size:0.9rem;padding:10px" onclick="stopDriverTracking()">
@@ -2419,12 +2419,11 @@ select.input {
       <!-- تفاصيل تسجيل حاوية (تظهر عند الضغط) -->
       <div id="binTrackingControls" style="display:none;margin-bottom:12px">
         <div class="info-card" style="text-align:center;margin-bottom:10px;font-weight:bold">
-          <i class="fas fa-signal"></i> التتبع نشط - سجل الحاويات
+          <i class="fas fa-signal"></i> جاري تسجيل موقع الحاوية...
         </div>
-        <button class="btn btn-success ripple" onclick="recordBinCollection()" style="font-size:1.1rem;padding:18px" id="recordBinBtn">
+        <button class="btn btn-success ripple" onclick="recordBinCollection()" style="font-size:1.1rem;padding:18px;display:none" id="recordBinBtn">
           <i class="fas fa-trash-alt"></i> <span data-i18n="recordBin">تسجيل موقع الحاوية</span>
         </button>
-        <div style="text-align:center;margin-top:8px;color:var(--text-light);font-size:0.85rem">اضغط عند كل موقع حاوية ترفعها</div>
         <div id="binRecordResult" style="display:none;margin-top:12px;background:var(--bg-card);border-radius:var(--radius-sm);padding:14px;border:2px solid var(--success)">
           <div style="font-weight:700;color:var(--primary);margin-bottom:8px;text-align:center"><i class="fas fa-map-marker-alt"></i> تفاصيل الموقع المسجل</div>
           <div class="info-row"><b>📍 العنوان:</b> <span id="binAddr">-</span></div>
@@ -5499,7 +5498,19 @@ function startInlineGPS() {
 }
 
 function recordBinFromDriver() {
-  // استدعاء الوظيفة التي تظهر العنوان والإحداثيات وعدد الحاويات
+  // إخفاء الزر الرئيسي مؤقتاً لإظهار لوحة التحكم في التسجيل
+  const mainBtn = document.getElementById('mainRecordBinBtn');
+  if(mainBtn) mainBtn.style.display = 'none';
+  
+  // إظهار لوحة التحكم في التسجيل
+  const controls = document.getElementById('binTrackingControls');
+  if(controls) {
+    controls.style.display = 'block';
+    // التمرير للأسفل لرؤية اللوحة
+    controls.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }
+  
+  // استدعاء وظيفة جلب الموقع والعنوان تلقائياً
   recordBinCollection();
 }
 
@@ -5606,6 +5617,13 @@ function confirmBinCollection() {
   try { addBinMarkerToMap(bin); } catch(e) {}
   
   document.getElementById('binRecordResult').style.display = 'none';
+  
+  // إرجاع الزر الرئيسي وإخفاء لوحة التحكم
+  const mainBtn = document.getElementById('mainRecordBinBtn');
+  if(mainBtn) mainBtn.style.display = 'block';
+  const controls = document.getElementById('binTrackingControls');
+  if(controls) controls.style.display = 'none';
+
   pendingBinData = null;
   showToast('✅ تم تسجيل ' + count + ' حاوية في الموقع #' + truckTrackingData.collectedBins.length, 'success');
   if(navigator.vibrate) navigator.vibrate([200, 100, 200]);
@@ -5614,6 +5632,13 @@ function confirmBinCollection() {
 function cancelBinCollection() {
   pendingBinData = null;
   document.getElementById('binRecordResult').style.display = 'none';
+  
+  // إرجاع الزر الرئيسي وإخفاء لوحة التحكم
+  const mainBtn = document.getElementById('mainRecordBinBtn');
+  if(mainBtn) mainBtn.style.display = 'block';
+  const controls = document.getElementById('binTrackingControls');
+  if(controls) controls.style.display = 'none';
+
   showToast('تم إلغاء التسجيل', 'info');
 }
 
