@@ -3809,6 +3809,39 @@ function setupSync() {
         if(currentDriver && document.getElementById('tasksList')) renderDriverTasks();
       } catch(e) {}
     });
+    
+    // مستمع الموظفين
+    db.ref('staff').on('value', (snapshot) => {
+      try {
+        const data = snapshot && snapshot.val ? snapshot.val() : null;
+        if(data) {
+          localStorage.setItem('medea_staff', JSON.stringify(data));
+          if(document.getElementById('staffList')) loadStaffList();
+        }
+      } catch(e) {}
+    });
+    
+    // مستمع القطاعات
+    db.ref('schedule').on('value', (snapshot) => {
+      try {
+        const data = snapshot && snapshot.val ? snapshot.val() : null;
+        if(data) {
+          localStorage.setItem('medea_schedule', JSON.stringify(data));
+          if(document.getElementById('sectorsList')) loadSectorsList();
+        }
+      } catch(e) {}
+    });
+    
+    // مستمع الأطنان
+    db.ref('tonnage').on('value', (snapshot) => {
+      try {
+        const data = snapshot && snapshot.val ? snapshot.val() : null;
+        if(data) {
+          localStorage.setItem('medea_tonnage', JSON.stringify(data));
+          if(document.getElementById('tonnageList')) loadTonnageList();
+        }
+      } catch(e) {}
+    });
   } catch(e) {}
 }
 
@@ -4849,6 +4882,8 @@ function addScheduleSector() {
     });
     
     localStorage.setItem('medea_schedule', JSON.stringify(sectors));
+    // رفع إلى السحابة
+    try { db.ref('schedule').set(sectors).catch(()=>{}); } catch(e) {}
     showToast('✅ تم إضافة القطاع', 'success');
     
     document.getElementById('sectorNum').value = '';
@@ -4944,6 +4979,8 @@ function updateScheduleSector(id) {
       truckType: document.getElementById('sectorTruckType').value,
     };
     localStorage.setItem('medea_schedule', JSON.stringify(sectors));
+    // رفع إلى السحابة
+    try { db.ref('schedule').set(sectors).catch(()=>{}); } catch(e) {}
     showToast('✅ تم تحديث القطاع', 'success');
     // إعادة زر الحفظ لحالته الأصلية
     const saveBtn = document.querySelector('#scheduleManager .btn-primary');
@@ -4967,6 +5004,8 @@ function deleteScheduleSector(id) {
     let sectors = JSON.parse(localStorage.getItem('medea_schedule') || '[]');
     sectors = sectors.filter(s => s.id != id);
     localStorage.setItem('medea_schedule', JSON.stringify(sectors));
+    // رفع إلى السحابة
+    try { db.ref('schedule').set(sectors).catch(()=>{}); } catch(e) {}
     showToast('✅ تم الحذف', 'success');
     loadScheduleSectors();
   } catch(e) {
@@ -5471,7 +5510,7 @@ function startInlineGPS() {
     saveToCloud('truckTracking', truckTrackingData);
 
     var countEl = document.getElementById('driverDistCount');
-    if(countEl) countEl.textContent = driverTrackingPositions.length;
+    if(countEl) countEl.textContent = (truckTrackingData.collectedBins || []).length;
 
     // تحديث الخريطة
     try {
@@ -6289,7 +6328,8 @@ function addStaff() {
   
   try { 
     localStorage.setItem('medea_staff', JSON.stringify(s)); 
-    
+    // رفع إلى السحابة
+    try { db.ref('staff').set(s).catch(()=>{}); } catch(e) {}
     // تصفير الخانات بعد الحفظ الناجح
     document.getElementById('newStaffName').value = '';
     document.getElementById('newStaffRole').value = '';
