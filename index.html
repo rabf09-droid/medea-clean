@@ -5570,57 +5570,158 @@ function startGPSMonitoring() {
 let pendingBinData = null;
 
 function recordBinCollection() {
-  if(!truckTrackingData.active) { showToast('⚠️ التتبع غير نشط', 'error'); return; }
+  if(!truckTrackingData.active) { showToast('⚠️ التتبع غير نشط — ابدأ التتبع أولاً', 'error'); return; }
+
   const btn = document.getElementById('recordBinBtn');
+  const resultDiv = document.getElementById('binRecordResult');
+  const coordsEl = document.getElementById('binCoords');
+  const addrEl   = document.getElementById('binAddr');
+  const countInp = document.getElementById('binCountInput');
+
+  // --- تهيئة واجهة التحميل فوراً ---
   if(btn) { btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري تحديد الموقع...'; btn.disabled = true; }
-  document.getElementById('binRecordResult').style.display = 'none';
-  navigator.geolocation.getCurrentPosition(async pos => {
-    const lat = pos.coords.latitude, lng = pos.coords.longitude;
+  if(coordsEl) coordsEl.textContent = '⏳ جاري تحديد الإحداثيات...';
+  if(addrEl)   addrEl.textContent   = '⏳ جاري تحديد العنوان...';
+  if(countInp) countInp.value = 1;
+  if(resultDiv) resultDiv.style.display = 'block'; // نعرض الكارت فوراً
+
+  if(!navigator.geolocation) {
+    if(addrEl)   addrEl.textContent   = 'GPS غير مدعوم في هذا الجهاز';
+    if(coordsEl) coordsEl.textContent = '-';
+    if(btn) { btn.innerHTML = '<i class="fas fa-trash-alt"></i> تسجيل موقع الحاوية'; btn.disabled = false; }
+    showToast('⚠️ GPS غير مدعوم', 'error');
+    return;
+  }
+
+  // --- دالة مشتركة لمعالجة الموقع ---
+  async function handlePosition(lat, lng, isApproximate) {
     pendingBinData = { lat, lng, timestamp: new Date().toISOString() };
-    document.getElementById('binCoords').textContent = lat.toFixed(6) + ', ' + lng.toFixed(6);
-    document.getElementById('binAddr').textContent = '⏳ جاري تحديد العنوان...';
-    document.getElementById('binRecordResult').style.display = 'block';
-    document.getElementById('binCountInput').value = 1;
+
+    // عرض الإحداثيات فوراً
+    if(coordsEl) coordsEl.textContent = lat.toFixed(6) + ' , ' + lng.toFixed(6);
+
+    // إعادة الزر
     if(btn) { btn.innerHTML = '<i class="fas fa-trash-alt"></i> تسجيل موقع جديد'; btn.disabled = false; }
     if(navigator.vibrate) navigator.vibrate([100, 50, 100]);
+
+    if(isApproximate) {
+      showToast('⚠️ تم استخدام آخر موقع محفوظ', 'warning');
+    } else {
+      showToast('📍 تم تحديد الموقع — أدخل عدد الحاويات', 'info');
+    }
+
+    // جلب العنوان بشكل منفصل (لا يعيق العرض)
     try {
+      if(addrEl) addrEl.textContent = '⏳ جاري تحديد العنوان...';
       const addr = await getAddressFromCoords(lat, lng);
-      document.getElementById('binAddr').textContent = addr;
-      pendingBinData.address = addr;
-    } catch(e) { document.getElementById('binAddr').textContent = lat.toFixed(4) + ', ' + lng.toFixed(4); }
-    showToast('📍 تم تحديد الموقع - أدخل عدد الحاويات', 'info');
-  }, err => {
-    if(btn) { btn.innerHTML = '<i class="fas fa-trash-alt"></i> <span data-i18n="recordBin">تسجيل موقع الحاوية</span>'; btn.disabled = false; }
-    showToast('⚠️ فشل تحديد الموقع، حاول مجدداً', 'error');
-  }, {enableHighAccuracy: true, timeout: 15000, maximumAge: 0});
+      const finalAddr = addr || ('المدية — ' + lat.toFixed(4) + ', ' + lng.toFixed(4));
+      if(addrEl) addrEl.textContent = finalAddr;
+      pendingBinData.address = finalAddr;
+    } catch(e) {
+      const fallbackAddr = 'المدية — ' + lat.toFixed(4) + ', ' + lng.toFixed(4);
+      if(addrEl) addrEl.textContent = fallbackAddr;
+      pendingBinData.address = fallbackAddr;
+    }
+  }
+
+  // --- طلب GPS بدقة عالية ---
+  let resolved = false;
+
+  // Timeout يدوي: إذا لم يرد GPS في 8 ثواني نستخدم المخزّن المؤقت
+  const gpsTimeout = setTimeout(() => {
+    if(resolved) return;
+    resolved = true;
+    // محاولة استخدام آخر موقع مخزّن (maximumAge كبير)
+    navigator.geolocation.getCurrentPosition(
+      pos => handlePosition(pos.coords.latitude, pos.coords.longitude, true),
+      () => {
+        // لا يوجد أي موقع — نعرض رسالة خطأ واضحة
+        if(coordsEl) coordsEl.textContent = 'تعذر تحديد الموقع';
+        if(addrEl)   addrEl.textContent   = 'تأكد من تفعيل GPS وإذن الموقع';
+        if(btn) { btn.innerHTML = '<i class="fas fa-trash-alt"></i> أعد المحاولة'; btn.disabled = false; }
+        if(resultDiv) resultDiv.style.display = 'none';
+        showToast('⚠️ فشل GPS — تأكد من تفعيل الموقع', 'error');
+      },
+      { enableHighAccuracy: false, timeout: 5000, maximumAge: 60000 }
+    );
+  }, 8000);
+
+  navigator.geolocation.getCurrentPosition(
+    pos => {
+      if(resolved) return;
+      resolved = true;
+      clearTimeout(gpsTimeout);
+      handlePosition(pos.coords.latitude, pos.coords.longitude, false);
+    },
+    err => {
+      if(resolved) return;
+      resolved = true;
+      clearTimeout(gpsTimeout);
+      let msg = '⚠️ فشل تحديد الموقع';
+      if(err.code === 1) msg = '⚠️ لم تُمنح إذن الموقع — فعّل الإذن من الإعدادات';
+      if(err.code === 2) msg = '⚠️ الموقع غير متاح — تحقق من GPS';
+      if(err.code === 3) msg = '⚠️ انتهت مهلة GPS — حاول مجدداً';
+      if(coordsEl) coordsEl.textContent = 'تعذر تحديد الموقع';
+      if(addrEl)   addrEl.textContent   = msg;
+      if(btn) { btn.innerHTML = '<i class="fas fa-trash-alt"></i> أعد المحاولة'; btn.disabled = false; }
+      if(resultDiv) resultDiv.style.display = 'none';
+      showToast(msg, 'error');
+    },
+    { enableHighAccuracy: true, timeout: 8000, maximumAge: 0 }
+  );
 }
 
 function changeBinCount(delta) {
   const inp = document.getElementById('binCountInput');
   if(!inp) return;
-  let val = parseInt(inp.value) + delta;
+  let val = (parseInt(inp.value) || 1) + delta;
   inp.value = Math.min(50, Math.max(1, val));
 }
 
 function confirmBinCollection() {
-  if(!pendingBinData) { showToast('⚠️ لا يوجد موقع محدد', 'error'); return; }
-  const count = parseInt(document.getElementById('binCountInput').value) || 1;
-  const bin = { id: Date.now(), lat: pendingBinData.lat, lng: pendingBinData.lng,
-    address: pendingBinData.address || '', count: count,
-    timestamp: pendingBinData.timestamp, sector: currentDriverSector, driver: currentDriver };
+  if(!pendingBinData) { showToast('⚠️ لا يوجد موقع محدد — اضغط تسجيل أولاً', 'error'); return; }
+
+  const countInp = document.getElementById('binCountInput');
+  const count = parseInt(countInp ? countInp.value : 1) || 1;
+
+  const bin = {
+    id: Date.now(),
+    lat: pendingBinData.lat,
+    lng: pendingBinData.lng,
+    address: pendingBinData.address || (pendingBinData.lat.toFixed(4) + ', ' + pendingBinData.lng.toFixed(4)),
+    count: count,
+    timestamp: pendingBinData.timestamp,
+    sector: currentDriverSector,
+    driver: currentDriver
+  };
+
+  if(!truckTrackingData.collectedBins) truckTrackingData.collectedBins = [];
   truckTrackingData.collectedBins.push(bin);
   saveToCloud('truckTracking', truckTrackingData);
+
+  // تحديث عداد الحاويات في كل العناصر
+  const totalBins = truckTrackingData.collectedBins.length;
+  const binCountEl = document.getElementById('driverBinCount');
+  if(binCountEl) binCountEl.textContent = totalBins;
+  const collectedCountEl = document.getElementById('collectedBinsCount');
+  if(collectedCountEl) collectedCountEl.textContent = totalBins;
+
   updateTruckTrackingUI();
   addBinMarkerToMap(bin);
+
   document.getElementById('binRecordResult').style.display = 'none';
   pendingBinData = null;
-  showToast('✅ تم تسجيل ' + count + ' حاوية في الموقع #' + truckTrackingData.collectedBins.length, 'success');
+
+  showToast('✅ تم تسجيل ' + count + ' حاوية — إجمالي المواقع: ' + totalBins, 'success');
   if(navigator.vibrate) navigator.vibrate([200, 100, 200]);
 }
 
 function cancelBinCollection() {
   pendingBinData = null;
-  document.getElementById('binRecordResult').style.display = 'none';
+  const resultDiv = document.getElementById('binRecordResult');
+  if(resultDiv) resultDiv.style.display = 'none';
+  const btn = document.getElementById('recordBinBtn');
+  if(btn) { btn.innerHTML = '<i class="fas fa-trash-alt"></i> تسجيل موقع الحاوية'; btn.disabled = false; }
   showToast('تم إلغاء التسجيل', 'info');
 }
 
