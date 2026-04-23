@@ -1,4 +1,4 @@
-  <!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
 <meta charset="UTF-8">
@@ -3312,10 +3312,16 @@ function _startApp(mode) {
   try { loadFromCloud('wasteTracking','wasteTracking',(d)=>{wasteTracking=d?Object.values(d):[];}); } catch(e) {}
   try { loadFromCloud('marketMaterials','marketMaterials',(d)=>{marketMaterials=d?Object.values(d):[];}); } catch(e) {}
   try { loadFromCloud('truckTracking','truckTracking',(d)=>{if(d)truckTrackingData=d;}); } catch(e) {}
-  // تحميل الموظفين والقطاعات فور بدء التطبيق لضمان المزامنة
-  try { loadFromCloud('staff','staff',(d)=>{ if(d){ const arr=Array.isArray(d)?d:Object.values(d); localStorage.setItem('medea_staff',JSON.stringify(arr)); } }); } catch(e) {}
-  try { loadFromCloud('schedule','schedule',(d)=>{ if(d){ const arr=Array.isArray(d)?d:Object.values(d); localStorage.setItem('medea_schedule',JSON.stringify(arr)); } }); } catch(e) {}
-  try { loadFromCloud('tonnage','tonnage',(d)=>{ if(d){ const arr=Array.isArray(d)?d:Object.values(d); localStorage.setItem('medea_tonnage',JSON.stringify(arr)); } }); } catch(e) {}
+  // تحميل الموظفين والقطاعات فور بدء التطبيق — ضروري للأجهزة الجديدة
+  try { loadFromCloud('staff','staff',(d)=>{
+    if(d){ const arr=Array.isArray(d)?d:Object.values(d); localStorage.setItem('medea_staff',JSON.stringify(arr)); }
+  }); } catch(e) {}
+  try { loadFromCloud('schedule','schedule',(d)=>{
+    if(d){ const arr=Array.isArray(d)?d:Object.values(d); localStorage.setItem('medea_schedule',JSON.stringify(arr)); }
+  }); } catch(e) {}
+  try { loadFromCloud('tonnage','tonnage',(d)=>{
+    if(d){ const arr=Array.isArray(d)?d:Object.values(d); localStorage.setItem('medea_tonnage',JSON.stringify(arr)); }
+  }); } catch(e) {}
   try { var lang=localStorage.getItem('medea_lang')||'ar'; currentLang=lang; updateLanguageUI(); } catch(e) {}
   try { applyRoleUI(); } catch(e) {}
 }
@@ -3819,7 +3825,6 @@ function setupSync() {
       try {
         const data = snapshot && snapshot.val ? snapshot.val() : null;
         if(data) {
-          // Firebase يُعيد object — نحوّله لـ array
           const arr = Array.isArray(data) ? data : Object.values(data);
           localStorage.setItem('medea_staff', JSON.stringify(arr));
           if(document.getElementById('staffList')) loadStaffList();
@@ -3832,10 +3837,13 @@ function setupSync() {
       try {
         const data = snapshot && snapshot.val ? snapshot.val() : null;
         if(data) {
-          // Firebase يُعيد object — نحوّله لـ array
           const arr = Array.isArray(data) ? data : Object.values(data);
           localStorage.setItem('medea_schedule', JSON.stringify(arr));
           if(document.getElementById('scheduleList')) loadScheduleSectors();
+          // تحديث جدول المواطن إذا كان مفتوحاً
+          if(document.getElementById('scheduleDisplay')) displaySchedule();
+          // تحديث السائق إذا كان مسجل الدخول
+          if(currentDriver) updateDriverSchedule();
         }
       } catch(e) {}
     });
@@ -5518,7 +5526,13 @@ function startInlineGPS() {
     saveToCloud('truckTracking', truckTrackingData);
 
     var countEl = document.getElementById('driverDistCount');
-    if(countEl) countEl.textContent = (truckTrackingData.collectedBins || []).length;
+    if(countEl) countEl.textContent = driverTrackingPositions.length;
+    // تحديث عداد الحاويات بالمجموع الحقيقي
+    var binEl = document.getElementById('driverBinCount');
+    if(binEl) {
+      var totalBins = (truckTrackingData.collectedBins || []).reduce(function(s,b){ return s+(parseInt(b.count)||1); }, 0);
+      binEl.textContent = totalBins;
+    }
 
     // تحديث الخريطة
     try {
@@ -5646,9 +5660,12 @@ function confirmBinCollection() {
   truckTrackingData.collectedBins.push(bin);
   saveToCloud('truckTracking', truckTrackingData);
   
-  // تحديث واجهة السائق
+  // تحديث واجهة السائق — مجموع الحاويات الحقيقي وليس عدد النقاط
   const countEl = document.getElementById('driverBinCount');
-  if(countEl) countEl.textContent = truckTrackingData.collectedBins.length;
+  if(countEl) {
+    const totalBins = (truckTrackingData.collectedBins || []).reduce((s,b) => s + (parseInt(b.count)||1), 0);
+    countEl.textContent = totalBins;
+  }
   
   // رسم على الخريطة المضمنة للسائق إذا كانت موجودة
   try {
@@ -5722,7 +5739,10 @@ function updateTruckTrackingUI() {
     const timeEl = document.getElementById('trackingTime');
     if(timeEl) timeEl.textContent = truckTrackingData.startTime ? new Date(truckTrackingData.startTime).toLocaleTimeString('ar-DZ') : '-';
     const countEl = document.getElementById('collectedBinsCount');
-    if(countEl) countEl.textContent = truckTrackingData.collectedBins.length;
+    if(countEl) {
+      const realTotal = (truckTrackingData.collectedBins||[]).reduce((s,b)=>s+(parseInt(b.count)||1),0);
+      countEl.textContent = realTotal;
+    }
     
     const binsList = document.getElementById('collectedBinsList');
     if(binsList) {
@@ -6370,12 +6390,10 @@ function editStaff(i) {
   const np = prompt('الهاتف الجديد:', st.phone || '');
   
   s[i] = {name: nn, role: nr, phone: np, addedBy: st.addedBy || 'فتحي', addedDate: st.addedDate || new Date().toLocaleDateString('ar-DZ')};
-  try { 
+  try {
     localStorage.setItem('medea_staff', JSON.stringify(s));
-    // رفع التعديل إلى السحابة
     try { db.ref('staff').set(s).catch(()=>{}); } catch(e) {}
   } catch(e) {}
-  
   loadStaffList();
   showToast('✅ تم التعديل بواسطة فتحي', 'success');
 }
@@ -6392,12 +6410,10 @@ function deleteStaff(i) {
   let s = [];
   try { s = JSON.parse(localStorage.getItem('medea_staff') || '[]'); } catch(e) {}
   s.splice(i, 1);
-  try { 
+  try {
     localStorage.setItem('medea_staff', JSON.stringify(s));
-    // رفع الحذف إلى السحابة
     try { db.ref('staff').set(s).catch(()=>{}); } catch(e) {}
   } catch(e) {}
-  
   loadStaffList();
   showToast('✅ تم الحذف بواسطة فتحي', 'success');
 }
