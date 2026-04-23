@@ -2235,19 +2235,29 @@ select.input {
     <h2 style="margin-bottom:15px;color:var(--primary);text-align:center">
       <i class="fas fa-truck"></i> <span data-i18n="truckTitle">تتبع مسار الشاحنة</span>
     </h2>
-    <div class="card">
+    <!-- اختيار القطاع -->
+    <div class="card" style="margin-bottom:12px">
+      <h3 style="margin-bottom:10px"><i class="fas fa-map-marked-alt"></i> اختر القطاع</h3>
+      <select class="in input" id="citizenSectorSelect" onchange="citizenSelectSector()" style="font-size:1rem;padding:12px;border:2px solid var(--primary);border-radius:var(--radius-sm);width:100%;font-family:Cairo,sans-serif;color:var(--text);background:var(--bg-card)">
+        <option value="">-- اختر رقم القطاع --</option>
+      </select>
+    </div>
+    <div class="card" id="citizenTrackingInfoCard" style="display:none">
       <h3><i class="fas fa-info-circle"></i> المعلومات الحالية</h3>
       <div class="info-row"><b>🏷️ رقم القطاع:</b> <span id="trackingSector">-</span></div>
-      <div class="info-row"><b>📅 التاريخ:</b> <span id="trackingDate">-</span></div>
-      <div class="info-row"><b>🕐 الوقت:</b> <span id="trackingTime">-</span></div>
+      <div class="info-row"><b>📍 الأحياء:</b> <span id="trackingZones" style="color:var(--primary-light);font-size:0.88rem">-</span></div>
+      <div class="info-row"><b>📅 أيام الجمع:</b> <span id="trackingDays">-</span></div>
+      <div class="info-row"><b>🕐 وقت المرور:</b> <span id="trackingTime">-</span></div>
+      <div class="info-row"><b>📅 تاريخ آخر تتبع:</b> <span id="trackingDate">-</span></div>
       <div class="info-row"><b>🗑️ الحاويات المجمعة:</b> <span id="collectedBinsCount" style="color:var(--success);font-weight:bold">0</span></div>
     </div>
-    <div class="warning-card" id="liveTrackingStatus">🔴 التتبع المباشر نشط</div>
+    <div class="warning-card" id="liveTrackingStatus" style="display:none">🔴 التتبع المباشر نشط</div>
     <div id="map"></div>
-    <div class="card">
+    <div class="card" id="citizenBinsListCard" style="display:none">
       <h3><i class="fas fa-list"></i> سجل الحاويات المجمعة</h3>
-      <div id="collectedBinsList"></div>    </div>
-    <button class="btn ripple" style="background:#757575" onclick="showPage('driver')">
+      <div id="collectedBinsList"></div>
+    </div>
+    <button class="btn ripple" style="background:#757575" onclick="showPage('home')">
       <i class="fas fa-arrow-right"></i> <span data-i18n="back">رجوع</span>
     </button>
   </div>
@@ -3878,11 +3888,34 @@ function setupSync() {
         }
       } catch(e) {}
     });
+
+    // ✅ مستمع تتبع الشاحنة — يحدّث المواطن والإدارة فورياً عند أي تغيير من السائق
+    db.ref('truckTracking').on('value', (snapshot) => {
+      try {
+        const data = snapshot && snapshot.val ? snapshot.val() : null;
+        if(data) {
+          truckTrackingData = data;
+          localStorage.setItem('medea_truckTracking', JSON.stringify(data));
+          // تحديث واجهة التتبع إذا كانت مفتوحة
+          try { updateTruckTrackingUI(); } catch(e) {}
+          // تحديث خريطة المواطن إذا كانت مفتوحة
+          try {
+            const sel = document.getElementById('citizenSectorSelect');
+            if(sel && sel.value) citizenSelectSector();
+          } catch(e) {}
+          // تحديث لوحة الإدارة إذا كانت مفتوحة
+          try { if(document.getElementById('activeDrivers')) updateAdminStats(); } catch(e) {}
+        }
+      } catch(e) {}
+    });
   } catch(e) {}
 }
 
 function saveToCloud(path, data) {
-  try { db.ref(path).set(data).catch(()=>{}); } catch(e) {}
+  try {
+    // truckTracking: نستخدم set() مباشرة لأن البنية كاملة دائماً
+    db.ref(path).set(data).catch(()=>{});
+  } catch(e) {}
   try { localStorage.setItem('medea_' + path, JSON.stringify(data)); } catch(e) {}
 }
 function loadFromCloud(path, localKey, callback) {
@@ -3890,15 +3923,21 @@ function loadFromCloud(path, localKey, callback) {
     db.ref(path).once('value').then(snapshot => {
       try {
         const data = snapshot && snapshot.val ? snapshot.val() : null;
-        if(data) {
+        if(data !== null && data !== undefined) {
+          // ✅ البيانات موجودة في السحابة — هي المصدر الرئيسي
           callback(data);
           localStorage.setItem('medea_' + localKey, JSON.stringify(data));
         } else {
+          // السحابة فارغة — استخدم النسخة المحلية كاحتياط فقط
           const localData = localStorage.getItem('medea_' + localKey);
           if(localData) callback(JSON.parse(localData));
         }
-      } catch(e) {}
+      } catch(e) {
+        const localData = localStorage.getItem('medea_' + localKey);
+        if(localData) try { callback(JSON.parse(localData)); } catch(e2) {}
+      }
     }).catch(() => {
+      // لا اتصال — استخدم النسخة المحلية
       try {
         const localData = localStorage.getItem('medea_' + localKey);
         if(localData) callback(JSON.parse(localData));
@@ -5751,14 +5790,22 @@ function updateTruckTrackingUI() {
       }
     }
     
-    const driverEl = document.getElementById('trackingDriverName');
-    if(driverEl) driverEl.textContent = truckTrackingData.driver || '-';
     const sectorEl = document.getElementById('trackingSector');
     if(sectorEl) sectorEl.textContent = truckTrackingData.sector || '-';
     const dateEl = document.getElementById('trackingDate');
     if(dateEl) dateEl.textContent = truckTrackingData.startTime ? new Date(truckTrackingData.startTime).toLocaleDateString('ar-DZ') : '-';
     const timeEl = document.getElementById('trackingTime');
-    if(timeEl) timeEl.textContent = truckTrackingData.startTime ? new Date(truckTrackingData.startTime).toLocaleTimeString('ar-DZ') : '-';
+    if(timeEl) {
+      try {
+        const sectors = JSON.parse(localStorage.getItem('medea_schedule')||'[]');
+        const si = sectors.find(s=>String(s.num||s.name)===String(truckTrackingData.sector));
+        timeEl.textContent = si ? (si.time||'-') : '-';
+        const zonesEl = document.getElementById('trackingZones');
+        if(zonesEl) zonesEl.textContent = si ? (si.name||'-') : '-';
+        const daysEl = document.getElementById('trackingDays');
+        if(daysEl) daysEl.textContent = si ? (si.days||'-') : '-';
+      } catch(e) { timeEl.textContent = '-'; }
+    }
     const countEl = document.getElementById('collectedBinsCount');
     if(countEl) {
       const realTotal = (truckTrackingData.collectedBins||[]).reduce((s,b)=>s+(parseInt(b.count)||1),0);
@@ -5797,8 +5844,33 @@ function updateDriverPanel() {
 
 function initTruckTrackingMap() {
   try {
-    if(map) { map.remove(); }
-    
+    // تعبئة قائمة القطاعات للمواطن
+    const citizenSel = document.getElementById('citizenSectorSelect');
+    if(citizenSel) {
+      try {
+        const sectors = JSON.parse(localStorage.getItem('medea_schedule') || '[]');
+        citizenSel.innerHTML = '<option value="">-- اختر رقم القطاع --</option>';
+        const seen = new Set();
+        sectors.forEach(s => {
+          const num = s.num || s.name || '';
+          if(num && !seen.has(num)) {
+            seen.add(num);
+            const opt = document.createElement('option');
+            opt.value = num;
+            opt.textContent = 'القطاع ' + num;
+            citizenSel.appendChild(opt);
+          }
+        });
+        // إذا كان التتبع نشطاً حدد القطاع الحالي تلقائياً
+        if(truckTrackingData.active && truckTrackingData.sector) {
+          citizenSel.value = truckTrackingData.sector;
+          citizenSelectSector();
+          return;
+        }
+      } catch(e) {}
+    }
+
+    if(map) { map.remove(); map = null; }
     map = L.map('map').setView([36.2642, 2.7545], 13);
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
       attribution: '© OpenStreetMap contributors'
@@ -5807,14 +5879,88 @@ function initTruckTrackingMap() {
     if(truckTrackingData.positions.length > 0) {
       const lastPos = truckTrackingData.positions[truckTrackingData.positions.length - 1];
       map.setView([lastPos.lat, lastPos.lng], 15);
-      
       trackingMarker = L.marker([lastPos.lat, lastPos.lng]).addTo(map).bindPopup(`<b>🚚 الشاحنة</b><br>القطاع: ${truckTrackingData.sector}`);
-      
       const latlngs = truckTrackingData.positions.map(p => [p.lat, p.lng]);
       trackingPath = L.polyline(latlngs, {color: '#1B5E20', weight: 4}).addTo(map);
-      
       truckTrackingData.collectedBins.forEach(bin => addBinMarkerToMap(bin));
     }
+  } catch(e) {}
+}
+
+// ===== تحديث معلومات القطاع المختار من المواطن =====
+function citizenSelectSector() {
+  try {
+    const sectorNum = document.getElementById('citizenSectorSelect').value;
+    const infoCard = document.getElementById('citizenTrackingInfoCard');
+    const statusEl = document.getElementById('liveTrackingStatus');
+    const binsCard = document.getElementById('citizenBinsListCard');
+
+    if(!sectorNum) {
+      if(infoCard) infoCard.style.display = 'none';
+      if(statusEl) statusEl.style.display = 'none';
+      if(binsCard) binsCard.style.display = 'none';
+      if(map) { map.remove(); map = null; }
+      return;
+    }
+
+    if(infoCard) infoCard.style.display = 'block';
+
+    // بيانات الجدول من localStorage
+    const sectors = JSON.parse(localStorage.getItem('medea_schedule') || '[]');
+    const sectorInfo = sectors.find(s => String(s.num || s.name) === String(sectorNum));
+
+    document.getElementById('trackingSector').textContent = sectorNum;
+    document.getElementById('trackingZones').textContent = sectorInfo ? (sectorInfo.name || '-') : '-';
+    document.getElementById('trackingDays').textContent  = sectorInfo ? (sectorInfo.days || '-') : '-';
+    document.getElementById('trackingTime').textContent  = sectorInfo ? (sectorInfo.time || '-') : '-';
+
+    // بيانات التتبع الحي إذا كانت تخص نفس القطاع
+    const isActiveSector = truckTrackingData.active && String(truckTrackingData.sector) === String(sectorNum);
+    
+    if(isActiveSector) {
+      document.getElementById('trackingDate').textContent = truckTrackingData.startTime
+        ? new Date(truckTrackingData.startTime).toLocaleDateString('ar-DZ') : '-';
+      const realTotal = (truckTrackingData.collectedBins||[]).reduce((s,b)=>s+(parseInt(b.count)||1),0);
+      document.getElementById('collectedBinsCount').textContent = realTotal;
+      if(statusEl) { statusEl.style.display = 'block'; statusEl.innerHTML = '🟢 التتبع المباشر نشط'; statusEl.style.background = 'linear-gradient(135deg,var(--success),#388E3C)'; }
+      
+      // سجل الحاويات
+      const binsList = document.getElementById('collectedBinsList');
+      if(binsList && truckTrackingData.collectedBins.length > 0) {
+        if(binsCard) binsCard.style.display = 'block';
+        binsList.innerHTML = truckTrackingData.collectedBins.map((bin,idx) => `
+          <div class="bin-collected">
+            🗑️ موقع #${idx+1} — <b>${bin.count||1}</b> حاوية<br>
+            ${bin.address ? `<small>📍 ${bin.address}</small><br>` : ''}
+            <small>🕐 ${new Date(bin.timestamp).toLocaleTimeString('ar-DZ')}</small>
+          </div>`).join('');
+      } else {
+        if(binsCard) binsCard.style.display = 'none';
+      }
+
+      // تحديث الخريطة
+      if(map) { map.remove(); map = null; }
+      map = L.map('map').setView([36.2642, 2.7545], 13);
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {attribution:'© OpenStreetMap'}).addTo(map);
+      if(truckTrackingData.positions.length > 0) {
+        const lastPos = truckTrackingData.positions[truckTrackingData.positions.length - 1];
+        map.setView([lastPos.lat, lastPos.lng], 15);
+        L.marker([lastPos.lat, lastPos.lng]).addTo(map).bindPopup(`<b>🚚 الشاحنة</b><br>القطاع: ${sectorNum}`);
+        if(truckTrackingData.positions.length > 1) {
+          L.polyline(truckTrackingData.positions.map(p=>[p.lat,p.lng]), {color:'#1B5E20',weight:4}).addTo(map);
+        }
+        truckTrackingData.collectedBins.forEach(bin => addBinMarkerToMap(bin));
+      }
+    } else {
+      document.getElementById('trackingDate').textContent = '-';
+      document.getElementById('collectedBinsCount').textContent = '0';
+      if(statusEl) { statusEl.style.display = 'block'; statusEl.innerHTML = '🔴 لا يوجد تتبع نشط لهذا القطاع حالياً'; statusEl.style.background = '#757575'; }
+      if(binsCard) binsCard.style.display = 'none';
+      if(map) { map.remove(); map = null; }
+      map = L.map('map').setView([36.2642, 2.7545], 13);
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {attribution:'© OpenStreetMap'}).addTo(map);
+    }
+    setTimeout(()=>{ try{ if(map) map.invalidateSize(); }catch(e){} }, 300);
   } catch(e) {}
 }
 
