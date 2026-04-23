@@ -2237,7 +2237,6 @@ select.input {
     </h2>
     <div class="card">
       <h3><i class="fas fa-info-circle"></i> المعلومات الحالية</h3>
-      <div class="info-row"><b>👤 السائق:</b> <span id="trackingDriverName">-</span></div>
       <div class="info-row"><b>🏷️ رقم القطاع:</b> <span id="trackingSector">-</span></div>
       <div class="info-row"><b>📅 التاريخ:</b> <span id="trackingDate">-</span></div>
       <div class="info-row"><b>🕐 الوقت:</b> <span id="trackingTime">-</span></div>
@@ -2262,11 +2261,6 @@ select.input {
       <h3><i class="fas fa-map-marked-alt"></i> اختيار القطاع</h3>
       <select class="in input" id="sectorSelect" onchange="loadSectorRoute()">
         <option value="">-- اختر القطاع --</option>
-        <option value="1">القطاع 1</option>
-        <option value="2">القطاع 2</option>
-        <option value="3">القطاع 3</option>
-        <option value="4">القطاع 4</option>
-        <option value="5">القطاع 5</option>
       </select>
       <div class="grid-2" style="margin-top:10px">
         <button class="btn btn-primary ripple" onclick="showRouteOnMap()">
@@ -2281,7 +2275,6 @@ select.input {
       <h3><i class="fas fa-chart-line"></i> معلومات المسار</h3>
       <div class="info-row"><b>🏷️ القطاع:</b> <span id="routeSectorName">-</span></div>
       <div class="info-row"><b>📅 التاريخ:</b> <span id="routeDate">-</span></div>
-      <div class="info-row"><b>🚛 السائق:</b> <span id="routeDriver">-</span></div>
       <div class="info-row"><b>🗑️ الحاويات المجمعة:</b> <span id="routeBinsCount" style="color:var(--success);font-weight:bold">0</span></div>
     </div>
     <div id="routeMap"></div>
@@ -2306,7 +2299,6 @@ select.input {
       <div style="background:var(--bg);padding:15px;border-radius:var(--radius-sm);margin-bottom:15px">
         <h3 style="color:var(--primary);margin-bottom:8px;font-size:16px;text-align:center">📊 معلومات المسار</h3>
         <div style="display:flex;justify-content:space-between;margin:5px 0;padding:7px 0;border-bottom:1px solid var(--border)"><b>القطاع:</b><span id="previewSector">-</span></div>
-        <div style="display:flex;justify-content:space-between;margin:5px 0;padding:7px 0;border-bottom:1px solid var(--border)"><b>السائق:</b><span id="previewDriver">-</span></div>
         <div style="display:flex;justify-content:space-between;margin:5px 0;padding:7px 0;border-bottom:1px solid var(--border)"><b>التاريخ:</b><span id="previewDate">-</span></div>
         <div style="display:flex;justify-content:space-between;margin:5px 0;padding:7px 0"><b>عدد الحاويات:</b><span id="previewBinsCount">-</span></div>
       </div>
@@ -2716,7 +2708,7 @@ select.input {
       <h3><i class="fas fa-plus-circle"></i> <span data-i18n="addSector">إضافة قطاع</span></h3>
       <input type="text" class="input" id="sectorNum" placeholder="🏷️ رقم القطاع" data-i18n-ph="sectorNumPh">
       <select class="in input" id="sectorType">
-        <option value="بلدية">🏛️ خاص / بلدية</option>
+        <option value="بلدية">🏛️ بلدية</option>
         <option value="خاص">🏠 خاص</option>
       </select>
       <input type="text" class="input" id="sectorName" placeholder="📍 الأحياء والشوارع" data-i18n-ph="sectorNamePh">
@@ -3700,7 +3692,7 @@ function applyLanguage(lang) {
   var stSel = document.getElementById('sectorType');
   if(stSel) {
     var stOpts = {
-      'بلدية': lang==='ar'?'🏛️ خاص / بلدية':lang==='fr'?'🏛️ Communal':'🏛️ Municipal',
+      'بلدية': lang==='ar'?'🏛️ بلدية':lang==='fr'?'🏛️ Communal':'🏛️ Municipal',
       'خاص': lang==='ar'?'🏠 خاص':lang==='fr'?'🏠 Privé':'🏠 Private'
     };
     stSel.querySelectorAll('option').forEach(function(opt) { if(stOpts[opt.value]) opt.textContent = stOpts[opt.value]; });
@@ -3750,7 +3742,35 @@ function showPage(id) {
     if(id === 'sortingCenter') loadSortedMaterials();
     if(id === 'recyclingMarket') loadMarketMaterials();
     if(id === 'truckTracking') initTruckTrackingMap();
-    if(id === 'routeTracking') loadSectorRoute();
+    if(id === 'routeTracking') {
+      // تعبئة قائمة القطاعات من البيانات المحفوظة
+      try {
+        const sectors = JSON.parse(localStorage.getItem('medea_schedule') || '[]');
+        const sel = document.getElementById('sectorSelect');
+        if(sel) {
+          sel.innerHTML = '<option value="">-- اختر القطاع --</option>';
+          const seen = new Set();
+          sectors.forEach(s => {
+            const num = s.num || s.name || '';
+            if(num && !seen.has(num)) {
+              seen.add(num);
+              const opt = document.createElement('option');
+              opt.value = num;
+              opt.textContent = 'القطاع ' + num;
+              sel.appendChild(opt);
+            }
+          });
+          if(seen.size === 0) {
+            [1,2,3,4,5].forEach(n => {
+              const opt = document.createElement('option');
+              opt.value = n; opt.textContent = 'القطاع ' + n;
+              sel.appendChild(opt);
+            });
+          }
+        }
+      } catch(e) {}
+      loadSectorRoute();
+    }
     if(id === 'driver') updateDriverPanel();
     if(id === 'pdfPreviewPage') initPreviewMap();
     // [2] أرقام متحركة عند دخول الإدارة
@@ -5520,33 +5540,15 @@ function startInlineGPS() {
 
   window.driverGPSWatch = navigator.geolocation.watchPosition(function(pos) {
     var lat = pos.coords.latitude, lng = pos.coords.longitude;
-    var position = { lat:lat, lng:lng, timestamp: new Date().toISOString() };
-    driverTrackingPositions.push(position);
-    truckTrackingData.positions = driverTrackingPositions;
-    saveToCloud('truckTracking', truckTrackingData);
+    // ✅ الإصلاح: نحفظ آخر موقع معروف فقط — لا نضيف للمصفوفة ولا نحدّث العداد
+    window.lastKnownPosition = { lat:lat, lng:lng, timestamp: new Date().toISOString() };
 
-    var countEl = document.getElementById('driverDistCount');
-    if(countEl) countEl.textContent = driverTrackingPositions.length;
-    // تحديث عداد الحاويات بالمجموع الحقيقي
-    var binEl = document.getElementById('driverBinCount');
-    if(binEl) {
-      var totalBins = (truckTrackingData.collectedBins || []).reduce(function(s,b){ return s+(parseInt(b.count)||1); }, 0);
-      binEl.textContent = totalBins;
-    }
-
-    // تحديث الخريطة
+    // تحديث الخريطة فقط (بدون تحديث العداد)
     try {
       if(driverTrackingMap) {
         if(driverTrackingMarker) driverTrackingMap.removeLayer(driverTrackingMarker);
         driverTrackingMarker = L.marker([lat,lng]).addTo(driverTrackingMap);
         driverTrackingMap.setView([lat,lng], 16);
-        if(driverTrackingPolyline) driverTrackingMap.removeLayer(driverTrackingPolyline);
-        if(driverTrackingPositions.length > 1) {
-          driverTrackingPolyline = L.polyline(
-            driverTrackingPositions.map(function(p){return [p.lat,p.lng];}),
-            {color:'#006233', weight:4}
-          ).addTo(driverTrackingMap);
-        }
       } else {
         // بدون Leaflet: عرض نصي
         var mapDiv2 = document.getElementById('driverInlineMap');
@@ -5580,6 +5582,7 @@ function stopDriverTracking() {
   if(window.driverGPSWatch) { navigator.geolocation.clearWatch(window.driverGPSWatch); }
   if(driverTrackingMap) { try { driverTrackingMap.remove(); } catch(e) {} driverTrackingMap = null; }
   driverTrackingMarker = null; driverTrackingPolyline = null; driverTrackingPositions = [];
+  window.lastKnownPosition = null;
 
   truckTrackingData.active = false;
   truckTrackingData.endTime = new Date().toISOString();
@@ -5619,27 +5622,25 @@ let pendingBinData = null;
 function recordBinCollection() {
   if(!truckTrackingData.active) { showToast('⚠️ التتبع غير نشط', 'error'); return; }
   const btn = document.getElementById('recordBinBtn');
-  if(btn) { btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري تحديد الموقع...'; btn.disabled = true; }
-  document.getElementById('binRecordResult').style.display = 'none';
-  navigator.geolocation.getCurrentPosition(async pos => {
-    const lat = pos.coords.latitude, lng = pos.coords.longitude;
-    pendingBinData = { lat, lng, timestamp: new Date().toISOString() };
-    document.getElementById('binCoords').textContent = lat.toFixed(6) + ', ' + lng.toFixed(6);
-    document.getElementById('binAddr').textContent = '⏳ جاري تحديد العنوان...';
-    document.getElementById('binRecordResult').style.display = 'block';
-    document.getElementById('binCountInput').value = 1;
-    if(btn) { btn.innerHTML = '<i class="fas fa-trash-alt"></i> تسجيل موقع جديد'; btn.disabled = false; }
-    if(navigator.vibrate) navigator.vibrate([100, 50, 100]);
-    try {
-      const addr = await getAddressFromCoords(lat, lng);
-      document.getElementById('binAddr').textContent = addr;
-      pendingBinData.address = addr;
-    } catch(e) { document.getElementById('binAddr').textContent = lat.toFixed(4) + ', ' + lng.toFixed(4); }
-    showToast('📍 تم تحديد الموقع - أدخل عدد الحاويات', 'info');
-  }, err => {
-    if(btn) { btn.innerHTML = '<i class="fas fa-trash-alt"></i> <span data-i18n="recordBin">تسجيل موقع الحاوية</span>'; btn.disabled = false; }
-    showToast('⚠️ فشل تحديد الموقع، حاول مجدداً', 'error');
-  }, {enableHighAccuracy: true, timeout: 15000, maximumAge: 0});
+
+  // ✅ نستخدم آخر موقع معروف من watchPosition مباشرة
+  if(!window.lastKnownPosition) {
+    showToast('⚠️ لم يتم تحديد الموقع بعد، انتظر لحظة...', 'error');
+    return;
+  }
+
+  const lat = window.lastKnownPosition.lat, lng = window.lastKnownPosition.lng;
+  pendingBinData = { lat, lng, timestamp: new Date().toISOString() };
+  document.getElementById('binCoords').textContent = lat.toFixed(6) + ', ' + lng.toFixed(6);
+  document.getElementById('binAddr').textContent = '⏳ جاري تحديد العنوان...';
+  document.getElementById('binRecordResult').style.display = 'block';
+  document.getElementById('binCountInput').value = 1;
+  if(navigator.vibrate) navigator.vibrate([100, 50, 100]);
+  getAddressFromCoords(lat, lng).then(addr => {
+    document.getElementById('binAddr').textContent = addr;
+    pendingBinData.address = addr;
+  }).catch(e => { document.getElementById('binAddr').textContent = lat.toFixed(4) + ', ' + lng.toFixed(4); });
+  showToast('📍 تم تحديد الموقع - أدخل عدد الحاويات', 'info');
 }
 
 function changeBinCount(delta) {
@@ -5658,9 +5659,29 @@ function confirmBinCollection() {
   
   if(!truckTrackingData.collectedBins) truckTrackingData.collectedBins = [];
   truckTrackingData.collectedBins.push(bin);
+
+  // ✅ نضيف الموقع لمصفوفة المسار فقط عند تثبيت الحاوية
+  if(window.lastKnownPosition) {
+    driverTrackingPositions.push(window.lastKnownPosition);
+    truckTrackingData.positions = driverTrackingPositions;
+    // تحديث الخط على الخريطة
+    try {
+      if(driverTrackingMap && driverTrackingPositions.length > 1) {
+        if(driverTrackingPolyline) driverTrackingMap.removeLayer(driverTrackingPolyline);
+        driverTrackingPolyline = L.polyline(
+          driverTrackingPositions.map(function(p){return [p.lat,p.lng];}),
+          {color:'#006233', weight:4}
+        ).addTo(driverTrackingMap);
+      }
+    } catch(e) {}
+  }
   saveToCloud('truckTracking', truckTrackingData);
   
-  // تحديث واجهة السائق — مجموع الحاويات الحقيقي وليس عدد النقاط
+  // ✅ تحديث عداد "نقطة مسجّلة" — يزيد بـ 1 فقط عند كل تثبيت
+  const distEl = document.getElementById('driverDistCount');
+  if(distEl) distEl.textContent = driverTrackingPositions.length;
+
+  // تحديث عداد الحاويات الحقيقي
   const countEl = document.getElementById('driverBinCount');
   if(countEl) {
     const totalBins = (truckTrackingData.collectedBins || []).reduce((s,b) => s + (parseInt(b.count)||1), 0);
@@ -5787,7 +5808,7 @@ function initTruckTrackingMap() {
       const lastPos = truckTrackingData.positions[truckTrackingData.positions.length - 1];
       map.setView([lastPos.lat, lastPos.lng], 15);
       
-      trackingMarker = L.marker([lastPos.lat, lastPos.lng]).addTo(map).bindPopup(`<b>🚚 ${truckTrackingData.driver}</b><br>القطاع: ${truckTrackingData.sector}`);
+      trackingMarker = L.marker([lastPos.lat, lastPos.lng]).addTo(map).bindPopup(`<b>🚚 الشاحنة</b><br>القطاع: ${truckTrackingData.sector}`);
       
       const latlngs = truckTrackingData.positions.map(p => [p.lat, p.lng]);
       trackingPath = L.polyline(latlngs, {color: '#1B5E20', weight: 4}).addTo(map);
@@ -5803,8 +5824,8 @@ function updateTruckTrackingMap(position) {
     
     if(trackingMarker) {
       trackingMarker.setLatLng([position.lat, position.lng]);
-      trackingMarker.bindPopup(`<b>🚚 ${truckTrackingData.driver}</b><br>القطاع: ${truckTrackingData.sector}<br>🕐 ${new Date(position.timestamp).toLocaleTimeString('ar-DZ')}`);
-    } else {      trackingMarker = L.marker([position.lat, position.lng]).addTo(map).bindPopup(`<b>🚚 ${truckTrackingData.driver}</b><br>القطاع: ${truckTrackingData.sector}`);
+      trackingMarker.bindPopup(`<b>🚚 الشاحنة</b><br>القطاع: ${truckTrackingData.sector}<br>🕐 ${new Date(position.timestamp).toLocaleTimeString('ar-DZ')}`);
+    } else {      trackingMarker = L.marker([position.lat, position.lng]).addTo(map).bindPopup(`<b>🚚 الشاحنة</b><br>القطاع: ${truckTrackingData.sector}`);
     }
     
     const latlngs = truckTrackingData.positions.map(p => [p.lat, p.lng]);
@@ -5842,7 +5863,6 @@ function loadSectorRoute() {
     document.getElementById('routeInfo').style.display = 'block';
     document.getElementById('routeSectorName').textContent = currentSectorData.name;
     document.getElementById('routeDate').textContent = currentSectorData.date;
-    document.getElementById('routeDriver').textContent = currentSectorData.driver;
     document.getElementById('routeBinsCount').textContent = currentSectorData.bins.length;
   }
 }
