@@ -6531,85 +6531,168 @@ async function downloadPreviewPDF() {
 <html dir="rtl"><head>
 <meta charset="UTF-8">
 <title>تقرير مسار - ${sd.name||''}</title>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap" rel="stylesheet">
 <style>
   * { box-sizing:border-box; margin:0; padding:0; }
   body { font-family:'Cairo','Segoe UI',sans-serif; color:#111; background:#fff; font-size:13px; direction:rtl; }
-  @page { size:A4 portrait; margin:15mm 12mm; }
+  @page { size:A4 portrait; margin:12mm 10mm; }
   @media print {
-    .page-break { page-break-before: always; }
-    body { print-color-adjust: exact; -webkit-print-color-adjust: exact; }
+    .page-break { page-break-before:always; break-before:always; }
+    body { print-color-adjust:exact; -webkit-print-color-adjust:exact; }
   }
 
-  /* ===== صفحة 1 ===== */
-  .header { text-align:center; border-bottom:3px solid #006233; padding-bottom:10px; margin-bottom:14px; }
-  .header h1 { color:#006233; font-size:20px; }
-  .header p  { color:#666; font-size:11px; margin-top:3px; }
-  .info-table { width:100%; border-collapse:collapse; margin-bottom:14px; }
-  .info-table td { padding:7px 10px; border:1px solid #e0e0e0; font-size:12px; }
-  .info-table td:first-child { font-weight:bold; background:#f5f5f5; width:38%; }
-  .map-section h3 { color:#006233; font-size:14px; border-right:4px solid #006233; padding-right:8px; margin-bottom:8px; }
-  .map-img { width:60%; max-width:120mm; display:block; margin:0 auto; border-radius:6px; border:1px solid #ccc; }
-  .map-placeholder { background:#f0f4f0; border:1px solid #ccc; border-radius:6px; padding:40px; text-align:center; color:#888; font-size:12px; }
+  /* ===== هيدر مشترك ===== */
+  .header {
+    display:flex; align-items:center; justify-content:space-between;
+    border-bottom:3px solid #006233; padding-bottom:8px; margin-bottom:12px;
+  }
+  .header-logo { font-size:22px; font-weight:900; color:#006233; }
+  .header-logo span { font-size:13px; }
+  .header-sub { color:#666; font-size:10px; text-align:left; }
+  .header-badge {
+    background:#006233; color:#fff; padding:4px 10px;
+    border-radius:20px; font-size:11px; font-weight:700; white-space:nowrap;
+  }
 
-  /* ===== صفحة 2 ===== */
-  .table-section h3 { color:#006233; font-size:14px; border-right:4px solid #006233; padding-right:8px; margin-bottom:10px; }
-  table.bins { width:100%; border-collapse:collapse; font-size:11px; }
+  /* ===== جدول المعلومات ===== */
+  .info-grid {
+    display:grid; grid-template-columns:1fr 1fr; gap:0;
+    border:1px solid #ddd; border-radius:6px; overflow:hidden; margin-bottom:12px;
+  }
+  .info-row {
+    display:contents;
+  }
+  .info-label {
+    background:#f0f7f0; padding:6px 10px; font-weight:700;
+    font-size:11px; border-bottom:1px solid #e0e0e0; border-left:1px solid #e0e0e0;
+    color:#004d29;
+  }
+  .info-value {
+    padding:6px 10px; font-size:11px;
+    border-bottom:1px solid #e0e0e0;
+  }
+  .info-value.accent { color:#006233; font-weight:700; }
+  .info-value.warn   { color:#E65100; font-weight:700; }
+  .info-value.mono   { font-family:monospace; font-size:10px; }
+
+  /* ===== جدول الحاويات ===== */
+  .section-title {
+    color:#006233; font-size:13px; font-weight:800;
+    border-right:4px solid #006233; padding-right:8px;
+    margin-bottom:8px; margin-top:12px;
+  }
+  table.bins { width:100%; border-collapse:collapse; font-size:10.5px; }
   table.bins thead tr { background:#006233; color:#fff; }
-  table.bins th, table.bins td { padding:7px 6px; border:1px solid #ddd; text-align:center; }
+  table.bins th { padding:7px 5px; text-align:center; font-weight:700; }
+  table.bins td { padding:6px 5px; border:1px solid #ddd; text-align:center; }
   table.bins tbody tr:nth-child(even) { background:#f9fbe7; }
-  .total-bar { margin-top:12px; padding:10px 15px; background:#006233; color:#fff; border-radius:6px; font-weight:bold; font-size:13px; text-align:center; }
-  .footer { margin-top:18px; text-align:center; border-top:2px solid #006233; padding-top:10px; color:#888; font-size:10px; }
-  .footer p { margin:2px 0; }
+  table.bins tbody tr:hover { background:#e8f5e9; }
+
+  /* ===== شريط الإجمالي ===== */
+  .total-bar {
+    margin-top:10px; padding:9px 14px;
+    background:linear-gradient(90deg,#006233,#008040);
+    color:#fff; border-radius:6px; font-weight:700;
+    font-size:12px; text-align:center; letter-spacing:0.3px;
+  }
+
+  /* ===== فوتر ===== */
+  .footer {
+    margin-top:14px; text-align:center;
+    border-top:1px solid #e0e0e0; padding-top:8px;
+    color:#999; font-size:9px;
+  }
+
+  /* ===== صفحة الخريطة ===== */
+  .map-page {
+    display:flex; flex-direction:column;
+    align-items:center; justify-content:center;
+    min-height:250mm;
+  }
+  .map-page .map-title {
+    color:#006233; font-size:15px; font-weight:800;
+    border-right:4px solid #006233; padding-right:10px;
+    margin-bottom:14px; align-self:flex-start;
+  }
+  .map-page img {
+    width:100%; max-width:185mm;
+    border-radius:10px; border:2px solid #a5d6a7;
+    box-shadow:0 2px 12px rgba(0,0,0,0.12);
+  }
+  .map-placeholder {
+    background:#f0f4f0; border:1px solid #ccc; border-radius:8px;
+    padding:50px; text-align:center; color:#888; font-size:12px; width:100%;
+  }
+  .map-ref {
+    margin-top:10px; font-size:9px; color:#999; align-self:flex-start;
+  }
 </style>
 </head><body>
 
-<!-- ========== صفحة 1: المعلومات + الخريطة ========== -->
+<!-- ============================================================ -->
+<!-- صفحة 1 : المعلومات + جدول الحاويات                          -->
+<!-- ============================================================ -->
+
+<!-- هيدر -->
 <div class="header">
-  <h1>🌿 المدية نظيفة 2026</h1>
-  <p>تقرير مسار الشاحنات — مصلحة النظافة والوقاية الصحية — بلدية المدية</p>
+  <div class="header-logo">🌿 المدية نظيفة 2026<br><span>تقرير مسار الشاحنات</span></div>
+  <div class="header-badge">${sd.name||'القطاع'}</div>
+  <div class="header-sub">مصلحة النظافة والوقاية الصحية<br>بلدية المدية</div>
 </div>
 
-<table class="info-table">
-  <tr><td>🏷️ القطاع</td><td>${sd.name||'-'}</td></tr>
-  <tr><td>👤 السائق</td><td>${sd.driver||'-'}</td></tr>
-  ${sd.schedule ? `<tr><td>📍 الأحياء</td><td style="font-size:11px">${sd.schedule.name||'-'}</td></tr>` : ''}
-  <tr><td>📅 التاريخ</td><td>${sd.date||'-'}</td></tr>
-  <tr><td>📍 عدد النقاط المسجلة</td><td style="color:#006233;font-weight:bold">${(sd.path||[]).length}</td></tr>
-  <tr><td>🗑️ إجمالي الحاويات</td><td style="color:#006233;font-weight:bold">${totalBins}</td></tr>
-  <tr><td>⚖️ الكمية بالطن</td><td style="color:#E65100;font-weight:bold">${sd.totalTons||'0.00'} طن</td></tr>
-  <tr><td>🔖 رقم السند</td><td style="font-family:monospace;font-size:11px">${sd.refNum||'-'}</td></tr>
+<!-- معلومات المسار في شبكة 2×N -->
+<div class="info-grid">
+  <div class="info-label">🏷️ القطاع</div>       <div class="info-value accent">${sd.name||'-'}</div>
+  <div class="info-label">👤 السائق</div>       <div class="info-value">${sd.driver||'-'}</div>
+  ${sd.schedule ? `<div class="info-label">📍 الأحياء</div><div class="info-value" style="font-size:10px">${sd.schedule.name||'-'}</div>` : ''}
+  <div class="info-label">📅 التاريخ</div>       <div class="info-value">${sd.date||'-'}</div>
+  <div class="info-label">📍 عدد النقاط</div>    <div class="info-value accent">${(sd.path||[]).length}</div>
+  <div class="info-label">🗑️ إجمالي الحاويات</div><div class="info-value accent">${totalBins}</div>
+  <div class="info-label">⚖️ الكمية بالطن</div>  <div class="info-value warn">${sd.totalTons||'0.00'} طن</div>
+  <div class="info-label">🔖 رقم السند</div>      <div class="info-value mono">${sd.refNum||'-'}</div>
+</div>
+
+<!-- جدول الحاويات -->
+<div class="section-title">📋 جدول مواقع الحاويات</div>
+<table class="bins">
+  <thead>
+    <tr><th>#</th><th>الوقت</th><th>العنوان</th><th>الإحداثيات</th><th>العدد</th></tr>
+  </thead>
+  <tbody>
+    ${binsRows||'<tr><td colspan="5" style="text-align:center;color:#888;padding:16px">لا توجد بيانات</td></tr>'}
+  </tbody>
 </table>
+<div class="total-bar">🗑️ إجمالي: ${totalBins} حاوية &nbsp;|&nbsp; ⚖️ ${sd.totalTons||'0.00'} طن &nbsp;|&nbsp; 🔖 ${sd.refNum||'-'}</div>
 
-<div class="map-section">
-  <h3>🗺️ خريطة المسار</h3>
-  ${mapHTML}
+<div class="footer">
+  <p>إعداد: مصلحة النظافة والوقاية الصحية — بلدية المدية &nbsp;|&nbsp; تاريخ الطباعة: ${new Date().toLocaleDateString('ar-DZ')}</p>
 </div>
 
-<!-- ========== صفحة 2: جدول الحاويات ========== -->
+<!-- ============================================================ -->
+<!-- صفحة 2 : خريطة المسار كاملة                                 -->
+<!-- ============================================================ -->
 <div class="page-break"></div>
 
+<!-- هيدر مختصر -->
 <div class="header">
-  <h1>🌿 المدية نظيفة 2026</h1>
-  <p>جدول مواقع الحاويات — ${sd.name||''} — ${sd.date||''}</p>
+  <div class="header-logo">🌿 المدية نظيفة 2026<br><span>خريطة المسار</span></div>
+  <div class="header-badge">${sd.name||'القطاع'} — ${sd.date||''}</div>
+  <div class="header-sub">مصلحة النظافة والوقاية الصحية<br>بلدية المدية</div>
 </div>
 
-<div class="table-section">
-  <h3>📋 جدول مواقع الحاويات</h3>
-  <table class="bins">
-    <thead><tr><th>#</th><th>الوقت</th><th>العنوان</th><th>الإحداثيات</th><th>العدد</th></tr></thead>
-    <tbody>${binsRows||'<tr><td colspan="5" style="text-align:center;color:#888">لا توجد بيانات</td></tr>'}</tbody>
-  </table>
-  <div class="total-bar">🗑️ إجمالي: ${totalBins} حاوية &nbsp;|&nbsp; ⚖️ ${sd.totalTons||'0.00'} طن &nbsp;|&nbsp; 🔖 ${sd.refNum||'-'}</div>
+<div class="map-page">
+  <div class="map-title">🗺️ خريطة المسار الميداني</div>
+  ${mapHTML}
+  <div class="map-ref">🔖 ${sd.refNum||'-'} &nbsp;|&nbsp; 👤 ${sd.driver||'-'} &nbsp;|&nbsp; 📅 ${sd.date||'-'}</div>
 </div>
 
 <div class="footer">
-  <p>إعداد: مصلحة النظافة والوقاية الصحية — بلدية المدية</p>
-  <p>تاريخ الطباعة: ${new Date().toLocaleDateString('ar-DZ')}</p>
+  <p>إعداد: مصلحة النظافة والوقاية الصحية — بلدية المدية &nbsp;|&nbsp; تاريخ الطباعة: ${new Date().toLocaleDateString('ar-DZ')}</p>
 </div>
 
 <script>
   window.onload = function() {
-    setTimeout(function() { window.print(); }, 600);
+    setTimeout(function() { window.print(); }, 800);
   };
 <\/script>
 </body></html>`);
