@@ -6222,78 +6222,124 @@ function initPreviewMap() {
 }
 
 function printPreview() {
-  const content = document.getElementById('pdfPreviewContent').innerHTML;
-  const win = window.open('', '_blank', 'width=900,height=700');
-  win.document.write(`<html dir="rtl"><head><meta charset="UTF-8"><title>طباعة التقرير</title><style>body{font-family:'Cairo',sans-serif;padding:20px}table{width:100%;border-collapse:collapse}th{background:#1B5E20;color:#fff;padding:8px;font-size:12px}td{padding:7px;border:1px solid #ddd;font-size:11px}.total-bar{margin-top:10px;padding:10px;background:#1B5E20;color:#fff;border-radius:6px;font-weight:700;text-align:center}@media print{.no-print{display:none}}</style></head><body>${content}<script>window.print();setTimeout(()=>window.close(),1000);<\/script></body></html>`);
-  win.document.close();
+  downloadPreviewPDF();
 }
 
 async function downloadPreviewPDF() {
-  if(typeof html2pdf === 'undefined') { printPreview(); return; }
-  showToast('📥 جاري إنشاء PDF...', 'info');
-  try {
-    const sd = currentSectorData || {};
-    const totalBins = (sd.bins||[]).reduce((s,b)=>s+(parseInt(b.count)||1),0);
-    let mapImgDataUrl = null;
-    const mapContainer = document.getElementById('previewMap');
-    if(mapContainer && previewMap && typeof html2canvas !== 'undefined') {
-      try {
-        previewMap.invalidateSize();
-        await new Promise(r => setTimeout(r, 900));
-        const canvas = await html2canvas(mapContainer, {useCORS:true,allowTaint:true,logging:false,backgroundColor:'#e8e8e8',scale:2});
-        mapImgDataUrl = canvas.toDataURL('image/png');
-      } catch(e) {}
-    }
-    const tmpDiv = document.createElement('div');
-    tmpDiv.style.cssText = 'position:fixed;top:0;left:0;width:190mm;padding:20px;background:#fff;z-index:-9999;font-family:Cairo,sans-serif;direction:rtl;color:#000';
-    document.body.appendChild(tmpDiv);
+  const sd = currentSectorData || {};
+  const totalBins = (sd.bins||[]).reduce((s,b)=>s+(parseInt(b.count)||1),0);
 
-    tmpDiv.innerHTML =
-      '<div style="text-align:center;border-bottom:3px solid #006233;padding-bottom:12px;margin-bottom:16px">' +
-        '<h2 style="color:#006233;margin:0;font-size:20px">المدية نظيفة 2026</h2>' +
-        '<p style="color:#666;margin:4px 0;font-size:12px">تقرير مسار الشاحنات - مصلحة النظافة والوقاية الصحية</p>' +
-      '</div>' +
-      '<div style="background:#f5f5f5;padding:12px;border-radius:8px;margin-bottom:14px">' +
-        '<table style="width:100%;border-collapse:collapse">' +
-          '<tr><td style="padding:6px;font-weight:bold;width:40%">القطاع:</td><td style="padding:6px">'+(sd.name||'-')+'</td></tr>' +
-          '<tr><td style="padding:6px;font-weight:bold">👤 السائق:</td><td style="padding:6px">'+(sd.driver||'-')+'</td></tr>' +
-          (sd.schedule ? '<tr><td style="padding:6px;font-weight:bold">📍 الأحياء:</td><td style="padding:6px;font-size:11px">'+(sd.schedule.name||'-')+'</td></tr>' : '') +
-          '<tr><td style="padding:6px;font-weight:bold">📅 التاريخ:</td><td style="padding:6px">'+(sd.date||'-')+'</td></tr>' +
-          '<tr><td style="padding:6px;font-weight:bold">📍 عدد النقاط:</td><td style="padding:6px;color:#006233;font-weight:bold">'+((sd.path||[]).length)+'</td></tr>' +
-          '<tr><td style="padding:6px;font-weight:bold">🗑️ إجمالي الحاويات:</td><td style="padding:6px;color:#006233;font-weight:bold">'+totalBins+'</td></tr>' +
-          '<tr><td style="padding:6px;font-weight:bold">⚖️ الكمية بالطن:</td><td style="padding:6px;color:#E65100;font-weight:bold">'+(sd.totalTons||'0.00')+' طن</td></tr>' +
-          '<tr><td style="padding:6px;font-weight:bold">🔖 رقم السند:</td><td style="padding:6px;font-family:monospace;font-size:11px">'+(sd.refNum||'-')+'</td></tr>' +
-        '</table>' +
-      '</div>' +
-      (mapImgDataUrl ?
-        '<div style="margin-bottom:16px"><h3 style="color:#006233;margin-bottom:8px;font-size:14px;border-right:4px solid #006233;padding-right:8px">🗺️ خريطة المسار</h3><img src="'+mapImgDataUrl+'" style="width:100%;border-radius:8px;border:1px solid #ddd"/></div>' :
-        '<div style="background:#fff3cd;padding:10px;border-radius:8px;margin-bottom:14px;text-align:center;color:#856404">⚠️ تعذر تصوير الخريطة</div>') +
-      '<h3 style="color:#006233;margin-bottom:8px;font-size:14px;border-right:4px solid #006233;padding-right:8px">📋 جدول مواقع الحاويات</h3>' +
-      '<table style="width:100%;border-collapse:collapse;font-size:11px">' +
-        '<thead><tr style="background:#006233;color:#fff"><th style="padding:7px">#</th><th style="padding:7px">الوقت</th><th style="padding:7px">العنوان</th><th style="padding:7px">الإحداثيات</th><th style="padding:7px">العدد</th></tr></thead>' +
-        '<tbody>' + document.getElementById('previewBinsTable').innerHTML + '</tbody>' +
-      '</table>' +
-      '<div style="margin-top:10px;padding:10px 15px;background:#006233;color:#fff;border-radius:8px;font-weight:700;font-size:13px;text-align:center">' +
-        '🗑️ إجمالي: '+totalBins+' حاوية  |  ⚖️ '+(sd.totalTons||'0.00')+' طن  |  🔖 '+(sd.refNum||'-') +
-      '</div>' +
-      '<div style="margin-top:18px;text-align:center;border-top:2px solid #006233;padding-top:10px;color:#666;font-size:10px">' +
-        '<p>إعداد: مصلحة النظافة والوقاية الصحية - بلدية المدية</p>' +
-        '<p>تاريخ الطباعة: ' + new Date().toLocaleDateString('ar-DZ') + '</p>' +
-      '</div>';
-
-    tmpDiv.querySelectorAll('tbody td').forEach(td => { td.style.cssText='padding:7px;border:1px solid #ddd;text-align:center;'; });
-    const fname = 'تقرير_مسار_' + (sd.name||'') + '_' + (sd.date||'').replace(/\//g,'-') + '.pdf';
-    await html2pdf().from(tmpDiv).set({
-      margin:[8,8,8,8], filename: fname,
-      html2canvas:{scale:2,useCORS:true,logging:false,backgroundColor:'#ffffff'},
-      jsPDF:{unit:'mm',format:'a4',orientation:'portrait'}
-    }).save();
-    document.body.removeChild(tmpDiv);
-    showToast('✅ تم تحميل PDF بنجاح', 'success');
-  } catch(err) {
-    showToast('⚠️ خطأ في PDF، جاري الطباعة...', 'error');
-    printPreview();
+  // تصوير الخريطة أولاً
+  let mapImgDataUrl = null;
+  const mapContainer = document.getElementById('previewMap');
+  if(mapContainer && previewMap && typeof html2canvas !== 'undefined') {
+    try {
+      previewMap.invalidateSize();
+      await new Promise(r => setTimeout(r, 800));
+      const canvas = await html2canvas(mapContainer, {useCORS:true,allowTaint:true,logging:false,backgroundColor:'#e8f5e9',scale:2});
+      mapImgDataUrl = canvas.toDataURL('image/png');
+    } catch(e) {}
   }
+
+  const binsRows = (sd.bins||[]).map((bin,idx) => `
+    <tr>
+      <td>${idx+1}</td>
+      <td>${bin.time||'-'}</td>
+      <td>${bin.address||'-'}</td>
+      <td style="font-family:monospace;font-size:10px">${Number(bin.lat||0).toFixed(6)}, ${Number(bin.lng||0).toFixed(6)}</td>
+      <td style="font-weight:bold;color:#006233">${bin.count||1}</td>
+    </tr>`).join('');
+
+  const win = window.open('', '_blank', 'width=900,height=700');
+  win.document.write(`<!DOCTYPE html>
+<html dir="rtl"><head>
+<meta charset="UTF-8">
+<title>تقرير مسار - ${sd.name||''}</title>
+<style>
+  * { box-sizing:border-box; margin:0; padding:0; }
+  body { font-family:'Cairo','Segoe UI',sans-serif; color:#111; background:#fff; font-size:13px; direction:rtl; }
+  @page { size:A4 portrait; margin:15mm 12mm; }
+  @media print {
+    .page-break { page-break-before: always; }
+    body { print-color-adjust: exact; -webkit-print-color-adjust: exact; }
+  }
+
+  /* ===== صفحة 1 ===== */
+  .header { text-align:center; border-bottom:3px solid #006233; padding-bottom:10px; margin-bottom:14px; }
+  .header h1 { color:#006233; font-size:20px; }
+  .header p  { color:#666; font-size:11px; margin-top:3px; }
+  .info-table { width:100%; border-collapse:collapse; margin-bottom:14px; }
+  .info-table td { padding:7px 10px; border:1px solid #e0e0e0; font-size:12px; }
+  .info-table td:first-child { font-weight:bold; background:#f5f5f5; width:38%; }
+  .map-section h3 { color:#006233; font-size:14px; border-right:4px solid #006233; padding-right:8px; margin-bottom:8px; }
+  .map-img { width:100%; border-radius:6px; border:1px solid #ccc; display:block; }
+  .map-placeholder { background:#f0f4f0; border:1px solid #ccc; border-radius:6px; padding:40px; text-align:center; color:#888; font-size:12px; }
+
+  /* ===== صفحة 2 ===== */
+  .table-section h3 { color:#006233; font-size:14px; border-right:4px solid #006233; padding-right:8px; margin-bottom:10px; }
+  table.bins { width:100%; border-collapse:collapse; font-size:11px; }
+  table.bins thead tr { background:#006233; color:#fff; }
+  table.bins th, table.bins td { padding:7px 6px; border:1px solid #ddd; text-align:center; }
+  table.bins tbody tr:nth-child(even) { background:#f9fbe7; }
+  .total-bar { margin-top:12px; padding:10px 15px; background:#006233; color:#fff; border-radius:6px; font-weight:bold; font-size:13px; text-align:center; }
+  .footer { margin-top:18px; text-align:center; border-top:2px solid #006233; padding-top:10px; color:#888; font-size:10px; }
+  .footer p { margin:2px 0; }
+</style>
+</head><body>
+
+<!-- ========== صفحة 1: المعلومات + الخريطة ========== -->
+<div class="header">
+  <h1>🌿 المدية نظيفة 2026</h1>
+  <p>تقرير مسار الشاحنات — مصلحة النظافة والوقاية الصحية — بلدية المدية</p>
+</div>
+
+<table class="info-table">
+  <tr><td>🏷️ القطاع</td><td>${sd.name||'-'}</td></tr>
+  <tr><td>👤 السائق</td><td>${sd.driver||'-'}</td></tr>
+  ${sd.schedule ? `<tr><td>📍 الأحياء</td><td style="font-size:11px">${sd.schedule.name||'-'}</td></tr>` : ''}
+  <tr><td>📅 التاريخ</td><td>${sd.date||'-'}</td></tr>
+  <tr><td>📍 عدد النقاط المسجلة</td><td style="color:#006233;font-weight:bold">${(sd.path||[]).length}</td></tr>
+  <tr><td>🗑️ إجمالي الحاويات</td><td style="color:#006233;font-weight:bold">${totalBins}</td></tr>
+  <tr><td>⚖️ الكمية بالطن</td><td style="color:#E65100;font-weight:bold">${sd.totalTons||'0.00'} طن</td></tr>
+  <tr><td>🔖 رقم السند</td><td style="font-family:monospace;font-size:11px">${sd.refNum||'-'}</td></tr>
+</table>
+
+<div class="map-section">
+  <h3>🗺️ خريطة المسار</h3>
+  ${mapImgDataUrl
+    ? `<img src="${mapImgDataUrl}" class="map-img"/>`
+    : `<div class="map-placeholder">⚠️ تعذّر تصوير الخريطة — استخدم زر الطباعة للحصول على نسخة تشمل الخريطة</div>`}
+</div>
+
+<!-- ========== صفحة 2: جدول الحاويات ========== -->
+<div class="page-break"></div>
+
+<div class="header">
+  <h1>🌿 المدية نظيفة 2026</h1>
+  <p>جدول مواقع الحاويات — ${sd.name||''} — ${sd.date||''}</p>
+</div>
+
+<div class="table-section">
+  <h3>📋 جدول مواقع الحاويات</h3>
+  <table class="bins">
+    <thead><tr><th>#</th><th>الوقت</th><th>العنوان</th><th>الإحداثيات</th><th>العدد</th></tr></thead>
+    <tbody>${binsRows||'<tr><td colspan="5" style="text-align:center;color:#888">لا توجد بيانات</td></tr>'}</tbody>
+  </table>
+  <div class="total-bar">🗑️ إجمالي: ${totalBins} حاوية &nbsp;|&nbsp; ⚖️ ${sd.totalTons||'0.00'} طن &nbsp;|&nbsp; 🔖 ${sd.refNum||'-'}</div>
+</div>
+
+<div class="footer">
+  <p>إعداد: مصلحة النظافة والوقاية الصحية — بلدية المدية</p>
+  <p>تاريخ الطباعة: ${new Date().toLocaleDateString('ar-DZ')}</p>
+</div>
+
+<script>
+  window.onload = function() {
+    setTimeout(function() { window.print(); }, 600);
+  };
+<\/script>
+</body></html>`);
+  win.document.close();
 }
 
 function closePDFPreview() {
