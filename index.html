@@ -2292,7 +2292,7 @@ select.input {
       <h3><i class="fas fa-map-pin"></i> مواقع الحاويات</h3>
       <div id="binsLocationsList"></div>
     </div>
-    <button class="btn ripple" style="background:#757575" onclick="showPage('driver')">
+    <button class="btn ripple" style="background:#757575" onclick="showPage('admin')">
       <i class="fas fa-arrow-right"></i> <span data-i18n="back">رجوع</span>
     </button>
   </div>
@@ -3902,6 +3902,11 @@ function setupSync() {
           try {
             const sel = document.getElementById('citizenSectorSelect');
             if(sel && sel.value) citizenSelectSector();
+          } catch(e) {}
+          // تحديث صفحة تتبع الإدارة إذا كانت مفتوحة
+          try {
+            const adminSel = document.getElementById('sectorSelect');
+            if(adminSel && adminSel.value) loadSectorRoute();
           } catch(e) {}
           // تحديث لوحة الإدارة إذا كانت مفتوحة
           try { if(document.getElementById('activeDrivers')) updateAdminStats(); } catch(e) {}
@@ -5532,10 +5537,13 @@ var driverTrackingPositions = [];
 
 function startDriverTracking() {
   if(!currentDriver) { showToast('⚠️ يجب تسجيل الدخول أولاً', 'error'); return; }
+  const now = new Date();
+  const refNum = 'REF-' + currentDriverSector + '-' + now.toISOString().slice(0,10).replace(/-/g,'') + '-' + Math.floor(Math.random()*1000).toString().padStart(3,'0');
   truckTrackingData = {
     active: true, driver: currentDriver,
     sector: currentDriverSector,
-    startTime: new Date().toISOString(),
+    startTime: now.toISOString(),
+    refNum: refNum,
     positions: [], collectedBins: []
   };
   driverTrackingPositions = [];
@@ -6003,101 +6011,173 @@ function addBinMarkerToMap(bin) {
 // ===== تتبع المسار حسب القطاع =====
 function loadSectorRoute() {
   const sectorId = document.getElementById('sectorSelect').value;
-  
-  if(sectorId && sectorRoutesData[sectorId]) {
-    currentSectorData = sectorRoutesData[sectorId];
-    document.getElementById('routeInfo').style.display = 'block';
-    document.getElementById('routeSectorName').textContent = currentSectorData.name;
-    document.getElementById('routeDate').textContent = currentSectorData.date;
-    document.getElementById('routeBinsCount').textContent = currentSectorData.bins.length;
+  if(!sectorId) {
+    document.getElementById('routeInfo').style.display = 'none';
+    document.getElementById('routeBinsList').style.display = 'none';
+    return;
   }
+
+  // ===== بيانات جدول الجمع (الأحياء، أيام المرور، الوقت) =====
+  let scheduleInfo = null;
+  try {
+    const sectors = JSON.parse(localStorage.getItem('medea_schedule') || '[]');
+    scheduleInfo = sectors.find(s => String(s.num || s.name || '') === String(sectorId));
+  } catch(e) {}
+
+  // ===== بيانات التتبع الحي من Firebase =====
+  const isActive = truckTrackingData.active && String(truckTrackingData.sector) === String(sectorId);
+  const td = (isActive || String(truckTrackingData.sector) === String(sectorId)) ? truckTrackingData : null;
+
+  const sectorLabel = 'القطاع ' + sectorId;
+  const driverName  = td ? (td.driver || '-') : '-';
+  const startTime   = td ? (td.startTime || null) : null;
+  const endTime     = td ? (td.endTime || null) : null;
+  const collectedBins = td ? (td.collectedBins || []) : [];
+  const positions   = td ? (td.positions || []) : [];
+  const totalBins   = collectedBins.reduce((s, b) => s + (parseInt(b.count) || 1), 0);
+  const totalTons   = (totalBins * 0.08).toFixed(2); // تقدير: 80 كغ/حاوية
+  const refNum      = td ? (td.refNum || ('REF-' + sectorId + '-' + (startTime ? new Date(startTime).toISOString().slice(0,10).replace(/-/g,'') : 'XXXXX'))) : '-';
+
+  // ===== عرض المعلومات =====
+  document.getElementById('routeInfo').style.display = 'block';
+
+  // أعد بناء routeInfo بالكامل لعرض كل البيانات
+  document.getElementById('routeInfo').innerHTML = `
+    <h3><i class="fas fa-chart-line"></i> معلومات المسار</h3>
+    <div class="info-row"><b>🏷️ القطاع:</b> <span id="routeSectorName">${sectorLabel}</span></div>
+    <div class="info-row"><b>👤 السائق:</b> <span style="color:var(--primary-light)">${driverName}</span></div>
+    ${scheduleInfo ? `<div class="info-row"><b>📍 الأحياء / المسار المحدد:</b> <span style="font-size:0.88rem;color:var(--text-light)">${scheduleInfo.name || '-'}</span></div>` : ''}
+    ${scheduleInfo ? `<div class="info-row"><b>📅 أيام الجمع:</b> <span>${scheduleInfo.days || '-'}</span></div>` : ''}
+    ${scheduleInfo ? `<div class="info-row"><b>🕐 وقت المرور:</b> <span>${scheduleInfo.time || '-'}</span></div>` : ''}
+    <div class="info-row"><b>📅 تاريخ المهمة:</b> <span id="routeDate">${startTime ? new Date(startTime).toLocaleDateString('ar-DZ') : '-'}</span></div>
+    <div class="info-row"><b>🕑 وقت البداية:</b> <span>${startTime ? new Date(startTime).toLocaleTimeString('ar-DZ') : '-'}</span></div>
+    <div class="info-row"><b>🕔 وقت النهاية:</b> <span>${endTime ? new Date(endTime).toLocaleTimeString('ar-DZ') : (isActive ? '🟢 جارٍ الآن' : '-')}</span></div>
+    <div class="info-row"><b>📍 عدد النقاط المسجلة:</b> <span style="color:var(--primary);font-weight:bold">${positions.length}</span></div>
+    <div class="info-row"><b>🗑️ إجمالي الحاويات المجمعة:</b> <span id="routeBinsCount" style="color:var(--success);font-weight:bold">${totalBins}</span></div>
+    <div class="info-row"><b>⚖️ الكمية المقدّرة بالطن:</b> <span style="color:var(--warning);font-weight:bold">${totalTons} طن</span></div>
+    <div class="info-row"><b>🔖 رقم السند:</b> <span style="font-family:monospace;color:var(--text-light);font-size:0.85rem">${refNum}</span></div>
+  `;
+
+  // ===== تحديث currentSectorData للاستخدام في PDF والخريطة =====
+  currentSectorData = {
+    name: sectorLabel,
+    driver: driverName,
+    date: startTime ? new Date(startTime).toLocaleDateString('ar-DZ') : '-',
+    startTime, endTime, refNum, totalTons,
+    schedule: scheduleInfo,
+    path: positions.map(p => [p.lat, p.lng]),
+    bins: collectedBins.map((b, i) => ({
+      id: i + 1,
+      lat: b.lat, lng: b.lng,
+      time: b.timestamp ? new Date(b.timestamp).toLocaleTimeString('ar-DZ') : '-',
+      address: b.address || '',
+      count: b.count || 1
+    }))
+  };
+
+  // ===== عرض قائمة النقاط =====
+  if(collectedBins.length > 0) {
+    document.getElementById('routeBinsList').style.display = 'block';
+    document.getElementById('binsLocationsList').innerHTML = collectedBins.map((bin, idx) => `
+      <div class="tonnage-card" style="margin:8px 0;border-right:4px solid var(--primary)">
+        <div class="tonnage-info">
+          <b>🗑️ نقطة #${idx+1}</b>
+          <span style="color:var(--success);font-weight:bold">${bin.count||1} حاوية</span>
+        </div>
+        ${bin.address ? `<div style="font-size:0.85rem;color:var(--text-light);margin:3px 0">📍 ${bin.address}</div>` : ''}
+        <div style="font-size:0.78rem;color:var(--text-light)">
+          📌 ${bin.lat ? bin.lat.toFixed(6) : '-'}, ${bin.lng ? bin.lng.toFixed(6) : '-'}
+          &nbsp;|&nbsp; 🕐 ${bin.timestamp ? new Date(bin.timestamp).toLocaleTimeString('ar-DZ') : '-'}
+        </div>
+      </div>
+    `).join('');
+  } else {
+    document.getElementById('routeBinsList').style.display = 'none';
+  }
+
+  if(td) showRouteOnMap();
 }
 
 function showRouteOnMap() {
-  if(!currentSectorData) {
-    showToast('⚠️ اختر القطاع أولاً', 'error');
-    return;
+  if(!currentSectorData) { showToast('⚠️ اختر القطاع أولاً', 'error'); return; }
+  if(!currentSectorData.path || currentSectorData.path.length === 0) {
+    showToast('⚠️ لا توجد بيانات مسار لهذا القطاع بعد', 'error'); return;
   }
-  
-  if(routeMap) { routeMap.remove(); }
+  try {
+    const routeMapDiv = document.getElementById('routeMap');
+    routeMapDiv.style.height = '320px';
+    if(routeMap) { routeMap.remove(); routeMap = null; }
     routeMap = L.map('routeMap').setView(currentSectorData.path[0], 15);
-  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    attribution: '© OpenStreetMap contributors'
-  }).addTo(routeMap);
-  
-  if(routeLayer) routeMap.removeLayer(routeLayer);
-  routeLayer = L.polyline(currentSectorData.path, {color: '#1B5E20', weight: 5, opacity: 0.8}).addTo(routeMap);
-  
-  currentSectorData.path.forEach((point, index) => {
-    const color = index === 0 ? '#4CAF50' : index === currentSectorData.path.length - 1 ? '#f44336' : '#2196F3';
-    const label = index === 0 ? '🚚 البداية' : index === currentSectorData.path.length - 1 ? '🏁 النهاية' : `📍 نقطة ${index}`;
-    
-    L.circleMarker(point, {
-      radius: 8,
-      fillColor: color,
-      color: '#fff',
-      weight: 2,
-      opacity: 1,
-      fillOpacity: 0.9
-    }).addTo(routeMap).bindPopup(label);
-  });
-  
-  if(binsLayer) routeMap.removeLayer(binsLayer);
-  binsLayer = L.layerGroup().addTo(routeMap);
-  
-  currentSectorData.bins.forEach(bin => {
-    L.circleMarker([bin.lat, bin.lng], {
-      radius: 10,
-      fillColor: '#FF9800',
-      color: '#fff',
-      weight: 2,
-      opacity: 1,
-      fillOpacity: 0.9
-    }).addTo(binsLayer).bindPopup(`🗑️ حاوية #${bin.id}<br>🕐 ${bin.time}`);
-  });
-  
-  routeMap.fitBounds(routeLayer.getBounds(), {padding: [50, 50]});
-  
-  document.getElementById('routeBinsList').style.display = 'block';
-  
-  const binsListHtml = currentSectorData.bins.map(bin => `
-    <div class="tonnage-card" style="margin:8px 0">
-      <div class="tonnage-info"><b>🗑️ حاوية #${bin.id}</b><span>🕐 ${bin.time}</span></div>
-      <div class="tonnage-info"><small>📍 ${bin.lat.toFixed(4)}, ${bin.lng.toFixed(4)}</small></div>
-    </div>
-  `).join('');
-  
-  document.getElementById('binsLocationsList').innerHTML = binsListHtml;
-  showToast('✅ تم عرض المسار بنجاح', 'success');
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {attribution:'© OpenStreetMap'}).addTo(routeMap);
+
+    if(currentSectorData.path.length > 1) {
+      routeLayer = L.polyline(currentSectorData.path, {color:'#1B5E20', weight:5, opacity:0.8}).addTo(routeMap);
+      // نقطة البداية
+      L.circleMarker(currentSectorData.path[0], {radius:10,fillColor:'#4CAF50',color:'#fff',weight:3,fillOpacity:1})
+        .addTo(routeMap).bindPopup('🚚 نقطة البداية');
+      // نقطة النهاية
+      const last = currentSectorData.path[currentSectorData.path.length-1];
+      L.circleMarker(last, {radius:10,fillColor:'#f44336',color:'#fff',weight:3,fillOpacity:1})
+        .addTo(routeMap).bindPopup('🏁 نقطة النهاية');
+      routeMap.fitBounds(routeLayer.getBounds(), {padding:[40,40]});
+    } else {
+      routeMap.setView(currentSectorData.path[0], 16);
+    }
+
+    // علامات الحاويات
+    currentSectorData.bins.forEach(bin => {
+      L.circleMarker([bin.lat, bin.lng], {radius:10,fillColor:'#FF9800',color:'#fff',weight:2,fillOpacity:0.95})
+        .addTo(routeMap)
+        .bindPopup(`🗑️ نقطة #${bin.id} — <b>${bin.count}</b> حاوية<br>${bin.address ? '📍 '+bin.address+'<br>' : ''}🕐 ${bin.time}`);
+    });
+    setTimeout(() => { try { routeMap.invalidateSize(); } catch(e) {} }, 300);
+    showToast('✅ تم عرض المسار', 'success');
+  } catch(e) { showToast('⚠️ خطأ في عرض الخريطة', 'error'); }
 }
 // ===== تصدير PDF مع المعاينة =====
 function exportRouteToPDF() {
-  if(!currentSectorData) {
-    showToast('⚠️ اختر القطاع أولاً', 'error');
-    return;
-  }
-  
-  document.getElementById('previewSector').textContent = currentSectorData.name;
-  document.getElementById('previewDriver').textContent = currentSectorData.driver;
-  document.getElementById('previewDate').textContent = currentSectorData.date;
-  document.getElementById('previewBinsCount').textContent = currentSectorData.bins.length;
+  if(!currentSectorData) { showToast('⚠️ اختر القطاع أولاً', 'error'); return; }
+
+  const sd = currentSectorData;
+  const totalBins = sd.bins.reduce((s,b)=>s+(parseInt(b.count)||1),0);
+
+  // ملء صفحة المعاينة
+  document.getElementById('previewSector').textContent   = sd.name;
+  document.getElementById('previewDate').textContent     = sd.date;
+  document.getElementById('previewBinsCount').textContent = totalBins;
   document.getElementById('previewPrintDate').textContent = new Date().toLocaleDateString('ar-DZ');
-  
+
+  // إضافة الحقول الجديدة ديناميكياً في قسم المعلومات
+  const infoBox = document.querySelector('#pdfPreviewContent > div:nth-child(2)');
+  if(infoBox) infoBox.innerHTML = `
+    <h3 style="color:var(--primary);margin-bottom:8px;font-size:16px;text-align:center">📊 معلومات المسار</h3>
+    <div style="display:flex;justify-content:space-between;margin:5px 0;padding:7px 0;border-bottom:1px solid var(--border)"><b>القطاع:</b><span>${sd.name}</span></div>
+    <div style="display:flex;justify-content:space-between;margin:5px 0;padding:7px 0;border-bottom:1px solid var(--border)"><b>👤 السائق:</b><span>${sd.driver||'-'}</span></div>
+    ${sd.schedule ? `<div style="display:flex;justify-content:space-between;margin:5px 0;padding:7px 0;border-bottom:1px solid var(--border)"><b>📍 الأحياء:</b><span style="font-size:0.85rem">${sd.schedule.name||'-'}</span></div>` : ''}
+    <div style="display:flex;justify-content:space-between;margin:5px 0;padding:7px 0;border-bottom:1px solid var(--border)"><b>📅 التاريخ:</b><span>${sd.date}</span></div>
+    <div style="display:flex;justify-content:space-between;margin:5px 0;padding:7px 0;border-bottom:1px solid var(--border)"><b>📍 عدد النقاط المسجلة:</b><span style="color:var(--primary);font-weight:bold">${sd.path ? sd.path.length : 0}</span></div>
+    <div style="display:flex;justify-content:space-between;margin:5px 0;padding:7px 0;border-bottom:1px solid var(--border)"><b>🗑️ إجمالي الحاويات:</b><span style="color:var(--success);font-weight:bold">${totalBins}</span></div>
+    <div style="display:flex;justify-content:space-between;margin:5px 0;padding:7px 0;border-bottom:1px solid var(--border)"><b>⚖️ الكمية بالطن:</b><span style="color:var(--warning);font-weight:bold">${sd.totalTons||'0.00'} طن</span></div>
+    <div style="display:flex;justify-content:space-between;margin:5px 0;padding:7px 0"><b>🔖 رقم السند:</b><span style="font-family:monospace;font-size:0.82rem">${sd.refNum||'-'}</span></div>
+  `;
+
+  // جدول الحاويات
   const tableBody = document.getElementById('previewBinsTable');
-  tableBody.innerHTML = currentSectorData.bins.map((bin, idx) => `
+  tableBody.innerHTML = sd.bins.map((bin,idx) => `
     <tr>
       <td style="padding:8px;border:1px solid var(--border);text-align:center">${idx+1}</td>
       <td style="padding:8px;border:1px solid var(--border);text-align:center">${bin.time}</td>
-      <td style="padding:8px;border:1px solid var(--border);text-align:center">${bin.address || '-'}</td>
-      <td style="padding:8px;border:1px solid var(--border);text-align:center">${bin.lat.toFixed(6)}, ${bin.lng.toFixed(6)}</td>
-      <td style="padding:8px;border:1px solid var(--border);text-align:center;font-weight:bold;color:var(--primary)">${bin.count || 1}</td>
+      <td style="padding:8px;border:1px solid var(--border);text-align:center">${bin.address||'-'}</td>
+      <td style="padding:8px;border:1px solid var(--border);text-align:center;font-family:monospace;font-size:0.8rem">${Number(bin.lat).toFixed(6)}, ${Number(bin.lng).toFixed(6)}</td>
+      <td style="padding:8px;border:1px solid var(--border);text-align:center;font-weight:bold;color:var(--primary)">${bin.count||1}</td>
     </tr>
   `).join('');
-  
-  const totalBins = currentSectorData.bins.reduce((sum, b) => sum + (parseInt(b.count) || 1), 0);
-  document.getElementById('previewTotalBins').textContent = '🗑️ إجمالي الحاويات المجمعة: ' + totalBins + ' حاوية';
-  
+
+  document.getElementById('previewTotalBins').textContent =
+    `🗑️ إجمالي الحاويات: ${totalBins} حاوية  |  ⚖️ ${sd.totalTons||'0.00'} طن  |  🔖 ${sd.refNum||'-'}`;
+
   showPage('pdfPreviewPage');
+  setTimeout(initPreviewMap, 400);
   showToast('✅ تم فتح المعاينة', 'success');
 }
 
@@ -6150,8 +6230,10 @@ function printPreview() {
 
 async function downloadPreviewPDF() {
   if(typeof html2pdf === 'undefined') { printPreview(); return; }
-  showToast('📥 جاري تصوير الخريطة وإنشاء PDF...', 'info');
+  showToast('📥 جاري إنشاء PDF...', 'info');
   try {
+    const sd = currentSectorData || {};
+    const totalBins = (sd.bins||[]).reduce((s,b)=>s+(parseInt(b.count)||1),0);
     let mapImgDataUrl = null;
     const mapContainer = document.getElementById('previewMap');
     if(mapContainer && previewMap && typeof html2canvas !== 'undefined') {
@@ -6160,12 +6242,12 @@ async function downloadPreviewPDF() {
         await new Promise(r => setTimeout(r, 900));
         const canvas = await html2canvas(mapContainer, {useCORS:true,allowTaint:true,logging:false,backgroundColor:'#e8e8e8',scale:2});
         mapImgDataUrl = canvas.toDataURL('image/png');
-      } catch(e) { mapImgDataUrl = null; }
+      } catch(e) {}
     }
     const tmpDiv = document.createElement('div');
     tmpDiv.style.cssText = 'position:fixed;top:0;left:0;width:190mm;padding:20px;background:#fff;z-index:-9999;font-family:Cairo,sans-serif;direction:rtl;color:#000';
     document.body.appendChild(tmpDiv);
-    const binsRows = document.getElementById('previewBinsTable').innerHTML;
+
     tmpDiv.innerHTML =
       '<div style="text-align:center;border-bottom:3px solid #006233;padding-bottom:12px;margin-bottom:16px">' +
         '<h2 style="color:#006233;margin:0;font-size:20px">المدية نظيفة 2026</h2>' +
@@ -6173,34 +6255,41 @@ async function downloadPreviewPDF() {
       '</div>' +
       '<div style="background:#f5f5f5;padding:12px;border-radius:8px;margin-bottom:14px">' +
         '<table style="width:100%;border-collapse:collapse">' +
-          '<tr><td style="padding:6px;font-weight:bold;width:40%">القطاع:</td><td style="padding:6px">' + document.getElementById('previewSector').textContent + '</td></tr>' +
-          '<tr><td style="padding:6px;font-weight:bold">السائق:</td><td style="padding:6px">' + document.getElementById('previewDriver').textContent + '</td></tr>' +
-          '<tr><td style="padding:6px;font-weight:bold">التاريخ:</td><td style="padding:6px">' + document.getElementById('previewDate').textContent + '</td></tr>' +
-          '<tr><td style="padding:6px;font-weight:bold">عدد الحاويات:</td><td style="padding:6px">' + document.getElementById('previewBinsCount').textContent + '</td></tr>' +
+          '<tr><td style="padding:6px;font-weight:bold;width:40%">القطاع:</td><td style="padding:6px">'+(sd.name||'-')+'</td></tr>' +
+          '<tr><td style="padding:6px;font-weight:bold">👤 السائق:</td><td style="padding:6px">'+(sd.driver||'-')+'</td></tr>' +
+          (sd.schedule ? '<tr><td style="padding:6px;font-weight:bold">📍 الأحياء:</td><td style="padding:6px;font-size:11px">'+(sd.schedule.name||'-')+'</td></tr>' : '') +
+          '<tr><td style="padding:6px;font-weight:bold">📅 التاريخ:</td><td style="padding:6px">'+(sd.date||'-')+'</td></tr>' +
+          '<tr><td style="padding:6px;font-weight:bold">📍 عدد النقاط:</td><td style="padding:6px;color:#006233;font-weight:bold">'+((sd.path||[]).length)+'</td></tr>' +
+          '<tr><td style="padding:6px;font-weight:bold">🗑️ إجمالي الحاويات:</td><td style="padding:6px;color:#006233;font-weight:bold">'+totalBins+'</td></tr>' +
+          '<tr><td style="padding:6px;font-weight:bold">⚖️ الكمية بالطن:</td><td style="padding:6px;color:#E65100;font-weight:bold">'+(sd.totalTons||'0.00')+' طن</td></tr>' +
+          '<tr><td style="padding:6px;font-weight:bold">🔖 رقم السند:</td><td style="padding:6px;font-family:monospace;font-size:11px">'+(sd.refNum||'-')+'</td></tr>' +
         '</table>' +
       '</div>' +
       (mapImgDataUrl ?
-        '<div style="margin-bottom:16px"><h3 style="color:#006233;margin-bottom:8px;font-size:14px;border-right:4px solid #006233;padding-right:8px">🗺️ خريطة المسار</h3><img src="' + mapImgDataUrl + '" style="width:100%;border-radius:8px;border:1px solid #ddd"/></div>' :
+        '<div style="margin-bottom:16px"><h3 style="color:#006233;margin-bottom:8px;font-size:14px;border-right:4px solid #006233;padding-right:8px">🗺️ خريطة المسار</h3><img src="'+mapImgDataUrl+'" style="width:100%;border-radius:8px;border:1px solid #ddd"/></div>' :
         '<div style="background:#fff3cd;padding:10px;border-radius:8px;margin-bottom:14px;text-align:center;color:#856404">⚠️ تعذر تصوير الخريطة</div>') +
       '<h3 style="color:#006233;margin-bottom:8px;font-size:14px;border-right:4px solid #006233;padding-right:8px">📋 جدول مواقع الحاويات</h3>' +
       '<table style="width:100%;border-collapse:collapse;font-size:11px">' +
-        '<thead><tr style="background:#006233;color:#fff"><th style="padding:7px;text-align:center">#</th><th style="padding:7px;text-align:center">الوقت</th><th style="padding:7px;text-align:center">العنوان</th><th style="padding:7px;text-align:center">الإحداثيات</th><th style="padding:7px;text-align:center">العدد</th></tr></thead>' +
-        '<tbody>' + binsRows + '</tbody>' +
+        '<thead><tr style="background:#006233;color:#fff"><th style="padding:7px">#</th><th style="padding:7px">الوقت</th><th style="padding:7px">العنوان</th><th style="padding:7px">الإحداثيات</th><th style="padding:7px">العدد</th></tr></thead>' +
+        '<tbody>' + document.getElementById('previewBinsTable').innerHTML + '</tbody>' +
       '</table>' +
-      '<div style="margin-top:10px;padding:10px 15px;background:#006233;color:#fff;border-radius:8px;font-weight:700;font-size:14px;text-align:center">' + document.getElementById('previewTotalBins').textContent + '</div>'  +
+      '<div style="margin-top:10px;padding:10px 15px;background:#006233;color:#fff;border-radius:8px;font-weight:700;font-size:13px;text-align:center">' +
+        '🗑️ إجمالي: '+totalBins+' حاوية  |  ⚖️ '+(sd.totalTons||'0.00')+' طن  |  🔖 '+(sd.refNum||'-') +
+      '</div>' +
       '<div style="margin-top:18px;text-align:center;border-top:2px solid #006233;padding-top:10px;color:#666;font-size:10px">' +
         '<p>إعداد: مصلحة النظافة والوقاية الصحية - بلدية المدية</p>' +
         '<p>تاريخ الطباعة: ' + new Date().toLocaleDateString('ar-DZ') + '</p>' +
       '</div>';
+
     tmpDiv.querySelectorAll('tbody td').forEach(td => { td.style.cssText='padding:7px;border:1px solid #ddd;text-align:center;'; });
-    const fname = currentSectorData ? 'تقرير_مسار_' + currentSectorData.name + '_' + Date.now() + '.pdf' : 'تقرير_' + Date.now() + '.pdf';
+    const fname = 'تقرير_مسار_' + (sd.name||'') + '_' + (sd.date||'').replace(/\//g,'-') + '.pdf';
     await html2pdf().from(tmpDiv).set({
-      margin:[8,8,8,8], filename:fname,
+      margin:[8,8,8,8], filename: fname,
       html2canvas:{scale:2,useCORS:true,logging:false,backgroundColor:'#ffffff'},
       jsPDF:{unit:'mm',format:'a4',orientation:'portrait'}
     }).save();
     document.body.removeChild(tmpDiv);
-    showToast('✅ تم تحميل PDF مع الخريطة بنجاح', 'success');
+    showToast('✅ تم تحميل PDF بنجاح', 'success');
   } catch(err) {
     showToast('⚠️ خطأ في PDF، جاري الطباعة...', 'error');
     printPreview();
