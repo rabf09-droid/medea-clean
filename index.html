@@ -6290,87 +6290,142 @@ function printPreview() {
   downloadPreviewPDF();
 }
 
-function buildRouteMapDataUrl(path, bins) {
-  // رسم المسار على Canvas وتحويله إلى data URL PNG — يظهر دائماً في PDF
-  try {
-    const W = 700, H = 380, PAD = 40;
+// ===== تحويل lat/lng إلى رقم tile في OSM =====
+function latLngToTile(lat, lng, zoom) {
+  const n = Math.pow(2, zoom);
+  const x = Math.floor((lng + 180) / 360 * n);
+  const latRad = lat * Math.PI / 180;
+  const y = Math.floor((1 - Math.log(Math.tan(latRad) + 1 / Math.cos(latRad)) / Math.PI) / 2 * n);
+  return {x, y};
+}
 
-    // استخراج الإحداثيات
+// ===== تحويل tile إلى lat/lng (الزاوية العلوية اليسرى) =====
+function tileToLatLng(x, y, zoom) {
+  const n = Math.pow(2, zoom);
+  const lng = x / n * 360 - 180;
+  const latRad = Math.atan(Math.sinh(Math.PI * (1 - 2 * y / n)));
+  const lat = latRad * 180 / Math.PI;
+  return {lat, lng};
+}
+
+// ===== رسم خريطة OSM حقيقية على Canvas ثم إرجاع data URL =====
+async function buildRealMapDataUrl(path, bins) {
+  try {
     const getLat = p => Array.isArray(p) ? p[0] : p.lat;
     const getLng = p => Array.isArray(p) ? p[1] : p.lng;
 
     const allLats = [...path.map(getLat), ...(bins||[]).map(b=>b.lat)];
     const allLngs = [...path.map(getLng), ...(bins||[]).map(b=>b.lng)];
-
     const minLat = Math.min(...allLats), maxLat = Math.max(...allLats);
     const minLng = Math.min(...allLngs), maxLng = Math.max(...allLngs);
-    const dLat = (maxLat - minLat) || 0.002;
-    const dLng = (maxLng - minLng) || 0.002;
 
-    // إضافة هامش 15% حول المسار
-    const padLat = dLat * 0.15, padLng = dLng * 0.15;
-    const fMinLat = minLat - padLat, fMaxLat = maxLat + padLat;
-    const fMinLng = minLng - padLng, fMaxLng = maxLng + padLng;
-    const fDLat = fMaxLat - fMinLat, fDLng = fMaxLng - fMinLng;
+    // اختيار مستوى الزوم المناسب
+    let zoom = 15;
+    const dLat = maxLat - minLat, dLng = maxLng - minLng;
+    if(dLat > 0.05 || dLng > 0.05) zoom = 13;
+    else if(dLat > 0.02 || dLng > 0.02) zoom = 14;
+    else if(dLat > 0.005 || dLng > 0.005) zoom = 15;
+    else zoom = 16;
 
-    const toX = lng => PAD + ((lng - fMinLng) / fDLng) * (W - PAD*2);
-    const toY = lat => H - PAD - ((lat - fMinLat) / fDLat) * (H - PAD*2);
+    // حساب نطاق tiles المطلوبة مع هامش
+    const padLat = Math.max(dLat * 0.25, 0.002);
+    const padLng = Math.max(dLng * 0.25, 0.002);
+    const t1 = latLngToTile(maxLat + padLat, minLng - padLng, zoom);
+    const t2 = latLngToTile(minLat - padLat, maxLng + padLng, zoom);
+
+    const txMin = Math.min(t1.x, t2.x), txMax = Math.max(t1.x, t2.x);
+    const tyMin = Math.min(t1.y, t2.y), tyMax = Math.max(t1.y, t2.y);
+
+    // حد أقصى 6×4 tiles لتجنب بطء التحميل
+    const txCount = Math.min(txMax - txMin + 1, 6);
+    const tyCount = Math.min(tyMax - tyMin + 1, 4);
+    const TILE_SIZE = 256;
+    const W = txCount * TILE_SIZE, H = tyCount * TILE_SIZE;
 
     const canvas = document.createElement('canvas');
     canvas.width = W; canvas.height = H;
     const ctx = canvas.getContext('2d');
 
-    // خلفية
-    ctx.fillStyle = '#e8f5e9';
+    // خلفية احتياطية (تظهر لو فشل تحميل tile)
+    ctx.fillStyle = '#f0ede6';
     ctx.fillRect(0, 0, W, H);
 
-    // إطار
-    ctx.strokeStyle = '#a5d6a7';
-    ctx.lineWidth = 2;
-    ctx.strokeRect(1, 1, W-2, H-2);
-
-    // شبكة خفيفة
-    ctx.strokeStyle = '#c8e6c9';
-    ctx.lineWidth = 0.5;
-    for(let i=1; i<6; i++){
-      const gy = PAD + i*(H-PAD*2)/6;
-      ctx.beginPath(); ctx.moveTo(PAD, gy); ctx.lineTo(W-PAD, gy); ctx.stroke();
-      const gx = PAD + i*(W-PAD*2)/6;
-      ctx.beginPath(); ctx.moveTo(gx, PAD); ctx.lineTo(gx, H-PAD); ctx.stroke();
+    // ===== تحميل tiles OSM بالتوازي =====
+    const tilePromises = [];
+    for(let ty = tyMin; ty < tyMin + tyCount; ty++) {
+      for(let tx = txMin; tx < txMin + txCount; tx++) {
+        const dx = (tx - txMin) * TILE_SIZE;
+        const dy = (ty - tyMin) * TILE_SIZE;
+        const subdomains = ['a','b','c'];
+        const s = subdomains[(tx + ty) % 3];
+        const url = `https://${s}.tile.openstreetmap.org/${zoom}/${tx}/${ty}.png`;
+        tilePromises.push(new Promise(resolve => {
+          const img = new Image();
+          img.crossOrigin = 'anonymous';
+          img.onload = () => { ctx.drawImage(img, dx, dy, TILE_SIZE, TILE_SIZE); resolve(); };
+          img.onerror = () => {
+            // tile فشل: ارسم مستطيل رمادي فاتح
+            ctx.fillStyle = '#e8e8e8';
+            ctx.fillRect(dx, dy, TILE_SIZE, TILE_SIZE);
+            ctx.strokeStyle = '#ccc'; ctx.lineWidth = 0.5;
+            ctx.strokeRect(dx, dy, TILE_SIZE, TILE_SIZE);
+            resolve();
+          };
+          img.src = url;
+        }));
+      }
     }
+
+    // انتظر تحميل جميع tiles (مع timeout 8 ثوانٍ)
+    await Promise.race([
+      Promise.all(tilePromises),
+      new Promise(r => setTimeout(r, 8000))
+    ]);
+
+    // ===== دالة تحويل lat/lng → pixel على الـ canvas =====
+    const originTL = tileToLatLng(txMin, tyMin, zoom);
+    const originBR = tileToLatLng(txMin + txCount, tyMin + tyCount, zoom);
+
+    // استخدام Mercator صحيح
+    function mercY(lat) {
+      const latRad = lat * Math.PI / 180;
+      return Math.log(Math.tan(Math.PI/4 + latRad/2));
+    }
+    const mercTop = mercY(originTL.lat), mercBot = mercY(originBR.lat);
+    const lngRange = originBR.lng - originTL.lng;
+
+    const toX = lng => ((lng - originTL.lng) / lngRange) * W;
+    const toY = lat => ((mercTop - mercY(lat)) / (mercTop - mercBot)) * H;
 
     // ===== رسم خط المسار =====
     if(path.length >= 2) {
-      // ظل خفيف
-      ctx.shadowColor = 'rgba(27,94,32,0.3)';
-      ctx.shadowBlur = 4;
-      ctx.strokeStyle = '#1B5E20';
-      ctx.lineWidth = 4;
-      ctx.lineJoin = 'round';
-      ctx.lineCap = 'round';
+      // الخط الخارجي (أبيض) للتباين مع الخريطة
+      ctx.strokeStyle = 'rgba(255,255,255,0.8)';
+      ctx.lineWidth = 7;
+      ctx.lineJoin = 'round'; ctx.lineCap = 'round';
       ctx.beginPath();
       ctx.moveTo(toX(getLng(path[0])), toY(getLat(path[0])));
-      for(let i=1; i<path.length; i++) {
-        ctx.lineTo(toX(getLng(path[i])), toY(getLat(path[i])));
-      }
+      for(let i=1; i<path.length; i++) ctx.lineTo(toX(getLng(path[i])), toY(getLat(path[i])));
       ctx.stroke();
-      ctx.shadowBlur = 0;
 
-      // سهم الاتجاه في منتصف المسار
+      // الخط الأخضر الرئيسي
+      ctx.strokeStyle = '#1B5E20';
+      ctx.lineWidth = 4;
+      ctx.beginPath();
+      ctx.moveTo(toX(getLng(path[0])), toY(getLat(path[0])));
+      for(let i=1; i<path.length; i++) ctx.lineTo(toX(getLng(path[i])), toY(getLat(path[i])));
+      ctx.stroke();
+
+      // سهم الاتجاه
       const mi = Math.floor(path.length / 2);
       const ax1 = toX(getLng(path[mi-1])), ay1 = toY(getLat(path[mi-1]));
       const ax2 = toX(getLng(path[mi])),   ay2 = toY(getLat(path[mi]));
       const angle = Math.atan2(ay2-ay1, ax2-ax1);
-      const mx = (ax1+ax2)/2, my = (ay1+ay2)/2;
       ctx.save();
-      ctx.translate(mx, my);
+      ctx.translate((ax1+ax2)/2, (ay1+ay2)/2);
       ctx.rotate(angle);
       ctx.fillStyle = '#1B5E20';
-      ctx.beginPath();
-      ctx.moveTo(10, 0);
-      ctx.lineTo(-6, -6);
-      ctx.lineTo(-6, 6);
-      ctx.closePath();
+      ctx.beginPath(); ctx.moveTo(12,0); ctx.lineTo(-7,-6); ctx.lineTo(-7,6); ctx.closePath();
       ctx.fill();
       ctx.restore();
     }
@@ -6378,60 +6433,69 @@ function buildRouteMapDataUrl(path, bins) {
     // ===== الحاويات =====
     (bins||[]).forEach((b, i) => {
       const bx = toX(b.lng), by = toY(b.lat);
-      ctx.beginPath();
-      ctx.arc(bx, by, 8, 0, Math.PI*2);
-      ctx.fillStyle = '#FF9800';
-      ctx.fill();
-      ctx.strokeStyle = '#fff';
-      ctx.lineWidth = 2;
-      ctx.stroke();
-      ctx.fillStyle = '#fff';
-      ctx.font = 'bold 9px Arial';
-      ctx.textAlign = 'center';
-      ctx.textBaseline = 'middle';
+      // ظل
+      ctx.beginPath(); ctx.arc(bx+1, by+1, 10, 0, Math.PI*2);
+      ctx.fillStyle = 'rgba(0,0,0,0.25)'; ctx.fill();
+      // دائرة
+      ctx.beginPath(); ctx.arc(bx, by, 10, 0, Math.PI*2);
+      ctx.fillStyle = '#FF9800'; ctx.fill();
+      ctx.strokeStyle = '#fff'; ctx.lineWidth = 2.5; ctx.stroke();
+      ctx.fillStyle = '#fff'; ctx.font = 'bold 10px Arial';
+      ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
       ctx.fillText(String(i+1), bx, by);
     });
 
     // ===== نقطة البداية =====
     const sx = toX(getLng(path[0])), sy = toY(getLat(path[0]));
-    ctx.beginPath(); ctx.arc(sx, sy, 10, 0, Math.PI*2);
+    ctx.beginPath(); ctx.arc(sx+1, sy+1, 12, 0, Math.PI*2);
+    ctx.fillStyle = 'rgba(0,0,0,0.25)'; ctx.fill();
+    ctx.beginPath(); ctx.arc(sx, sy, 12, 0, Math.PI*2);
     ctx.fillStyle = '#4CAF50'; ctx.fill();
-    ctx.strokeStyle = '#fff'; ctx.lineWidth = 2.5; ctx.stroke();
-    ctx.fillStyle = '#fff'; ctx.font = 'bold 11px Arial';
+    ctx.strokeStyle = '#fff'; ctx.lineWidth = 3; ctx.stroke();
+    ctx.fillStyle = '#fff'; ctx.font = 'bold 12px Arial';
     ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-    ctx.fillText('S', sx, sy);
+    ctx.fillText('▶', sx, sy);
 
     // ===== نقطة النهاية =====
     const ex = toX(getLng(path[path.length-1])), ey = toY(getLat(path[path.length-1]));
-    ctx.beginPath(); ctx.arc(ex, ey, 10, 0, Math.PI*2);
+    ctx.beginPath(); ctx.arc(ex+1, ey+1, 12, 0, Math.PI*2);
+    ctx.fillStyle = 'rgba(0,0,0,0.25)'; ctx.fill();
+    ctx.beginPath(); ctx.arc(ex, ey, 12, 0, Math.PI*2);
     ctx.fillStyle = '#f44336'; ctx.fill();
-    ctx.strokeStyle = '#fff'; ctx.lineWidth = 2.5; ctx.stroke();
-    ctx.fillStyle = '#fff'; ctx.font = 'bold 11px Arial';
+    ctx.strokeStyle = '#fff'; ctx.lineWidth = 3; ctx.stroke();
+    ctx.fillStyle = '#fff'; ctx.font = 'bold 12px Arial';
     ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-    ctx.fillText('E', ex, ey);
+    ctx.fillText('■', ex, ey);
 
     // ===== مفتاح الخريطة =====
-    const lx = W - 130, ly = H - 80;
-    ctx.fillStyle = 'rgba(255,255,255,0.92)';
+    const lx = W - 145, ly = H - 90;
+    ctx.fillStyle = 'rgba(255,255,255,0.93)';
     ctx.beginPath();
-    ctx.roundRect ? ctx.roundRect(lx, ly, 122, 72, 6) : ctx.rect(lx, ly, 122, 72);
+    if(ctx.roundRect) ctx.roundRect(lx, ly, 138, 82, 7);
+    else ctx.rect(lx, ly, 138, 82);
     ctx.fill();
-    ctx.strokeStyle = '#a5d6a7'; ctx.lineWidth = 1; ctx.stroke();
-
+    ctx.strokeStyle = '#aaa'; ctx.lineWidth = 1; ctx.stroke();
     const legendItems = [
-      {color:'#4CAF50', label:'نقطة البداية'},
-      {color:'#f44336', label:'نقطة النهاية'},
+      {color:'#4CAF50', label:'نقطة البداية (S)'},
+      {color:'#f44336', label:'نقطة النهاية (E)'},
       {color:'#FF9800', label:'موقع الحاوية'}
     ];
     legendItems.forEach((item, i) => {
-      const iy = ly + 16 + i * 20;
-      ctx.beginPath(); ctx.arc(lx+14, iy, 6, 0, Math.PI*2);
+      const iy = ly + 18 + i * 22;
+      ctx.beginPath(); ctx.arc(lx+16, iy, 7, 0, Math.PI*2);
       ctx.fillStyle = item.color; ctx.fill();
       ctx.strokeStyle = '#fff'; ctx.lineWidth = 1.5; ctx.stroke();
-      ctx.fillStyle = '#333'; ctx.font = '11px Arial';
+      ctx.fillStyle = '#222'; ctx.font = '11px Arial';
       ctx.textAlign = 'right'; ctx.textBaseline = 'middle';
-      ctx.fillText(item.label, lx+118, iy);
+      ctx.fillText(item.label, lx+133, iy);
     });
+
+    // ===== حقوق OpenStreetMap =====
+    ctx.fillStyle = 'rgba(255,255,255,0.75)';
+    ctx.fillRect(0, H-16, 200, 16);
+    ctx.fillStyle = '#555'; ctx.font = '9px Arial';
+    ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
+    ctx.fillText('© OpenStreetMap contributors', 4, H-8);
 
     return canvas.toDataURL('image/png');
   } catch(e) {
@@ -6443,12 +6507,13 @@ async function downloadPreviewPDF() {
   const sd = currentSectorData || {};
   const totalBins = (sd.bins||[]).reduce((s,b)=>s+(parseInt(b.count)||1),0);
 
-  // رسم الخريطة على Canvas محلي وتحويلها إلى صورة PNG
+  // رسم الخريطة الحقيقية (OSM tiles + مسار) وتحويلها إلى PNG مضمّن في PDF
   let mapHTML = '<div class="map-placeholder">⚠️ لا توجد نقاط مسار مسجّلة</div>';
   if((sd.path||[]).length >= 2) {
-    const dataUrl = buildRouteMapDataUrl(sd.path, sd.bins||[]);
+    showToast('⏳ جاري تحميل خريطة المسار...', 'info');
+    const dataUrl = await buildRealMapDataUrl(sd.path, sd.bins||[]);
     if(dataUrl) {
-      mapHTML = '<img src="' + dataUrl + '" style="width:100%;max-width:170mm;display:block;margin:0 auto;border-radius:8px;border:1px solid #ccc"/>';
+      mapHTML = '<img src="' + dataUrl + '" style="width:100%;max-width:175mm;display:block;margin:0 auto;border-radius:8px;border:1px solid #ccc"/>';
     }
   }
 
