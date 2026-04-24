@@ -1187,11 +1187,19 @@ body {
 .track-step.pending::before { background: var(--warning); box-shadow: 0 0 0 2px var(--warning); }
 
 /* ===== الخريطة ===== */
-#map, #routeMap, #previewMap {
+#map, #routeMap {
   height: 300px;
   width: 100%;
   border-radius: var(--radius);
   margin: 12px 0;
+  z-index: 1;
+  border: 2px solid var(--border);
+}
+#previewMap {
+  height: 200px;
+  width: 100%;
+  border-radius: var(--radius);
+  margin: 10px 0;
   z-index: 1;
   border: 2px solid var(--border);
 }
@@ -2493,7 +2501,12 @@ select.input {
         <div id="alertsList"></div>
       </div>
       <div id="driversLivePanel" style="margin-bottom:12px">
-        <h3 style="color:var(--primary);margin-bottom:8px;font-size:0.92rem"><i class="fas fa-circle" style="color:var(--success)"></i> السائقون الآن</h3>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+          <h3 style="color:var(--primary);font-size:0.92rem;margin:0"><i class="fas fa-circle" style="color:var(--success)"></i> السائقون الآن</h3>
+          <button onclick="toggleDriversPanel()" id="toggleDriversBtn" style="background:none;border:1px solid var(--border);border-radius:20px;padding:3px 10px;font-size:0.75rem;color:var(--text-light);cursor:pointer;font-family:Cairo,sans-serif">
+            <i class="fas fa-eye-slash" id="toggleDriversIcon"></i> إخفاء
+          </button>
+        </div>
         <div id="driversLiveList"></div>
       </div>
 
@@ -2582,6 +2595,21 @@ select.input {
         <button class="btn ripple" style="background:linear-gradient(135deg,#006233,#004d29)" onclick="openPresentationMode()">
           <i class="fas fa-desktop"></i> وضع العرض التقديمي
         </button>
+      </div>
+
+      <!-- ===== القسم 6: الإعدادات (المشرف الرئيسي فقط) ===== -->
+      <div id="adminSettingsSection" style="display:none;background:var(--bg);border-radius:var(--radius-sm);padding:12px;margin-bottom:10px;border:2px solid #e0e0e0">
+        <div style="font-weight:800;color:#424242;margin-bottom:10px;font-size:0.9rem">
+          <i class="fas fa-shield-alt"></i> إعدادات المشرف الرئيسي
+        </div>
+        <div style="background:var(--bg-card);border-radius:var(--radius-sm);padding:12px;border:1px solid var(--border)">
+          <h4 style="margin-bottom:10px;color:var(--primary);font-size:0.88rem"><i class="fas fa-key"></i> تغيير رمز الدخول</h4>
+          <input type="password" id="newPassInput" class="input" placeholder="🔑 رمز الدخول الجديد" style="margin-bottom:8px">
+          <input type="password" id="newPassConfirm" class="input" placeholder="🔑 تأكيد الرمز الجديد" style="margin-bottom:8px">
+          <button class="btn btn-primary ripple" onclick="changeAdminPassword()" style="font-size:0.88rem">
+            <i class="fas fa-save"></i> حفظ الرمز الجديد
+          </button>
+        </div>
       </div>
 
       <!-- خروج + مسح -->
@@ -3324,6 +3352,10 @@ function _startApp(mode) {
   try { loadFromCloud('tonnage','tonnage',(d)=>{
     if(d){ const arr=Array.isArray(d)?d:Object.values(d); localStorage.setItem('medea_tonnage',JSON.stringify(arr)); }
   }); } catch(e) {}
+  // مزامنة رمز المشرف الرئيسي من السحابة
+  try { db.ref('adminConfig/mainPassword').once('value').then(snap => {
+    if(snap && snap.val()) localStorage.setItem('medea_adminPass', snap.val());
+  }).catch(()=>{}); } catch(e) {}
   try { var lang=localStorage.getItem('medea_lang')||'ar'; currentLang=lang; updateLanguageUI(); } catch(e) {}
   try { applyRoleUI(); } catch(e) {}
 }
@@ -4227,17 +4259,21 @@ function sendReport() {
 
 // ===== الإدارة =====
 function loginAdmin() {
-  // فتحي هو المشرف الرئيسي الوحيد الذي يمكنه تغيير الرمز
   const adminName = document.getElementById('adminName').value.trim();
   const adminCode = document.getElementById('adminCode').value;
   const staff = JSON.parse(localStorage.getItem('medea_staff') || '[]');
+  // الرمز الحالي: من localStorage إذا غُيِّر، وإلا الافتراضي
+  const currentPass = localStorage.getItem('medea_adminPass') || '280876';
   
   // إذا أدخل فتحي الرمز الصحيح
-  if(adminName === 'فتحي' && adminCode === '280876') {
+  if(adminName === 'فتحي' && adminCode === currentPass) {
     document.getElementById('adminLogin').classList.add('hidden');
     document.getElementById('adminPanel').classList.remove('hidden');
     currentAdminName = 'فتحي';
     document.getElementById('adminCurrentUser').textContent = 'المشرف الرئيسي: فتحي';
+    // إظهار قسم الإعدادات للمشرف الرئيسي فقط
+    const settingsSection = document.getElementById('adminSettingsSection');
+    if(settingsSection) settingsSection.style.display = 'block';
     updateStats();
     showToast('✓ دخول ناجح - أنت المشرف الرئيسي', 'success');
   }
@@ -4259,11 +4295,40 @@ function loginAdmin() {
   }
 }
 
+
+// ===== إخفاء/إظهار قائمة السائقين =====
+function toggleDriversPanel() {
+  const list = document.getElementById('driversLiveList');
+  const btn  = document.getElementById('toggleDriversBtn');
+  if(!list) return;
+  const hidden = list.style.display === 'none';
+  list.style.display = hidden ? 'block' : 'none';
+  btn.innerHTML = hidden
+    ? '<i class="fas fa-eye-slash"></i> إخفاء'
+    : '<i class="fas fa-eye"></i> إظهار';
+}
+
+// ===== تغيير رمز دخول المشرف الرئيسي =====
+function changeAdminPassword() {
+  const newPass     = document.getElementById('newPassInput').value.trim();
+  const confirmPass = document.getElementById('newPassConfirm').value.trim();
+  if(!newPass || newPass.length < 4) { showToast('⚠️ الرمز يجب أن يكون 4 أرقام على الأقل', 'error'); return; }
+  if(newPass !== confirmPass)         { showToast('⚠️ الرمزان غير متطابقَين', 'error'); return; }
+  try {
+    db.ref('adminConfig/mainPassword').set(newPass).catch(()=>{});
+    localStorage.setItem('medea_adminPass', newPass);
+  } catch(e) {}
+  document.getElementById('newPassInput').value = '';
+  document.getElementById('newPassConfirm').value = '';
+  showToast('✅ تم تغيير رمز الدخول بنجاح', 'success');
+}
+
 function logoutAdmin() {
-  document.getElementById('adminLogin').classList.remove('hidden');
   document.getElementById('adminPanel').classList.add('hidden');
   document.getElementById('adminName').value = '';
   document.getElementById('adminCode').value = '';
+  const settingsSection = document.getElementById('adminSettingsSection');
+  if(settingsSection) settingsSection.style.display = 'none';
   currentAdminName = '';
   showToast('✓ خروج', 'info');
 }
@@ -6272,7 +6337,7 @@ async function downloadPreviewPDF() {
   .info-table td { padding:7px 10px; border:1px solid #e0e0e0; font-size:12px; }
   .info-table td:first-child { font-weight:bold; background:#f5f5f5; width:38%; }
   .map-section h3 { color:#006233; font-size:14px; border-right:4px solid #006233; padding-right:8px; margin-bottom:8px; }
-  .map-img { width:100%; border-radius:6px; border:1px solid #ccc; display:block; }
+  .map-img { width:60%; max-width:120mm; display:block; margin:0 auto; border-radius:6px; border:1px solid #ccc; }
   .map-placeholder { background:#f0f4f0; border:1px solid #ccc; border-radius:6px; padding:40px; text-align:center; color:#888; font-size:12px; }
 
   /* ===== صفحة 2 ===== */
