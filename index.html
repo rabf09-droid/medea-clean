@@ -8107,20 +8107,30 @@ window.addEventListener('DOMContentLoaded', function() {
     }, 700);
   }
 
-  // ربط مع sendReport — توسيع الدالة الأصلية
-  if (typeof window.sendReport === 'function') {
-    var _origSendReport = window.sendReport;
-    window.sendReport = function() {
-      var result = _origSendReport.apply(this, arguments);
-      setTimeout(function() {
-        var overlay = document.getElementById('thanksOverlay');
-        if (overlay && overlay.style.display === 'flex') {
-          playThanksSpeech();
-        }
-      }, 150);
-      return result;
-    };
-  }
+  // مراقبة ظهور شاشة الشكر بـ MutationObserver (أكثر أماناً من توسيع الدالة)
+  (function() {
+    var _thanksDone = false;
+    function _watchOverlay() {
+      var overlay = document.getElementById('thanksOverlay');
+      if (!overlay) { setTimeout(_watchOverlay, 500); return; }
+      var observer = new MutationObserver(function(mutations) {
+        mutations.forEach(function(m) {
+          if (m.attributeName === 'style') {
+            if (overlay.style.display === 'flex' && !_thanksDone) {
+              _thanksDone = true;
+              playThanksSpeech();
+            } else if (overlay.style.display === 'none') {
+              _thanksDone = false;
+            }
+          }
+        });
+      });
+      observer.observe(overlay, { attributes: true, attributeFilter: ['style'] });
+    }
+    document.readyState === 'loading'
+      ? document.addEventListener('DOMContentLoaded', _watchOverlay)
+      : _watchOverlay();
+  })();
 
   window.MedeaPlayThanks = playThanksSpeech;
 
@@ -8191,14 +8201,16 @@ window.addEventListener('DOMContentLoaded', function() {
   // (شرط المتصفح: لا صوت قبل تفاعل حقيقي)
   // =====================================================
   function _onFirstInteraction() {
-    playWelcomeSpeech();
-    document.removeEventListener('click',     _onFirstInteraction);
+    // إزالة فورية قبل أي شيء — يمنع أي تكرار
+    document.removeEventListener('click',      _onFirstInteraction);
     document.removeEventListener('touchstart', _onFirstInteraction);
-    document.removeEventListener('keydown',   _onFirstInteraction);
+    document.removeEventListener('keydown',    _onFirstInteraction);
+    playWelcomeSpeech();
   }
-  document.addEventListener('click',      _onFirstInteraction, { once: true, passive: true });
-  document.addEventListener('touchstart', _onFirstInteraction, { once: true, passive: true });
-  document.addEventListener('keydown',    _onFirstInteraction, { once: true, passive: true });
+  // بدون { once } — نعتمد على الإزالة اليدوية الفورية داخل الدالة
+  document.addEventListener('click',      _onFirstInteraction, false);
+  document.addEventListener('touchstart', _onFirstInteraction, { passive: true });
+  document.addEventListener('keydown',    _onFirstInteraction, false);
 
   // =====================================================
   // تصدير SFX + دالة الترحيب للاستخدام الخارجي
