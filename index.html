@@ -3279,6 +3279,26 @@ try {  if(typeof firebase !== 'undefined'){
   };
 }
 
+// ===== تحميل البيانات من Firebase فور تحميل الصفحة (قبل اختيار الدور) =====
+(function _earlyFirebaseSync() {
+  try {
+    db.ref('reports').on('value', function(snapshot) {
+      try {
+        var data = snapshot && snapshot.val ? snapshot.val() : null;
+        allReports = data ? Object.values(data).map(normalizeReport) : [];
+        try { updateStats(); } catch(e) {}
+        try {
+          if(typeof renderDriverTasks === 'function' && currentDriver) renderDriverTasks();
+        } catch(e) {}
+        try {
+          var rp = document.getElementById('reportsPage');
+          if(rp && rp.classList.contains('active') && typeof applyFilters === 'function') applyFilters();
+        } catch(e) {}
+      } catch(e) {}
+    });
+  } catch(e) {}
+})();
+
 // ===== المتغيرات العامة =====
 let allReports=[], currentLang='ar', tempImage=null, tempAfterImage=null, currentDriver='', userPoints=0, currentDriverSector='';
 let wasteTracking=[], marketMaterials=[], marketRequests=[];
@@ -3913,16 +3933,8 @@ function setupSync() {
       } catch(e) {}
     });
     
-    db.ref('reports').on('value', (snapshot) => {
-      try {
-        const data = snapshot && snapshot.val ? snapshot.val() : null;
-        allReports = data ? Object.values(data).map(normalizeReport) : [];
-        updateStats();
-        // تحديث مهام السائق لو كانت الصفحة مفتوحة
-        if(currentDriver && document.getElementById('tasksList')) renderDriverTasks();
-      } catch(e) {}
-    });
-    
+    // مستمع البلاغات: مُعرَّف مبكراً في _earlyFirebaseSync أعلى الصفحة
+
     // مستمع الموظفين
     db.ref('staff').on('value', (snapshot) => {
       try {
