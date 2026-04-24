@@ -6290,89 +6290,167 @@ function printPreview() {
   downloadPreviewPDF();
 }
 
-function buildRouteSVG(path, bins) {
-  // رسم خريطة SVG من الإحداثيات — لا تعتمد على الإنترنت أو html2canvas
-  if (!path || path.length < 2) return '<div class="map-placeholder">⚠️ لا توجد نقاط مسار مسجّلة</div>';
+function buildRouteMapDataUrl(path, bins) {
+  // رسم المسار على Canvas وتحويله إلى data URL PNG — يظهر دائماً في PDF
+  try {
+    const W = 700, H = 380, PAD = 40;
 
-  const W = 520, H = 320, PAD = 30;
+    // استخراج الإحداثيات
+    const getLat = p => Array.isArray(p) ? p[0] : p.lat;
+    const getLng = p => Array.isArray(p) ? p[1] : p.lng;
 
-  // حساب min/max
-  const lats = path.map(p => Array.isArray(p) ? p[0] : p.lat);
-  const lngs = path.map(p => Array.isArray(p) ? p[1] : p.lng);
-  const binLats = (bins||[]).map(b => b.lat);
-  const binLngs = (bins||[]).map(b => b.lng);
-  const allLats = [...lats, ...binLats];
-  const allLngs = [...lngs, ...binLngs];
+    const allLats = [...path.map(getLat), ...(bins||[]).map(b=>b.lat)];
+    const allLngs = [...path.map(getLng), ...(bins||[]).map(b=>b.lng)];
 
-  const minLat = Math.min(...allLats), maxLat = Math.max(...allLats);
-  const minLng = Math.min(...allLngs), maxLng = Math.max(...allLngs);
-  const dLat = maxLat - minLat || 0.001;
-  const dLng = maxLng - minLng || 0.001;
+    const minLat = Math.min(...allLats), maxLat = Math.max(...allLats);
+    const minLng = Math.min(...allLngs), maxLng = Math.max(...allLngs);
+    const dLat = (maxLat - minLat) || 0.002;
+    const dLng = (maxLng - minLng) || 0.002;
 
-  // تحويل إحداثيات جغرافية → SVG (lat مقلوب لأن Y ينزل)
-  const toX = lng => PAD + ((lng - minLng) / dLng) * (W - PAD*2);
-  const toY = lat => H - PAD - ((lat - minLat) / dLat) * (H - PAD*2);
+    // إضافة هامش 15% حول المسار
+    const padLat = dLat * 0.15, padLng = dLng * 0.15;
+    const fMinLat = minLat - padLat, fMaxLat = maxLat + padLat;
+    const fMinLng = minLng - padLng, fMaxLng = maxLng + padLng;
+    const fDLat = fMaxLat - fMinLat, fDLng = fMaxLng - fMinLng;
 
-  // رسم خط المسار
-  const pts = path.map(p => {
-    const lat = Array.isArray(p) ? p[0] : p.lat;
-    const lng = Array.isArray(p) ? p[1] : p.lng;
-    return `${toX(lng).toFixed(1)},${toY(lat).toFixed(1)}`;
-  }).join(' ');
+    const toX = lng => PAD + ((lng - fMinLng) / fDLng) * (W - PAD*2);
+    const toY = lat => H - PAD - ((lat - fMinLat) / fDLat) * (H - PAD*2);
 
-  // نقاط الحاويات
-  const binCircles = (bins||[]).map((b,i) => `
-    <circle cx="${toX(b.lng).toFixed(1)}" cy="${toY(b.lat).toFixed(1)}" r="6" fill="#FF9800" stroke="#fff" stroke-width="2" opacity="0.9"/>
-    <text x="${toX(b.lng).toFixed(1)}" y="${(toY(b.lat)-9).toFixed(1)}" text-anchor="middle" font-size="8" fill="#E65100" font-family="Cairo,sans-serif">${i+1}</text>
-  `).join('');
+    const canvas = document.createElement('canvas');
+    canvas.width = W; canvas.height = H;
+    const ctx = canvas.getContext('2d');
 
-  // بداية ونهاية
-  const startLat = Array.isArray(path[0]) ? path[0][0] : path[0].lat;
-  const startLng = Array.isArray(path[0]) ? path[0][1] : path[0].lng;
-  const endLat   = Array.isArray(path[path.length-1]) ? path[path.length-1][0] : path[path.length-1].lat;
-  const endLng   = Array.isArray(path[path.length-1]) ? path[path.length-1][1] : path[path.length-1].lng;
+    // خلفية
+    ctx.fillStyle = '#e8f5e9';
+    ctx.fillRect(0, 0, W, H);
 
-  return `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}"
-    style="border:1px solid #ccc;border-radius:8px;background:#e8f5e9;display:block;margin:0 auto">
-    <rect width="${W}" height="${H}" fill="#e8f5e9"/>
-    <!-- شبكة خفيفة -->
-    <g stroke="#c8e6c9" stroke-width="0.5">
-      ${Array.from({length:5},(_,i)=>`<line x1="${PAD}" y1="${PAD + i*(H-PAD*2)/4}" x2="${W-PAD}" y2="${PAD + i*(H-PAD*2)/4}"/>`).join('')}
-      ${Array.from({length:5},(_,i)=>`<line x1="${PAD + i*(W-PAD*2)/4}" y1="${PAD}" x2="${PAD + i*(W-PAD*2)/4}" y2="${H-PAD}"/>`).join('')}
-    </g>
-    <!-- خط المسار -->
-    <polyline points="${pts}" fill="none" stroke="#1B5E20" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" opacity="0.85"/>
-    <!-- سهم الاتجاه على المنتصف -->
-    ${path.length >= 2 ? (() => {
-      const mi = Math.floor(path.length/2);
-      const p1 = path[mi-1], p2 = path[mi];
-      const x1 = toX(Array.isArray(p1)?p1[1]:p1.lng), y1 = toY(Array.isArray(p1)?p1[0]:p1.lat);
-      const x2 = toX(Array.isArray(p2)?p2[1]:p2.lng), y2 = toY(Array.isArray(p2)?p2[0]:p2.lat);
-      const angle = Math.atan2(y2-y1, x2-x1) * 180/Math.PI;
-      return `<polygon points="0,-5 10,0 0,5" fill="#1B5E20" transform="translate(${((x1+x2)/2).toFixed(1)},${((y1+y2)/2).toFixed(1)}) rotate(${angle.toFixed(1)})"/>`;
-    })() : ''}
-    <!-- الحاويات -->
-    ${binCircles}
-    <!-- نقطة البداية -->
-    <circle cx="${toX(startLng).toFixed(1)}" cy="${toY(startLat).toFixed(1)}" r="8" fill="#4CAF50" stroke="#fff" stroke-width="2"/>
-    <text x="${toX(startLng).toFixed(1)}" y="${(toY(startLat)+4).toFixed(1)}" text-anchor="middle" font-size="9" fill="white" font-family="Cairo,sans-serif">▶</text>
-    <!-- نقطة النهاية -->
-    <circle cx="${toX(endLng).toFixed(1)}" cy="${toY(endLat).toFixed(1)}" r="8" fill="#f44336" stroke="#fff" stroke-width="2"/>
-    <text x="${toX(endLng).toFixed(1)}" y="${(toY(endLat)+4).toFixed(1)}" text-anchor="middle" font-size="9" fill="white" font-family="Cairo,sans-serif">■</text>
-    <!-- مفتاح الخريطة -->
-    <rect x="${W-120}" y="${H-58}" width="110" height="52" rx="5" fill="white" opacity="0.85"/>
-    <circle cx="${W-108}" cy="${H-46}" r="5" fill="#4CAF50"/><text x="${W-100}" y="${H-43}" font-size="9" fill="#333" font-family="Cairo,sans-serif">نقطة البداية</text>
-    <circle cx="${W-108}" cy="${H-33}" r="5" fill="#f44336"/><text x="${W-100}" y="${H-30}" font-size="9" fill="#333" font-family="Cairo,sans-serif">نقطة النهاية</text>
-    <circle cx="${W-108}" cy="${H-20}" r="5" fill="#FF9800"/><text x="${W-100}" y="${H-17}" font-size="9" fill="#333" font-family="Cairo,sans-serif">موقع الحاوية</text>
-  </svg>`;
+    // إطار
+    ctx.strokeStyle = '#a5d6a7';
+    ctx.lineWidth = 2;
+    ctx.strokeRect(1, 1, W-2, H-2);
+
+    // شبكة خفيفة
+    ctx.strokeStyle = '#c8e6c9';
+    ctx.lineWidth = 0.5;
+    for(let i=1; i<6; i++){
+      const gy = PAD + i*(H-PAD*2)/6;
+      ctx.beginPath(); ctx.moveTo(PAD, gy); ctx.lineTo(W-PAD, gy); ctx.stroke();
+      const gx = PAD + i*(W-PAD*2)/6;
+      ctx.beginPath(); ctx.moveTo(gx, PAD); ctx.lineTo(gx, H-PAD); ctx.stroke();
+    }
+
+    // ===== رسم خط المسار =====
+    if(path.length >= 2) {
+      // ظل خفيف
+      ctx.shadowColor = 'rgba(27,94,32,0.3)';
+      ctx.shadowBlur = 4;
+      ctx.strokeStyle = '#1B5E20';
+      ctx.lineWidth = 4;
+      ctx.lineJoin = 'round';
+      ctx.lineCap = 'round';
+      ctx.beginPath();
+      ctx.moveTo(toX(getLng(path[0])), toY(getLat(path[0])));
+      for(let i=1; i<path.length; i++) {
+        ctx.lineTo(toX(getLng(path[i])), toY(getLat(path[i])));
+      }
+      ctx.stroke();
+      ctx.shadowBlur = 0;
+
+      // سهم الاتجاه في منتصف المسار
+      const mi = Math.floor(path.length / 2);
+      const ax1 = toX(getLng(path[mi-1])), ay1 = toY(getLat(path[mi-1]));
+      const ax2 = toX(getLng(path[mi])),   ay2 = toY(getLat(path[mi]));
+      const angle = Math.atan2(ay2-ay1, ax2-ax1);
+      const mx = (ax1+ax2)/2, my = (ay1+ay2)/2;
+      ctx.save();
+      ctx.translate(mx, my);
+      ctx.rotate(angle);
+      ctx.fillStyle = '#1B5E20';
+      ctx.beginPath();
+      ctx.moveTo(10, 0);
+      ctx.lineTo(-6, -6);
+      ctx.lineTo(-6, 6);
+      ctx.closePath();
+      ctx.fill();
+      ctx.restore();
+    }
+
+    // ===== الحاويات =====
+    (bins||[]).forEach((b, i) => {
+      const bx = toX(b.lng), by = toY(b.lat);
+      ctx.beginPath();
+      ctx.arc(bx, by, 8, 0, Math.PI*2);
+      ctx.fillStyle = '#FF9800';
+      ctx.fill();
+      ctx.strokeStyle = '#fff';
+      ctx.lineWidth = 2;
+      ctx.stroke();
+      ctx.fillStyle = '#fff';
+      ctx.font = 'bold 9px Arial';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(String(i+1), bx, by);
+    });
+
+    // ===== نقطة البداية =====
+    const sx = toX(getLng(path[0])), sy = toY(getLat(path[0]));
+    ctx.beginPath(); ctx.arc(sx, sy, 10, 0, Math.PI*2);
+    ctx.fillStyle = '#4CAF50'; ctx.fill();
+    ctx.strokeStyle = '#fff'; ctx.lineWidth = 2.5; ctx.stroke();
+    ctx.fillStyle = '#fff'; ctx.font = 'bold 11px Arial';
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillText('S', sx, sy);
+
+    // ===== نقطة النهاية =====
+    const ex = toX(getLng(path[path.length-1])), ey = toY(getLat(path[path.length-1]));
+    ctx.beginPath(); ctx.arc(ex, ey, 10, 0, Math.PI*2);
+    ctx.fillStyle = '#f44336'; ctx.fill();
+    ctx.strokeStyle = '#fff'; ctx.lineWidth = 2.5; ctx.stroke();
+    ctx.fillStyle = '#fff'; ctx.font = 'bold 11px Arial';
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillText('E', ex, ey);
+
+    // ===== مفتاح الخريطة =====
+    const lx = W - 130, ly = H - 80;
+    ctx.fillStyle = 'rgba(255,255,255,0.92)';
+    ctx.beginPath();
+    ctx.roundRect ? ctx.roundRect(lx, ly, 122, 72, 6) : ctx.rect(lx, ly, 122, 72);
+    ctx.fill();
+    ctx.strokeStyle = '#a5d6a7'; ctx.lineWidth = 1; ctx.stroke();
+
+    const legendItems = [
+      {color:'#4CAF50', label:'نقطة البداية'},
+      {color:'#f44336', label:'نقطة النهاية'},
+      {color:'#FF9800', label:'موقع الحاوية'}
+    ];
+    legendItems.forEach((item, i) => {
+      const iy = ly + 16 + i * 20;
+      ctx.beginPath(); ctx.arc(lx+14, iy, 6, 0, Math.PI*2);
+      ctx.fillStyle = item.color; ctx.fill();
+      ctx.strokeStyle = '#fff'; ctx.lineWidth = 1.5; ctx.stroke();
+      ctx.fillStyle = '#333'; ctx.font = '11px Arial';
+      ctx.textAlign = 'right'; ctx.textBaseline = 'middle';
+      ctx.fillText(item.label, lx+118, iy);
+    });
+
+    return canvas.toDataURL('image/png');
+  } catch(e) {
+    return null;
+  }
 }
 
 async function downloadPreviewPDF() {
   const sd = currentSectorData || {};
   const totalBins = (sd.bins||[]).reduce((s,b)=>s+(parseInt(b.count)||1),0);
 
-  // رسم الخريطة كـ SVG محلي (لا يعتمد على html2canvas أو اتصال خارجي)
-  const mapSVG = buildRouteSVG(sd.path || [], sd.bins || []);
+  // رسم الخريطة على Canvas محلي وتحويلها إلى صورة PNG
+  let mapHTML = '<div class="map-placeholder">⚠️ لا توجد نقاط مسار مسجّلة</div>';
+  if((sd.path||[]).length >= 2) {
+    const dataUrl = buildRouteMapDataUrl(sd.path, sd.bins||[]);
+    if(dataUrl) {
+      mapHTML = '<img src="' + dataUrl + '" style="width:100%;max-width:170mm;display:block;margin:0 auto;border-radius:8px;border:1px solid #ccc"/>';
+    }
+  }
 
   const binsRows = (sd.bins||[]).map((bin,idx) => `
     <tr>
@@ -6439,7 +6517,7 @@ async function downloadPreviewPDF() {
 
 <div class="map-section">
   <h3>🗺️ خريطة المسار</h3>
-  ${mapSVG}
+  ${mapHTML}
 </div>
 
 <!-- ========== صفحة 2: جدول الحاويات ========== -->
