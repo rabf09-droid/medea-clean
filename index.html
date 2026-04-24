@@ -2482,8 +2482,45 @@ select.input {
     </div>
     <div id="adminLogin" class="card">
       <h3><i class="fas fa-lock"></i> <span data-i18n="adminLogin">الدخول للمشرفين</span></h3>
-      <input type="text" id="adminName" class="input" placeholder="👤 الاسم" data-i18n-ph="nameFullPh">
-      <input type="password" id="adminCode" class="input" placeholder="🔑 الرمز (280876)" data-i18n-ph="codePh">
+
+      <!-- تبويبان للدخول -->
+      <div style="display:flex;gap:8px;margin-bottom:14px">
+        <button id="tabSuperAdmin" onclick="switchLoginTab('super')"
+          style="flex:1;padding:9px;border:2px solid var(--primary);border-radius:10px;
+                 background:var(--primary);color:#fff;font-family:Cairo,sans-serif;
+                 font-size:0.82rem;font-weight:700;cursor:pointer;transition:all .25s">
+          <i class="fas fa-shield-alt"></i> المشرف الرئيسي
+        </button>
+        <button id="tabSubAdmin" onclick="switchLoginTab('sub')"
+          style="flex:1;padding:9px;border:2px solid var(--primary);border-radius:10px;
+                 background:transparent;color:var(--primary);font-family:Cairo,sans-serif;
+                 font-size:0.82rem;font-weight:700;cursor:pointer;transition:all .25s">
+          <i class="fas fa-user-tie"></i> مسؤول مضاف
+        </button>
+      </div>
+
+      <!-- حقول المشرف الرئيسي -->
+      <div id="loginPanelSuper">
+        <input type="text" id="adminName" class="input"
+               placeholder="👤 الاسم (فتحي)" data-i18n-ph="nameFullPh"
+               style="margin-bottom:10px">
+        <input type="password" id="adminCode" class="input"
+               placeholder="🔑 الرمز السري" data-i18n-ph="codePh"
+               style="margin-bottom:10px">
+      </div>
+
+      <!-- حقل المسؤول المضاف -->
+      <div id="loginPanelSub" style="display:none">
+        <div style="background:#e8f5e9;border:1px solid #a5d6a7;border-radius:10px;
+                    padding:10px 12px;margin-bottom:10px;font-size:0.8rem;color:#2e7d32">
+          <i class="fas fa-info-circle"></i>
+          أدخل اسمك كما أضافه المشرف الرئيسي
+        </div>
+        <input type="text" id="subAdminName" class="input"
+               placeholder="👤 اسمك الكامل"
+               style="margin-bottom:10px">
+      </div>
+
       <button class="btn btn-dark ripple" onclick="loginAdmin()">
         <i class="fas fa-sign-in-alt"></i> <span data-i18n="login">دخول</span>
       </button>
@@ -4258,40 +4295,74 @@ function sendReport() {
 }
 
 // ===== الإدارة =====
-function loginAdmin() {
-  const adminName = document.getElementById('adminName').value.trim();
-  const adminCode = document.getElementById('adminCode').value;
-  const staff = JSON.parse(localStorage.getItem('medea_staff') || '[]');
-  // الرمز الحالي: من localStorage إذا غُيِّر، وإلا الافتراضي
-  const currentPass = localStorage.getItem('medea_adminPass') || '280876';
-  
-  // إذا أدخل فتحي الرمز الصحيح
-  if(adminName === 'فتحي' && adminCode === currentPass) {
-    document.getElementById('adminLogin').classList.add('hidden');
-    document.getElementById('adminPanel').classList.remove('hidden');
-    currentAdminName = 'فتحي';
-    document.getElementById('adminCurrentUser').textContent = 'المشرف الرئيسي: فتحي';
-    // إظهار قسم الإعدادات للمشرف الرئيسي فقط
-    const settingsSection = document.getElementById('adminSettingsSection');
-    if(settingsSection) settingsSection.style.display = 'block';
-    updateStats();
-    showToast('✓ دخول ناجح - أنت المشرف الرئيسي', 'success');
+// ===== تبديل تبويب الدخول =====
+let currentLoginTab = 'super'; // 'super' أو 'sub'
+
+function switchLoginTab(tab) {
+  currentLoginTab = tab;
+  const panelSuper = document.getElementById('loginPanelSuper');
+  const panelSub   = document.getElementById('loginPanelSub');
+  const tabSuper   = document.getElementById('tabSuperAdmin');
+  const tabSub     = document.getElementById('tabSubAdmin');
+
+  if(tab === 'super') {
+    if(panelSuper) panelSuper.style.display = 'block';
+    if(panelSub)   panelSub.style.display   = 'none';
+    if(tabSuper) { tabSuper.style.background = 'var(--primary)'; tabSuper.style.color = '#fff'; }
+    if(tabSub)   { tabSub.style.background   = 'transparent';    tabSub.style.color   = 'var(--primary)'; }
+  } else {
+    if(panelSuper) panelSuper.style.display = 'none';
+    if(panelSub)   panelSub.style.display   = 'block';
+    if(tabSub)   { tabSub.style.background   = 'var(--primary)'; tabSub.style.color = '#fff'; }
+    if(tabSuper) { tabSuper.style.background = 'transparent';    tabSuper.style.color = 'var(--primary)'; }
+    // تركيز على حقل الاسم تلقائياً
+    setTimeout(() => { const f = document.getElementById('subAdminName'); if(f) f.focus(); }, 100);
   }
-  // إذا أدخل مشرف مضاف من قبل فتحي باسمه فقط (بدون رمز)
-  else if(adminName && !adminCode) {
-    const isApprovedAdmin = staff.some(s => s.name === adminName && s.role.includes('مشرف'));
+}
+
+function loginAdmin() {
+  const staff = JSON.parse(localStorage.getItem('medea_staff') || '[]');
+  const currentPass = localStorage.getItem('medea_adminPass') || '280876';
+
+  // ===== تبويب المشرف الرئيسي =====
+  if(currentLoginTab === 'super') {
+    const adminName = (document.getElementById('adminName')?.value || '').trim();
+    const adminCode = (document.getElementById('adminCode')?.value || '');
+
+    if(adminName === 'فتحي' && adminCode === currentPass) {
+      document.getElementById('adminLogin').classList.add('hidden');
+      document.getElementById('adminPanel').classList.remove('hidden');
+      currentAdminName = 'فتحي';
+      document.getElementById('adminCurrentUser').textContent = 'المشرف الرئيسي: فتحي';
+      const settingsSection = document.getElementById('adminSettingsSection');
+      if(settingsSection) settingsSection.style.display = 'block';
+      updateStats();
+      showToast('✓ دخول ناجح - أنت المشرف الرئيسي', 'success');
+    } else {
+      showToast('✗ اسم أو رمز خاطئ', 'error');
+    }
+
+  // ===== تبويب المسؤول المضاف =====
+  } else {
+    const subName = (document.getElementById('subAdminName')?.value || '').trim();
+    if(!subName) { showToast('⚠️ أدخل اسمك أولاً', 'error'); return; }
+
+    const isApprovedAdmin = staff.some(s =>
+      s.name && s.name.trim() === subName && s.role && s.role.includes('مشرف')
+    );
     if(isApprovedAdmin) {
       document.getElementById('adminLogin').classList.add('hidden');
       document.getElementById('adminPanel').classList.remove('hidden');
-      currentAdminName = adminName;
-      document.getElementById('adminCurrentUser').textContent = 'المشرف: ' + adminName;
+      currentAdminName = subName;
+      document.getElementById('adminCurrentUser').textContent = 'المسؤول: ' + subName;
+      // إخفاء الإعدادات الرئيسية عن المسؤول الفرعي
+      const settingsSection = document.getElementById('adminSettingsSection');
+      if(settingsSection) settingsSection.style.display = 'none';
       updateStats();
-      showToast('✓ دخول ناجح - مرحباً ' + adminName, 'success');
+      showToast('✓ دخول ناجح - مرحباً ' + subName, 'success');
     } else {
-      showToast('✗ لا توجد صلاحيات - يجب أن يضيفك فتحي أولاً', 'error');
+      showToast('✗ هذا الاسم غير مسجّل كمسؤول — تأكد من الاسم أو اطلب من المشرف الرئيسي إضافتك', 'error');
     }
-  } else {
-    showToast('✗ بيانات دخول خاطئة', 'error');
   }
 }
 
@@ -4325,8 +4396,13 @@ function changeAdminPassword() {
 
 function logoutAdmin() {
   document.getElementById('adminPanel').classList.add('hidden');
-  document.getElementById('adminName').value = '';
-  document.getElementById('adminCode').value = '';
+  document.getElementById('adminLogin').classList.remove('hidden');
+  // تصفير الحقول
+  const an = document.getElementById('adminName'); if(an) an.value = '';
+  const ac = document.getElementById('adminCode'); if(ac) ac.value = '';
+  const sn = document.getElementById('subAdminName'); if(sn) sn.value = '';
+  // إعادة للتبويب الافتراضي
+  switchLoginTab('super');
   const settingsSection = document.getElementById('adminSettingsSection');
   if(settingsSection) settingsSection.style.display = 'none';
   currentAdminName = '';
