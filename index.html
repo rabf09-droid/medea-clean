@@ -2716,7 +2716,11 @@ select.input {
     <div class="card">
       <h3><i class="fas fa-user-plus"></i> <span data-i18n="addStaffTitle">إضافة موظف</span></h3>
       <input type="text" id="newStaffName" class="input" placeholder="👤 الاسم" data-i18n-ph="nameFullPh">
-      <input type="text" id="newStaffRole" class="input" placeholder="💼 المنصب (سائق/مسؤول)" data-i18n-ph="rolePh">
+      <select id="newStaffRole" class="input" style="cursor:pointer;color:var(--text)">
+        <option value="" disabled selected>💼 اختر المنصب</option>
+        <option value="سائق">🚛 سائق</option>
+        <option value="مشرف">🏛️ مسؤول (مشرف)</option>
+      </select>
       <input type="tel" id="newStaffPhone" class="input" placeholder="📞 الهاتف" data-i18n-ph="phonePh">
       <button class="btn btn-primary ripple" onclick="addStaff()">
         <i class="fas fa-save"></i> <span data-i18n="save">حفظ</span>
@@ -4348,7 +4352,8 @@ function loginAdmin() {
     if(!subName) { showToast('⚠️ أدخل اسمك أولاً', 'error'); return; }
 
     const isApprovedAdmin = staff.some(s =>
-      s.name && s.name.trim() === subName && s.role && s.role.includes('مشرف')
+      s.name && s.name.trim() === subName && s.role &&
+      (s.role.includes('مشرف') || s.role.includes('مسؤول'))
     );
     if(isApprovedAdmin) {
       document.getElementById('adminLogin').classList.add('hidden');
