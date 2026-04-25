@@ -6016,88 +6016,65 @@ function updateDriverPanel() {
 
 function initTruckTrackingMap() {
   try {
-    // نفس منطق الإدارة بالضبط لتعبئة القطاعات
-    var citizenSel = document.getElementById('citizenSectorSelect');
-    if(citizenSel) {
-      var sectors = [];
-      try { sectors = JSON.parse(localStorage.getItem('medea_schedule') || '[]'); } catch(e) {}
-      // Firebase يحوّل array إلى object — نعالجه
-      if(!Array.isArray(sectors)) { try { sectors = Object.values(sectors); } catch(e) { sectors = []; } }
-      
-      citizenSel.innerHTML = '<option value="">-- اختر رقم القطاع --</option>';
-      var seen = {};
-      sectors.forEach(function(s) {
-        var num = (s.num || s.name || '').toString();
-        if(num && !seen[num]) {
-          seen[num] = true;
-          var opt = document.createElement('option');
-          opt.value = num;
-          opt.textContent = 'القطاع ' + num;
-          citizenSel.appendChild(opt);
-        }
-      });
-      // إذا لم توجد قطاعات في localStorage بعد — أضف افتراضية
-      if(Object.keys(seen).length === 0) {
-        [1,2,3,4,5].forEach(function(n) {
-          var opt = document.createElement('option');
-          opt.value = n; opt.textContent = 'القطاع ' + n;
-          citizenSel.appendChild(opt);
+    // نفس كود الإدارة حرفياً — يقرأ من localStorage ثم Firebase
+    function fillCitizenSectors(sectors) {
+      try {
+        var sel = document.getElementById('citizenSectorSelect');
+        if(!sel) return;
+        // تحويل object إلى array إذا لزم
+        if(!Array.isArray(sectors)) sectors = Object.values(sectors||{});
+        sectors = sectors.filter(function(s){ return s && typeof s === 'object'; });
+        sel.innerHTML = '<option value="">-- اختر رقم القطاع --</option>';
+        var seen = {};
+        sectors.forEach(function(s) {
+          var num = (s.num || s.name || '').toString().trim();
+          if(num && !seen[num]) {
+            seen[num] = true;
+            var opt = document.createElement('option');
+            opt.value = num;
+            opt.textContent = 'القطاع ' + num;
+            sel.appendChild(opt);
+          }
         });
-      }
-      // إذا كان التتبع نشطاً — حدد القطاع تلقائياً
-      if(truckTrackingData.active && truckTrackingData.sector) {
-        citizenSel.value = truckTrackingData.sector;
-      }
+        // إذا لم توجد بيانات — أضف افتراضية مؤقتة
+        if(Object.keys(seen).length === 0) {
+          [1,2,3,4,5].forEach(function(n){
+            var opt = document.createElement('option');
+            opt.value = n; opt.textContent = 'القطاع ' + n;
+            sel.appendChild(opt);
+          });
+        }
+        // إذا كان التتبع نشطاً — حدد القطاع تلقائياً
+        if(truckTrackingData.active && truckTrackingData.sector) {
+          sel.value = truckTrackingData.sector;
+          citizenSelectSector();
+        }
+      } catch(e) {}
     }
 
-    // تهيئة الخريطة
-    if(map) { map.remove(); map = null; }
+    // 1) من localStorage فوراً
+    var stored = [];
+    try { stored = JSON.parse(localStorage.getItem('medea_schedule') || '[]'); } catch(e) {}
+    fillCitizenSectors(stored);
+
+    // 2) من Firebase — نفس ما يفعله setupSync
+    try {
+      db.ref('schedule').once('value').then(function(snap) {
+        var data = snap && snap.val ? snap.val() : null;
+        if(data) fillCitizenSectors(data);
+      }).catch(function(){});
+    } catch(e) {}
+
+    // 3) تهيئة الخريطة
+    if(map) { try { map.remove(); } catch(e) {} map = null; }
     map = L.map('map').setView([36.2642, 2.7545], 13);
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
       attribution: '© OpenStreetMap contributors'
     }).addTo(map);
-    setTimeout(function(){ try{ if(map) map.invalidateSize(); }catch(e){} }, 400);
-
-    // إذا كان التتبع نشطاً — أظهر المسار مباشرة
-    if(truckTrackingData.active && truckTrackingData.sector) {
-      citizenSelectSector();
-    }
-
-    // جلب من Firebase إذا كان localStorage فارغاً
-    try {
-      db.ref('schedule').once('value').then(function(snap) {
-        try {
-          var data = snap && snap.val ? snap.val() : null;
-          if(!data) return;
-          var arr = Array.isArray(data) ? data : Object.values(data);
-          arr = arr.filter(function(x){ return x && typeof x === 'object'; });
-          if(arr.length === 0) return;
-          localStorage.setItem('medea_schedule', JSON.stringify(arr));
-          // أعد تعبئة القائمة فقط إذا كانت تحتوي على القطاعات الافتراضية أو فارغة
-          var sel = document.getElementById('citizenSectorSelect');
-          if(!sel) return;
-          sel.innerHTML = '<option value="">-- اختر رقم القطاع --</option>';
-          var seen2 = {};
-          arr.forEach(function(s) {
-            var num = (s.num || s.name || '').toString();
-            if(num && !seen2[num]) {
-              seen2[num] = true;
-              var opt = document.createElement('option');
-              opt.value = num; opt.textContent = 'القطاع ' + num;
-              sel.appendChild(opt);
-            }
-          });
-          if(truckTrackingData.active && truckTrackingData.sector) {
-            sel.value = truckTrackingData.sector;
-            citizenSelectSector();
-          }
-        } catch(e2) {}
-      }).catch(function(){});
-    } catch(e) {}
+    setTimeout(function(){ try{ if(map) map.invalidateSize(); } catch(e){} }, 400);
 
   } catch(e) {}
 }
-
 // ===== تحديث معلومات القطاع المختار من المواطن =====
 function citizenSelectSector() {
   try {
