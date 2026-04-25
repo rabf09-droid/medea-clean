@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+  <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
 <meta charset="UTF-8">
@@ -3947,6 +3947,24 @@ function setupSync() {
           if(document.getElementById('scheduleDisplay')) displaySchedule();
           // تحديث السائق إذا كان مسجل الدخول
           if(currentDriver) updateDriverSchedule();
+          // تحديث قائمة القطاعات في صفحة تتبع المواطن إذا كانت مفتوحة
+          try {
+            var cSel = document.getElementById('citizenSectorSelect');
+            if(cSel && cSel.options.length <= 1) {
+              var fArr = Array.isArray(arr) ? arr : Object.values(arr);
+              cSel.innerHTML = '<option value="">-- اختر رقم القطاع --</option>';
+              var seen2 = {};
+              fArr.forEach(function(s) {
+                var num = (s.num||s.name||'').toString();
+                if(num && !seen2[num]) {
+                  seen2[num] = true;
+                  var opt = document.createElement('option');
+                  opt.value = num; opt.textContent = 'القطاع ' + num;
+                  cSel.appendChild(opt);
+                }
+              });
+            }
+          } catch(e2) {}
         }
       } catch(e) {}
     });
@@ -6029,25 +6047,49 @@ function initTruckTrackingMap() {
       }
     }
 
-    // أولاً: حاول من localStorage (سريع)
+    // محاولة 1: localStorage الفوري
     var localSectors = [];
     try { localSectors = JSON.parse(localStorage.getItem('medea_schedule') || '[]'); } catch(e) {}
+    
+    // تحويل آمن من أي شكل (array أو object) إلى array
+    function toArray(data) {
+      if(!data) return [];
+      if(Array.isArray(data)) return data.filter(function(x){ return x; });
+      return Object.values(data).filter(function(x){ return x && typeof x === 'object'; });
+    }
+    
     if(localSectors.length > 0) {
       fillSectorSelect(localSectors);
     }
 
-    // ثانياً: اجلب من Firebase دائماً لضمان التحديث
+    // محاولة 2: Firebase مباشرة (يضمن وصول البيانات حتى لو localStorage فارغ)
     try {
       db.ref('schedule').once('value').then(function(snap) {
-        var data = snap && snap.val ? snap.val() : null;
-        if(data) {
-          var arr = Array.isArray(data) ? data : Object.values(data);
+        try {
+          var data = snap && snap.val ? snap.val() : null;
+          var arr = toArray(data);
           if(arr.length > 0) {
             localStorage.setItem('medea_schedule', JSON.stringify(arr));
             fillSectorSelect(arr);
           }
-        }
+        } catch(e2) {}
       }).catch(function(){});
+    } catch(e) {}
+    
+    // محاولة 3: listener مستمر يُحدّث القائمة فور وصول البيانات
+    try {
+      db.ref('schedule').on('value', function(snap) {
+        try {
+          var data = snap && snap.val ? snap.val() : null;
+          var arr = toArray(data);
+          if(arr.length > 0) {
+            localStorage.setItem('medea_schedule', JSON.stringify(arr));
+            // أضف فقط إذا كانت القائمة فارغة حالياً
+            var sel = document.getElementById('citizenSectorSelect');
+            if(sel && sel.options.length <= 1) fillSectorSelect(arr);
+          }
+        } catch(e2) {}
+      });
     } catch(e) {}
 
   } catch(e) {}
