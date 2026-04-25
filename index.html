@@ -5998,27 +5998,7 @@ function updateDriverPanel() {
 
 function initTruckTrackingMap() {
   try {
-    // تعبئة قائمة القطاعات من جدول الجمع
-    const citizenSel = document.getElementById('citizenSectorSelect');
-    if(citizenSel) {
-      try {
-        const sectors = JSON.parse(localStorage.getItem('medea_schedule') || '[]');
-        citizenSel.innerHTML = '<option value="">-- اختر رقم القطاع --</option>';
-        const seen = new Set();
-        sectors.forEach(s => {
-          const num = s.num || s.name || '';
-          if(num && !seen.has(num)) {
-            seen.add(num);
-            const opt = document.createElement('option');
-            opt.value = num;
-            opt.textContent = 'القطاع ' + num;
-            citizenSel.appendChild(opt);
-          }
-        });
-      } catch(e) {}
-    }
-
-    // تهيئة الخريطة فوراً عند فتح الصفحة
+    // تهيئة الخريطة فوراً
     if(map) { map.remove(); map = null; }
     map = L.map('map').setView([36.2642, 2.7545], 13);
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -6026,11 +6006,50 @@ function initTruckTrackingMap() {
     }).addTo(map);
     setTimeout(function(){ try{ if(map) map.invalidateSize(); }catch(e){} }, 400);
 
-    // إذا كان التتبع نشطاً: حدد القطاع تلقائياً وأظهر المسار
-    if(truckTrackingData.active && truckTrackingData.sector) {
-      if(citizenSel) citizenSel.value = truckTrackingData.sector;
-      citizenSelectSector();
+    // دالة تعبئة القطاعات
+    function fillSectorSelect(sectors) {
+      var citizenSel = document.getElementById('citizenSectorSelect');
+      if(!citizenSel) return;
+      citizenSel.innerHTML = '<option value="">-- اختر رقم القطاع --</option>';
+      var seen = {};
+      (sectors||[]).forEach(function(s) {
+        var num = s.num || s.name || '';
+        if(num && !seen[num]) {
+          seen[num] = true;
+          var opt = document.createElement('option');
+          opt.value = num;
+          opt.textContent = 'القطاع ' + num;
+          citizenSel.appendChild(opt);
+        }
+      });
+      // إذا كان التتبع نشطاً: حدد القطاع تلقائياً
+      if(truckTrackingData.active && truckTrackingData.sector) {
+        citizenSel.value = truckTrackingData.sector;
+        citizenSelectSector();
+      }
     }
+
+    // أولاً: حاول من localStorage (سريع)
+    var localSectors = [];
+    try { localSectors = JSON.parse(localStorage.getItem('medea_schedule') || '[]'); } catch(e) {}
+    if(localSectors.length > 0) {
+      fillSectorSelect(localSectors);
+    }
+
+    // ثانياً: اجلب من Firebase دائماً لضمان التحديث
+    try {
+      db.ref('schedule').once('value').then(function(snap) {
+        var data = snap && snap.val ? snap.val() : null;
+        if(data) {
+          var arr = Array.isArray(data) ? data : Object.values(data);
+          if(arr.length > 0) {
+            localStorage.setItem('medea_schedule', JSON.stringify(arr));
+            fillSectorSelect(arr);
+          }
+        }
+      }).catch(function(){});
+    } catch(e) {}
+
   } catch(e) {}
 }
 
