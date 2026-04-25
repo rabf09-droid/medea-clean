@@ -2251,15 +2251,15 @@ select.input {
       </select>
     </div>
     <div class="card" id="citizenTrackingInfoCard" style="display:none">
-      <h3><i class="fas fa-info-circle"></i> المعلومات الحالية</h3>
+      <h3><i class="fas fa-info-circle"></i> معلومات القطاع</h3>
       <div class="info-row"><b>🏷️ رقم القطاع:</b> <span id="trackingSector">-</span></div>
       <div class="info-row"><b>📍 الأحياء:</b> <span id="trackingZones" style="color:var(--primary-light);font-size:0.88rem">-</span></div>
       <div class="info-row"><b>📅 أيام الجمع:</b> <span id="trackingDays">-</span></div>
       <div class="info-row"><b>🕐 وقت المرور:</b> <span id="trackingTime">-</span></div>
-      <div class="info-row"><b>📅 تاريخ آخر تتبع:</b> <span id="trackingDate">-</span></div>
-      <div class="info-row"><b>🗑️ الحاويات المجمعة:</b> <span id="collectedBinsCount" style="color:var(--success);font-weight:bold">0</span></div>
+      <div class="info-row" id="binsCountRow" style="display:none"><b>🗑️ الحاويات المجمعة اليوم:</b> <span id="collectedBinsCount" style="color:var(--success);font-weight:bold">0</span></div>
+      <span id="trackingDate" style="display:none">-</span>
     </div>
-    <div class="warning-card" id="liveTrackingStatus" style="display:none">🔴 التتبع المباشر نشط</div>
+    <div class="success-card" id="liveTrackingStatus" style="display:none">🟢 الشاحنة نشطة الآن في هذا القطاع</div>
     <div id="map"></div>
     <div class="card" id="citizenBinsListCard" style="display:none">
       <h3><i class="fas fa-list"></i> سجل الحاويات المجمعة</h3>
@@ -5998,7 +5998,7 @@ function updateDriverPanel() {
 
 function initTruckTrackingMap() {
   try {
-    // تعبئة قائمة القطاعات للمواطن
+    // تعبئة قائمة القطاعات من جدول الجمع
     const citizenSel = document.getElementById('citizenSectorSelect');
     if(citizenSel) {
       try {
@@ -6015,28 +6015,21 @@ function initTruckTrackingMap() {
             citizenSel.appendChild(opt);
           }
         });
-        // إذا كان التتبع نشطاً حدد القطاع الحالي تلقائياً
-        if(truckTrackingData.active && truckTrackingData.sector) {
-          citizenSel.value = truckTrackingData.sector;
-          citizenSelectSector();
-          return;
-        }
       } catch(e) {}
     }
 
+    // تهيئة الخريطة فوراً عند فتح الصفحة
     if(map) { map.remove(); map = null; }
     map = L.map('map').setView([36.2642, 2.7545], 13);
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
       attribution: '© OpenStreetMap contributors'
     }).addTo(map);
-    
-    if(truckTrackingData.positions.length > 0) {
-      const lastPos = truckTrackingData.positions[truckTrackingData.positions.length - 1];
-      map.setView([lastPos.lat, lastPos.lng], 15);
-      trackingMarker = L.marker([lastPos.lat, lastPos.lng]).addTo(map).bindPopup(`<b>🚚 الشاحنة</b><br>القطاع: ${truckTrackingData.sector}`);
-      const latlngs = truckTrackingData.positions.map(p => [p.lat, p.lng]);
-      trackingPath = L.polyline(latlngs, {color: '#1B5E20', weight: 4}).addTo(map);
-      truckTrackingData.collectedBins.forEach(bin => addBinMarkerToMap(bin));
+    setTimeout(function(){ try{ if(map) map.invalidateSize(); }catch(e){} }, 400);
+
+    // إذا كان التتبع نشطاً: حدد القطاع تلقائياً وأظهر المسار
+    if(truckTrackingData.active && truckTrackingData.sector) {
+      if(citizenSel) citizenSel.value = truckTrackingData.sector;
+      citizenSelectSector();
     }
   } catch(e) {}
 }
@@ -6072,11 +6065,12 @@ function citizenSelectSector() {
     const isActiveSector = truckTrackingData.active && String(truckTrackingData.sector) === String(sectorNum);
     
     if(isActiveSector) {
-      document.getElementById('trackingDate').textContent = truckTrackingData.startTime
-        ? new Date(truckTrackingData.startTime).toLocaleDateString('ar-DZ') : '-';
       const realTotal = (truckTrackingData.collectedBins||[]).reduce((s,b)=>s+(parseInt(b.count)||1),0);
       document.getElementById('collectedBinsCount').textContent = realTotal;
-      if(statusEl) { statusEl.style.display = 'block'; statusEl.innerHTML = '🟢 التتبع المباشر نشط'; statusEl.style.background = 'linear-gradient(135deg,var(--success),#388E3C)'; }
+      // أظهر خانة الحاويات فقط إن وُجدت
+      var binsRow = document.getElementById('binsCountRow');
+      if(binsRow) binsRow.style.display = realTotal > 0 ? 'flex' : 'none';
+      if(statusEl) { statusEl.style.display = 'block'; }
       
       // سجل الحاويات
       const binsList = document.getElementById('collectedBinsList');
@@ -6106,15 +6100,26 @@ function citizenSelectSector() {
         truckTrackingData.collectedBins.forEach(bin => addBinMarkerToMap(bin));
       }
     } else {
+      // لا تتبع نشط — أظهر الخريطة فارغة مع معلومات القطاع الأساسية فقط
       document.getElementById('trackingDate').textContent = '-';
       document.getElementById('collectedBinsCount').textContent = '0';
-      if(statusEl) { statusEl.style.display = 'block'; statusEl.innerHTML = '🔴 لا يوجد تتبع نشط لهذا القطاع حالياً'; statusEl.style.background = '#757575'; }
+      if(statusEl) { statusEl.style.display = 'none'; }
       if(binsCard) binsCard.style.display = 'none';
-      if(map) { map.remove(); map = null; }
-      map = L.map('map').setView([36.2642, 2.7545], 13);
-      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {attribution:'© OpenStreetMap'}).addTo(map);
+      // تحديث الخريطة الموجودة (لا نعيد إنشاءها إن كانت موجودة)
+      if(!map) {
+        map = L.map('map').setView([36.2642, 2.7545], 13);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {attribution:'© OpenStreetMap'}).addTo(map);
+      } else {
+        // امسح العلامات القديمة وأبقِ الخريطة
+        map.eachLayer(function(layer){
+          if(layer instanceof L.Marker || layer instanceof L.Polyline || layer instanceof L.CircleMarker) {
+            try { map.removeLayer(layer); } catch(e) {}
+          }
+        });
+        map.setView([36.2642, 2.7545], 13);
+      }
     }
-    setTimeout(()=>{ try{ if(map) map.invalidateSize(); }catch(e){} }, 300);
+    setTimeout(function(){ try{ if(map) map.invalidateSize(); }catch(e){} }, 300);
   } catch(e) {}
 }
 
