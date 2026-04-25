@@ -1,4 +1,4 @@
-  <!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
 <meta charset="UTF-8">
@@ -6016,22 +6016,18 @@ function updateDriverPanel() {
 
 function initTruckTrackingMap() {
   try {
-    // تهيئة الخريطة فوراً
-    if(map) { map.remove(); map = null; }
-    map = L.map('map').setView([36.2642, 2.7545], 13);
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      attribution: '© OpenStreetMap contributors'
-    }).addTo(map);
-    setTimeout(function(){ try{ if(map) map.invalidateSize(); }catch(e){} }, 400);
-
-    // دالة تعبئة القطاعات
-    function fillSectorSelect(sectors) {
-      var citizenSel = document.getElementById('citizenSectorSelect');
-      if(!citizenSel) return;
+    // نفس منطق الإدارة بالضبط لتعبئة القطاعات
+    var citizenSel = document.getElementById('citizenSectorSelect');
+    if(citizenSel) {
+      var sectors = [];
+      try { sectors = JSON.parse(localStorage.getItem('medea_schedule') || '[]'); } catch(e) {}
+      // Firebase يحوّل array إلى object — نعالجه
+      if(!Array.isArray(sectors)) { try { sectors = Object.values(sectors); } catch(e) { sectors = []; } }
+      
       citizenSel.innerHTML = '<option value="">-- اختر رقم القطاع --</option>';
       var seen = {};
-      (sectors||[]).forEach(function(s) {
-        var num = s.num || s.name || '';
+      sectors.forEach(function(s) {
+        var num = (s.num || s.name || '').toString();
         if(num && !seen[num]) {
           seen[num] = true;
           var opt = document.createElement('option');
@@ -6040,56 +6036,63 @@ function initTruckTrackingMap() {
           citizenSel.appendChild(opt);
         }
       });
-      // إذا كان التتبع نشطاً: حدد القطاع تلقائياً
+      // إذا لم توجد قطاعات في localStorage بعد — أضف افتراضية
+      if(Object.keys(seen).length === 0) {
+        [1,2,3,4,5].forEach(function(n) {
+          var opt = document.createElement('option');
+          opt.value = n; opt.textContent = 'القطاع ' + n;
+          citizenSel.appendChild(opt);
+        });
+      }
+      // إذا كان التتبع نشطاً — حدد القطاع تلقائياً
       if(truckTrackingData.active && truckTrackingData.sector) {
         citizenSel.value = truckTrackingData.sector;
-        citizenSelectSector();
       }
     }
 
-    // محاولة 1: localStorage الفوري
-    var localSectors = [];
-    try { localSectors = JSON.parse(localStorage.getItem('medea_schedule') || '[]'); } catch(e) {}
-    
-    // تحويل آمن من أي شكل (array أو object) إلى array
-    function toArray(data) {
-      if(!data) return [];
-      if(Array.isArray(data)) return data.filter(function(x){ return x; });
-      return Object.values(data).filter(function(x){ return x && typeof x === 'object'; });
-    }
-    
-    if(localSectors.length > 0) {
-      fillSectorSelect(localSectors);
+    // تهيئة الخريطة
+    if(map) { map.remove(); map = null; }
+    map = L.map('map').setView([36.2642, 2.7545], 13);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '© OpenStreetMap contributors'
+    }).addTo(map);
+    setTimeout(function(){ try{ if(map) map.invalidateSize(); }catch(e){} }, 400);
+
+    // إذا كان التتبع نشطاً — أظهر المسار مباشرة
+    if(truckTrackingData.active && truckTrackingData.sector) {
+      citizenSelectSector();
     }
 
-    // محاولة 2: Firebase مباشرة (يضمن وصول البيانات حتى لو localStorage فارغ)
+    // جلب من Firebase إذا كان localStorage فارغاً
     try {
       db.ref('schedule').once('value').then(function(snap) {
         try {
           var data = snap && snap.val ? snap.val() : null;
-          var arr = toArray(data);
-          if(arr.length > 0) {
-            localStorage.setItem('medea_schedule', JSON.stringify(arr));
-            fillSectorSelect(arr);
+          if(!data) return;
+          var arr = Array.isArray(data) ? data : Object.values(data);
+          arr = arr.filter(function(x){ return x && typeof x === 'object'; });
+          if(arr.length === 0) return;
+          localStorage.setItem('medea_schedule', JSON.stringify(arr));
+          // أعد تعبئة القائمة فقط إذا كانت تحتوي على القطاعات الافتراضية أو فارغة
+          var sel = document.getElementById('citizenSectorSelect');
+          if(!sel) return;
+          sel.innerHTML = '<option value="">-- اختر رقم القطاع --</option>';
+          var seen2 = {};
+          arr.forEach(function(s) {
+            var num = (s.num || s.name || '').toString();
+            if(num && !seen2[num]) {
+              seen2[num] = true;
+              var opt = document.createElement('option');
+              opt.value = num; opt.textContent = 'القطاع ' + num;
+              sel.appendChild(opt);
+            }
+          });
+          if(truckTrackingData.active && truckTrackingData.sector) {
+            sel.value = truckTrackingData.sector;
+            citizenSelectSector();
           }
         } catch(e2) {}
       }).catch(function(){});
-    } catch(e) {}
-    
-    // محاولة 3: listener مستمر يُحدّث القائمة فور وصول البيانات
-    try {
-      db.ref('schedule').on('value', function(snap) {
-        try {
-          var data = snap && snap.val ? snap.val() : null;
-          var arr = toArray(data);
-          if(arr.length > 0) {
-            localStorage.setItem('medea_schedule', JSON.stringify(arr));
-            // أضف فقط إذا كانت القائمة فارغة حالياً
-            var sel = document.getElementById('citizenSectorSelect');
-            if(sel && sel.options.length <= 1) fillSectorSelect(arr);
-          }
-        } catch(e2) {}
-      });
     } catch(e) {}
 
   } catch(e) {}
