@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+  <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
 <meta charset="UTF-8">
@@ -3962,45 +3962,8 @@ function setupSync() {
       try {
         const data = snapshot && snapshot.val ? snapshot.val() : null;
         if(data) {
-          // Firebase يحوّل array إلى object — نعالجه
-          const arr = Array.isArray(data) ? data : Object.values(data).filter(x => x && typeof x === 'object');
-          localStorage.setItem('medea_tonnage', JSON.stringify(arr));
-          if(document.getElementById('tonnageList')) loadTonnageRecords();
-        }
-      } catch(e) {}
-    });
-
-    // مستمع مركز الفرز
-    db.ref('wasteTracking').on('value', (snapshot) => {
-      try {
-        const data = snapshot && snapshot.val ? snapshot.val() : null;
-        if(data) {
-          wasteTracking = Array.isArray(data) ? data : Object.values(data).filter(x => x && typeof x === 'object');
-          if(document.getElementById('sortedMaterialsList')) loadSortedMaterials();
-        }
-      } catch(e) {}
-    });
-
-    // مستمع سوق التدوير
-    db.ref('marketMaterials').on('value', (snapshot) => {
-      try {
-        const data = snapshot && snapshot.val ? snapshot.val() : null;
-        if(data) {
-          marketMaterials = Array.isArray(data) ? data : Object.values(data).filter(x => x && typeof x === 'object');
-          if(document.getElementById('marketMaterialsList')) loadMarketMaterials();
-        }
-      } catch(e) {}
-    });
-
-    // مستمع طلبات المواطنين
-    db.ref('requests').on('value', (snapshot) => {
-      try {
-        const data = snapshot && snapshot.val ? snapshot.val() : null;
-        if(data) {
-          const arr = Array.isArray(data) ? data : Object.values(data).filter(x => x && typeof x === 'object');
-          localStorage.setItem('medea_requests', JSON.stringify(arr));
-          if(document.getElementById('adminRequestsList')) loadAdminRequests();
-          if(document.getElementById('myRequestsList')) loadMyRequests();
+          localStorage.setItem('medea_tonnage', JSON.stringify(data));
+          if(document.getElementById('tonnageList')) loadTonnageList();
         }
       } catch(e) {}
     });
@@ -4029,9 +3992,57 @@ function setupSync() {
         }
       } catch(e) {}
     });
+
+    // مستمع كميات الأطنان (tonnage)
+    db.ref('tonnage').on('value', (snapshot) => {
+      try {
+        const data = snapshot && snapshot.val ? snapshot.val() : null;
+        if(data) {
+          const arr = Array.isArray(data) ? data : Object.values(data).filter(x => x && typeof x === 'object');
+          localStorage.setItem('medea_tonnage', JSON.stringify(arr));
+          if(document.getElementById('tonnageList')) loadTonnageRecords();
+        }
+      } catch(e) {}
+    });
+
+    // مستمع مركز الفرز
+    db.ref('wasteTracking').on('value', (snapshot) => {
+      try {
+        const data = snapshot && snapshot.val ? snapshot.val() : null;
+        if(data) {
+          wasteTracking = Array.isArray(data) ? data : Object.values(data).filter(x => x && typeof x === 'object');
+          localStorage.setItem('medea_wasteTracking', JSON.stringify(wasteTracking));
+          if(document.getElementById('sortedMaterialsList')) loadSortedMaterials();
+        }
+      } catch(e) {}
+    });
+
+    // مستمع سوق التدوير
+    db.ref('marketMaterials').on('value', (snapshot) => {
+      try {
+        const data = snapshot && snapshot.val ? snapshot.val() : null;
+        if(data) {
+          marketMaterials = Array.isArray(data) ? data : Object.values(data).filter(x => x && typeof x === 'object');
+          localStorage.setItem('medea_marketMaterials', JSON.stringify(marketMaterials));
+          if(document.getElementById('marketMaterialsList')) loadMarketMaterials();
+        }
+      } catch(e) {}
+    });
+
+    // مستمع طلبات المواطنين
+    db.ref('requests').on('value', (snapshot) => {
+      try {
+        const data = snapshot && snapshot.val ? snapshot.val() : null;
+        if(data) {
+          const arr = Array.isArray(data) ? data : Object.values(data).filter(x => x && typeof x === 'object');
+          localStorage.setItem('medea_requests', JSON.stringify(arr));
+          if(document.getElementById('adminRequestsList')) loadAdminRequests();
+          if(document.getElementById('myRequestsList')) loadMyRequests();
+        }
+      } catch(e) {}
+    });
   } catch(e) {}
 }
-
 function saveToCloud(path, data) {
   try {
     // truckTracking: نستخدم set() مباشرة لأن البنية كاملة دائماً
@@ -5163,6 +5174,29 @@ function addScheduleSector() {
     localStorage.setItem('medea_schedule', JSON.stringify(sectors));
     // رفع إلى السحابة
     try { db.ref('schedule').set(sectors).catch(()=>{}); } catch(e) {}
+
+    // ربط آلي: إضافة السائق لقائمة الموظفين إن لم يكن مسجلاً
+    if(driver) {
+      try {
+        let staff = [];
+        try { staff = JSON.parse(localStorage.getItem('medea_staff') || '[]'); } catch(e) {}
+        const exists = staff.some(s => s.name && s.name.trim() === driver.trim());
+        if(!exists) {
+          const newStaff = {
+            name: driver.trim(),
+            role: 'سائق',
+            phone: phone || '',
+            addedBy: 'جدول القطاعات',
+            addedDate: new Date().toLocaleDateString('ar-DZ')
+          };
+          staff.push(newStaff);
+          localStorage.setItem('medea_staff', JSON.stringify(staff));
+          try { db.ref('staff').set(staff).catch(()=>{}); } catch(e) {}
+          showToast('✅ تم إضافة السائق ' + driver + ' لقائمة الموظفين تلقائياً', 'info');
+        }
+      } catch(e) {}
+    }
+
     showToast('✅ تم إضافة القطاع', 'success');
     
     document.getElementById('sectorNum').value = '';
@@ -5260,6 +5294,23 @@ function updateScheduleSector(id) {
     localStorage.setItem('medea_schedule', JSON.stringify(sectors));
     // رفع إلى السحابة
     try { db.ref('schedule').set(sectors).catch(()=>{}); } catch(e) {}
+
+    // ربط آلي: إضافة السائق المُحدَّث لقائمة الموظفين إن لم يكن مسجلاً
+    const updDriver = document.getElementById('sectorDriver').value.trim();
+    const updPhone  = document.getElementById('sectorPhone').value.trim();
+    if(updDriver) {
+      try {
+        let staff2 = [];
+        try { staff2 = JSON.parse(localStorage.getItem('medea_staff') || '[]'); } catch(e) {}
+        const ex2 = staff2.some(s => s.name && s.name.trim() === updDriver);
+        if(!ex2) {
+          staff2.push({ name:updDriver, role:'سائق', phone:updPhone||'', addedBy:'جدول القطاعات', addedDate:new Date().toLocaleDateString('ar-DZ') });
+          localStorage.setItem('medea_staff', JSON.stringify(staff2));
+          try { db.ref('staff').set(staff2).catch(()=>{}); } catch(e) {}
+        }
+      } catch(e) {}
+    }
+
     showToast('✅ تم تحديث القطاع', 'success');
     // إعادة زر الحفظ لحالته الأصلية
     const saveBtn = document.querySelector('#scheduleManager .btn-primary');
