@@ -2251,15 +2251,15 @@ select.input {
       </select>
     </div>
     <div class="card" id="citizenTrackingInfoCard" style="display:none">
-      <h3><i class="fas fa-info-circle"></i> معلومات القطاع</h3>
+      <h3><i class="fas fa-info-circle"></i> المعلومات الحالية</h3>
       <div class="info-row"><b>🏷️ رقم القطاع:</b> <span id="trackingSector">-</span></div>
       <div class="info-row"><b>📍 الأحياء:</b> <span id="trackingZones" style="color:var(--primary-light);font-size:0.88rem">-</span></div>
       <div class="info-row"><b>📅 أيام الجمع:</b> <span id="trackingDays">-</span></div>
       <div class="info-row"><b>🕐 وقت المرور:</b> <span id="trackingTime">-</span></div>
-      <div class="info-row" id="binsCountRow" style="display:none"><b>🗑️ الحاويات المجمعة اليوم:</b> <span id="collectedBinsCount" style="color:var(--success);font-weight:bold">0</span></div>
-      <span id="trackingDate" style="display:none">-</span>
+      <div class="info-row"><b>📅 تاريخ آخر تتبع:</b> <span id="trackingDate">-</span></div>
+      <div class="info-row"><b>🗑️ الحاويات المجمعة:</b> <span id="collectedBinsCount" style="color:var(--success);font-weight:bold">0</span></div>
     </div>
-    <div class="success-card" id="liveTrackingStatus" style="display:none">🟢 الشاحنة نشطة الآن في هذا القطاع</div>
+    <div class="warning-card" id="liveTrackingStatus" style="display:none">🔴 التتبع المباشر نشط</div>
     <div id="map"></div>
     <div class="card" id="citizenBinsListCard" style="display:none">
       <h3><i class="fas fa-list"></i> سجل الحاويات المجمعة</h3>
@@ -3947,24 +3947,6 @@ function setupSync() {
           if(document.getElementById('scheduleDisplay')) displaySchedule();
           // تحديث السائق إذا كان مسجل الدخول
           if(currentDriver) updateDriverSchedule();
-          // تحديث قائمة القطاعات في صفحة تتبع المواطن إذا كانت مفتوحة
-          try {
-            var cSel = document.getElementById('citizenSectorSelect');
-            if(cSel && cSel.options.length <= 1) {
-              var fArr = Array.isArray(arr) ? arr : Object.values(arr);
-              cSel.innerHTML = '<option value="">-- اختر رقم القطاع --</option>';
-              var seen2 = {};
-              fArr.forEach(function(s) {
-                var num = (s.num||s.name||'').toString();
-                if(num && !seen2[num]) {
-                  seen2[num] = true;
-                  var opt = document.createElement('option');
-                  opt.value = num; opt.textContent = 'القطاع ' + num;
-                  cSel.appendChild(opt);
-                }
-              });
-            }
-          } catch(e2) {}
         }
       } catch(e) {}
     });
@@ -6016,65 +5998,49 @@ function updateDriverPanel() {
 
 function initTruckTrackingMap() {
   try {
-    // نفس كود الإدارة حرفياً — يقرأ من localStorage ثم Firebase
-    function fillCitizenSectors(sectors) {
+    // تعبئة قائمة القطاعات للمواطن
+    const citizenSel = document.getElementById('citizenSectorSelect');
+    if(citizenSel) {
       try {
-        var sel = document.getElementById('citizenSectorSelect');
-        if(!sel) return;
-        // تحويل object إلى array إذا لزم
-        if(!Array.isArray(sectors)) sectors = Object.values(sectors||{});
-        sectors = sectors.filter(function(s){ return s && typeof s === 'object'; });
-        sel.innerHTML = '<option value="">-- اختر رقم القطاع --</option>';
-        var seen = {};
-        sectors.forEach(function(s) {
-          var num = (s.num || s.name || '').toString().trim();
-          if(num && !seen[num]) {
-            seen[num] = true;
-            var opt = document.createElement('option');
+        const sectors = JSON.parse(localStorage.getItem('medea_schedule') || '[]');
+        citizenSel.innerHTML = '<option value="">-- اختر رقم القطاع --</option>';
+        const seen = new Set();
+        sectors.forEach(s => {
+          const num = s.num || s.name || '';
+          if(num && !seen.has(num)) {
+            seen.add(num);
+            const opt = document.createElement('option');
             opt.value = num;
             opt.textContent = 'القطاع ' + num;
-            sel.appendChild(opt);
+            citizenSel.appendChild(opt);
           }
         });
-        // إذا لم توجد بيانات — أضف افتراضية مؤقتة
-        if(Object.keys(seen).length === 0) {
-          [1,2,3,4,5].forEach(function(n){
-            var opt = document.createElement('option');
-            opt.value = n; opt.textContent = 'القطاع ' + n;
-            sel.appendChild(opt);
-          });
-        }
-        // إذا كان التتبع نشطاً — حدد القطاع تلقائياً
+        // إذا كان التتبع نشطاً حدد القطاع الحالي تلقائياً
         if(truckTrackingData.active && truckTrackingData.sector) {
-          sel.value = truckTrackingData.sector;
+          citizenSel.value = truckTrackingData.sector;
           citizenSelectSector();
+          return;
         }
       } catch(e) {}
     }
 
-    // 1) من localStorage فوراً
-    var stored = [];
-    try { stored = JSON.parse(localStorage.getItem('medea_schedule') || '[]'); } catch(e) {}
-    fillCitizenSectors(stored);
-
-    // 2) من Firebase — نفس ما يفعله setupSync
-    try {
-      db.ref('schedule').once('value').then(function(snap) {
-        var data = snap && snap.val ? snap.val() : null;
-        if(data) fillCitizenSectors(data);
-      }).catch(function(){});
-    } catch(e) {}
-
-    // 3) تهيئة الخريطة
-    if(map) { try { map.remove(); } catch(e) {} map = null; }
+    if(map) { map.remove(); map = null; }
     map = L.map('map').setView([36.2642, 2.7545], 13);
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
       attribution: '© OpenStreetMap contributors'
     }).addTo(map);
-    setTimeout(function(){ try{ if(map) map.invalidateSize(); } catch(e){} }, 400);
-
+    
+    if(truckTrackingData.positions.length > 0) {
+      const lastPos = truckTrackingData.positions[truckTrackingData.positions.length - 1];
+      map.setView([lastPos.lat, lastPos.lng], 15);
+      trackingMarker = L.marker([lastPos.lat, lastPos.lng]).addTo(map).bindPopup(`<b>🚚 الشاحنة</b><br>القطاع: ${truckTrackingData.sector}`);
+      const latlngs = truckTrackingData.positions.map(p => [p.lat, p.lng]);
+      trackingPath = L.polyline(latlngs, {color: '#1B5E20', weight: 4}).addTo(map);
+      truckTrackingData.collectedBins.forEach(bin => addBinMarkerToMap(bin));
+    }
   } catch(e) {}
 }
+
 // ===== تحديث معلومات القطاع المختار من المواطن =====
 function citizenSelectSector() {
   try {
@@ -6106,12 +6072,11 @@ function citizenSelectSector() {
     const isActiveSector = truckTrackingData.active && String(truckTrackingData.sector) === String(sectorNum);
     
     if(isActiveSector) {
+      document.getElementById('trackingDate').textContent = truckTrackingData.startTime
+        ? new Date(truckTrackingData.startTime).toLocaleDateString('ar-DZ') : '-';
       const realTotal = (truckTrackingData.collectedBins||[]).reduce((s,b)=>s+(parseInt(b.count)||1),0);
       document.getElementById('collectedBinsCount').textContent = realTotal;
-      // أظهر خانة الحاويات فقط إن وُجدت
-      var binsRow = document.getElementById('binsCountRow');
-      if(binsRow) binsRow.style.display = realTotal > 0 ? 'flex' : 'none';
-      if(statusEl) { statusEl.style.display = 'block'; }
+      if(statusEl) { statusEl.style.display = 'block'; statusEl.innerHTML = '🟢 التتبع المباشر نشط'; statusEl.style.background = 'linear-gradient(135deg,var(--success),#388E3C)'; }
       
       // سجل الحاويات
       const binsList = document.getElementById('collectedBinsList');
@@ -6141,26 +6106,15 @@ function citizenSelectSector() {
         truckTrackingData.collectedBins.forEach(bin => addBinMarkerToMap(bin));
       }
     } else {
-      // لا تتبع نشط — أظهر الخريطة فارغة مع معلومات القطاع الأساسية فقط
       document.getElementById('trackingDate').textContent = '-';
       document.getElementById('collectedBinsCount').textContent = '0';
-      if(statusEl) { statusEl.style.display = 'none'; }
+      if(statusEl) { statusEl.style.display = 'block'; statusEl.innerHTML = '🔴 لا يوجد تتبع نشط لهذا القطاع حالياً'; statusEl.style.background = '#757575'; }
       if(binsCard) binsCard.style.display = 'none';
-      // تحديث الخريطة الموجودة (لا نعيد إنشاءها إن كانت موجودة)
-      if(!map) {
-        map = L.map('map').setView([36.2642, 2.7545], 13);
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {attribution:'© OpenStreetMap'}).addTo(map);
-      } else {
-        // امسح العلامات القديمة وأبقِ الخريطة
-        map.eachLayer(function(layer){
-          if(layer instanceof L.Marker || layer instanceof L.Polyline || layer instanceof L.CircleMarker) {
-            try { map.removeLayer(layer); } catch(e) {}
-          }
-        });
-        map.setView([36.2642, 2.7545], 13);
-      }
+      if(map) { map.remove(); map = null; }
+      map = L.map('map').setView([36.2642, 2.7545], 13);
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {attribution:'© OpenStreetMap'}).addTo(map);
     }
-    setTimeout(function(){ try{ if(map) map.invalidateSize(); }catch(e){} }, 300);
+    setTimeout(()=>{ try{ if(map) map.invalidateSize(); }catch(e){} }, 300);
   } catch(e) {}
 }
 
@@ -7917,16 +7871,19 @@ window.addEventListener('DOMContentLoaded', function() {
     if(eBtn) eBtn.classList.add('visible');
   }, 1000);
 });
-</script>
-<script>
+
 // =========================================================
-// 🔊 نظام المؤثرات الصوتية — المدية نظيفة 2026
+// ===== 🔊 نظام المؤثرات الصوتية — المدية نظيفة 2026 =====
+// =========================================================
+// يعمل بالكامل بـ Web Audio API (بدون ملفات خارجية)
+// لا يمس أي دالة أصلية — يعمل بالتوسيع (Monkey-Patching)
 // =========================================================
 
 (function() {
   'use strict';
 
-  var _audioCtx = null;
+  // ------ مولّد الصوت الرئيسي ------
+  let _audioCtx = null;
   function getAudioCtx() {
     if (!_audioCtx) {
       try { _audioCtx = new (window.AudioContext || window.webkitAudioContext)(); } catch(e) {}
@@ -7934,15 +7891,16 @@ window.addEventListener('DOMContentLoaded', function() {
     return _audioCtx;
   }
 
+  // ------ دالة العزف الأساسية ------
   function playTone(frequency, duration, type, gainVal, delay) {
     try {
-      var ctx = getAudioCtx();
+      const ctx = getAudioCtx();
       if (!ctx) return;
-      var osc  = ctx.createOscillator();
-      var gain = ctx.createGain();
+      const osc  = ctx.createOscillator();
+      const gain = ctx.createGain();
       osc.connect(gain);
       gain.connect(ctx.destination);
-      osc.type = type || 'sine';
+      osc.type      = type || 'sine';
       osc.frequency.setValueAtTime(frequency, ctx.currentTime + (delay||0));
       gain.gain.setValueAtTime(gainVal || 0.18, ctx.currentTime + (delay||0));
       gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + (delay||0) + duration);
@@ -7951,23 +7909,86 @@ window.addEventListener('DOMContentLoaded', function() {
     } catch(e) {}
   }
 
-  var SFX = {
-    welcome:   function() { [[523,0.12],[659,0.12],[784,0.12],[1047,0.22]].forEach(function(x,i){playTone(x[0],x[1],'sine',0.18,i*0.10);}); },
-    success:   function() { playTone(784,0.12,'sine',0.18,0); playTone(1047,0.22,'sine',0.18,0.14); },
-    error:     function() { playTone(440,0.10,'square',0.12,0); playTone(330,0.18,'square',0.12,0.12); },
-    info:      function() { playTone(880,0.08,'sine',0.12,0); playTone(660,0.12,'sine',0.10,0.10); },
-    emergency: function() { [0,0.20,0.40].forEach(function(d){ playTone(1200,0.12,'sawtooth',0.20,d); playTone(800,0.06,'sawtooth',0.15,d+0.13); }); },
-    bin:       function() { playTone(600,0.06,'triangle',0.15,0); playTone(900,0.10,'sine',0.18,0.07); },
-    goodbye:   function() { [[784,0.10],[659,0.10],[523,0.10],[392,0.18]].forEach(function(x,i){playTone(x[0],x[1],'sine',0.15,i*0.09);}); },
-    fanfare:   function() { [[523,0.10],[523,0.10],[523,0.10],[659,0.30]].forEach(function(x,i){playTone(x[0],x[1],'sine',0.20,i*0.11);}); playTone(784,0.35,'sine',0.20,0.45); },
-    download:  function() { playTone(440,0.07,'triangle',0.14,0); playTone(550,0.12,'triangle',0.14,0.09); },
-    notify:    function() { playTone(880,0.10,'sine',0.15,0); playTone(1100,0.14,'sine',0.15,0.12); },
-    thanks:    function() { playTone(784,0.10,'sine',0.18,0); playTone(1047,0.10,'sine',0.18,0.12); playTone(1319,0.28,'sine',0.20,0.24); }
+  // ------ مكتبة المؤثرات ------
+  const SFX = {
+
+    // 🎉 ترحيب — عند اختيار الدور (مقياس صاعد مبهج)
+    welcome: function() {
+      [[523,0.12],[659,0.12],[784,0.12],[1047,0.22]].forEach(([f,d],i) => playTone(f,d,'sine',0.18,i*0.10));
+    },
+
+    // ✅ نجاح / إنجاز (نغمتان متصاعدتان)
+    success: function() {
+      playTone(784, 0.12, 'sine', 0.18, 0.00);
+      playTone(1047,0.22, 'sine', 0.18, 0.14);
+    },
+
+    // ⚠️ تحذير / خطأ (نغمة هابطة مزدوجة)
+    error: function() {
+      playTone(440, 0.10, 'square', 0.12, 0.00);
+      playTone(330, 0.18, 'square', 0.12, 0.12);
+    },
+
+    // ℹ️ معلومة / تنبيه محايد (نقرة خفيفة)
+    info: function() {
+      playTone(880, 0.08, 'sine', 0.12, 0.00);
+      playTone(660, 0.12, 'sine', 0.10, 0.10);
+    },
+
+    // 🚨 طوارئ (ثلاث نبضات حادة)
+    emergency: function() {
+      [0, 0.20, 0.40].forEach(d => {
+        playTone(1200, 0.12, 'sawtooth', 0.20, d);
+        playTone(800,  0.06, 'sawtooth', 0.15, d+0.13);
+      });
+    },
+
+    // 🗑️ تسجيل حاوية (نقرة إيجابية)
+    bin: function() {
+      playTone(600, 0.06, 'triangle', 0.15, 0.00);
+      playTone(900, 0.10, 'sine',     0.18, 0.07);
+    },
+
+    // 🔙 عودة / إلغاء (نغمة هابطة ناعمة)
+    back: function() {
+      playTone(660, 0.08, 'sine', 0.12, 0.00);
+      playTone(440, 0.14, 'sine', 0.10, 0.09);
+    },
+
+    // 👋 وداع / خروج (مقياس هابط)
+    goodbye: function() {
+      [[784,0.10],[659,0.10],[523,0.10],[392,0.18]].forEach(([f,d],i) => playTone(f,d,'sine',0.15,i*0.09));
+    },
+
+    // 🏆 إنجاز شهري / شهادة (فانفار قصير)
+    fanfare: function() {
+      [[523,0.10],[523,0.10],[523,0.10],[659,0.30]].forEach(([f,d],i) => playTone(f,d,'sine',0.20,i*0.11));
+      playTone(784, 0.35, 'sine', 0.20, 0.45);
+    },
+
+    // 📥 تحميل / PDF (نقرة مزدوجة)
+    download: function() {
+      playTone(440, 0.07, 'triangle', 0.14, 0.00);
+      playTone(550, 0.12, 'triangle', 0.14, 0.09);
+    },
+
+    // 🔔 إشعار عام
+    notify: function() {
+      playTone(880, 0.10, 'sine', 0.15, 0.00);
+      playTone(1100,0.14, 'sine', 0.15, 0.12);
+    },
+    thanks: function() {
+      playTone(784, 0.10, 'sine', 0.18, 0.00);
+      playTone(1047,0.10, 'sine', 0.18, 0.12);
+      playTone(1319,0.28, 'sine', 0.20, 0.24);
+    }
   };
 
-  // ربط showToast
+  // =====================================================
+  // ربط الصوت بـ showToast (الأصلية)
+  // =====================================================
   if (typeof window.showToast === 'function') {
-    var _origShowToast = window.showToast;
+    const _origShowToast = window.showToast;
     window.showToast = function(msg, type) {
       try {
         if      (type === 'success') SFX.success();
@@ -7979,39 +8000,154 @@ window.addEventListener('DOMContentLoaded', function() {
     };
   }
 
-  // ربط selectRole
+  // =====================================================
+  // ربط الصوت باختيار الدور (selectRole / _startApp)
+  // =====================================================
   if (typeof window.selectRole === 'function') {
-    var _origSelectRole = window.selectRole;
-    window.selectRole = function() { try { SFX.welcome(); } catch(e) {} return _origSelectRole.apply(this, arguments); };
+    const _origSelectRole = window.selectRole;
+    window.selectRole = function() {
+      try { SFX.welcome(); } catch(e) {}
+      return _origSelectRole.apply(this, arguments);
+    };
   }
 
-  // ربط goBackToSelector
+  // =====================================================
+  // ربط الصوت بالعودة لشاشة الاختيار (goBackToSelector)
+  // =====================================================
   if (typeof window.goBackToSelector === 'function') {
-    var _origGoBack = window.goBackToSelector;
-    window.goBackToSelector = function() { try { SFX.goodbye(); } catch(e) {} return _origGoBack.apply(this, arguments); };
+    const _origGoBack = window.goBackToSelector;
+    window.goBackToSelector = function() {
+      try { SFX.goodbye(); } catch(e) {}
+      return _origGoBack.apply(this, arguments);
+    };
   }
 
-  // ربط confirmBinCollection
+  // =====================================================
+  // ربط الصوت بتسجيل الحاوية (confirmBinCollection)
+  // =====================================================
   if (typeof window.confirmBinCollection === 'function') {
-    var _origBin = window.confirmBinCollection;
-    window.confirmBinCollection = function() { try { SFX.bin(); } catch(e) {} return _origBin.apply(this, arguments); };
+    const _origConfirmBin = window.confirmBinCollection;
+    window.confirmBinCollection = function() {
+      try { SFX.bin(); } catch(e) {}
+      return _origConfirmBin.apply(this, arguments);
+    };
   }
 
-  // ربط sendEmergencyReport
+  // =====================================================
+  // ربط الصوت ببلاغ الطوارئ (sendEmergencyReport)
+  // =====================================================
   if (typeof window.sendEmergencyReport === 'function') {
-    var _origEmerg = window.sendEmergencyReport;
-    window.sendEmergencyReport = function() { try { SFX.emergency(); } catch(e) {} return _origEmerg.apply(this, arguments); };
+    const _origEmergency = window.sendEmergencyReport;
+    window.sendEmergencyReport = function() {
+      try { SFX.emergency(); } catch(e) {}
+      return _origEmergency.apply(this, arguments);
+    };
   }
 
-  // ربط PDF
-  ['generateDailyReport','exportScheduleToPDF','downloadPreviewPDF','printMonthlyCertificate'].forEach(function(fn) {
+  // =====================================================
+  // ربط الصوت ببطاقة الإنجاز الشهري (showMonthlyAchievement)
+  // =====================================================
+  if (typeof window.showMonthlyAchievement === 'function') {
+    const _origMonthly = window.showMonthlyAchievement;
+    window.showMonthlyAchievement = function() {
+      try { SFX.fanfare(); } catch(e) {}
+      return _origMonthly.apply(this, arguments);
+    };
+  }
+
+  // =====================================================
+  // ربط الصوت بتحميل PDF/تقرير
+  // =====================================================
+  ['generateDailyReport','exportScheduleToPDF','downloadPreviewPDF','printMonthlyCertificate'].forEach(fn => {
     if (typeof window[fn] === 'function') {
-      var _o = window[fn];
-      window[fn] = function() { try { SFX.download(); } catch(e) {} return _o.apply(this, arguments); };
+      const _orig = window[fn];
+      window[fn] = function() {
+        try { SFX.download(); } catch(e) {}
+        return _orig.apply(this, arguments);
+      };
     }
   });
 
-  // رسالة شكر صوتية عند ظهور thanksOverlay — MutationObserver فقط (لا يمس sendReport)
+  // =====================================================
+  // 🎙️ الرسالة الترحيبية الصوتية عند فتح التطبيق
+  // =====================================================
+
+  // نص الرسالة الترحيبية
+  const WELCOME_TEXT =
+    'أهلاً وسهلاً بكم في تطبيق المدية نظيفة. ' +
+    'منصتكم الذكية لإدارة النظافة وحماية البيئة في بلدية المدية. ' +
+    'معاً من أجل مدينة أنظف وأجمل.';
+
+  var _welcomePlayed = false;
+
+  function playWelcomeSpeech() {
+    if (_welcomePlayed) return;
+    _welcomePlayed = true;
+
+    // 1) تفعيل AudioContext (رفع قيد المتصفح)
+    try { getAudioCtx(); } catch(e) {}
+
+    // 2) موسيقى مقدمة قصيرة قبل الكلام (0.6 ث)
+    try {
+      // نغمة افتتاحية ثلاثية
+      playTone(523, 0.12, 'sine', 0.20, 0.00);
+      playTone(659, 0.12, 'sine', 0.20, 0.14);
+      playTone(784, 0.12, 'sine', 0.20, 0.28);
+      playTone(1047,0.30, 'sine', 0.22, 0.42);
+    } catch(e) {}
+
+    // 3) الكلام الترحيبي بعد 0.9 ث
+    setTimeout(function() {
+      try {
+        if (!('speechSynthesis' in window)) return;
+        window.speechSynthesis.cancel();
+
+        var utterance = new SpeechSynthesisUtterance(WELCOME_TEXT);
+        utterance.lang  = 'ar-DZ'; // عربية جزائرية — يقع على ar-SA تلقائياً إن لم تُوجد
+        utterance.rate  = 0.92;    // سرعة مريحة
+        utterance.pitch = 1.05;    // نبرة طبيعية
+        utterance.volume = 0.95;
+
+        // حاول اختيار صوت عربي إن وُجد
+        function _speak() {
+          var voices = window.speechSynthesis.getVoices();
+          var arabicVoice = voices.find(v => v.lang && v.lang.startsWith('ar'));
+          if (arabicVoice) utterance.voice = arabicVoice;
+          window.speechSynthesis.speak(utterance);
+        }
+
+        if (window.speechSynthesis.getVoices().length > 0) {
+          _speak();
+        } else {
+          window.speechSynthesis.onvoiceschanged = function() {
+            window.speechSynthesis.onvoiceschanged = null;
+            _speak();
+          };
+          // تأمين: إن لم يُطلق الحدث
+          setTimeout(_speak, 600);
+        }
+      } catch(e) {}
+    }, 900);
+  }
+
+  // =====================================================
+  // تشغيل الترحيب عند أول نقرة / لمسة من المستخدم
+  // (شرط المتصفح: لا صوت قبل تفاعل حقيقي)
+  // =====================================================
+  function _onFirstInteraction() {
+    playWelcomeSpeech();
+    document.removeEventListener('click',     _onFirstInteraction);
+    document.removeEventListener('touchstart', _onFirstInteraction);
+    document.removeEventListener('keydown',   _onFirstInteraction);
+  }
+  document.addEventListener('click',      _onFirstInteraction, { once: true, passive: true });
+  document.addEventListener('touchstart', _onFirstInteraction, { once: true, passive: true });
+  document.addEventListener('keydown',    _onFirstInteraction, { once: true, passive: true });
+
+  // =====================================================
+  // تصدير SFX + دالة الترحيب للاستخدام الخارجي
+  // =====================================================
+  // رسالة شكر صوتية عند إرسال البلاغ — MutationObserver (لا يمس sendReport)
   var THANKS_TEXT = 'شكراً لكم! تم إرسال بلاغكم بنجاح. مشاركتكم تساعدنا في بناء مدية أنظف وأجمل. معاً لمدية خضراء 2026.';
   function playThanksSpeech() {
     try { SFX.thanks(); } catch(e) {}
@@ -8048,41 +8184,9 @@ window.addEventListener('DOMContentLoaded', function() {
     document.readyState === 'loading' ? document.addEventListener('DOMContentLoaded', _watch) : _watch();
   })();
 
-  // رسالة ترحيبية صوتية — مرة واحدة فقط عند أول تفاعل
-  var WELCOME_TEXT = 'أهلاً وسهلاً بكم في تطبيق المدية نظيفة. منصتكم الذكية لإدارة النظافة وحماية البيئة في بلدية المدية. معاً من أجل مدينة أنظف وأجمل.';
-  var _welcomeDone = false;
-  function playWelcomeSpeech() {
-    if (_welcomeDone) return;
-    _welcomeDone = true;
-    try { getAudioCtx(); } catch(e) {}
-    try { playTone(523,0.12,'sine',0.20,0); playTone(659,0.12,'sine',0.20,0.14); playTone(784,0.12,'sine',0.20,0.28); playTone(1047,0.30,'sine',0.22,0.42); } catch(e) {}
-    setTimeout(function() {
-      try {
-        if (!('speechSynthesis' in window)) return;
-        window.speechSynthesis.cancel();
-        var utt = new SpeechSynthesisUtterance(WELCOME_TEXT);
-        utt.lang = 'ar-DZ'; utt.rate = 0.92; utt.pitch = 1.05; utt.volume = 0.95;
-        function _speak() {
-          var v = window.speechSynthesis.getVoices().find(function(x){ return x.lang && x.lang.startsWith('ar'); });
-          if (v) utt.voice = v;
-          window.speechSynthesis.speak(utt);
-        }
-        if (window.speechSynthesis.getVoices().length > 0) { _speak(); }
-        else { window.speechSynthesis.onvoiceschanged = function(){ window.speechSynthesis.onvoiceschanged=null; _speak(); }; setTimeout(_speak,600); }
-      } catch(e) {}
-    }, 900);
-  }
-  function _onFirstInteraction() {
-    document.removeEventListener('click',      _onFirstInteraction);
-    document.removeEventListener('touchstart', _onFirstInteraction);
-    document.removeEventListener('keydown',    _onFirstInteraction);
-    playWelcomeSpeech();
-  }
-  document.addEventListener('click',      _onFirstInteraction, false);
-  document.addEventListener('touchstart', _onFirstInteraction, { passive: true });
-  document.addEventListener('keydown',    _onFirstInteraction, false);
+  window.MedeaSFX          = SFX;
+  window.playWelcomeSpeech = playWelcomeSpeech;
 
-  window.MedeaSFX = SFX;
 })();
 // ===== نهاية نظام المؤثرات الصوتية =====
 </script>
