@@ -3391,6 +3391,12 @@ function _startApp(mode) {
     if(d){ const arr=Array.isArray(d)?d:Object.values(d); localStorage.setItem('medea_schedule',JSON.stringify(arr)); }
   }); } catch(e) {}
   try { loadFromCloud('tonnage','tonnage',(d)=>{
+    if(d){ const arr=Array.isArray(d)?d:Object.values(d).filter(x=>x&&typeof x==='object'); localStorage.setItem('medea_tonnage',JSON.stringify(arr)); }
+  }); } catch(e) {}
+  try { loadFromCloud('requests','requests',(d)=>{
+    if(d){ const arr=Array.isArray(d)?d:Object.values(d).filter(x=>x&&typeof x==='object'); localStorage.setItem('medea_requests',JSON.stringify(arr)); }
+  }); } catch(e) {}
+  try { loadFromCloud('tonnage','tonnage',(d)=>{
     if(d){ const arr=Array.isArray(d)?d:Object.values(d); localStorage.setItem('medea_tonnage',JSON.stringify(arr)); }
   }); } catch(e) {}
   // مزامنة رمز المشرف الرئيسي من السحابة
@@ -3956,8 +3962,45 @@ function setupSync() {
       try {
         const data = snapshot && snapshot.val ? snapshot.val() : null;
         if(data) {
-          localStorage.setItem('medea_tonnage', JSON.stringify(data));
-          if(document.getElementById('tonnageList')) loadTonnageList();
+          // Firebase يحوّل array إلى object — نعالجه
+          const arr = Array.isArray(data) ? data : Object.values(data).filter(x => x && typeof x === 'object');
+          localStorage.setItem('medea_tonnage', JSON.stringify(arr));
+          if(document.getElementById('tonnageList')) loadTonnageRecords();
+        }
+      } catch(e) {}
+    });
+
+    // مستمع مركز الفرز
+    db.ref('wasteTracking').on('value', (snapshot) => {
+      try {
+        const data = snapshot && snapshot.val ? snapshot.val() : null;
+        if(data) {
+          wasteTracking = Array.isArray(data) ? data : Object.values(data).filter(x => x && typeof x === 'object');
+          if(document.getElementById('sortedMaterialsList')) loadSortedMaterials();
+        }
+      } catch(e) {}
+    });
+
+    // مستمع سوق التدوير
+    db.ref('marketMaterials').on('value', (snapshot) => {
+      try {
+        const data = snapshot && snapshot.val ? snapshot.val() : null;
+        if(data) {
+          marketMaterials = Array.isArray(data) ? data : Object.values(data).filter(x => x && typeof x === 'object');
+          if(document.getElementById('marketMaterialsList')) loadMarketMaterials();
+        }
+      } catch(e) {}
+    });
+
+    // مستمع طلبات المواطنين
+    db.ref('requests').on('value', (snapshot) => {
+      try {
+        const data = snapshot && snapshot.val ? snapshot.val() : null;
+        if(data) {
+          const arr = Array.isArray(data) ? data : Object.values(data).filter(x => x && typeof x === 'object');
+          localStorage.setItem('medea_requests', JSON.stringify(arr));
+          if(document.getElementById('adminRequestsList')) loadAdminRequests();
+          if(document.getElementById('myRequestsList')) loadMyRequests();
         }
       } catch(e) {}
     });
@@ -4575,6 +4618,9 @@ function saveDriverTonnage() {
     });
     
     localStorage.setItem('medea_tonnage', JSON.stringify(records));
+    // رفع كل سجل على حدة في Firebase (reports style)
+    const lastRecord = records[records.length - 1];
+    try { db.ref('tonnage/' + lastRecord.id).set(lastRecord).catch(()=>{}); } catch(e) {}
     showToast('✅ تم حفظ الكمية: ' + weight + ' طن', 'success');
     
     document.getElementById('driverTonnageWeight').value = '';
@@ -4796,6 +4842,9 @@ function submitRequest() {
     });
     
     localStorage.setItem('medea_requests', JSON.stringify(requests));
+    // رفع لـ Firebase
+    const lastReq = requests[requests.length - 1];
+    try { db.ref('requests/' + lastReq.id).set(lastReq).catch(()=>{}); } catch(e) {}
     showToast('✅ تم إرسال طلبك', 'success');
     
     document.getElementById('reqDesc').value = '';
@@ -4871,6 +4920,7 @@ function processRequest(id) {
     if(i !== -1) {
       requests[i].status = 'done';
       localStorage.setItem('medea_requests', JSON.stringify(requests));
+      try { db.ref('requests/' + id + '/status').set('done').catch(()=>{}); } catch(e) {}
       showToast('✅ تمت معالجة الطلب', 'success');
       loadAdminRequests();
     }
@@ -5022,7 +5072,10 @@ function renderChart() {
 // ===== سجل الكميات =====
 function loadTonnageRecords() {
   try {
-    const records = JSON.parse(localStorage.getItem('medea_tonnage') || '[]');
+    // أولاً من localStorage — ثم Firebase يُحدّثه عبر listener
+    let records = [];
+    try { records = JSON.parse(localStorage.getItem('medea_tonnage') || '[]'); } catch(e) {}
+    if(!Array.isArray(records)) records = Object.values(records).filter(x => x && typeof x === 'object');
     const list = document.getElementById('tonnageList');
     
     if(!records.length) {
@@ -5295,6 +5348,8 @@ function registerWasteIn() {
     
     saveWasteTracking(waste);
     wasteTracking.push(waste);
+    // رفع لـ Firebase مباشرة
+    try { db.ref('wasteTracking/' + waste.id).set(waste).catch(()=>{}); } catch(e) {}
     
     showToast('✅ تم تسجيل الوارد بنجاح', 'success');
     
