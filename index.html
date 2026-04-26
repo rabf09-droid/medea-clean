@@ -1,4 +1,4 @@
-  <!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
 <meta charset="UTF-8">
@@ -3979,16 +3979,18 @@ function setupSync() {
           try { updateTruckTrackingUI(); } catch(e) {}
           // تحديث خريطة المواطن إذا كانت مفتوحة
           try {
-            const sel = document.getElementById('citizenSectorSelect');
-            if(sel && sel.value) citizenSelectSector();
+            const cSel = document.getElementById('citizenSectorSelect');
+            if(cSel && cSel.value) citizenSelectSector();
           } catch(e) {}
           // تحديث صفحة تتبع الإدارة إذا كانت مفتوحة
           try {
             const adminSel = document.getElementById('sectorSelect');
             if(adminSel && adminSel.value) loadSectorRoute();
           } catch(e) {}
-          // تحديث لوحة الإدارة إذا كانت مفتوحة
+          // تحديث لوحة الإدارة والسائقين المباشرة
           try { if(document.getElementById('activeDrivers')) updateAdminStats(); } catch(e) {}
+          try { updateDriversLivePanel(); } catch(e) {}
+          try { updateAlertsPanel(); } catch(e) {}
         }
       } catch(e) {}
     });
@@ -5837,43 +5839,85 @@ function startInlineGPS() {
     }
   } catch(e) {}
 
+  var _lastSavedToPath = 0; // آخر وقت حُفظ فيه الموقع للمسار
+
   window.driverGPSWatch = navigator.geolocation.watchPosition(function(pos) {
     var lat = pos.coords.latitude, lng = pos.coords.longitude;
-    // ✅ الإصلاح: نحفظ آخر موقع معروف فقط — لا نضيف للمصفوفة ولا نحدّث العداد
+    var now = Date.now();
     window.lastKnownPosition = { lat:lat, lng:lng, timestamp: new Date().toISOString() };
 
-    // تحديث الخريطة فقط (بدون تحديث العداد)
+    // نحفظ للمسار كل 30 ثانية تلقائياً (لبناء المسار حتى بدون تسجيل حاويات)
+    if(now - _lastSavedToPath > 30000) {
+      _lastSavedToPath = now;
+      if(truckTrackingData.active) {
+        if(!truckTrackingData.positions) truckTrackingData.positions = [];
+        truckTrackingData.positions.push(window.lastKnownPosition);
+        driverTrackingPositions = truckTrackingData.positions;
+        // رفع للسحابة كل 30 ث
+        try { db.ref('truckTracking/positions').set(truckTrackingData.positions).catch(function(){}); } catch(e) {}
+      }
+    }
+
+    // تحديث الخريطة المضمنة
     try {
       if(driverTrackingMap) {
         if(driverTrackingMarker) driverTrackingMap.removeLayer(driverTrackingMarker);
         driverTrackingMarker = L.marker([lat,lng]).addTo(driverTrackingMap);
         driverTrackingMap.setView([lat,lng], 16);
+        // رسم الخط إن وُجدت نقاط
+        if(driverTrackingPositions.length > 1) {
+          if(driverTrackingPolyline) driverTrackingMap.removeLayer(driverTrackingPolyline);
+          driverTrackingPolyline = L.polyline(
+            driverTrackingPositions.map(function(p){ return [p.lat, p.lng]; }),
+            {color:'#006233', weight:4}
+          ).addTo(driverTrackingMap);
+        }
       } else {
-        // بدون Leaflet: عرض نصي
         var mapDiv2 = document.getElementById('driverInlineMap');
-        if(mapDiv2) mapDiv2.innerHTML = '<div style="text-align:center;padding:20px;color:var(--primary)"><i class="fas fa-map-marker-alt" style="font-size:2rem;margin-bottom:8px;display:block"></i><b>موقعك الحالي</b><br><small>'+lat.toFixed(5)+', '+lng.toFixed(5)+'</small></div>';
+        if(mapDiv2 && mapDiv2.children.length === 0) mapDiv2.innerHTML = '<div style="text-align:center;padding:20px;color:var(--primary)"><i class="fas fa-map-marker-alt" style="font-size:2rem;margin-bottom:8px;display:block"></i><b>موقعك الحالي</b><br><small>'+lat.toFixed(5)+', '+lng.toFixed(5)+'</small></div>';
       }
     } catch(e) {}
   }, function(err) {
-    showToast('⚠️ تعذر تحديد الموقع', 'error');
-  }, {enableHighAccuracy:true, timeout:15000, maximumAge:0});
+    showToast('⚠️ تعذر تحديد الموقع — تأكد من تفعيل GPS', 'error');
+  }, {enableHighAccuracy:true, timeout:15000, maximumAge:10000});
 }
 
 function recordBinFromDriver() {
-  // إخفاء الزر الرئيسي مؤقتاً لإظهار لوحة التحكم في التسجيل
-  const mainBtn = document.getElementById('mainRecordBinBtn');
-  if(mainBtn) mainBtn.style.display = 'none';
-  
-  // إظهار لوحة التحكم في التسجيل
+  if(!truckTrackingData.active) { showToast('⚠️ يجب بدء التتبع أولاً', 'error'); return; }
+
+  const mainBtn  = document.getElementById('mainRecordBinBtn');
   const controls = document.getElementById('binTrackingControls');
-  if(controls) {
-    controls.style.display = 'block';
-    // التمرير للأسفل لرؤية اللوحة
-    controls.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  const result   = document.getElementById('binRecordResult');
+
+  // إخفاء الزر الرئيسي
+  if(mainBtn) mainBtn.style.display = 'none';
+
+  // إظهار رسالة "جاري تحديد الموقع"
+  if(controls) controls.style.display = 'block';
+  if(result)   result.style.display   = 'none';
+
+  // إذا كان الموقع جاهزاً — استخدمه مباشرة
+  if(window.lastKnownPosition) {
+    recordBinCollection();
+    if(controls) controls.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    return;
   }
-  
-  // استدعاء وظيفة جلب الموقع والعنوان تلقائياً
-  recordBinCollection();
+
+  // إذا لم يكن جاهزاً — اجلبه الآن
+  showToast('📡 جاري تحديد موقعك...', 'info');
+  navigator.geolocation.getCurrentPosition(function(pos) {
+    window.lastKnownPosition = {
+      lat: pos.coords.latitude,
+      lng: pos.coords.longitude,
+      timestamp: new Date().toISOString()
+    };
+    recordBinCollection();
+    if(controls) controls.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }, function() {
+    showToast('⚠️ تعذّر تحديد الموقع — تأكد من تفعيل GPS', 'error');
+    if(mainBtn) mainBtn.style.display = 'block';
+    if(controls) controls.style.display = 'none';
+  }, { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 });
 }
 
 function stopDriverTracking() {
