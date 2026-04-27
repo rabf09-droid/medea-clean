@@ -6020,9 +6020,9 @@ function confirmBinCollection() {
   }
   saveToCloud('truckTracking', truckTrackingData);
   
-  // ✅ تحديث عداد "نقطة مسجّلة" — يزيد بـ 1 فقط عند كل تثبيت
+  // عداد "نقطة مسجّلة" = عدد مواقع الحاويات فقط (وليس نقاط GPS التلقائية)
   const distEl = document.getElementById('driverDistCount');
-  if(distEl) distEl.textContent = driverTrackingPositions.length;
+  if(distEl) distEl.textContent = (truckTrackingData.collectedBins || []).length;
 
   // تحديث عداد الحاويات الحقيقي
   const countEl = document.getElementById('driverBinCount');
@@ -6203,69 +6203,128 @@ function citizenSelectSector() {
       if(infoCard) infoCard.style.display = 'none';
       if(statusEl) statusEl.style.display = 'none';
       if(binsCard) binsCard.style.display = 'none';
-      if(map) { map.remove(); map = null; }
       return;
     }
 
     if(infoCard) infoCard.style.display = 'block';
 
-    // بيانات الجدول من localStorage
-    const sectors = JSON.parse(localStorage.getItem('medea_schedule') || '[]');
-    const sectorInfo = sectors.find(s => String(s.num || s.name) === String(sectorNum));
+    // ===== بيانات الجدول — من localStorage أولاً ثم Firebase =====
+    function applyScheduleInfo(sectors) {
+      const arr = Array.isArray(sectors) ? sectors : Object.values(sectors||{}).filter(x=>x&&typeof x==='object');
+      const si = arr.find(s => String(s.num||s.name||'') === String(sectorNum));
+      document.getElementById('trackingSector').textContent = sectorNum;
+      document.getElementById('trackingZones').textContent = si ? (si.name||'-') : '-';
+      document.getElementById('trackingDays').textContent  = si ? (si.days||'-') : '-';
+      document.getElementById('trackingTime').textContent  = si ? (si.time||'-') : '-';
+    }
 
-    document.getElementById('trackingSector').textContent = sectorNum;
-    document.getElementById('trackingZones').textContent = sectorInfo ? (sectorInfo.name || '-') : '-';
-    document.getElementById('trackingDays').textContent  = sectorInfo ? (sectorInfo.days || '-') : '-';
-    document.getElementById('trackingTime').textContent  = sectorInfo ? (sectorInfo.time || '-') : '-';
+    // من localStorage فوراً
+    let localSectors = [];
+    try { localSectors = JSON.parse(localStorage.getItem('medea_schedule')||'[]'); } catch(e){}
+    applyScheduleInfo(localSectors);
 
-    // بيانات التتبع الحي إذا كانت تخص نفس القطاع
+    // من Firebase إن كان localStorage فارغاً أو لا يحتوي هذا القطاع
+    const hasLocal = localSectors.some(s => String(s.num||s.name||'') === String(sectorNum));
+    if(!hasLocal) {
+      try {
+        db.ref('schedule').once('value').then(snap => {
+          const data = snap && snap.val ? snap.val() : null;
+          if(data) {
+            const arr = Array.isArray(data) ? data : Object.values(data).filter(x=>x&&typeof x==='object');
+            localStorage.setItem('medea_schedule', JSON.stringify(arr));
+            applyScheduleInfo(arr);
+          }
+        }).catch(()=>{});
+      } catch(e){}
+    }
+
+    // ===== بيانات التتبع الحي =====
     const isActiveSector = truckTrackingData.active && String(truckTrackingData.sector) === String(sectorNum);
-    
+
+    // تهيئة الخريطة أو تحديثها
+    if(!map) {
+      map = L.map('map').setView([36.2642, 2.7545], 13);
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {attribution:'© OpenStreetMap'}).addTo(map);
+    }
+
     if(isActiveSector) {
-      document.getElementById('trackingDate').textContent = truckTrackingData.startTime
-        ? new Date(truckTrackingData.startTime).toLocaleDateString('ar-DZ') : '-';
-      const realTotal = (truckTrackingData.collectedBins||[]).reduce((s,b)=>s+(parseInt(b.count)||1),0);
-      document.getElementById('collectedBinsCount').textContent = realTotal;
-      if(statusEl) { statusEl.style.display = 'block'; statusEl.innerHTML = '🟢 التتبع المباشر نشط'; statusEl.style.background = 'linear-gradient(135deg,var(--success),#388E3C)'; }
-      
-      // سجل الحاويات
+      // ===== القطاع نشط — أظهر كل المعطيات =====
+      const bins   = truckTrackingData.collectedBins || [];
+      const pos    = truckTrackingData.positions || [];
+      const total  = bins.reduce((s,b)=>s+(parseInt(b.count)||1),0);
+
+      // شريط الحالة
+      if(statusEl) {
+        statusEl.style.display = 'block';
+        statusEl.style.background = 'linear-gradient(135deg,var(--success),#388E3C)';
+        statusEl.innerHTML = '🟢 الشاحنة نشطة الآن في قطاعك';
+      }
+
+      // عدد الحاويات
+      const binsCountEl = document.getElementById('collectedBinsCount');
+      if(binsCountEl) binsCountEl.textContent = total;
+      const binsRow = document.getElementById('binsCountRow');
+      if(binsRow) binsRow.style.display = total > 0 ? 'flex' : 'none';
+
+      // سجل مواقع الحاويات
       const binsList = document.getElementById('collectedBinsList');
-      if(binsList && truckTrackingData.collectedBins.length > 0) {
+      if(binsList && bins.length > 0) {
         if(binsCard) binsCard.style.display = 'block';
-        binsList.innerHTML = truckTrackingData.collectedBins.map((bin,idx) => `
+        binsList.innerHTML = bins.map((bin,i) => `
           <div class="bin-collected">
-            🗑️ موقع #${idx+1} — <b>${bin.count||1}</b> حاوية<br>
-            ${bin.address ? `<small>📍 ${bin.address}</small><br>` : ''}
-            <small>🕐 ${new Date(bin.timestamp).toLocaleTimeString('ar-DZ')}</small>
+            🗑️ موقع #${i+1} — <b>${bin.count||1}</b> حاوية
+            ${bin.address ? `<br><small>📍 ${bin.address}</small>` : ''}
+            <br><small>🕐 ${new Date(bin.timestamp).toLocaleTimeString('ar-DZ')}</small>
           </div>`).join('');
       } else {
         if(binsCard) binsCard.style.display = 'none';
       }
 
-      // تحديث الخريطة
-      if(map) { map.remove(); map = null; }
-      map = L.map('map').setView([36.2642, 2.7545], 13);
-      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {attribution:'© OpenStreetMap'}).addTo(map);
-      if(truckTrackingData.positions.length > 0) {
-        const lastPos = truckTrackingData.positions[truckTrackingData.positions.length - 1];
-        map.setView([lastPos.lat, lastPos.lng], 15);
-        L.marker([lastPos.lat, lastPos.lng]).addTo(map).bindPopup(`<b>🚚 الشاحنة</b><br>القطاع: ${sectorNum}`);
-        if(truckTrackingData.positions.length > 1) {
-          L.polyline(truckTrackingData.positions.map(p=>[p.lat,p.lng]), {color:'#1B5E20',weight:4}).addTo(map);
+      // الخريطة — موقع الشاحنة + المسار + الحاويات
+      map.eachLayer(function(l){
+        if(!(l instanceof L.TileLayer)) try{map.removeLayer(l);}catch(e){}
+      });
+
+      if(pos.length > 0) {
+        const last = pos[pos.length - 1];
+        map.setView([last.lat, last.lng], 15);
+        // علامة الشاحنة
+        L.marker([last.lat, last.lng])
+          .addTo(map)
+          .bindPopup('<b>🚚 الشاحنة</b><br>القطاع: ' + sectorNum)
+          .openPopup();
+        // خط المسار
+        if(pos.length > 1) {
+          L.polyline(pos.map(p=>[p.lat,p.lng]), {color:'#1B5E20',weight:5,opacity:0.8}).addTo(map);
         }
-        truckTrackingData.collectedBins.forEach(bin => addBinMarkerToMap(bin));
+        // مواقع الحاويات
+        bins.forEach(function(bin,i) {
+          L.circleMarker([bin.lat,bin.lng], {
+            radius:10, fillColor:'#FF9800', color:'#fff', weight:2, fillOpacity:0.9
+          }).addTo(map).bindPopup('🗑️ موقع #'+(i+1)+' — '+( bin.count||1)+' حاوية<br>'+(bin.address||''));
+        });
       }
+
     } else {
-      document.getElementById('trackingDate').textContent = '-';
-      document.getElementById('collectedBinsCount').textContent = '0';
-      if(statusEl) { statusEl.style.display = 'block'; statusEl.innerHTML = '🔴 لا يوجد تتبع نشط لهذا القطاع حالياً'; statusEl.style.background = '#757575'; }
+      // ===== القطاع غير نشط — أظهر معلومات الجدول فقط =====
+      if(statusEl) {
+        statusEl.style.display = 'block';
+        statusEl.style.background = '#757575';
+        statusEl.innerHTML = '⭕ لا توجد شاحنة نشطة في هذا القطاع الآن';
+      }
+      const binsRow = document.getElementById('binsCountRow');
+      if(binsRow) binsRow.style.display = 'none';
       if(binsCard) binsCard.style.display = 'none';
-      if(map) { map.remove(); map = null; }
-      map = L.map('map').setView([36.2642, 2.7545], 13);
-      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {attribution:'© OpenStreetMap'}).addTo(map);
+
+      // خريطة فارغة تمركز على المدية
+      map.eachLayer(function(l){
+        if(!(l instanceof L.TileLayer)) try{map.removeLayer(l);}catch(e){}
+      });
+      map.setView([36.2642, 2.7545], 13);
     }
-    setTimeout(()=>{ try{ if(map) map.invalidateSize(); }catch(e){} }, 300);
-  } catch(e) {}
+
+    setTimeout(function(){ try{ if(map) map.invalidateSize(); }catch(e){} }, 350);
+  } catch(e) { console.error('citizenSelectSector error:', e); }
 }
 
 function updateTruckTrackingMap(position) {
