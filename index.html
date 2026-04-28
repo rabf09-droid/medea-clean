@@ -2530,7 +2530,7 @@ select.input {
           <i class="fab fa-whatsapp" style="font-size:1.1rem"></i> إرسال الرمز عبر واتساب
         </button>
       </div>
-      <button onclick="document.getElementById('forgotPassPanel').style.display=document.getElementById('forgotPassPanel').style.display==='none'?'block':'none'"
+      <button onclick="toggleForgotPass()"
         style="background:none;border:none;color:var(--text-light);font-size:0.82rem;font-family:Cairo,sans-serif;cursor:pointer;margin-top:8px;text-decoration:underline;width:100%;text-align:center">
         🔑 نسيت الرمز؟
       </button>
@@ -4558,6 +4558,11 @@ function emergencyClearData() {
 }
 
 // ===== إرسال رمز الدخول عبر واتساب =====
+function toggleForgotPass() {
+  var p = document.getElementById('forgotPassPanel');
+  if(p) p.style.display = p.style.display === 'none' ? 'block' : 'none';
+}
+
 function sendPassViaWhatsApp() {
   try {
     const currentPass = localStorage.getItem('medea_adminPass') || '280876';
@@ -4571,27 +4576,16 @@ function sendPassViaWhatsApp() {
     const expiry = Date.now() + 10 * 60 * 1000;
     localStorage.setItem('medea_tempCode', JSON.stringify({code: String(tempCode), expiry: expiry}));
 
-    const msg =
-      '🏛️ *المدية نظيفة 2026*
-' +
-      '─────────────────
-' +
-      '🔑 *رمز الدخول الحالي:*
-' +
-      '`' + currentPass + '`
-
-' +
-      '⏱️ *رمز مؤقت (10 دقائق):*
-' +
-      '`' + tempCode + '`
-' +
-      '─────────────────
-' +
-      '📅 ' + dateStr + ' — 🕐 ' + timeStr + '
-' +
+    var msg =
+      '🏛️ *المدية نظيفة 2026*%0A' +
+      '─────────────────%0A' +
+      '🔑 *رمز الدخول الحالي:* ' + currentPass + '%0A%0A' +
+      '⏱️ *رمز مؤقت (10 دقائق):* ' + tempCode + '%0A' +
+      '─────────────────%0A' +
+      '📅 ' + dateStr + ' — 🕐 ' + timeStr + '%0A' +
       '⚠️ لا تشارك هذا الرمز مع أحد';
 
-    const url = 'https://wa.me/213783402428?text=' + encodeURIComponent(msg);
+    var url = 'https://wa.me/213783402428?text=' + msg;
     window.open(url, '_blank');
     showToast('✅ جاري فتح واتساب...', 'success');
   } catch(e) {
