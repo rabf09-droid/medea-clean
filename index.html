@@ -2654,7 +2654,7 @@ select.input {
         <button class="btn btn-danger ripple" onclick="logoutAdmin()">
           <i class="fas fa-sign-out-alt"></i> خروج
         </button>
-        <button class="btn ripple" style="font-size:0.8rem;background:#ff5722" onclick="emergencyClearData()">
+        <button class="btn ripple" id="clearDataBtn" style="font-size:0.8rem;background:#ff5722;display:none" onclick="emergencyClearData()">
           <i class="fas fa-exclamation-triangle"></i> مسح البيانات
         </button>
       </div>
@@ -4404,6 +4404,9 @@ function loginAdmin() {
       document.getElementById('adminCurrentUser').textContent = 'المشرف الرئيسي: فتحي';
       const settingsSection = document.getElementById('adminSettingsSection');
       if(settingsSection) settingsSection.style.display = 'block';
+      // إظهار زر مسح البيانات للمشرف الرئيسي فقط
+      const clearBtn = document.getElementById('clearDataBtn');
+      if(clearBtn) clearBtn.style.display = 'block';
       updateStats();
       showToast('✓ دخول ناجح - أنت المشرف الرئيسي', 'success');
     } else {
@@ -4427,6 +4430,9 @@ function loginAdmin() {
       // إخفاء الإعدادات الرئيسية عن المسؤول الفرعي
       const settingsSection = document.getElementById('adminSettingsSection');
       if(settingsSection) settingsSection.style.display = 'none';
+      // إخفاء زر مسح البيانات عن المسؤول المضاف
+      const clearBtnSub = document.getElementById('clearDataBtn');
+      if(clearBtnSub) clearBtnSub.style.display = 'none';
       updateStats();
       showToast('✓ دخول ناجح - مرحباً ' + subName, 'success');
     } else {
@@ -4474,6 +4480,9 @@ function logoutAdmin() {
   switchLoginTab('super');
   const settingsSection = document.getElementById('adminSettingsSection');
   if(settingsSection) settingsSection.style.display = 'none';
+  // إخفاء زر مسح البيانات عند الخروج
+  const clearBtnOut = document.getElementById('clearDataBtn');
+  if(clearBtnOut) clearBtnOut.style.display = 'none';
   currentAdminName = '';
   showToast('✓ خروج', 'info');
 }
@@ -4495,15 +4504,36 @@ function safeShowReports() {
 }
 
 function emergencyClearData() {
-  if(confirm('⚠️ تحذير: سيتم مسح جميع البيانات!\nهل أنت متأكد؟')) {
-    try { db.ref().remove(); } catch(e) {}
+  if(confirm('⚠️ تحذير: سيتم مسح البلاغات والكميات والتتبع!\nالموظفون والقطاعات والرمز ستبقى.\nهل أنت متأكد؟')) {
+    // احتفظ بالبيانات الأساسية قبل المسح
+    const savedStaff    = localStorage.getItem('medea_staff');
+    const savedSchedule = localStorage.getItem('medea_schedule');
+    const savedPass     = localStorage.getItem('medea_adminPass');
+
+    // امسح من Firebase — فقط البيانات المؤقتة
+    try { db.ref('reports').remove().catch(()=>{}); } catch(e) {}
+    try { db.ref('tonnage').remove().catch(()=>{}); } catch(e) {}
+    try { db.ref('truckTracking').remove().catch(()=>{}); } catch(e) {}
+    try { db.ref('wasteTracking').remove().catch(()=>{}); } catch(e) {}
+    try { db.ref('marketMaterials').remove().catch(()=>{}); } catch(e) {}
+    try { db.ref('requests').remove().catch(()=>{}); } catch(e) {}
+
+    // امسح localStorage بالكامل
     localStorage.clear();
-    allReports = [];
-    wasteTracking = [];
-    marketMaterials = [];
+
+    // أعد حفظ البيانات الأساسية
+    if(savedStaff)    localStorage.setItem('medea_staff',     savedStaff);
+    if(savedSchedule) localStorage.setItem('medea_schedule',  savedSchedule);
+    if(savedPass)     localStorage.setItem('medea_adminPass', savedPass);
+
+    // إعادة تهيئة المتغيرات
+    allReports       = [];
+    wasteTracking    = [];
+    marketMaterials  = [];
     truckTrackingData = {active:false, driver:'', sector:'', positions:[], collectedBins:[]};
+
     updateStats();
-    showToast('✅ تم مسح البيانات', 'success');
+    showToast('✅ تم مسح البيانات — الموظفون والقطاعات محفوظة', 'success');
   }
 }
 
