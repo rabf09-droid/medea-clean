@@ -5870,10 +5870,29 @@ function startInlineGPS() {
     var mapDiv = document.getElementById('driverInlineMap');
     if(mapDiv && !driverTrackingMap) {
       mapDiv.innerHTML = '';
-      driverTrackingMap = L.map('driverInlineMap').setView([36.264, 2.754], 14);
-      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '© OpenStreetMap', maxZoom: 19
-      }).addTo(driverTrackingMap);
+      driverTrackingMap = L.map('driverInlineMap', {
+        zoomControl: true,
+        attributionControl: false
+      }).setView([36.264, 2.754], 15);
+
+      // tile سريع مع fallback
+      var tileLoaded = false;
+      var tileLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '© OSM', maxZoom: 19, keepBuffer: 4
+      });
+      tileLayer.on('tileload', function(){ tileLoaded = true; });
+      tileLayer.addTo(driverTrackingMap);
+
+      // رسالة انتظار GPS
+      var waitMsg = L.control({position:'bottomleft'});
+      waitMsg.onAdd = function(){
+        var d = L.DomUtil.create('div','');
+        d.id = 'gpsWaitMsg';
+        d.style.cssText = 'background:rgba(0,98,51,0.85);color:#fff;padding:6px 12px;border-radius:20px;font-size:0.8rem;font-family:Cairo,sans-serif';
+        d.innerHTML = '📡 جاري تحديد موقعك...';
+        return d;
+      };
+      waitMsg.addTo(driverTrackingMap);
     }
   } catch(e) {}
 
@@ -5899,25 +5918,44 @@ function startInlineGPS() {
     // تحديث الخريطة المضمنة
     try {
       if(driverTrackingMap) {
+        // إخفاء رسالة الانتظار
+        var wm = document.getElementById('gpsWaitMsg');
+        if(wm) wm.style.display = 'none';
+
+        // علامة السائق
         if(driverTrackingMarker) driverTrackingMap.removeLayer(driverTrackingMarker);
-        driverTrackingMarker = L.marker([lat,lng]).addTo(driverTrackingMap);
+        var driverIcon = L.divIcon({
+          html: '<div style="background:#006233;color:#fff;border-radius:50%;width:36px;height:36px;display:flex;align-items:center;justify-content:center;font-size:1.2rem;border:3px solid #fff;box-shadow:0 2px 8px rgba(0,0,0,0.4)">🚛</div>',
+          iconSize: [36,36], iconAnchor: [18,18], className: ''
+        });
+        driverTrackingMarker = L.marker([lat,lng], {icon:driverIcon})
+          .addTo(driverTrackingMap)
+          .bindPopup('📍 موقعك الحالي<br><small>'+lat.toFixed(5)+', '+lng.toFixed(5)+'</small>');
         driverTrackingMap.setView([lat,lng], 16);
-        // رسم الخط إن وُجدت نقاط
+
+        // رسم خط المسار
         if(driverTrackingPositions.length > 1) {
           if(driverTrackingPolyline) driverTrackingMap.removeLayer(driverTrackingPolyline);
           driverTrackingPolyline = L.polyline(
             driverTrackingPositions.map(function(p){ return [p.lat, p.lng]; }),
-            {color:'#006233', weight:4}
+            {color:'#006233', weight:5, opacity:0.85}
           ).addTo(driverTrackingMap);
         }
-      } else {
-        var mapDiv2 = document.getElementById('driverInlineMap');
-        if(mapDiv2 && mapDiv2.children.length === 0) mapDiv2.innerHTML = '<div style="text-align:center;padding:20px;color:var(--primary)"><i class="fas fa-map-marker-alt" style="font-size:2rem;margin-bottom:8px;display:block"></i><b>موقعك الحالي</b><br><small>'+lat.toFixed(5)+', '+lng.toFixed(5)+'</small></div>';
       }
     } catch(e) {}
   }, function(err) {
-    showToast('⚠️ تعذر تحديد الموقع — تأكد من تفعيل GPS', 'error');
-  }, {enableHighAccuracy:true, timeout:15000, maximumAge:10000});
+    // عرض رسالة خطأ مناسبة
+    var msgs = {1:'🔒 الرجاء السماح بالوصول للموقع في إعدادات المتصفح', 2:'📡 إشارة GPS ضعيفة — جرّب في مكان مفتوح', 3:'⏱️ انتهت مهلة GPS — جاري إعادة المحاولة'};
+    showToast(msgs[err.code] || '⚠️ تعذر تحديد الموقع', 'error');
+    // إعادة المحاولة تلقائياً بعد 5 ثوانٍ
+    setTimeout(function(){
+      if(truckTrackingData.active && !window.lastKnownPosition) {
+        navigator.geolocation.getCurrentPosition(function(p){
+          window.lastKnownPosition = {lat:p.coords.latitude, lng:p.coords.longitude, timestamp:new Date().toISOString()};
+        }, function(){}, {enableHighAccuracy:false, timeout:20000});
+      }
+    }, 5000);
+  }, {enableHighAccuracy:true, timeout:20000, maximumAge:15000});
 }
 
 function recordBinFromDriver() {
