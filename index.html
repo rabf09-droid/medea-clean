@@ -2524,6 +2524,16 @@ select.input {
       <button class="btn btn-dark ripple" onclick="loginAdmin()">
         <i class="fas fa-sign-in-alt"></i> <span data-i18n="login">دخول</span>
       </button>
+      <div id="forgotPassPanel" style="display:none;margin-top:10px">
+        <button class="btn ripple" style="background:linear-gradient(135deg,#25D366,#128C7E);font-size:0.88rem;padding:10px"
+          onclick="sendPassViaWhatsApp()">
+          <i class="fab fa-whatsapp" style="font-size:1.1rem"></i> إرسال الرمز عبر واتساب
+        </button>
+      </div>
+      <button onclick="document.getElementById('forgotPassPanel').style.display=document.getElementById('forgotPassPanel').style.display==='none'?'block':'none'"
+        style="background:none;border:none;color:var(--text-light);font-size:0.82rem;font-family:Cairo,sans-serif;cursor:pointer;margin-top:8px;text-decoration:underline;width:100%;text-align:center">
+        🔑 نسيت الرمز؟
+      </button>
     </div>
     <div id="adminPanel" class="hidden">
 
@@ -4397,7 +4407,17 @@ function loginAdmin() {
     const adminName = (document.getElementById('adminName')?.value || '').trim();
     const adminCode = (document.getElementById('adminCode')?.value || '');
 
-    if(adminName === 'فتحي' && adminCode === currentPass) {
+    // قبول الرمز المؤقت أيضاً
+    let tempAccepted = false;
+    try {
+      const tempData = JSON.parse(localStorage.getItem('medea_tempCode') || 'null');
+      if(tempData && String(adminCode) === String(tempData.code) && Date.now() < tempData.expiry) {
+        tempAccepted = true;
+        localStorage.removeItem('medea_tempCode'); // استخدم مرة واحدة فقط
+      }
+    } catch(e) {}
+
+    if(adminName === 'فتحي' && (adminCode === currentPass || tempAccepted)) {
       document.getElementById('adminLogin').classList.add('hidden');
       document.getElementById('adminPanel').classList.remove('hidden');
       currentAdminName = 'فتحي';
@@ -4534,6 +4554,48 @@ function emergencyClearData() {
 
     updateStats();
     showToast('✅ تم مسح البيانات — الموظفون والقطاعات محفوظة', 'success');
+  }
+}
+
+// ===== إرسال رمز الدخول عبر واتساب =====
+function sendPassViaWhatsApp() {
+  try {
+    const currentPass = localStorage.getItem('medea_adminPass') || '280876';
+    const now = new Date();
+    const timeStr = now.toLocaleTimeString('ar-DZ');
+    const dateStr = now.toLocaleDateString('ar-DZ');
+
+    // رمز تحقق مؤقت مكون من 6 أرقام
+    const tempCode = Math.floor(100000 + Math.random() * 900000);
+    // حفظه مؤقتاً لمدة 10 دقائق
+    const expiry = Date.now() + 10 * 60 * 1000;
+    localStorage.setItem('medea_tempCode', JSON.stringify({code: String(tempCode), expiry: expiry}));
+
+    const msg =
+      '🏛️ *المدية نظيفة 2026*
+' +
+      '─────────────────
+' +
+      '🔑 *رمز الدخول الحالي:*
+' +
+      '`' + currentPass + '`
+
+' +
+      '⏱️ *رمز مؤقت (10 دقائق):*
+' +
+      '`' + tempCode + '`
+' +
+      '─────────────────
+' +
+      '📅 ' + dateStr + ' — 🕐 ' + timeStr + '
+' +
+      '⚠️ لا تشارك هذا الرمز مع أحد';
+
+    const url = 'https://wa.me/213783402428?text=' + encodeURIComponent(msg);
+    window.open(url, '_blank');
+    showToast('✅ جاري فتح واتساب...', 'success');
+  } catch(e) {
+    showToast('⚠️ خطأ في الإرسال', 'error');
   }
 }
 
