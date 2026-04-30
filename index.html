@@ -5761,11 +5761,11 @@ function startDriverTracking() {
   if(!currentDriver) { showToast('⚠️ يجب تسجيل الدخول أولاً', 'error'); return; }
   const now = new Date();
   const refNum = 'REF-' + currentDriverSector + '-' + now.toISOString().slice(0,10).replace(/-/g,'') + '-' + Math.floor(Math.random()*1000).toString().padStart(3,'0');
-  // أرشفة المهمة القديمة — نحدّث positions من المتغير الحي أولاً
+  // أرشفة المهمة القديمة — نسخة عميقة قبل تعديل أي شيء
   try {
-    // تحديث positions من المصدر الحقيقي
+    // حفظ positions الحية في truckTrackingData قبل الأرشفة
     if(driverTrackingPositions && driverTrackingPositions.length > 0) {
-      truckTrackingData.positions = driverTrackingPositions;
+      truckTrackingData.positions = driverTrackingPositions.slice();
     }
     var prevTD = JSON.parse(JSON.stringify(truckTrackingData));
     if(prevTD && prevTD.refNum && (prevTD.collectedBins||[]).length > 0) {
@@ -5874,54 +5874,57 @@ function recordBinFromDriver() {
 }
 
 function stopDriverTracking() {
+  // 1) إيقاف GPS والخريطة
   if(driverTrackingInterval) { clearInterval(driverTrackingInterval); driverTrackingInterval = null; }
-  if(window.driverGPSWatch) { navigator.geolocation.clearWatch(window.driverGPSWatch); }
+  if(window.driverGPSWatch) { navigator.geolocation.clearWatch(window.driverGPSWatch); window.driverGPSWatch = null; }
   if(driverTrackingMap) { try { driverTrackingMap.remove(); } catch(e) {} driverTrackingMap = null; }
-  driverTrackingMarker = null; driverTrackingPolyline = null; driverTrackingPositions = [];
+  driverTrackingMarker = null;
+  driverTrackingPolyline = null;
   window.lastKnownPosition = null;
 
-  // تحديث positions من المصدر الحقيقي قبل الحفظ
+  // 2) حفظ positions قبل مسحها
   if(driverTrackingPositions && driverTrackingPositions.length > 0) {
-    truckTrackingData.positions = driverTrackingPositions;
+    truckTrackingData.positions = driverTrackingPositions.slice();
   }
-  truckTrackingData.active = false;
+  driverTrackingPositions = []; // المسح بعد الحفظ
+
+  // 3) إنهاء المهمة
+  truckTrackingData.active  = false;
   truckTrackingData.endTime = new Date().toISOString();
-  saveToCloud('truckTracking', truckTrackingData);
-  // أرشفة المهمة المنتهية
+  var bins = (truckTrackingData.collectedBins || []).length;
+
+  // 4) أرشفة نسخة عميقة في Firebase + localStorage
   try {
-    var arKey2 = 'truckArchive/' + (truckTrackingData.refNum || ('STOP-'+Date.now()));
-    var arData2 = JSON.parse(JSON.stringify(truckTrackingData));
-    try { db.ref(arKey2).set(arData2).catch(function(){}); } catch(e) {}
+    var archived = JSON.parse(JSON.stringify(truckTrackingData));
+    var arKey = 'truckArchive/' + (archived.refNum || ('STOP-'+Date.now()));
+    try { db.ref(arKey).set(archived).catch(function(){}); } catch(e) {}
     try {
-      var loc2 = [];
-      try { loc2 = JSON.parse(localStorage.getItem('medea_truckArchive')||'[]'); } catch(e2){}
-      var ei2 = loc2.findIndex(function(x){ return x.refNum === arData2.refNum; });
-      if(ei2 !== -1) loc2[ei2] = arData2; else loc2.unshift(arData2);
-      if(loc2.length > 50) loc2 = loc2.slice(0,50);
-      localStorage.setItem('medea_truckArchive', JSON.stringify(loc2));
+      var loc = [];
+      try { loc = JSON.parse(localStorage.getItem('medea_truckArchive')||'[]'); } catch(e2){}
+      var ei = loc.findIndex(function(x){ return x.refNum === archived.refNum; });
+      if(ei !== -1) loc[ei] = archived; else loc.unshift(archived);
+      if(loc.length > 50) loc = loc.slice(0,50);
+      localStorage.setItem('medea_truckArchive', JSON.stringify(loc));
     } catch(e2){}
   } catch(e) {}
-  // أرشفة في Firebase
-  try {
-    if(truckTrackingData.refNum && (truckTrackingData.collectedBins||[]).length > 0) {
-      var arKey2 = 'truckArchive/' + truckTrackingData.refNum;
-      try { db.ref(arKey2).set(truckTrackingData).catch(function(){}); } catch(e) {}
-      try {
-        var loc2 = [];
-        try { loc2 = JSON.parse(localStorage.getItem('medea_truckArchive')||'[]'); } catch(e2) {}
-        var ex2 = loc2.findIndex(function(x){ return x.refNum === truckTrackingData.refNum; });
-        if(ex2 !== -1) loc2[ex2] = truckTrackingData; else loc2.unshift(truckTrackingData);
-        if(loc2.length > 50) loc2 = loc2.slice(0,50);
-        localStorage.setItem('medea_truckArchive', JSON.stringify(loc2));
-      } catch(e) {}
-    }
-  } catch(e) {}
 
-  document.getElementById('driverTrackingPanel').style.display = 'none';
-  document.getElementById('trackingOffPanel').style.display = 'block';
+  // 5) حفظ truckTracking الحالي في Firebase
+  saveToCloud('truckTracking', truckTrackingData);
 
-  var bins = (truckTrackingData.collectedBins || []).length;
-  showToast('✅ انتهى التتبع — ' + bins + ' حاوية مسجّلة', 'success');
+  // 6) إخفاء لوحة التتبع
+  var tp = document.getElementById('driverTrackingPanel');
+  var op = document.getElementById('trackingOffPanel');
+  if(tp) tp.style.display = 'none';
+  if(op) op.style.display = 'block';
+
+  showToast('تم انتهاء التتبع — ' + bins + ' حاوية مسجلة', 'success');
+
+  // 7) فتح صفحة بيان الرحلة تلقائياً
+  setTimeout(function() {
+    prepareDriverTonnage();
+    showPage('driverTonnage');
+    showToast('اكمل بيان الرحلة لتسجيل الكمية', 'info');
+  }, 800);
 }
 
 function startGPSMonitoring() {
