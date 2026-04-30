@@ -3867,7 +3867,7 @@ function showPage(id) {
       } catch(e) {}
       loadSectorRoute();
     }
-    if(id === 'driver') updateDriverPanel();
+    if(id === 'driver') { autoLoginDriver(); updateDriverPanel(); }
     if(id === 'pdfPreviewPage') initPreviewMap();
     // [2] أرقام متحركة عند دخول الإدارة
     if(id === 'admin') setTimeout(animateStatNums, 400);
@@ -4499,6 +4499,24 @@ function sendPassViaWhatsApp() {
 }
 
 // ===== السائق =====
+function autoLoginDriver() {
+  // إذا كان السائق مسجل الدخول بالفعل — لا شيء
+  if(currentDriver) return;
+  // إذا كان الاسم محفوظاً — ادخل تلقائياً
+  var saved = '';
+  try { saved = localStorage.getItem('medea_lastDriver') || ''; } catch(e) {}
+  if(!saved) return;
+  // تحقق أن الاسم لا يزال مسجلاً في الموظفين
+  var staff = [];
+  try { staff = JSON.parse(localStorage.getItem('medea_staff')||'[]'); } catch(e) {}
+  var isValid = staff.some(function(s){ return s.name === saved && s.role && s.role.includes('سائق'); });
+  if(!isValid) return;
+  // ملء الاسم في الحقل والدخول مباشرة
+  var nameInput = document.getElementById('driverName');
+  if(nameInput) nameInput.value = saved;
+  loginDriver();
+}
+
 function loginDriver() {
   const n = document.getElementById('driverName').value.trim();
   if(!n) { showToast('⚠️ أدخل الاسم', 'error'); return; }
@@ -4512,6 +4530,8 @@ function loginDriver() {
   }
   
   currentDriver = n;
+  // حفظ الاسم محلياً للدخول التلقائي
+  try { localStorage.setItem('medea_lastDriver', n); } catch(e) {}
   
   // البحث عن قطاع السائق في جدول الجمع
   const sectors = JSON.parse(localStorage.getItem('medea_schedule') || '[]');
@@ -4579,6 +4599,7 @@ function logoutDriver() {
   saveToCloud('truckTracking', truckTrackingData);
   currentDriver = '';
   currentDriverSector = '';
+  try { localStorage.removeItem('medea_lastDriver'); } catch(e) {}
   // إعادة شاشة الدخول
   var loginDiv  = document.getElementById('driverLogin');
   var panelDiv  = document.getElementById('driverPanel');
@@ -5740,13 +5761,29 @@ function startDriverTracking() {
   if(!currentDriver) { showToast('⚠️ يجب تسجيل الدخول أولاً', 'error'); return; }
   const now = new Date();
   const refNum = 'REF-' + currentDriverSector + '-' + now.toISOString().slice(0,10).replace(/-/g,'') + '-' + Math.floor(Math.random()*1000).toString().padStart(3,'0');
-  // أرشفة المهمة القديمة
+  // أرشفة المهمة القديمة — نحدّث positions من المتغير الحي أولاً
   try {
-    var prevTD = truckTrackingData;
-    if(prevTD && prevTD.refNum && (prevTD.positions||[]).length > 0) {
+    // تحديث positions من المصدر الحقيقي
+    if(driverTrackingPositions && driverTrackingPositions.length > 0) {
+      truckTrackingData.positions = driverTrackingPositions;
+    }
+    var prevTD = JSON.parse(JSON.stringify(truckTrackingData));
+    if(prevTD && prevTD.refNum && (prevTD.collectedBins||[]).length > 0) {
+      prevTD.active = false;
+      prevTD.endTime = prevTD.endTime || new Date().toISOString();
+      prevTD.archivedAt = new Date().toISOString();
       var arKey = 'truckArchive/' + prevTD.refNum;
-      var arData = Object.assign({}, prevTD, {active:false, archivedAt:new Date().toISOString()});
-      try { db.ref(arKey).set(arData).catch(function(){}); } catch(e) {}
+      try { db.ref(arKey).set(prevTD).catch(function(){}); } catch(e) {}
+      // حفظ محلي
+      try {
+        var loc = [];
+        try { loc = JSON.parse(localStorage.getItem('medea_truckArchive')||'[]'); } catch(e2) {}
+        var ex = loc.findIndex(function(x){ return x.refNum === prevTD.refNum; });
+        if(ex !== -1) loc[ex] = prevTD; else loc.unshift(prevTD);
+        if(loc.length > 50) loc = loc.slice(0,50);
+        localStorage.setItem('medea_truckArchive', JSON.stringify(loc));
+      } catch(e) {}
+      showToast('تم حفظ المهمة السابقة في الأرشيف', 'info');
     }
   } catch(e) {}
 
@@ -5843,9 +5880,42 @@ function stopDriverTracking() {
   driverTrackingMarker = null; driverTrackingPolyline = null; driverTrackingPositions = [];
   window.lastKnownPosition = null;
 
+  // تحديث positions من المصدر الحقيقي قبل الحفظ
+  if(driverTrackingPositions && driverTrackingPositions.length > 0) {
+    truckTrackingData.positions = driverTrackingPositions;
+  }
   truckTrackingData.active = false;
   truckTrackingData.endTime = new Date().toISOString();
   saveToCloud('truckTracking', truckTrackingData);
+  // أرشفة المهمة المنتهية
+  try {
+    var arKey2 = 'truckArchive/' + (truckTrackingData.refNum || ('STOP-'+Date.now()));
+    var arData2 = JSON.parse(JSON.stringify(truckTrackingData));
+    try { db.ref(arKey2).set(arData2).catch(function(){}); } catch(e) {}
+    try {
+      var loc2 = [];
+      try { loc2 = JSON.parse(localStorage.getItem('medea_truckArchive')||'[]'); } catch(e2){}
+      var ei2 = loc2.findIndex(function(x){ return x.refNum === arData2.refNum; });
+      if(ei2 !== -1) loc2[ei2] = arData2; else loc2.unshift(arData2);
+      if(loc2.length > 50) loc2 = loc2.slice(0,50);
+      localStorage.setItem('medea_truckArchive', JSON.stringify(loc2));
+    } catch(e2){}
+  } catch(e) {}
+  // أرشفة في Firebase
+  try {
+    if(truckTrackingData.refNum && (truckTrackingData.collectedBins||[]).length > 0) {
+      var arKey2 = 'truckArchive/' + truckTrackingData.refNum;
+      try { db.ref(arKey2).set(truckTrackingData).catch(function(){}); } catch(e) {}
+      try {
+        var loc2 = [];
+        try { loc2 = JSON.parse(localStorage.getItem('medea_truckArchive')||'[]'); } catch(e2) {}
+        var ex2 = loc2.findIndex(function(x){ return x.refNum === truckTrackingData.refNum; });
+        if(ex2 !== -1) loc2[ex2] = truckTrackingData; else loc2.unshift(truckTrackingData);
+        if(loc2.length > 50) loc2 = loc2.slice(0,50);
+        localStorage.setItem('medea_truckArchive', JSON.stringify(loc2));
+      } catch(e) {}
+    }
+  } catch(e) {}
 
   document.getElementById('driverTrackingPanel').style.display = 'none';
   document.getElementById('trackingOffPanel').style.display = 'block';
@@ -6264,7 +6334,7 @@ function loadSectorRoute() {
     <div class="info-row"><b>📅 تاريخ المهمة:</b> <span id="routeDate">${startTime ? new Date(startTime).toLocaleDateString('ar-DZ') : '-'}</span></div>
     <div class="info-row"><b>🕑 وقت البداية:</b> <span>${startTime ? new Date(startTime).toLocaleTimeString('ar-DZ') : '-'}</span></div>
     <div class="info-row"><b>🕔 وقت النهاية:</b> <span>${endTime ? new Date(endTime).toLocaleTimeString('ar-DZ') : (isActive ? '🟢 جارٍ الآن' : '-')}</span></div>
-    <div class="info-row"><b>📍 عدد النقاط المسجلة:</b> <span style="color:var(--primary);font-weight:bold">${positions.length}</span></div>
+    <div class="info-row"><b>📍 مواقع الحاويات:</b> <span style="color:var(--primary);font-weight:bold">${collectedBins.length}</span></div>
     <div class="info-row"><b>🗑️ إجمالي الحاويات المجمعة:</b> <span id="routeBinsCount" style="color:var(--success);font-weight:bold">${totalBins}</span></div>
     <div class="info-row"><b>⚖️ الكمية المقدّرة بالطن:</b> <span style="color:var(--warning);font-weight:bold">${totalTons} طن</span></div>
     <div class="info-row"><b>🔖 رقم السند:</b> <span style="font-family:monospace;color:var(--text-light);font-size:0.85rem">${refNum}</span></div>
@@ -6367,7 +6437,7 @@ function exportRouteToPDF() {
     <div style="display:flex;justify-content:space-between;margin:5px 0;padding:7px 0;border-bottom:1px solid var(--border)"><b>👤 السائق:</b><span>${sd.driver||'-'}</span></div>
     ${sd.schedule ? `<div style="display:flex;justify-content:space-between;margin:5px 0;padding:7px 0;border-bottom:1px solid var(--border)"><b>📍 الأحياء:</b><span style="font-size:0.85rem">${sd.schedule.name||'-'}</span></div>` : ''}
     <div style="display:flex;justify-content:space-between;margin:5px 0;padding:7px 0;border-bottom:1px solid var(--border)"><b>📅 التاريخ:</b><span>${sd.date}</span></div>
-    <div style="display:flex;justify-content:space-between;margin:5px 0;padding:7px 0;border-bottom:1px solid var(--border)"><b>📍 عدد النقاط المسجلة:</b><span style="color:var(--primary);font-weight:bold">${sd.path ? sd.path.length : 0}</span></div>
+    <div style="display:flex;justify-content:space-between;margin:5px 0;padding:7px 0;border-bottom:1px solid var(--border)"><b>📍 مواقع الحاويات:</b><span style="color:var(--primary);font-weight:bold">${(sd.bins||[]).length}</span></div>
     <div style="display:flex;justify-content:space-between;margin:5px 0;padding:7px 0;border-bottom:1px solid var(--border)"><b>🗑️ إجمالي الحاويات:</b><span style="color:var(--success);font-weight:bold">${totalBins}</span></div>
     <div style="display:flex;justify-content:space-between;margin:5px 0;padding:7px 0;border-bottom:1px solid var(--border)"><b>⚖️ الكمية بالطن:</b><span style="color:var(--warning);font-weight:bold">${sd.totalTons||'0.00'} طن</span></div>
     <div style="display:flex;justify-content:space-between;margin:5px 0;padding:7px 0"><b>🔖 رقم السند:</b><span style="font-family:monospace;font-size:0.82rem">${sd.refNum||'-'}</span></div>
@@ -6793,7 +6863,7 @@ async function downloadPreviewPDF() {
   <div class="info-label">👤 السائق</div>       <div class="info-value">${sd.driver||'-'}</div>
   ${sd.schedule ? `<div class="info-label">📍 الأحياء</div><div class="info-value" style="font-size:10px">${sd.schedule.name||'-'}</div>` : ''}
   <div class="info-label">📅 التاريخ</div>       <div class="info-value">${sd.date||'-'}</div>
-  <div class="info-label">📍 عدد النقاط</div>    <div class="info-value accent">${(sd.path||[]).length}</div>
+  <div class="info-label">📍 مواقع الحاويات</div>    <div class="info-value accent">${(sd.bins||[]).length}</div>
   <div class="info-label">🗑️ إجمالي الحاويات</div><div class="info-value accent">${totalBins}</div>
   <div class="info-label">⚖️ الكمية بالطن</div>  <div class="info-value warn">${sd.totalTons||'0.00'} طن</div>
   <div class="info-label">🔖 رقم السند</div>      <div class="info-value mono">${sd.refNum||'-'}</div>
