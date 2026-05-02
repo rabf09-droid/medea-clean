@@ -6408,7 +6408,120 @@ function loadSectorRoute() {
     document.getElementById('routeBinsList').style.display = 'none';
   }
 
-  if(td) showRouteOnMap();
+  // ===== جمع رحلات اليوم من truckArchive =====
+  try {
+    var todayISO = new Date().toISOString().slice(0,10);
+    var selSec   = String(sectorId);
+    db.ref('truckArchive').once('value').then(function(snap) {
+      var arch = snap && snap.val ? snap.val() : {};
+      var allM = Object.values(arch || {});
+      // إضافة المهمة الحالية إن كانت نشطة لنفس القطاع
+      if(truckTrackingData && truckTrackingData.active && String(truckTrackingData.sector) === selSec) {
+        var cur = JSON.parse(JSON.stringify(truckTrackingData));
+        if(driverTrackingPositions && driverTrackingPositions.length > 0) cur.positions = driverTrackingPositions.slice();
+        allM.push(cur);
+      }
+      // فلترة: نفس القطاع + نفس اليوم
+      var todayTrips = allM.filter(function(m) {
+        if(!m || !m.startTime) return false;
+        return m.startTime.slice(0,10) === todayISO && String(m.sector||'') === selSec;
+      });
+      todayTrips.sort(function(a,b){ return new Date(a.startTime) - new Date(b.startTime); });
+
+      if(todayTrips.length > 1) {
+        // --- عدة رحلات: اجمعهم مع ألوان مختلفة ---
+        var COLORS = ['#006233','#1565C0','#7B1FA2','#E65100','#00838F','#AD1457'];
+        var allBins = [], allPaths = [], totalBinsAll = 0, actualWeight = 0;
+        var tripsData = todayTrips.map(function(m, ti) {
+          var bins = (m.collectedBins||[]);
+          var bc   = bins.reduce(function(s,b){return s+(parseInt(b.count)||1);},0);
+          totalBinsAll += bc;
+          if(m.weight) actualWeight += parseFloat(m.weight);
+          bins.forEach(function(b){ allBins.push(b); });
+          return { path:(m.positions||[]), bins:bins, color:COLORS[ti%COLORS.length],
+            startTime:m.startTime, endTime:m.endTime, active:!!m.active,
+            refNum:m.refNum, weight:m.weight||null, regNum:m.regNum||null };
+        });
+
+        // تحديث currentSectorData
+        currentSectorData.trips    = tripsData;
+        currentSectorData.totalBins = totalBinsAll;
+        currentSectorData.totalTons = actualWeight > 0 ? actualWeight.toFixed(2) : (totalBinsAll*0.08).toFixed(2);
+        currentSectorData.actualWeight = actualWeight > 0 ? actualWeight : null;
+
+        // تحديث الواجهة
+        var ri = document.getElementById('routeInfo');
+        if(ri) {
+          var extra = document.getElementById('routeTripsInfo');
+          if(!extra){ extra=document.createElement('div'); extra.id='routeTripsInfo'; ri.appendChild(extra); }
+          var th = '<div style="background:var(--bg);border-radius:8px;padding:10px;margin-top:8px">';
+          th += '<b style="color:var(--primary)">🚛 رحلات اليوم: '+todayTrips.length+'</b>';
+          todayTrips.forEach(function(m,i){
+            var c  = COLORS[i%COLORS.length];
+            var t1 = m.startTime ? new Date(m.startTime).toLocaleTimeString('ar-DZ') : '-';
+            var t2 = m.active ? 'نشطة' : (m.endTime ? new Date(m.endTime).toLocaleTimeString('ar-DZ') : '-');
+            var bc = (m.collectedBins||[]).reduce(function(s,b){return s+(parseInt(b.count)||1);},0);
+            var wt = m.weight ? ' | ' + m.weight + ' طن' : '';
+            th += '<div style="display:flex;align-items:center;gap:8px;margin-top:5px;font-size:0.82rem">';
+            th += '<span style="width:14px;height:14px;border-radius:50%;background:'+c+';flex-shrink:0;display:inline-block"></span>';
+            th += '<span>رحلة '+(i+1)+': '+t1+' → '+t2+' — '+bc+' حاوية'+wt+'</span></div>';
+          });
+          th += '</div>';
+          extra.innerHTML = th;
+        }
+        showMultiTripRoute(tripsData);
+      } else if(td) {
+        currentSectorData.trips = null;
+        // الوزن الفعلي إن وُجد
+        if(td.weight) currentSectorData.totalTons = parseFloat(td.weight).toFixed(2);
+        showRouteOnMap();
+      }
+    }).catch(function(){ if(td) showRouteOnMap(); });
+  } catch(e) { if(td) showRouteOnMap(); }
+}
+
+function showMultiTripRoute(trips) {
+  try {
+    var routeMapDiv = document.getElementById('routeMap');
+    if(!routeMapDiv) return;
+    routeMapDiv.style.height = '350px';
+    if(routeMap) { routeMap.remove(); routeMap = null; }
+    routeMap = L.map('routeMap').setView([36.2642,2.7545],14);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{attribution:'© OpenStreetMap'}).addTo(routeMap);
+    var COLORS = ['#006233','#1565C0','#7B1FA2','#E65100','#00838F','#AD1457'];
+    var bounds = [];
+    trips.forEach(function(trip,ti) {
+      var color = trip.color || COLORS[ti%COLORS.length];
+      var path  = trip.path || [];
+      var bins  = trip.bins || [];
+      var t1 = trip.startTime ? new Date(trip.startTime).toLocaleTimeString('ar-DZ') : '-';
+      var t2 = trip.active ? 'نشطة' : (trip.endTime ? new Date(trip.endTime).toLocaleTimeString('ar-DZ') : '-');
+      if(path.length > 1) {
+        var pts = path.map(function(p){return [p.lat,p.lng];});
+        var line = L.polyline(pts,{color:color,weight:6,opacity:0.9}).addTo(routeMap);
+        line.bindPopup('<b style="color:'+color+'">رحلة '+(ti+1)+'</b><br>'+t1+' → '+t2);
+        bounds.push(line.getBounds());
+        L.circleMarker(pts[0],{radius:11,fillColor:color,color:'#fff',weight:3,fillOpacity:1})
+          .addTo(routeMap).bindPopup('▶ بداية رحلة '+(ti+1)+'<br>'+t1);
+        if(!trip.active) {
+          L.circleMarker(pts[pts.length-1],{radius:9,fillColor:'#f44336',color:'#fff',weight:2,fillOpacity:1})
+            .addTo(routeMap).bindPopup('■ نهاية رحلة '+(ti+1)+'<br>'+t2);
+        }
+      }
+      bins.forEach(function(bin,bi){
+        L.circleMarker([bin.lat,bin.lng],{radius:9,fillColor:color,color:'#fff',weight:2,fillOpacity:0.9})
+          .addTo(routeMap)
+          .bindPopup('رحلة '+(ti+1)+' — موقع #'+(bi+1)+'<br>'+(bin.count||1)+' حاوية'+(bin.address?'<br>'+bin.address:''));
+      });
+    });
+    if(bounds.length > 0) {
+      var cb = bounds[0];
+      for(var i=1;i<bounds.length;i++) cb.extend(bounds[i]);
+      routeMap.fitBounds(cb,{padding:[40,40]});
+    }
+    setTimeout(function(){try{routeMap.invalidateSize();}catch(e){}},300);
+    showToast(trips.length + ' رحلات — ألوان مختلفة', 'success');
+  } catch(e) {}
 }
 
 function showRouteOnMap() {
@@ -6754,6 +6867,8 @@ async function buildRealMapDataUrl(path, bins) {
 async function downloadPreviewPDF() {
   const sd = currentSectorData || {};
   const totalBins = (sd.bins||[]).reduce((s,b)=>s+(parseInt(b.count)||1),0);
+  // استخدام الوزن الفعلي إن وُجد
+  if(sd.actualWeight) sd.totalTons = parseFloat(sd.actualWeight).toFixed(2);
 
   // رسم الخريطة الحقيقية (OSM tiles + مسار) وتحويلها إلى PNG مضمّن في PDF
   let mapHTML = '<div class="map-placeholder">⚠️ لا توجد نقاط مسار مسجّلة</div>';
