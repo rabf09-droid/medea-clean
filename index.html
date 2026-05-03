@@ -3340,7 +3340,7 @@ try {  if(typeof firebase !== 'undefined'){
 }
 
 // ===== المتغيرات العامة =====
-let allReports=[], currentLang='ar', tempImage=null, tempAfterImage=null, currentDriver='', userPoints=0, currentDriverSector='';
+let allReports=[], currentLang='ar', tempImage=null, tempAfterImage=null, currentDriver='', userPoints=0, currentDriverSector='', lastMissionRefNum='';
 let wasteTracking=[], marketMaterials=[], marketRequests=[];
 let truckTrackingData = {active:false, driver:'', sector:'', startTime:null, positions:[], collectedBins:[]};
 let map=null, trackingMarker=null, trackingPath=null;
@@ -4750,12 +4750,13 @@ function saveDriverTonnage() {
     try { db.ref('tonnage/' + rec.id).set(rec).catch(function(){}); } catch(e) {}
 
     // ===== ربط الوزن والسند بالمهمة في الأرشيف =====
-    if(truckTrackingData.refNum) {
+    var targetRef = truckTrackingData.refNum || lastMissionRefNum;
+    if(targetRef) {
       try {
         // تحديث الأرشيف المحلي
         var loc = [];
         try { loc = JSON.parse(localStorage.getItem('medea_truckArchive')||'[]'); } catch(e2){}
-        var idx = loc.findIndex(function(x){ return x.refNum === truckTrackingData.refNum; });
+        var idx = loc.findIndex(function(x){ return x.refNum === targetRef; });
         if(idx !== -1) {
           loc[idx].weight    = parseFloat(weight);
           loc[idx].regNum    = regNum;
@@ -4763,9 +4764,9 @@ function saveDriverTonnage() {
           localStorage.setItem('medea_truckArchive', JSON.stringify(loc));
         }
         // تحديث Firebase
-        db.ref('truckArchive/' + truckTrackingData.refNum + '/weight').set(parseFloat(weight)).catch(function(){});
-        db.ref('truckArchive/' + truckTrackingData.refNum + '/regNum').set(regNum).catch(function(){});
-        db.ref('truckArchive/' + truckTrackingData.refNum + '/wasteType').set(wasteType).catch(function(){});
+        db.ref('truckArchive/' + targetRef + '/weight').set(parseFloat(weight)).catch(function(){});
+        db.ref('truckArchive/' + targetRef + '/regNum').set(regNum).catch(function(){});
+        db.ref('truckArchive/' + targetRef + '/wasteType').set(wasteType).catch(function(){});
       } catch(e2) {}
     }
 
@@ -5913,6 +5914,7 @@ function startDriverTracking() {
     refNum: refNum,
     positions: [], collectedBins: []
   };
+  lastMissionRefNum = refNum; // حفظ دائماً
   driverTrackingPositions = [];
   driverTrackingStartTime = Date.now();
   saveToCloud('truckTracking', truckTrackingData);
@@ -6009,6 +6011,8 @@ function stopDriverTracking() {
   // 3) إنهاء المهمة
   truckTrackingData.active  = false;
   truckTrackingData.endTime = new Date().toISOString();
+  // حفظ refNum قبل أي إعادة تعيين
+  if(truckTrackingData.refNum) lastMissionRefNum = truckTrackingData.refNum;
   var bins = (truckTrackingData.collectedBins || []).length;
 
   // 4) أرشفة نسخة عميقة في Firebase + localStorage
