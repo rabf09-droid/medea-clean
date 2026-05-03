@@ -5977,20 +5977,38 @@ function startInlineGPS() {
 }
 
 function recordBinFromDriver() {
-  // إخفاء الزر الرئيسي مؤقتاً لإظهار لوحة التحكم في التسجيل
-  const mainBtn = document.getElementById('mainRecordBinBtn');
-  if(mainBtn) mainBtn.style.display = 'none';
-  
-  // إظهار لوحة التحكم في التسجيل
-  const controls = document.getElementById('binTrackingControls');
-  if(controls) {
-    controls.style.display = 'block';
-    // التمرير للأسفل لرؤية اللوحة
-    controls.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  if(!truckTrackingData.active) { showToast('⚠️ يجب بدء التتبع أولاً', 'error'); return; }
+
+  var mainBtn  = document.getElementById('mainRecordBinBtn');
+  var controls = document.getElementById('binTrackingControls');
+  var result   = document.getElementById('binRecordResult');
+
+  if(mainBtn)  mainBtn.style.display  = 'none';
+  if(controls) controls.style.display = 'block';
+  if(result)   result.style.display   = 'none';
+
+  // إذا كان الموقع جاهزاً — استخدمه مباشرة
+  if(window.lastKnownPosition) {
+    recordBinCollection();
+    if(controls) controls.scrollIntoView({ behavior:'smooth', block:'center' });
+    return;
   }
-  
-  // استدعاء وظيفة جلب الموقع والعنوان تلقائياً
-  recordBinCollection();
+
+  // إذا لم يكن جاهزاً — اجلبه الآن
+  showToast('📡 جاري تحديد موقعك...', 'info');
+  navigator.geolocation.getCurrentPosition(function(pos) {
+    window.lastKnownPosition = {
+      lat: pos.coords.latitude,
+      lng: pos.coords.longitude,
+      timestamp: new Date().toISOString()
+    };
+    recordBinCollection();
+    if(controls) controls.scrollIntoView({ behavior:'smooth', block:'center' });
+  }, function(err) {
+    showToast('⚠️ تعذّر تحديد الموقع — تأكد من تفعيل GPS', 'error');
+    if(mainBtn)  mainBtn.style.display  = 'block';
+    if(controls) controls.style.display = 'none';
+  }, { enableHighAccuracy:true, timeout:15000, maximumAge:5000 });
 }
 
 function stopDriverTracking() {
