@@ -2633,6 +2633,22 @@ select.input {
         </button>
       </div>
 
+      <!-- ===== القسم 1.5: الذكاء الاصطناعي والتنبؤات ===== -->
+      <div style="background:linear-gradient(135deg,#e3f2fd,#f3e5f5);border-radius:var(--radius-sm);padding:12px;margin-bottom:10px;border:2px solid #9c27b0">
+        <div style="font-weight:800;color:#7b1fa2;margin-bottom:10px;font-size:0.9rem">
+          <i class="fas fa-brain"></i> الذكاء الاصطناعي والتنبؤات
+        </div>
+        <button class="btn ripple" style="background:linear-gradient(135deg,#9c27b0,#7b1fa2);color:#fff;width:100%;margin-bottom:8px" onclick="showAIHotspots()">
+          <i class="fas fa-fire"></i> المناطق الحارة (Hotspots)
+        </button>
+        <button class="btn ripple" style="background:linear-gradient(135deg,#673ab7,#512da8);color:#fff;width:100%;margin-bottom:8px" onclick="showAIRecommendations()">
+          <i class="fas fa-lightbulb"></i> التوصيات الذكية
+        </button>
+        <button class="btn ripple" style="background:linear-gradient(135deg,#5e35b1,#4527a0);color:#fff;width:100%" onclick="showAIChatBot()">
+          <i class="fas fa-comments"></i> مساعد الذكاء الاصطناعي
+        </button>
+      </div>
+
       <!-- ===== القسم 2: السجلات والإحصاء ===== -->
       <div style="background:var(--bg);border-radius:var(--radius-sm);padding:12px;margin-bottom:10px;border:2px solid #e8f5e9">
         <div style="font-weight:800;color:var(--primary);margin-bottom:10px;font-size:0.9rem">
@@ -4868,9 +4884,11 @@ function sendReport() {
     };
     
     saveReport(newReport);
-    addPoints(10);
+    const aiPoints = calculateAIPoints(newReport);
+    addPoints(aiPoints);
+    const qualityScore = calculateReportQualityScore(newReport);
     
-    showToast('✅ تم الإرسال! +10 نقاط 🎉', 'success');
+    showToast(`✅ تم الإرسال! +${aiPoints} نقاط 🎉 (جودة: ${qualityScore}%)`, 'success');
     document.getElementById('thanksOverlay').style.display = 'flex';
     
     tempImage = null;
@@ -6452,14 +6470,28 @@ async function autoAssign(report) {
 // ذكاء اصطناعي: المساعد الذكي
 async function askAI(question) {
   try {
-    const res = await fetch("https://api.openai.com/v1/responses", {
+    const res = await fetch("https://api.openai.com/v1/chat/completions", {
       method: "POST",
-      headers: { "Authorization": "Bearer YOUR_API_KEY", "Content-Type": "application/json" },
-      body: JSON.stringify({ model: "gpt-4.1-mini", input: question })
+      headers: { 
+        "Authorization": "Bearer " + (typeof OPENAI_API_KEY !== 'undefined' ? OPENAI_API_KEY : 'sk-test'),
+        "Content-Type": "application/json" 
+      },
+      body: JSON.stringify({ 
+        model: "gpt-4.1-mini", 
+        messages: [{role: "user", content: question}],
+        temperature: 0.7,
+        max_tokens: 150
+      })
     });
     const data = await res.json();
-    return data.output[0].content[0].text;
-  } catch(e) { return "عذراً، تعذر الاتصال بالذكاء الاصطناعي حالياً."; }
+    if(data.choices && data.choices[0] && data.choices[0].message) {
+      return data.choices[0].message.content;
+    }
+    return "عذراً، تعذر الاتصال بالذكاء الاصطناعي حالياً.";
+  } catch(e) { 
+    console.error('AI Error:', e);
+    return "عذراً، تعذر الاتصال بالذكاء الاصطناعي حالياً."; 
+  }
 }
 
 // ===== تتبع الشاحنة =====
@@ -9189,36 +9221,153 @@ function nextHadith() {
   document.getElementById('hadithContainer').innerHTML = `"${h.text}" <br><small style="color:#666">(${h.source})</small>`;
 }
 
-async function askCitizenAI() {
-  const q = document.getElementById('citizenAIInput').value;
-  if(!q) return;
-  const respDiv = document.getElementById('citizenAIResponse');
-  respDiv.style.display = 'block';
-  respDiv.innerHTML = "⏳ جاري البحث عن إجابة بيئية...";
+// ===== عرض المناطق الحارة =====
+function showAIHotspots() {
+  const hotspots = predictHotspots();
+  let html = '<div class="card" style="margin-bottom:10px"><h3 style="color:var(--danger);margin-bottom:10px"><i class="fas fa-fire"></i> المناطق التي تحتاج اهتماماً</h3>';
   
-  const prompt = `أنت مساعد بيئي ذكي لتطبيق "المدية نظيفة". أجب باختصار وودية على هذا السؤال حول النظافة وأهميتها في الحي: ${q}`;
-  const ans = await askAI(prompt);
-  respDiv.innerHTML = "<b>🌱 المساعد البيئي:</b> " + ans;
+  if(hotspots.length === 0) {
+    html += '<p style="color:var(--text-light)">لا توجد بيانات كافية للتحليل</p>';
+  } else {
+    hotspots.forEach((spot, i) => {
+      const priorityColor = spot.priority === 'عالية' ? 'var(--danger)' : spot.priority === 'متوسطة' ? 'var(--warning)' : 'var(--info)';
+      html += `<div style="background:var(--bg);border-right:4px solid ${priorityColor};padding:10px;margin-bottom:8px;border-radius:var(--radius-sm)"><div style="display:flex;justify-content:space-between;align-items:center"><div><b style="color:${priorityColor}">${i+1}. ${spot.area}</b><br><small style="color:var(--text-light)">عدد البلاغات: ${spot.reportCount}</small></div><span style="background:${priorityColor};color:#fff;padding:4px 10px;border-radius:12px;font-size:0.8rem;font-weight:700">الأولوية: ${spot.priority}</span></div></div>`;
+    });
+  }
+  
+  html += '</div>';
+  const modal = document.createElement('div');
+  modal.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);z-index:5000;display:flex;align-items:center;justify-content:center;padding:20px';
+  modal.innerHTML = `<div style="background:var(--bg-card);border-radius:var(--radius-lg);padding:20px;max-width:500px;width:100%;max-height:80vh;overflow-y:auto">${html}<button class="btn btn-primary ripple" onclick="this.parentElement.parentElement.remove()" style="width:100%;margin-top:10px">إغلاق</button></div>`;
+  document.body.appendChild(modal);
 }
 
-async function getAIReportAdvice() {
-  const addr = document.getElementById('addrInput').value;
-  const type = document.getElementById('wasteTypeSelect').value;
-  const adviceDiv = document.getElementById('reportAIAdvice');
-  adviceDiv.innerHTML = "⏳ جاري تحليل البيانات لتقديم نصيحة...";
+// ===== عرض التوصيات الذكية =====
+async function showAIRecommendations() {
+  const modal = document.createElement('div');
+  modal.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);z-index:5000;display:flex;align-items:center;justify-content:center;padding:20px';
+  modal.innerHTML = `<div style="background:var(--bg-card);border-radius:var(--radius-lg);padding:20px;max-width:500px;width:100%;text-align:center"><h3 style="color:var(--primary);margin-bottom:15px"><i class="fas fa-lightbulb"></i> التوصيات الذكية</h3><p style="color:var(--text-light);margin-bottom:15px">⏳ جاري تحليل البيانات...</p><div id="recommendationContent" style="text-align:right;margin-bottom:15px"></div><button class="btn btn-primary ripple" onclick="this.parentElement.parentElement.remove()" style="width:100%">إغلاق</button></div>`;
+  document.body.appendChild(modal);
   
-  const prompt = `المواطن يريد إرسال بلاغ عن نفايات من نوع ${type} في منطقة ${addr || 'غير محددة'}. قدم له نصيحة قصيرة جداً (جملة واحدة) حول كيفية التعامل مع هذا النوع من النفايات أو تشجيعه على البلاغ.`;
-  const ans = await askAI(prompt);
-  adviceDiv.innerHTML = "<b>💡 نصيحة ذكية:</b> " + ans;
+  const recommendation = await generateSmartRecommendations();
+  document.getElementById('recommendationContent').innerHTML = `<p style="background:linear-gradient(135deg,#fff9c4,#ffecb3);padding:15px;border-radius:var(--radius-sm);color:var(--text);border-right:4px solid var(--accent)"><b>🌟 التوصية:</b> ${recommendation}</p>`;
 }
 
-// تحسين وظيفة التقاط الصورة لتشمل تحليل تلقائي
+// ===== مساعد الذكاء الاصطناعي =====
+function showAIChatBot() {
+  const modal = document.createElement('div');
+  modal.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);z-index:5000;display:flex;align-items:center;justify-content:center;padding:20px';
+  modal.innerHTML = `<div style="background:var(--bg-card);border-radius:var(--radius-lg);padding:20px;max-width:500px;width:100%;max-height:80vh;display:flex;flex-direction:column"><h3 style="color:var(--primary);margin-bottom:15px"><i class="fas fa-comments"></i> مساعد الذكاء الاصطناعي</h3><div id="chatMessages" style="flex:1;overflow-y:auto;margin-bottom:15px;padding:10px;background:var(--bg);border-radius:var(--radius-sm);max-height:300px"><p style="color:var(--text-light);text-align:center;padding:20px 0">👋 مرحباً! كيف يمكنني مساعدتك بخصوص النظافة والتدوير؟</p></div><div style="display:flex;gap:8px"><input type="text" id="chatInput" placeholder="اكتب سؤالك..." style="flex:1;padding:10px;border:2px solid var(--border);border-radius:var(--radius-sm);font-family:Cairo,sans-serif"><button class="btn btn-primary ripple" onclick="sendChatMessage(event)" style="flex:0.3;padding:10px">إرسال</button></div><button class="btn ripple" style="background:#757575;margin-top:10px" onclick="this.parentElement.parentElement.remove()">إغلاق</button></div>`;
+  document.body.appendChild(modal);
+}
+
+function sendChatMessage(e) {
+  const input = document.getElementById('chatInput');
+  const message = input.value.trim();
+  if(!message) return;
+  
+  const messagesDiv = document.getElementById('chatMessages');
+  messagesDiv.innerHTML += `<p style="text-align:left;margin:8px 0;padding:8px;background:var(--primary);color:#fff;border-radius:8px">${message}</p>`;
+  input.value = '';
+  
+  messagesDiv.innerHTML += `<p style="text-align:right;margin:8px 0;color:var(--text-light)"><i class="fas fa-spinner fa-spin"></i> جاري الرد...</p>`;
+  messagesDiv.scrollTop = messagesDiv.scrollHeight;
+  
+  sendAIMessage(message).then(response => {
+    const loadingMsg = messagesDiv.querySelector('i.fa-spinner');
+    if(loadingMsg) loadingMsg.parentElement.remove();
+    messagesDiv.innerHTML += `<p style="text-align:right;margin:8px 0;padding:8px;background:var(--bg-card);border:1px solid var(--border);border-radius:8px">${response}</p>`;
+    messagesDiv.scrollTop = messagesDiv.scrollHeight;
+  });
+}
+// ===== ميزات الذكاء الاصطناعي المحسّنة =====
+
+// 1. نظام تقييم جودة البلاغ
+function calculateReportQualityScore(report) {
+  let score = 0;
+  if(report.image) score += 30;
+  if(report.gps && report.gps !== 'غير محدد') score += 25;
+  if(report.addr && report.addr.length > 10) score += 20;
+  if(report.wasteType && report.wasteType !== 'mixed') score += 15;
+  if(report.recurring) score += 10;
+  return Math.min(score, 100);
+}
+
+// 2. نظام النقاط الذكي
+function calculateAIPoints(report) {
+  const qualityScore = calculateReportQualityScore(report);
+  const basePoints = 10;
+  const bonusPoints = Math.floor(qualityScore / 10);
+  return basePoints + bonusPoints;
+}
+
+// 3. تنبؤات تحليلية - توقع المناطق الحارة
+function predictHotspots() {
+  try {
+    const reportsByArea = {};
+    allReports.forEach(r => {
+      const area = r.addr ? r.addr.split('-')[0] : 'unknown';
+      reportsByArea[area] = (reportsByArea[area] || 0) + 1;
+    });
+    const sorted = Object.entries(reportsByArea)
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 5);
+    return sorted.map(([area, count]) => ({
+      area: area.trim(),
+      reportCount: count,
+      priority: count > 5 ? 'عالية' : count > 2 ? 'متوسطة' : 'منخفضة'
+    }));
+  } catch(e) {
+    return [];
+  }
+}
+
+// 4. توصيات ذكية بناءً على البيانات
+async function generateSmartRecommendations() {
+  try {
+    const hotspots = predictHotspots();
+    const topArea = hotspots[0]?.area || 'المدينة';
+    const reportCount = allReports.length;
+    const completedCount = allReports.filter(r => r.status === 'done').length;
+    const completionRate = reportCount > 0 ? Math.round((completedCount / reportCount) * 100) : 0;
+    const prompt = `بناءً على البيانات التالية، قدم توصية واحدة قصيرة للمدينة:\n- عدد البلاغات: ${reportCount}\n- نسبة الإنجاز: ${completionRate}%\n- المنطقة الأكثر حاجة: ${topArea}\nاجعل التوصية عملية وقابلة للتطبيق.`;
+    return await askAI(prompt);
+  } catch(e) {
+    return 'استمروا في الإبلاغ عن النفايات لتحسين نظافة المدينة.';
+  }
+}
+
+// 5. مساعد محادثة ذكي
+const aiChatHistory = [];
+async function sendAIMessage(userMessage) {
+  try {
+    aiChatHistory.push({role: 'user', content: userMessage});
+    const systemPrompt = 'أنت مساعد ذكي في تطبيق إدارة النفايات والتدوير المدية نظيفة. مساعدتك هي: 1. الإجابة على أسئلة المستخدمين حول النفايات والتدوير 2. تقديم نصائح بيئية مفيدة 3. تشجيع المواطنين على الإبلاغ عن النفايات 4. توفير معلومات عن أنواع النفايات. أجب بشكل ودي وقصير.';
+    const messages = [{role: 'system', content: systemPrompt}, ...aiChatHistory.slice(-5)];
+    const res = await fetch('https://api.openai.com/v1/chat/completions', {
+      method: 'POST',
+      headers: { 'Authorization': 'Bearer ' + (typeof OPENAI_API_KEY !== 'undefined' ? OPENAI_API_KEY : 'sk-test'), 'Content-Type': 'application/json' },
+      body: JSON.stringify({ model: 'gpt-4.1-mini', messages: messages, temperature: 0.8, max_tokens: 200 })
+    });
+    const data = await res.json();
+    if(data.choices && data.choices[0]) {
+      const assistantMessage = data.choices[0].message.content;
+      aiChatHistory.push({role: 'assistant', content: assistantMessage});
+      return assistantMessage;
+    }
+    return 'عذراً، لم أتمكن من الإجابة حالياً.';
+  } catch(e) {
+    console.error('Chat error:', e);
+    return 'عذراً، حدث خطأ في الاتصال.';
+  }
+}
+
+// 6. تحسين وظيفة التقاط الصورة
 const originalTakePhoto = takePhoto;
 takePhoto = async function() {
   await originalTakePhoto();
-  // بعد التقاط الصورة، يمكن إضافة تحليل تلقائي لنوع النفايات هنا مستقبلاً
   const adviceDiv = document.getElementById('reportAIAdvice');
-  if(adviceDiv) adviceDiv.innerHTML = "📸 تم التقاط الصورة. هل تريد مني تحليل نوع النفايات؟";
+  if(adviceDiv) adviceDiv.innerHTML = '📸 تم التقاط الصورة. اختر نوع النفايات أو سأساعدك في التحديد.';
 };
 
 </script>
