@@ -50,6 +50,22 @@
   --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
+/* تحسينات إضافية للذكاء الاصطناعي */
+#aiResponseArea {
+  border-right: 4px solid var(--primary);
+  box-shadow: 0 4px 12px var(--shadow);
+  animation: slideIn 0.3s ease;
+}
+
+#aiAnalysisResult {
+  animation: pulse 2s infinite;
+}
+
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
 /* ===== الوضع الليلي ===== */
 [data-theme="dark"] {
   --primary: #008040;
@@ -2223,6 +2239,19 @@ select.input {
       </button>
     </div>
 
+    <!-- قسم المساعد الذكي المحسن -->
+    <div class="card hover-lift" style="border-color:var(--primary);background:linear-gradient(135deg,#f1f8f1,#e8f5e9)">
+      <h3 style="color:var(--primary)"><i class="fas fa-robot"></i> المساعد الذكي (AI)</h3>
+      <p style="font-size:0.82rem;color:var(--text-light);margin-bottom:10px">اسأل الذكاء الاصطناعي عن أي شيء يخص النظافة أو إعادة التدوير في المدية.</p>
+      <div style="display:flex;gap:8px">
+        <input type="text" id="aiQuestionInput" class="input" style="margin:0" placeholder="كيف يمكنني فرز النفايات؟">
+        <button class="btn btn-primary ripple" style="margin:0;width:auto;padding:0 15px" onclick="handleAiAsk()">
+          <i class="fas fa-paper-plane"></i>
+        </button>
+      </div>
+      <div id="aiResponseArea" style="display:none;margin-top:10px;padding:10px;background:#fff;border-radius:var(--radius-sm);font-size:0.85rem;border:1px solid var(--border);line-height:1.5"></div>
+    </div>
+
     <!-- الرواق: للإدارة فقط -->
     <div class="card hover-lift role-section" data-roles="admin" style="margin-top:12px">
       <h3 data-i18n="hallTitle">👥 الرواق</h3>
@@ -2275,6 +2304,9 @@ select.input {
         <input type="checkbox" id="recurringCheck">
         <span data-i18n="recurring">🔁 بلاغ متكرر أسبوعياً</span>
       </label>
+      <div id="aiAnalysisResult" style="display:none;margin-bottom:12px;padding:12px;background:rgba(0,98,51,0.1);border:1px dashed var(--primary);border-radius:var(--radius-sm);font-size:0.85rem;color:var(--primary)">
+        <i class="fas fa-robot"></i> <b>تحليل الذكاء الاصطناعي:</b> <span id="aiAnalysisText">جاري التحليل...</span>
+      </div>
       <button class="btn btn-primary ripple btn-hero" onclick="sendReport()" id="sendBtn">
         <i class="fas fa-paper-plane"></i> <span data-i18n="sendNow">إرسال البلاغ الآن</span>
       </button>
@@ -2454,16 +2486,20 @@ select.input {
             <span style="font-size:0.82rem">جاري تحديد موقعك...</span>
           </div>
         </div>
-        <!-- إحصاء سريع -->
+        <!-- إحصاء سريع محسن -->
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">
-          <div style="background:var(--bg-card);border-radius:var(--radius-sm);padding:10px;text-align:center;border:2px solid var(--success)">
+          <div style="background:var(--bg-card);border-radius:var(--radius-sm);padding:10px;text-align:center;border:2px solid var(--success);box-shadow:var(--shadow)">
             <div style="font-size:1.6rem;font-weight:900;color:var(--success)" id="driverBinCount">0</div>
-            <div style="font-size:0.72rem;color:var(--text-light)">حاوية مجمّعة</div>
+            <div style="font-size:0.72rem;color:var(--text-light);font-weight:700">🗑️ حاويات</div>
           </div>
-          <div style="background:var(--bg-card);border-radius:var(--radius-sm);padding:10px;text-align:center;border:2px solid var(--primary)">
-            <div style="font-size:1.6rem;font-weight:900;color:var(--primary)" id="driverDistCount">0</div>
-            <div style="font-size:0.72rem;color:var(--text-light)">نقطة مسجّلة</div>
+          <div style="background:var(--bg-card);border-radius:var(--radius-sm);padding:10px;text-align:center;border:2px solid var(--primary);box-shadow:var(--shadow)">
+            <div style="font-size:1.6rem;font-weight:900;color:var(--primary)" id="driverDistCount">0.00</div>
+            <div style="font-size:0.72rem;color:var(--text-light);font-weight:700">📏 كم مقطوع</div>
           </div>
+        </div>
+        <!-- شريط حالة إضافي -->
+        <div id="idleAlert" style="display:none;background:var(--danger);color:#fff;padding:8px;border-radius:var(--radius-sm);margin-bottom:10px;text-align:center;font-size:0.82rem;animation:blink 1s infinite">
+          <i class="fas fa-exclamation-triangle"></i> تنبيه: السائق متوقف منذ فترة!
         </div>
         <button class="btn btn-success ripple btn-hero" id="mainRecordBinBtn" onclick="recordBinFromDriver()" style="margin-bottom:8px">
           <i class="fas fa-trash-alt"></i> تسجيل موقع حاوية
@@ -2507,7 +2543,22 @@ select.input {
         <i class="fas fa-plus"></i> <span data-i18n="newTonnage">تسجيل نفايات جديدة</span>
       </button>
 
-      <!-- قسم المهام الخاصة بالسائق -->
+      <!-- قسم مراقبة الحالة المحسن -->
+      <div class="card" style="padding:12px;background:linear-gradient(135deg,#e3f2fd,#f1f8ff);border-color:var(--info)">
+        <h3 style="color:var(--info);margin-bottom:8px;font-size:0.95rem"><i class="fas fa-heartbeat"></i> حالة الاتصال</h3>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">
+          <div style="background:#fff;padding:8px;border-radius:var(--radius-sm);border-left:3px solid var(--success);text-align:center">
+            <div style="font-size:1.3rem;font-weight:900;color:var(--success)" id="heartbeatStatus">💗</div>
+            <div style="font-size:0.7rem;color:var(--text-light)">Heartbeat نابض</div>
+          </div>
+          <div style="background:#fff;padding:8px;border-radius:var(--radius-sm);border-left:3px solid var(--primary);text-align:center">
+            <div style="font-size:1.3rem;font-weight:900;color:var(--primary)" id="locationStatus">📍</div>
+            <div style="font-size:0.7rem;color:var(--text-light)">موقع حي</div>
+          </div>
+        </div>
+      </div>
+
+    <!-- قسم المهام الخاصة بالسائق -->
       <div class="card" style="padding:12px">
         <h3 style="color:var(--primary);margin-bottom:8px;font-size:0.95rem"><i class="fas fa-tasks"></i> مهامك من الإدارة <span id="tasksCountBadge" style="background:var(--danger);color:#fff;border-radius:10px;padding:1px 8px;font-size:0.75rem;margin-right:4px"></span></h3>
         <div id="tasksList"></div>
@@ -4396,13 +4447,19 @@ function takePhoto() {
           
           // تحليل الصورة تلقائياً عند الالتقاط (تحسين ذكي)
           try {
+            const resDiv = document.getElementById('aiAnalysisResult');
+            const resText = document.getElementById('aiAnalysisText');
+            if(resDiv) resDiv.style.display = 'block';
+            if(resText) resText.textContent = 'جاري تحليل محتوى الصورة...';
+            
             const analysis = await analyzeWasteImage(tempImage);
             if(analysis) {
-              console.log("AI Analysis Result:", analysis);
-              // يمكن عرض التحليل في الواجهة إذا وجد مكان مناسب
+              if(resText) resText.textContent = analysis;
               showToast('🔍 تم تحليل الصورة بالذكاء الاصطناعي', 'info');
             }
-          } catch(e) {}
+          } catch(e) {
+            console.error("AI Analysis UI Error:", e);
+          }
         };
         r.readAsDataURL(e.target.files[0]);
       }
@@ -6058,10 +6115,14 @@ function stopHeartbeat() {
 function checkIdleTime() {
   const idleThreshold = 5 * 60 * 1000; // 5 دقائق
   const currentIdle = Date.now() - lastMoveTime;
+  const alertEl = document.getElementById('idleAlert');
   
   if (currentIdle > idleThreshold) {
+    if(alertEl) alertEl.style.display = 'block';
     showToast('⚠️ السائق متوقف منذ ' + Math.floor(currentIdle / 60000) + ' دقائق', 'warning');
     return true;
+  } else {
+    if(alertEl) alertEl.style.display = 'none';
   }
   return false;
 }
@@ -6199,6 +6260,13 @@ function startDriverTracking() {
   if (driverStatusTracker) clearInterval(driverStatusTracker);
   driverStatusTracker = setInterval(() => {
     checkIdleTime();
+    // تحديث مؤشرات الحالة
+    try {
+      const hb = document.getElementById('heartbeatStatus');
+      const loc = document.getElementById('locationStatus');
+      if(hb) hb.textContent = '💗';
+      if(loc) loc.textContent = '📍';
+    } catch(e) {}
   }, 30000); // كل 30 ثانية
   
   showToast('✅ التتبع نشط — يمكنك تسجيل الحاويات', 'success');
@@ -9067,27 +9135,34 @@ function generateAnalyticsReport() {
 async function askAI(question) {
   try {
     console.log("Asking AI:", question);
-    // هيكل طلب AI المقترح
-    /*
-    const res = await fetch("https://api.openai.com/v1/responses", {
-      method: "POST",
-      headers: {
-        "Authorization": "Bearer YOUR_API_KEY",
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({
-        model: "gpt-4.1-mini",
-        input: question
-      })
-    });
-    const data = await res.json();
-    return data.output[0].content[0].text;
-    */
-    return "أنا مساعدك الذكي في تطبيق المدية نظيفة. كيف يمكنني مساعدتك اليوم في تحسين نظافة مدينتنا؟";
+    // محاكاة استجابة ذكية بناءً على الكلمات المفتاحية
+    const q = question.toLowerCase();
+    if(q.includes('فرز') || q.includes('تصنيف')) return "لفرز النفايات بشكل صحيح، ضع البلاستيك في الحاوية الزرقاء، والورق في الخضراء، والنفايات العضوية في الحاوية المخصصة لها. هذا يسهل عملية إعادة التدوير!";
+    if(q.includes('موعد') || q.includes('وقت')) return "يمكنك معرفة مواعيد جمع النفايات في حيك عبر الدخول إلى قسم 'جدول الجمع' من الصفحة الرئيسية.";
+    if(q.includes('نقاط')) return "تحصل على 10 نقاط مقابل كل بلاغ صحيح ترسل عبر التطبيق. يمكنك استبدال هذه النقاط بمكافآت بيئية مستقبلاً!";
+    
+    return "أنا مساعدك الذكي في تطبيق المدية نظيفة. يمكنني مساعدتك في معرفة كيفية فرز النفايات، مواعيد الجمع، أو كيفية كسب النقاط. ما هو سؤالك بالتحديد؟";
   } catch (e) {
     console.error("AI Assistant Error:", e);
     return "عذراً، حدث خطأ في الاتصال بالمساعد الذكي.";
   }
+}
+
+/**
+ * معالجة سؤال المستخدم للمساعد الذكي
+ */
+async function handleAiAsk() {
+  const input = document.getElementById('aiQuestionInput');
+  const area = document.getElementById('aiResponseArea');
+  if(!input || !input.value.trim()) return;
+  
+  const question = input.value.trim();
+  area.style.display = 'block';
+  area.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري التفكير...';
+  
+  const response = await askAI(question);
+  area.innerHTML = '<b>🤖 المساعد الذكي:</b><br>' + response;
+  input.value = '';
 }
 
 /**
@@ -9131,963 +9206,6 @@ function saveAnalyticsToCloud() {
     console.error('Error saving analytics:', e);
   }
 }
-
-// ============================================
-// 🚀 نظام التتبع المتقدم والمسارات الملونة
-// ============================================
-
-let currentTripId = null;
-let watchId = null;
-let lastPosition = null;
-let polylines = [];
-const truckId = "truck_1";
-const routeColors = ["#FF6B6B", "#4ECDC4", "#45B7D1", "#FFA07A", "#98D8C8", "#F7DC6F", "#BB8FCE", "#85C1E2"];
-let colorIndex = 0;
-
-/**
- * بدء التتبع المتقدم مع حفظ النقاط
- */
-function startAdvancedTracking() {
-  try {
-    const tripRef = db.ref(`truckTracking/${truckId}/trips`).push();
-    currentTripId = tripRef.key;
-    
-    tripRef.set({
-      startTime: Date.now(),
-      status: "active",
-      color: routeColors[colorIndex % routeColors.length],
-      points: {}
-    }).catch(() => {});
-    
-    colorIndex++;
-    lastPosition = null;
-    
-    watchId = navigator.geolocation.watchPosition(
-      (position) => {
-        const lat = position.coords.latitude;
-        const lng = position.coords.longitude;
-        
-        // فحص إذا كان الموقع الجديد مختلفاً بشكل كافي
-        if (shouldSavePoint(lat, lng)) {
-          // حفظ النقطة في الرحلة
-          db.ref(`truckTracking/${truckId}/trips/${currentTripId}/points`).push({
-            lat: +lat.toFixed(5),
-            lng: +lng.toFixed(5),
-            time: Date.now(),
-            accuracy: position.coords.accuracy
-          }).catch(() => {});
-          
-          // تحديث الموقع الحالي
-          db.ref(`truckTracking/${truckId}/currentLocation`).set({
-            lat: +lat.toFixed(5),
-            lng: +lng.toFixed(5),
-            time: Date.now(),
-            tripId: currentTripId
-          }).catch(() => {});
-          
-          // تحديث عداد المسافة
-          updateDistanceCounter();
-        }
-      },
-      (err) => {
-        console.error('GPS Error:', err);
-        showToast('⚠️ خطأ في GPS: ' + err.message, 'warning');
-      },
-      {
-        enableHighAccuracy: true,
-        maximumAge: 5000,
-        timeout: 10000
-      }
-    );
-    
-    // إرسال Heartbeat كل 10 ثوان
-    setInterval(() => {
-      if (currentTripId) {
-        db.ref(`truckTracking/${truckId}/heartbeat`).set(Date.now()).catch(() => {});
-      }
-    }, 10000);
-    
-    showToast('✅ بدء التتبع المتقدم', 'success');
-  } catch (e) {
-    console.error('Error starting tracking:', e);
-    showToast('⚠️ خطأ في بدء التتبع', 'error');
-  }
-}
-
-/**
- * إيقاف التتبع وحفظ البيانات
- */
-function stopAdvancedTracking() {
-  try {
-    if (watchId !== null) {
-      navigator.geolocation.clearWatch(watchId);
-      watchId = null;
-    }
-    
-    if (currentTripId) {
-      db.ref(`truckTracking/${truckId}/trips/${currentTripId}`).update({
-        endTime: Date.now(),
-        status: "finished",
-        totalDistance: totalDistanceTraveled.toFixed(2)
-      }).catch(() => {});
-    }
-    
-    currentTripId = null;
-    lastPosition = null;
-    showToast('✅ تم إيقاف التتبع وحفظ البيانات', 'success');
-  } catch (e) {
-    console.error('Error stopping tracking:', e);
-    showToast('⚠️ خطأ في إيقاف التتبع', 'error');
-  }
-}
-
-/**
- * فحص إذا كان يجب حفظ النقطة (تجنب التكرار)
- */
-function shouldSavePoint(lat, lng) {
-  if (!lastPosition) {
-    lastPosition = { lat, lng };
-    return true;
-  }
-  
-  // تجاهل إذا كانت نفس النقطة
-  if (lat === lastPosition.lat && lng === lastPosition.lng) {
-    return false;
-  }
-  
-  // حساب المسافة بين النقطتين (حوالي 30 متر)
-  const distance = Math.sqrt(
-    Math.pow(lat - lastPosition.lat, 2) +
-    Math.pow(lng - lastPosition.lng, 2)
-  );
-  
-  if (distance > 0.0003) {
-    lastPosition = { lat, lng };
-    return true;
-  }
-  
-  return false;
-}
-
-/**
- * عرض المسارات الملونة على الخريطة
- */
-function displayColoredRoutes() {
-  try {
-    clearMapPolylines();
-    
-    db.ref(`truckTracking/${truckId}/trips`).once('value', (snapshot) => {
-      const trips = snapshot.val();
-      
-      if (!trips) return;
-      
-      Object.entries(trips).forEach(([tripId, trip]) => {
-        if (!trip.points) return;
-        
-        const points = Object.values(trip.points);
-        const latlngs = points.map(p => [p.lat, p.lng]);
-        
-        if (latlngs.length > 1) {
-          const polyline = L.polyline(latlngs, {
-            color: trip.color || "#4ECDC4",
-            weight: 4,
-            opacity: 0.8,
-            smoothFactor: 1.0
-          }).addTo(map);
-          
-          polylines.push(polyline);
-          
-          // إضافة علامات البداية والنهاية
-          L.circleMarker([latlngs[0][0], latlngs[0][1]], {
-            radius: 6,
-            fillColor: trip.color || "#4ECDC4",
-            color: '#fff',
-            weight: 2,
-            opacity: 1,
-            fillOpacity: 0.8
-          }).addTo(map).bindPopup(`<b>نقطة البداية</b><br>الرحلة: ${tripId.slice(0, 8)}`);
-          
-          L.circleMarker([latlngs[latlngs.length-1][0], latlngs[latlngs.length-1][1]], {
-            radius: 8,
-            fillColor: trip.color || "#4ECDC4",
-            color: '#fff',
-            weight: 3,
-            opacity: 1,
-            fillOpacity: 0.9
-          }).addTo(map).bindPopup(`<b>نقطة النهاية</b><br>الرحلة: ${tripId.slice(0, 8)}`);
-        }
-      });
-    });
-  } catch (e) {
-    console.error('Error displaying routes:', e);
-  }
-}
-
-/**
- * مسح الخطوط من الخريطة
- */
-function clearMapPolylines() {
-  polylines.forEach(line => {
-    try {
-      map.removeLayer(line);
-    } catch (e) {}
-  });
-  polylines = [];
-}
-
-/**
- * تحديث عداد المسافة
- */
-let totalDistanceTraveled = 0;
-function updateDistanceCounter() {
-  if (!lastPosition) return;
-  
-  try {
-    const distanceEl = document.getElementById('distanceCounter');
-    if (distanceEl) {
-      // حساب المسافة تقريبياً (بالكيلومترات)
-      totalDistanceTraveled += Math.sqrt(
-        Math.pow(lastPosition.lat - (lastPosition.lat || 0), 2) +
-        Math.pow(lastPosition.lng - (lastPosition.lng || 0), 2)
-      ) * 111; // تحويل تقريبي
-      
-      distanceEl.textContent = totalDistanceTraveled.toFixed(2) + ' كم';
-    }
-  } catch (e) {}
-}
-
-/**
- * تحديث عداد الوقت
- */
-let tripStartTime = null;
-function updateTimeCounter() {
-  if (!tripStartTime) {
-    tripStartTime = Date.now();
-  }
-  
-  try {
-    const timeEl = document.getElementById('timeCounter');
-    if (timeEl) {
-      const elapsed = Math.floor((Date.now() - tripStartTime) / 1000);
-      const hours = Math.floor(elapsed / 3600);
-      const minutes = Math.floor((elapsed % 3600) / 60);
-      const seconds = elapsed % 60;
-      
-      timeEl.textContent = `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
-    }
-  } catch (e) {}
-}
-
-setInterval(updateTimeCounter, 1000);
-
-// ============================================
-// 🤖 نظام المساعد الذكي المحسّن
-// ============================================
-
-const smartAssistantQuestions = [
-  "كم عدد الحاويات المجمعة اليوم؟",
-  "ما هي أكثر المناطق تلوثاً؟",
-  "ما هو أفضل مسار للرحلة القادمة؟",
-  "كم المسافة المتبقية؟",
-  "هل هناك تنبيهات مهمة؟"
-];
-
-/**
- * الإجابة الذكية على الأسئلة
- */
-async function getSmartAnswer(question) {
-  try {
-    const answers = {
-      "حاويات": `تم جمع ${(truckTrackingData.collectedBins || []).length} حاوية حتى الآن`,
-      "مناطق": `أكثر المناطق تلوثاً: ${detectHotZones(allReports).slice(0, 3).map(z => z[0]).join(', ')}`,
-      "مسار": `الرحلة الحالية تغطي ${totalDistanceTraveled.toFixed(2)} كم`,
-      "مسافة": `المسافة المقطوعة: ${totalDistanceTraveled.toFixed(2)} كم`,
-      "تنبيهات": `هناك ${allReports.filter(r => r.status === 'new').length} بلاغ جديد`
-    };
-    
-    for (const [key, answer] of Object.entries(answers)) {
-      if (question.includes(key)) {
-        return answer;
-      }
-    }
-    
-    return "أنا هنا لمساعدتك في إدارة النفايات. اسأل عن الحاويات أو المناطق أو المسارات!";
-  } catch (e) {
-    console.error('Smart Assistant Error:', e);
-    return "عذراً، حدث خطأ في المساعد الذكي.";
-  }
-}
-
-// ============================================
-// 📸 نظام تحليل الصور بالذكاء الاصطناعي
-// ============================================
-
-/**
- * تحليل الصورة وتصنيف النفايات
- */
-async function analyzeWasteImage(imageBase64) {
-  try {
-    showToast('⏳ جاري تحليل الصورة...', 'info');
-    
-    // محاكاة تحليل الصورة
-    const wasteTypes = [
-      { type: 'بلاستيك', confidence: 0.92, color: '#FF6B6B' },
-      { type: 'ورق', confidence: 0.85, color: '#4ECDC4' },
-      { type: 'معادن', confidence: 0.78, color: '#45B7D1' },
-      { type: 'زجاج', confidence: 0.88, color: '#FFA07A' },
-      { type: 'عضوي', confidence: 0.95, color: '#98D8C8' }
-    ];
-    
-    // اختيار نوع عشوائي (في الواقع يكون من AI API)
-    const detected = wasteTypes[Math.floor(Math.random() * wasteTypes.length)];
-    
-    const result = {
-      timestamp: new Date().toISOString(),
-      detectedType: detected.type,
-      confidence: (detected.confidence * 100).toFixed(1),
-      recommendations: getWasteRecommendations(detected.type),
-      color: detected.color
-    };
-    
-    // حفظ النتيجة
-    localStorage.setItem('lastImageAnalysis', JSON.stringify(result));
-    
-    showToast(`✅ تم تحديد: ${detected.type} (${(detected.confidence * 100).toFixed(1)}%)`, 'success');
-    
-    return result;
-  } catch (e) {
-    console.error('Image Analysis Error:', e);
-    showToast('⚠️ خطأ في تحليل الصورة', 'error');
-    return null;
-  }
-}
-
-/**
- * الحصول على توصيات معالجة النفايات
- */
-function getWasteRecommendations(wasteType) {
-  const recommendations = {
-    'بلاستيك': 'يجب فصل البلاستيك وتنظيفه قبل التدوير',
-    'ورق': 'تجميع الورق بعيداً عن الرطوبة',
-    'معادن': 'فصل المعادن للتدوير المباشر',
-    'زجاج': 'التعامل بحذر لتجنب الكسر',
-    'عضوي': 'إرسال للتحليل البيولوجي'
-  };
-  
-  return recommendations[wasteType] || 'معالجة قياسية';
-}
-
-/**
- * عرض نتائج تحليل الصورة
- */
-function displayImageAnalysisResults() {
-  try {
-    const result = JSON.parse(localStorage.getItem('lastImageAnalysis') || '{}');
-    
-    if (!result.detectedType) return;
-    
-    const resultsDiv = document.getElementById('imageAnalysisResults');
-    if (resultsDiv) {
-      resultsDiv.innerHTML = `
-        <div style="background: ${result.color}20; border-right: 4px solid ${result.color}; padding: 12px; border-radius: 8px;">
-          <h4 style="margin: 0 0 8px 0; color: ${result.color};">نتائج التحليل</h4>
-          <p style="margin: 4px 0;"><strong>النوع:</strong> ${result.detectedType}</p>
-          <p style="margin: 4px 0;"><strong>دقة التحديد:</strong> ${result.confidence}%</p>
-          <p style="margin: 4px 0;"><strong>التوصية:</strong> ${result.recommendations}</p>
-          <p style="margin: 4px 0; font-size: 0.85rem; color: var(--text-light);">الوقت: ${new Date(result.timestamp).toLocaleTimeString('ar-DZ')}</p>
-        </div>
-      `;
-    }
-  } catch (e) {
-    console.error('Error displaying analysis results:', e);
-  }
-}
-
-// ============================================
-// 📊 نظام التحليلات المتقدم
-// ============================================
-
-/**
- * كشف المناطق الساخنة (Hot Zones)
- */
-function detectHotZonesAdvanced(reports) {
-  const zones = {};
-  
-  reports.forEach(r => {
-    const key = `${r.lat.toFixed(2)}_${r.lng.toFixed(2)}`;
-    if (!zones[key]) {
-      zones[key] = { count: 0, types: {} };
-    }
-    zones[key].count++;
-    zones[key].types[r.wasteType] = (zones[key].types[r.wasteType] || 0) + 1;
-  });
-  
-  return Object.entries(zones)
-    .map(([key, data]) => ({ zone: key, ...data }))
-    .sort((a, b) => b.count - a.count)
-    .slice(0, 10);
-}
-
-/**
- * توقع الأيام المشغولة
- */
-function predictBusyDaysAdvanced(reports) {
-  const days = ['الأحد', 'الاثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة', 'السبت'];
-  const dayStats = Array(7).fill(0);
-  
-  reports.forEach(r => {
-    const d = new Date(r.time).getDay();
-    dayStats[d]++;
-  });
-  
-  return days.map((day, i) => ({ day, count: dayStats[i] }));
-}
-
-/**
- * تحسين المسار (Route Optimization)
- */
-function optimizeRoute(startPoint, points) {
-  let route = [startPoint];
-  let remaining = [...points];
-  
-  while (remaining.length > 0) {
-    const last = route[route.length - 1];
-    let nearestIndex = 0;
-    let minDist = Infinity;
-    
-    remaining.forEach((p, i) => {
-      const dx = p.lat - last.lat;
-      const dy = p.lng - last.lng;
-      const dist = Math.sqrt(dx * dx + dy * dy);
-      
-      if (dist < minDist) {
-        minDist = dist;
-        nearestIndex = i;
-      }
-    });
-    
-    route.push(remaining[nearestIndex]);
-    remaining.splice(nearestIndex, 1);
-  }
-  
-  return route;
-}
-
-/**
- * تعيين السائق الأفضل تلقائياً
- */
-function autoAssignBestDriver(report, drivers) {
-  let bestDriver = null;
-  let bestScore = Infinity;
-  
-  drivers.forEach(driver => {
-    if (!driver.online) return;
-    
-    const dx = driver.lat - report.lat;
-    const dy = driver.lng - report.lng;
-    const distance = Math.sqrt(dx * dx + dy * dy);
-    const workload = (driver.activeTasks || 0) * 0.7;
-    const score = distance + workload;
-    
-    if (score < bestScore) {
-      bestScore = score;
-      bestDriver = driver;
-    }
-  });
-  
-  return bestDriver;
-}
-
-/**
- * إنشاء تقرير شامل مع جميع البيانات
- */
-function generateComprehensiveReport() {
-  try {
-    const report = {
-      generatedAt: new Date().toISOString(),
-      summary: {
-        totalReports: allReports.length,
-        completedReports: allReports.filter(r => r.status === 'done').length,
-        pendingReports: allReports.filter(r => r.status !== 'done').length,
-        totalBinsCollected: (truckTrackingData.collectedBins || []).length,
-        totalDistanceTraveled: totalDistanceTraveled.toFixed(2)
-      },
-      analytics: {
-        hotZones: detectHotZonesAdvanced(allReports),
-        busyDays: predictBusyDaysAdvanced(allReports),
-        wasteDistribution: getWasteDistribution(allReports)
-      },
-      tracking: {
-        activeTrips: Object.keys(truckTrackingData.trips || {}).length,
-        currentLocation: truckTrackingData.currentLocation,
-        lastUpdate: Date.now()
-      }
-    };
-    
-    return report;
-  } catch (e) {
-    console.error('Error generating comprehensive report:', e);
-    return null;
-  }
-}
-
-/**
- * توزيع أنواع النفايات
- */
-function getWasteDistribution(reports) {
-  const distribution = {};
-  
-  reports.forEach(r => {
-    const type = r.wasteType || 'غير محدد';
-    distribution[type] = (distribution[type] || 0) + 1;
-  });
-  
-  return distribution;
-}
-
-
-// ============================================
-// 🚀 نظام التتبع المتقدم والمسارات الملونة
-// ============================================
-
-let currentTripId = null;
-let watchId = null;
-let lastPosition = null;
-let polylines = [];
-const truckId = "truck_1";
-const routeColors = ["#FF6B6B", "#4ECDC4", "#45B7D1", "#FFA07A", "#98D8C8", "#F7DC6F", "#BB8FCE", "#85C1E2"];
-let colorIndex = 0;
-
-function startAdvancedTracking() {
-  try {
-    const tripRef = db.ref(`truckTracking/${truckId}/trips`).push();
-    currentTripId = tripRef.key;
-    
-    tripRef.set({
-      startTime: Date.now(),
-      status: "active",
-      color: routeColors[colorIndex % routeColors.length],
-      points: {}
-    }).catch(() => {});
-    
-    colorIndex++;
-    lastPosition = null;
-    
-    watchId = navigator.geolocation.watchPosition(
-      (position) => {
-        const lat = position.coords.latitude;
-        const lng = position.coords.longitude;
-        
-        if (shouldSavePoint(lat, lng)) {
-          db.ref(`truckTracking/${truckId}/trips/${currentTripId}/points`).push({
-            lat: +lat.toFixed(5),
-            lng: +lng.toFixed(5),
-            time: Date.now(),
-            accuracy: position.coords.accuracy
-          }).catch(() => {});
-          
-          db.ref(`truckTracking/${truckId}/currentLocation`).set({
-            lat: +lat.toFixed(5),
-            lng: +lng.toFixed(5),
-            time: Date.now(),
-            tripId: currentTripId
-          }).catch(() => {});
-          
-          updateDistanceCounter();
-        }
-      },
-      (err) => {
-        console.error('GPS Error:', err);
-        showToast('⚠️ خطأ في GPS: ' + err.message, 'warning');
-      },
-      {
-        enableHighAccuracy: true,
-        maximumAge: 5000,
-        timeout: 10000
-      }
-    );
-    
-    setInterval(() => {
-      if (currentTripId) {
-        db.ref(`truckTracking/${truckId}/heartbeat`).set(Date.now()).catch(() => {});
-      }
-    }, 10000);
-    
-    showToast('✅ بدء التتبع المتقدم', 'success');
-  } catch (e) {
-    console.error('Error starting tracking:', e);
-    showToast('⚠️ خطأ في بدء التتبع', 'error');
-  }
-}
-
-function stopAdvancedTracking() {
-  try {
-    if (watchId !== null) {
-      navigator.geolocation.clearWatch(watchId);
-      watchId = null;
-    }
-    
-    if (currentTripId) {
-      db.ref(`truckTracking/${truckId}/trips/${currentTripId}`).update({
-        endTime: Date.now(),
-        status: "finished",
-        totalDistance: totalDistanceTraveled.toFixed(2)
-      }).catch(() => {});
-    }
-    
-    currentTripId = null;
-    lastPosition = null;
-    showToast('✅ تم إيقاف التتبع وحفظ البيانات', 'success');
-  } catch (e) {
-    console.error('Error stopping tracking:', e);
-    showToast('⚠️ خطأ في إيقاف التتبع', 'error');
-  }
-}
-
-function shouldSavePoint(lat, lng) {
-  if (!lastPosition) {
-    lastPosition = { lat, lng };
-    return true;
-  }
-  
-  if (lat === lastPosition.lat && lng === lastPosition.lng) {
-    return false;
-  }
-  
-  const distance = Math.sqrt(
-    Math.pow(lat - lastPosition.lat, 2) +
-    Math.pow(lng - lastPosition.lng, 2)
-  );
-  
-  if (distance > 0.0003) {
-    lastPosition = { lat, lng };
-    return true;
-  }
-  
-  return false;
-}
-
-function displayColoredRoutes() {
-  try {
-    clearMapPolylines();
-    
-    db.ref(`truckTracking/${truckId}/trips`).once('value', (snapshot) => {
-      const trips = snapshot.val();
-      
-      if (!trips) return;
-      
-      Object.entries(trips).forEach(([tripId, trip]) => {
-        if (!trip.points) return;
-        
-        const points = Object.values(trip.points);
-        const latlngs = points.map(p => [p.lat, p.lng]);
-        
-        if (latlngs.length > 1) {
-          const polyline = L.polyline(latlngs, {
-            color: trip.color || "#4ECDC4",
-            weight: 4,
-            opacity: 0.8,
-            smoothFactor: 1.0
-          }).addTo(map);
-          
-          polylines.push(polyline);
-          
-          L.circleMarker([latlngs[0][0], latlngs[0][1]], {
-            radius: 6,
-            fillColor: trip.color || "#4ECDC4",
-            color: '#fff',
-            weight: 2,
-            opacity: 1,
-            fillOpacity: 0.8
-          }).addTo(map).bindPopup(`<b>نقطة البداية</b><br>الرحلة: ${tripId.slice(0, 8)}`);
-          
-          L.circleMarker([latlngs[latlngs.length-1][0], latlngs[latlngs.length-1][1]], {
-            radius: 8,
-            fillColor: trip.color || "#4ECDC4",
-            color: '#fff',
-            weight: 3,
-            opacity: 1,
-            fillOpacity: 0.9
-          }).addTo(map).bindPopup(`<b>نقطة النهاية</b><br>الرحلة: ${tripId.slice(0, 8)}`);
-        }
-      });
-    });
-  } catch (e) {
-    console.error('Error displaying routes:', e);
-  }
-}
-
-function clearMapPolylines() {
-  polylines.forEach(line => {
-    try {
-      map.removeLayer(line);
-    } catch (e) {}
-  });
-  polylines = [];
-}
-
-let totalDistanceTraveled = 0;
-function updateDistanceCounter() {
-  if (!lastPosition) return;
-  
-  try {
-    const distanceEl = document.getElementById('distanceCounter');
-    if (distanceEl) {
-      totalDistanceTraveled += Math.sqrt(
-        Math.pow(lastPosition.lat - (lastPosition.lat || 0), 2) +
-        Math.pow(lastPosition.lng - (lastPosition.lng || 0), 2)
-      ) * 111;
-      
-      distanceEl.textContent = totalDistanceTraveled.toFixed(2) + ' كم';
-    }
-  } catch (e) {}
-}
-
-let tripStartTime = null;
-function updateTimeCounter() {
-  if (!tripStartTime) {
-    tripStartTime = Date.now();
-  }
-  
-  try {
-    const timeEl = document.getElementById('timeCounter');
-    if (timeEl) {
-      const elapsed = Math.floor((Date.now() - tripStartTime) / 1000);
-      const hours = Math.floor(elapsed / 3600);
-      const minutes = Math.floor((elapsed % 3600) / 60);
-      const seconds = elapsed % 60;
-      
-      timeEl.textContent = `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
-    }
-  } catch (e) {}
-}
-
-setInterval(updateTimeCounter, 1000);
-
-// ============================================
-// 🤖 نظام المساعد الذكي
-// ============================================
-
-async function getSmartAnswer(question) {
-  try {
-    const answers = {
-      "حاويات": `تم جمع ${(truckTrackingData.collectedBins || []).length} حاوية حتى الآن`,
-      "مناطق": `أكثر المناطق تلوثاً: ${detectHotZones(allReports).slice(0, 3).map(z => z[0]).join(', ')}`,
-      "مسار": `الرحلة الحالية تغطي ${totalDistanceTraveled.toFixed(2)} كم`,
-      "مسافة": `المسافة المقطوعة: ${totalDistanceTraveled.toFixed(2)} كم`,
-      "تنبيهات": `هناك ${allReports.filter(r => r.status === 'new').length} بلاغ جديد`
-    };
-    
-    for (const [key, answer] of Object.entries(answers)) {
-      if (question.includes(key)) {
-        return answer;
-      }
-    }
-    
-    return "أنا هنا لمساعدتك في إدارة النفايات. اسأل عن الحاويات أو المناطق أو المسارات!";
-  } catch (e) {
-    console.error('Smart Assistant Error:', e);
-    return "عذراً، حدث خطأ في المساعد الذكي.";
-  }
-}
-
-// ============================================
-// 📸 نظام تحليل الصور
-// ============================================
-
-async function analyzeWasteImage(imageBase64) {
-  try {
-    showToast('⏳ جاري تحليل الصورة...', 'info');
-    
-    const wasteTypes = [
-      { type: 'بلاستيك', confidence: 0.92, color: '#FF6B6B' },
-      { type: 'ورق', confidence: 0.85, color: '#4ECDC4' },
-      { type: 'معادن', confidence: 0.78, color: '#45B7D1' },
-      { type: 'زجاج', confidence: 0.88, color: '#FFA07A' },
-      { type: 'عضوي', confidence: 0.95, color: '#98D8C8' }
-    ];
-    
-    const detected = wasteTypes[Math.floor(Math.random() * wasteTypes.length)];
-    
-    const result = {
-      timestamp: new Date().toISOString(),
-      detectedType: detected.type,
-      confidence: (detected.confidence * 100).toFixed(1),
-      recommendations: getWasteRecommendations(detected.type),
-      color: detected.color
-    };
-    
-    localStorage.setItem('lastImageAnalysis', JSON.stringify(result));
-    
-    showToast(`✅ تم تحديد: ${detected.type} (${(detected.confidence * 100).toFixed(1)}%)`, 'success');
-    
-    return result;
-  } catch (e) {
-    console.error('Image Analysis Error:', e);
-    showToast('⚠️ خطأ في تحليل الصورة', 'error');
-    return null;
-  }
-}
-
-function getWasteRecommendations(wasteType) {
-  const recommendations = {
-    'بلاستيك': 'يجب فصل البلاستيك وتنظيفه قبل التدوير',
-    'ورق': 'تجميع الورق بعيداً عن الرطوبة',
-    'معادن': 'فصل المعادن للتدوير المباشر',
-    'زجاج': 'التعامل بحذر لتجنب الكسر',
-    'عضوي': 'إرسال للتحليل البيولوجي'
-  };
-  
-  return recommendations[wasteType] || 'معالجة قياسية';
-}
-
-function displayImageAnalysisResults() {
-  try {
-    const result = JSON.parse(localStorage.getItem('lastImageAnalysis') || '{}');
-    
-    if (!result.detectedType) return;
-    
-    const resultsDiv = document.getElementById('imageAnalysisResults');
-    if (resultsDiv) {
-      resultsDiv.innerHTML = `
-        <div style="background: ${result.color}20; border-right: 4px solid ${result.color}; padding: 12px; border-radius: 8px;">
-          <h4 style="margin: 0 0 8px 0; color: ${result.color};">نتائج التحليل</h4>
-          <p style="margin: 4px 0;"><strong>النوع:</strong> ${result.detectedType}</p>
-          <p style="margin: 4px 0;"><strong>دقة التحديد:</strong> ${result.confidence}%</p>
-          <p style="margin: 4px 0;"><strong>التوصية:</strong> ${result.recommendations}</p>
-          <p style="margin: 4px 0; font-size: 0.85rem; color: var(--text-light);">الوقت: ${new Date(result.timestamp).toLocaleTimeString('ar-DZ')}</p>
-        </div>
-      `;
-    }
-  } catch (e) {
-    console.error('Error displaying analysis results:', e);
-  }
-}
-
-// ============================================
-// 📊 نظام التحليلات المتقدمة
-// ============================================
-
-function detectHotZonesAdvanced(reports) {
-  const zones = {};
-  
-  reports.forEach(r => {
-    const key = `${r.lat.toFixed(2)}_${r.lng.toFixed(2)}`;
-    if (!zones[key]) {
-      zones[key] = { count: 0, types: {} };
-    }
-    zones[key].count++;
-    zones[key].types[r.wasteType] = (zones[key].types[r.wasteType] || 0) + 1;
-  });
-  
-  return Object.entries(zones)
-    .map(([key, data]) => ({ zone: key, ...data }))
-    .sort((a, b) => b.count - a.count)
-    .slice(0, 10);
-}
-
-function predictBusyDaysAdvanced(reports) {
-  const days = ['الأحد', 'الاثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة', 'السبت'];
-  const dayStats = Array(7).fill(0);
-  
-  reports.forEach(r => {
-    const d = new Date(r.time).getDay();
-    dayStats[d]++;
-  });
-  
-  return days.map((day, i) => ({ day, count: dayStats[i] }));
-}
-
-function optimizeRoute(startPoint, points) {
-  let route = [startPoint];
-  let remaining = [...points];
-  
-  while (remaining.length > 0) {
-    const last = route[route.length - 1];
-    let nearestIndex = 0;
-    let minDist = Infinity;
-    
-    remaining.forEach((p, i) => {
-      const dx = p.lat - last.lat;
-      const dy = p.lng - last.lng;
-      const dist = Math.sqrt(dx * dx + dy * dy);
-      
-      if (dist < minDist) {
-        minDist = dist;
-        nearestIndex = i;
-      }
-    });
-    
-    route.push(remaining[nearestIndex]);
-    remaining.splice(nearestIndex, 1);
-  }
-  
-  return route;
-}
-
-function autoAssignBestDriver(report, drivers) {
-  let bestDriver = null;
-  let bestScore = Infinity;
-  
-  drivers.forEach(driver => {
-    if (!driver.online) return;
-    
-    const dx = driver.lat - report.lat;
-    const dy = driver.lng - report.lng;
-    const distance = Math.sqrt(dx * dx + dy * dy);
-    const workload = (driver.activeTasks || 0) * 0.7;
-    const score = distance + workload;
-    
-    if (score < bestScore) {
-      bestScore = score;
-      bestDriver = driver;
-    }
-  });
-  
-  return bestDriver;
-}
-
-function generateComprehensiveReport() {
-  try {
-    const report = {
-      generatedAt: new Date().toISOString(),
-      summary: {
-        totalReports: allReports.length,
-        completedReports: allReports.filter(r => r.status === 'done').length,
-        pendingReports: allReports.filter(r => r.status !== 'done').length,
-        totalBinsCollected: (truckTrackingData.collectedBins || []).length,
-        totalDistanceTraveled: totalDistanceTraveled.toFixed(2)
-      },
-      analytics: {
-        hotZones: detectHotZonesAdvanced(allReports),
-        busyDays: predictBusyDaysAdvanced(allReports),
-        wasteDistribution: getWasteDistribution(allReports)
-      },
-      tracking: {
-        activeTrips: Object.keys(truckTrackingData.trips || {}).length,
-        currentLocation: truckTrackingData.currentLocation,
-        lastUpdate: Date.now()
-      }
-    };
-    
-    return report;
-  } catch (e) {
-    console.error('Error generating comprehensive report:', e);
-    return null;
-  }
-}
-
-function getWasteDistribution(reports) {
-  const distribution = {};
-  
-  reports.forEach(r => {
-    const type = r.wasteType || 'غير محدد';
-    distribution[type] = (distribution[type] || 0) + 1;
-  });
-  
-  return distribution;
-}
-
 </script>
 </body>
 </html>
