@@ -2239,6 +2239,16 @@ select.input {
 
   <!-- ========== صفحة إرسال تبليغ ========== -->
   <div id="report" class="page">
+    <!-- مساعد البلاغات الذكي -->
+    <div class="card" style="border-right: 5px solid var(--secondary); background: #f9f9f9;">
+      <h4 style="color:var(--secondary); margin-bottom:10px;"><i class="fas fa-robot"></i> مساعد البلاغات الذكي</h4>
+      <p style="font-size:0.85rem; color:#666;">سأساعدك في وصف البلاغ بشكل دقيق. يمكنك سؤالي عن أي شيء يخص النظافة.</p>
+      <button class="btn btn-dark ripple" style="font-size:0.8rem; padding:8px;" onclick="getAIReportAdvice()">
+        <i class="fas fa-magic"></i> اطلب نصيحة للبلاغ
+      </button>
+      <div id="reportAIAdvice" style="margin-top:10px; font-size:0.85rem; color:var(--primary); font-style:italic;"></div>
+    </div>
+
     <h2 style="margin-bottom:15px;color:var(--primary);text-align:center">
       <i class="fas fa-file-alt"></i> <span data-i18n="newReport">بلاغ جديد</span>
       <button class="tts-btn" onclick="ttsBtn('صفحة إرسال بلاغ جديد. التقط الصورة ثم حدد الموقع وأرسل البلاغ', this)" title="استمع"><i class="fas fa-volume-up"></i></button>
@@ -3079,6 +3089,27 @@ select.input {
   </div>
   <!-- ========== توعية ========== -->
   <div id="tips" class="page">
+    <!-- ركن التوعية والدردشة الذكية -->
+    <div class="card" style="background: linear-gradient(to left, #e8f5e9, #ffffff); border-right: 5px solid var(--success);">
+      <h3><i class="fas fa-mosque"></i> النظافة في قيمنا</h3>
+      <div id="hadithContainer" style="padding:15px; text-align:center; font-style:italic; color:#2e7d32; font-weight:bold;">
+        "الطُّهُورُ شَطْرُ الإِيمَانِ" (حديث شريف)
+      </div>
+      <button class="btn btn-primary ripple" style="width:auto; margin:0 auto; display:block;" onclick="nextHadith()">
+        <i class="fas fa-sync"></i> حديث آخر
+      </button>
+    </div>
+
+    <div class="card">
+      <h3><i class="fas fa-comments"></i> اسأل المساعد البيئي</h3>
+      <p style="font-size:0.9rem;">لديك سؤال حول أهمية النظافة في حيك؟ أنا هنا للإجابة.</p>
+      <div class="info-row">
+        <input type="text" id="citizenAIInput" class="input" placeholder="مثلاً: ما أهمية فرز النفايات؟">
+        <button class="btn btn-primary" onclick="askCitizenAI()" style="margin:0; padding:12px;"><i class="fas fa-paper-plane"></i></button>
+      </div>
+      <div id="citizenAIResponse" style="margin-top:10px; padding:10px; border-radius:10px; background:#f0f4f8; display:none;"></div>
+    </div>
+
     <h2 style="margin-bottom:15px;color:var(--primary);text-align:center">
       <i class="fas fa-lightbulb"></i> <span data-i18n="tipsPage">نصائح بيئية</span>
     </h2>
@@ -3335,6 +3366,55 @@ async function handleAISend() {
   respDiv.innerHTML = "<b>🤖 المساعد:</b> " + ans;
 }
 
+
+// ===== نظام الذكاء الاصطناعي للمواطن =====
+const cleanHadiths = [
+  { text: "الطُّهُورُ شَطْرُ الإِيمَانِ", source: "صحيح مسلم" },
+  { text: "إِنَّ اللَّهَ طَيِّبٌ يُحِبُّ الطِّيبَ، نَظِيفٌ يُحِبُّ النَّظَافَةَ", source: "سنن الترمذي" },
+  { text: "إِمَاطَةُ الأَذَى عَنِ الطَّرِيقِ صَدَقَةٌ", source: "متفق عليه" },
+  { text: "بَيْنَمَا رَجُلٌ يَمْشِي بِطَرِيقٍ وَجَدَ غُصْنَ شَوْكٍ عَلَى الطَّرِيقِ فَأَخَّرَهُ، فَشَكَرَ اللَّهُ لَهُ فَغَفَرَ لَهُ", source: "صحيح البخاري" },
+  { text: "النظافة من الإيمان، والوسخ من الشيطان", source: "حكمة مأثورة" }
+];
+
+let currentHadithIndex = 0;
+function nextHadith() {
+  currentHadithIndex = (currentHadithIndex + 1) % cleanHadiths.length;
+  const h = cleanHadiths[currentHadithIndex];
+  document.getElementById('hadithContainer').innerHTML = `"${h.text}" <br><small style="color:#666">(${h.source})</small>`;
+}
+
+async function askCitizenAI() {
+  const q = document.getElementById('citizenAIInput').value;
+  if(!q) return;
+  const respDiv = document.getElementById('citizenAIResponse');
+  respDiv.style.display = 'block';
+  respDiv.innerHTML = "⏳ جاري البحث عن إجابة بيئية...";
+  
+  const prompt = `أنت مساعد بيئي ذكي لتطبيق "المدية نظيفة". أجب باختصار وودية على هذا السؤال حول النظافة وأهميتها في الحي: ${q}`;
+  const ans = await askAI(prompt);
+  respDiv.innerHTML = "<b>🌱 المساعد البيئي:</b> " + ans;
+}
+
+async function getAIReportAdvice() {
+  const addr = document.getElementById('addrInput').value;
+  const type = document.getElementById('wasteTypeSelect').value;
+  const adviceDiv = document.getElementById('reportAIAdvice');
+  adviceDiv.innerHTML = "⏳ جاري تحليل البيانات لتقديم نصيحة...";
+  
+  const prompt = `المواطن يريد إرسال بلاغ عن نفايات من نوع ${type} في منطقة ${addr || 'غير محددة'}. قدم له نصيحة قصيرة جداً (جملة واحدة) حول كيفية التعامل مع هذا النوع من النفايات أو تشجيعه على البلاغ.`;
+  const ans = await askAI(prompt);
+  adviceDiv.innerHTML = "<b>💡 نصيحة ذكية:</b> " + ans;
+}
+
+// تحسين وظيفة التقاط الصورة لتشمل تحليل تلقائي
+const originalTakePhoto = takePhoto;
+takePhoto = async function() {
+  await originalTakePhoto();
+  // بعد التقاط الصورة، يمكن إضافة تحليل تلقائي لنوع النفايات هنا مستقبلاً
+  const adviceDiv = document.getElementById('reportAIAdvice');
+  if(adviceDiv) adviceDiv.innerHTML = "📸 تم التقاط الصورة. هل تريد مني تحليل نوع النفايات؟";
+};
+
 </script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js">
 function loadHeatmap() {
@@ -3368,6 +3448,55 @@ async function handleAISend() {
   const ans = await askAI(q);
   respDiv.innerHTML = "<b>🤖 المساعد:</b> " + ans;
 }
+
+
+// ===== نظام الذكاء الاصطناعي للمواطن =====
+const cleanHadiths = [
+  { text: "الطُّهُورُ شَطْرُ الإِيمَانِ", source: "صحيح مسلم" },
+  { text: "إِنَّ اللَّهَ طَيِّبٌ يُحِبُّ الطِّيبَ، نَظِيفٌ يُحِبُّ النَّظَافَةَ", source: "سنن الترمذي" },
+  { text: "إِمَاطَةُ الأَذَى عَنِ الطَّرِيقِ صَدَقَةٌ", source: "متفق عليه" },
+  { text: "بَيْنَمَا رَجُلٌ يَمْشِي بِطَرِيقٍ وَجَدَ غُصْنَ شَوْكٍ عَلَى الطَّرِيقِ فَأَخَّرَهُ، فَشَكَرَ اللَّهُ لَهُ فَغَفَرَ لَهُ", source: "صحيح البخاري" },
+  { text: "النظافة من الإيمان، والوسخ من الشيطان", source: "حكمة مأثورة" }
+];
+
+let currentHadithIndex = 0;
+function nextHadith() {
+  currentHadithIndex = (currentHadithIndex + 1) % cleanHadiths.length;
+  const h = cleanHadiths[currentHadithIndex];
+  document.getElementById('hadithContainer').innerHTML = `"${h.text}" <br><small style="color:#666">(${h.source})</small>`;
+}
+
+async function askCitizenAI() {
+  const q = document.getElementById('citizenAIInput').value;
+  if(!q) return;
+  const respDiv = document.getElementById('citizenAIResponse');
+  respDiv.style.display = 'block';
+  respDiv.innerHTML = "⏳ جاري البحث عن إجابة بيئية...";
+  
+  const prompt = `أنت مساعد بيئي ذكي لتطبيق "المدية نظيفة". أجب باختصار وودية على هذا السؤال حول النظافة وأهميتها في الحي: ${q}`;
+  const ans = await askAI(prompt);
+  respDiv.innerHTML = "<b>🌱 المساعد البيئي:</b> " + ans;
+}
+
+async function getAIReportAdvice() {
+  const addr = document.getElementById('addrInput').value;
+  const type = document.getElementById('wasteTypeSelect').value;
+  const adviceDiv = document.getElementById('reportAIAdvice');
+  adviceDiv.innerHTML = "⏳ جاري تحليل البيانات لتقديم نصيحة...";
+  
+  const prompt = `المواطن يريد إرسال بلاغ عن نفايات من نوع ${type} في منطقة ${addr || 'غير محددة'}. قدم له نصيحة قصيرة جداً (جملة واحدة) حول كيفية التعامل مع هذا النوع من النفايات أو تشجيعه على البلاغ.`;
+  const ans = await askAI(prompt);
+  adviceDiv.innerHTML = "<b>💡 نصيحة ذكية:</b> " + ans;
+}
+
+// تحسين وظيفة التقاط الصورة لتشمل تحليل تلقائي
+const originalTakePhoto = takePhoto;
+takePhoto = async function() {
+  await originalTakePhoto();
+  // بعد التقاط الصورة، يمكن إضافة تحليل تلقائي لنوع النفايات هنا مستقبلاً
+  const adviceDiv = document.getElementById('reportAIAdvice');
+  if(adviceDiv) adviceDiv.innerHTML = "📸 تم التقاط الصورة. هل تريد مني تحليل نوع النفايات؟";
+};
 
 </script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js">
@@ -3403,6 +3532,55 @@ async function handleAISend() {
   respDiv.innerHTML = "<b>🤖 المساعد:</b> " + ans;
 }
 
+
+// ===== نظام الذكاء الاصطناعي للمواطن =====
+const cleanHadiths = [
+  { text: "الطُّهُورُ شَطْرُ الإِيمَانِ", source: "صحيح مسلم" },
+  { text: "إِنَّ اللَّهَ طَيِّبٌ يُحِبُّ الطِّيبَ، نَظِيفٌ يُحِبُّ النَّظَافَةَ", source: "سنن الترمذي" },
+  { text: "إِمَاطَةُ الأَذَى عَنِ الطَّرِيقِ صَدَقَةٌ", source: "متفق عليه" },
+  { text: "بَيْنَمَا رَجُلٌ يَمْشِي بِطَرِيقٍ وَجَدَ غُصْنَ شَوْكٍ عَلَى الطَّرِيقِ فَأَخَّرَهُ، فَشَكَرَ اللَّهُ لَهُ فَغَفَرَ لَهُ", source: "صحيح البخاري" },
+  { text: "النظافة من الإيمان، والوسخ من الشيطان", source: "حكمة مأثورة" }
+];
+
+let currentHadithIndex = 0;
+function nextHadith() {
+  currentHadithIndex = (currentHadithIndex + 1) % cleanHadiths.length;
+  const h = cleanHadiths[currentHadithIndex];
+  document.getElementById('hadithContainer').innerHTML = `"${h.text}" <br><small style="color:#666">(${h.source})</small>`;
+}
+
+async function askCitizenAI() {
+  const q = document.getElementById('citizenAIInput').value;
+  if(!q) return;
+  const respDiv = document.getElementById('citizenAIResponse');
+  respDiv.style.display = 'block';
+  respDiv.innerHTML = "⏳ جاري البحث عن إجابة بيئية...";
+  
+  const prompt = `أنت مساعد بيئي ذكي لتطبيق "المدية نظيفة". أجب باختصار وودية على هذا السؤال حول النظافة وأهميتها في الحي: ${q}`;
+  const ans = await askAI(prompt);
+  respDiv.innerHTML = "<b>🌱 المساعد البيئي:</b> " + ans;
+}
+
+async function getAIReportAdvice() {
+  const addr = document.getElementById('addrInput').value;
+  const type = document.getElementById('wasteTypeSelect').value;
+  const adviceDiv = document.getElementById('reportAIAdvice');
+  adviceDiv.innerHTML = "⏳ جاري تحليل البيانات لتقديم نصيحة...";
+  
+  const prompt = `المواطن يريد إرسال بلاغ عن نفايات من نوع ${type} في منطقة ${addr || 'غير محددة'}. قدم له نصيحة قصيرة جداً (جملة واحدة) حول كيفية التعامل مع هذا النوع من النفايات أو تشجيعه على البلاغ.`;
+  const ans = await askAI(prompt);
+  adviceDiv.innerHTML = "<b>💡 نصيحة ذكية:</b> " + ans;
+}
+
+// تحسين وظيفة التقاط الصورة لتشمل تحليل تلقائي
+const originalTakePhoto = takePhoto;
+takePhoto = async function() {
+  await originalTakePhoto();
+  // بعد التقاط الصورة، يمكن إضافة تحليل تلقائي لنوع النفايات هنا مستقبلاً
+  const adviceDiv = document.getElementById('reportAIAdvice');
+  if(adviceDiv) adviceDiv.innerHTML = "📸 تم التقاط الصورة. هل تريد مني تحليل نوع النفايات؟";
+};
+
 </script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js">
 function loadHeatmap() {
@@ -3436,6 +3614,55 @@ async function handleAISend() {
   const ans = await askAI(q);
   respDiv.innerHTML = "<b>🤖 المساعد:</b> " + ans;
 }
+
+
+// ===== نظام الذكاء الاصطناعي للمواطن =====
+const cleanHadiths = [
+  { text: "الطُّهُورُ شَطْرُ الإِيمَانِ", source: "صحيح مسلم" },
+  { text: "إِنَّ اللَّهَ طَيِّبٌ يُحِبُّ الطِّيبَ، نَظِيفٌ يُحِبُّ النَّظَافَةَ", source: "سنن الترمذي" },
+  { text: "إِمَاطَةُ الأَذَى عَنِ الطَّرِيقِ صَدَقَةٌ", source: "متفق عليه" },
+  { text: "بَيْنَمَا رَجُلٌ يَمْشِي بِطَرِيقٍ وَجَدَ غُصْنَ شَوْكٍ عَلَى الطَّرِيقِ فَأَخَّرَهُ، فَشَكَرَ اللَّهُ لَهُ فَغَفَرَ لَهُ", source: "صحيح البخاري" },
+  { text: "النظافة من الإيمان، والوسخ من الشيطان", source: "حكمة مأثورة" }
+];
+
+let currentHadithIndex = 0;
+function nextHadith() {
+  currentHadithIndex = (currentHadithIndex + 1) % cleanHadiths.length;
+  const h = cleanHadiths[currentHadithIndex];
+  document.getElementById('hadithContainer').innerHTML = `"${h.text}" <br><small style="color:#666">(${h.source})</small>`;
+}
+
+async function askCitizenAI() {
+  const q = document.getElementById('citizenAIInput').value;
+  if(!q) return;
+  const respDiv = document.getElementById('citizenAIResponse');
+  respDiv.style.display = 'block';
+  respDiv.innerHTML = "⏳ جاري البحث عن إجابة بيئية...";
+  
+  const prompt = `أنت مساعد بيئي ذكي لتطبيق "المدية نظيفة". أجب باختصار وودية على هذا السؤال حول النظافة وأهميتها في الحي: ${q}`;
+  const ans = await askAI(prompt);
+  respDiv.innerHTML = "<b>🌱 المساعد البيئي:</b> " + ans;
+}
+
+async function getAIReportAdvice() {
+  const addr = document.getElementById('addrInput').value;
+  const type = document.getElementById('wasteTypeSelect').value;
+  const adviceDiv = document.getElementById('reportAIAdvice');
+  adviceDiv.innerHTML = "⏳ جاري تحليل البيانات لتقديم نصيحة...";
+  
+  const prompt = `المواطن يريد إرسال بلاغ عن نفايات من نوع ${type} في منطقة ${addr || 'غير محددة'}. قدم له نصيحة قصيرة جداً (جملة واحدة) حول كيفية التعامل مع هذا النوع من النفايات أو تشجيعه على البلاغ.`;
+  const ans = await askAI(prompt);
+  adviceDiv.innerHTML = "<b>💡 نصيحة ذكية:</b> " + ans;
+}
+
+// تحسين وظيفة التقاط الصورة لتشمل تحليل تلقائي
+const originalTakePhoto = takePhoto;
+takePhoto = async function() {
+  await originalTakePhoto();
+  // بعد التقاط الصورة، يمكن إضافة تحليل تلقائي لنوع النفايات هنا مستقبلاً
+  const adviceDiv = document.getElementById('reportAIAdvice');
+  if(adviceDiv) adviceDiv.innerHTML = "📸 تم التقاط الصورة. هل تريد مني تحليل نوع النفايات؟";
+};
 
 </script>
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js">
@@ -3471,6 +3698,55 @@ async function handleAISend() {
   respDiv.innerHTML = "<b>🤖 المساعد:</b> " + ans;
 }
 
+
+// ===== نظام الذكاء الاصطناعي للمواطن =====
+const cleanHadiths = [
+  { text: "الطُّهُورُ شَطْرُ الإِيمَانِ", source: "صحيح مسلم" },
+  { text: "إِنَّ اللَّهَ طَيِّبٌ يُحِبُّ الطِّيبَ، نَظِيفٌ يُحِبُّ النَّظَافَةَ", source: "سنن الترمذي" },
+  { text: "إِمَاطَةُ الأَذَى عَنِ الطَّرِيقِ صَدَقَةٌ", source: "متفق عليه" },
+  { text: "بَيْنَمَا رَجُلٌ يَمْشِي بِطَرِيقٍ وَجَدَ غُصْنَ شَوْكٍ عَلَى الطَّرِيقِ فَأَخَّرَهُ، فَشَكَرَ اللَّهُ لَهُ فَغَفَرَ لَهُ", source: "صحيح البخاري" },
+  { text: "النظافة من الإيمان، والوسخ من الشيطان", source: "حكمة مأثورة" }
+];
+
+let currentHadithIndex = 0;
+function nextHadith() {
+  currentHadithIndex = (currentHadithIndex + 1) % cleanHadiths.length;
+  const h = cleanHadiths[currentHadithIndex];
+  document.getElementById('hadithContainer').innerHTML = `"${h.text}" <br><small style="color:#666">(${h.source})</small>`;
+}
+
+async function askCitizenAI() {
+  const q = document.getElementById('citizenAIInput').value;
+  if(!q) return;
+  const respDiv = document.getElementById('citizenAIResponse');
+  respDiv.style.display = 'block';
+  respDiv.innerHTML = "⏳ جاري البحث عن إجابة بيئية...";
+  
+  const prompt = `أنت مساعد بيئي ذكي لتطبيق "المدية نظيفة". أجب باختصار وودية على هذا السؤال حول النظافة وأهميتها في الحي: ${q}`;
+  const ans = await askAI(prompt);
+  respDiv.innerHTML = "<b>🌱 المساعد البيئي:</b> " + ans;
+}
+
+async function getAIReportAdvice() {
+  const addr = document.getElementById('addrInput').value;
+  const type = document.getElementById('wasteTypeSelect').value;
+  const adviceDiv = document.getElementById('reportAIAdvice');
+  adviceDiv.innerHTML = "⏳ جاري تحليل البيانات لتقديم نصيحة...";
+  
+  const prompt = `المواطن يريد إرسال بلاغ عن نفايات من نوع ${type} في منطقة ${addr || 'غير محددة'}. قدم له نصيحة قصيرة جداً (جملة واحدة) حول كيفية التعامل مع هذا النوع من النفايات أو تشجيعه على البلاغ.`;
+  const ans = await askAI(prompt);
+  adviceDiv.innerHTML = "<b>💡 نصيحة ذكية:</b> " + ans;
+}
+
+// تحسين وظيفة التقاط الصورة لتشمل تحليل تلقائي
+const originalTakePhoto = takePhoto;
+takePhoto = async function() {
+  await originalTakePhoto();
+  // بعد التقاط الصورة، يمكن إضافة تحليل تلقائي لنوع النفايات هنا مستقبلاً
+  const adviceDiv = document.getElementById('reportAIAdvice');
+  if(adviceDiv) adviceDiv.innerHTML = "📸 تم التقاط الصورة. هل تريد مني تحليل نوع النفايات؟";
+};
+
 </script>
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js">
 function loadHeatmap() {
@@ -3504,6 +3780,55 @@ async function handleAISend() {
   const ans = await askAI(q);
   respDiv.innerHTML = "<b>🤖 المساعد:</b> " + ans;
 }
+
+
+// ===== نظام الذكاء الاصطناعي للمواطن =====
+const cleanHadiths = [
+  { text: "الطُّهُورُ شَطْرُ الإِيمَانِ", source: "صحيح مسلم" },
+  { text: "إِنَّ اللَّهَ طَيِّبٌ يُحِبُّ الطِّيبَ، نَظِيفٌ يُحِبُّ النَّظَافَةَ", source: "سنن الترمذي" },
+  { text: "إِمَاطَةُ الأَذَى عَنِ الطَّرِيقِ صَدَقَةٌ", source: "متفق عليه" },
+  { text: "بَيْنَمَا رَجُلٌ يَمْشِي بِطَرِيقٍ وَجَدَ غُصْنَ شَوْكٍ عَلَى الطَّرِيقِ فَأَخَّرَهُ، فَشَكَرَ اللَّهُ لَهُ فَغَفَرَ لَهُ", source: "صحيح البخاري" },
+  { text: "النظافة من الإيمان، والوسخ من الشيطان", source: "حكمة مأثورة" }
+];
+
+let currentHadithIndex = 0;
+function nextHadith() {
+  currentHadithIndex = (currentHadithIndex + 1) % cleanHadiths.length;
+  const h = cleanHadiths[currentHadithIndex];
+  document.getElementById('hadithContainer').innerHTML = `"${h.text}" <br><small style="color:#666">(${h.source})</small>`;
+}
+
+async function askCitizenAI() {
+  const q = document.getElementById('citizenAIInput').value;
+  if(!q) return;
+  const respDiv = document.getElementById('citizenAIResponse');
+  respDiv.style.display = 'block';
+  respDiv.innerHTML = "⏳ جاري البحث عن إجابة بيئية...";
+  
+  const prompt = `أنت مساعد بيئي ذكي لتطبيق "المدية نظيفة". أجب باختصار وودية على هذا السؤال حول النظافة وأهميتها في الحي: ${q}`;
+  const ans = await askAI(prompt);
+  respDiv.innerHTML = "<b>🌱 المساعد البيئي:</b> " + ans;
+}
+
+async function getAIReportAdvice() {
+  const addr = document.getElementById('addrInput').value;
+  const type = document.getElementById('wasteTypeSelect').value;
+  const adviceDiv = document.getElementById('reportAIAdvice');
+  adviceDiv.innerHTML = "⏳ جاري تحليل البيانات لتقديم نصيحة...";
+  
+  const prompt = `المواطن يريد إرسال بلاغ عن نفايات من نوع ${type} في منطقة ${addr || 'غير محددة'}. قدم له نصيحة قصيرة جداً (جملة واحدة) حول كيفية التعامل مع هذا النوع من النفايات أو تشجيعه على البلاغ.`;
+  const ans = await askAI(prompt);
+  adviceDiv.innerHTML = "<b>💡 نصيحة ذكية:</b> " + ans;
+}
+
+// تحسين وظيفة التقاط الصورة لتشمل تحليل تلقائي
+const originalTakePhoto = takePhoto;
+takePhoto = async function() {
+  await originalTakePhoto();
+  // بعد التقاط الصورة، يمكن إضافة تحليل تلقائي لنوع النفايات هنا مستقبلاً
+  const adviceDiv = document.getElementById('reportAIAdvice');
+  if(adviceDiv) adviceDiv.innerHTML = "📸 تم التقاط الصورة. هل تريد مني تحليل نوع النفايات؟";
+};
 
 </script>
 
@@ -8846,6 +9171,55 @@ async function handleAISend() {
   const ans = await askAI(q);
   respDiv.innerHTML = "<b>🤖 المساعد:</b> " + ans;
 }
+
+
+// ===== نظام الذكاء الاصطناعي للمواطن =====
+const cleanHadiths = [
+  { text: "الطُّهُورُ شَطْرُ الإِيمَانِ", source: "صحيح مسلم" },
+  { text: "إِنَّ اللَّهَ طَيِّبٌ يُحِبُّ الطِّيبَ، نَظِيفٌ يُحِبُّ النَّظَافَةَ", source: "سنن الترمذي" },
+  { text: "إِمَاطَةُ الأَذَى عَنِ الطَّرِيقِ صَدَقَةٌ", source: "متفق عليه" },
+  { text: "بَيْنَمَا رَجُلٌ يَمْشِي بِطَرِيقٍ وَجَدَ غُصْنَ شَوْكٍ عَلَى الطَّرِيقِ فَأَخَّرَهُ، فَشَكَرَ اللَّهُ لَهُ فَغَفَرَ لَهُ", source: "صحيح البخاري" },
+  { text: "النظافة من الإيمان، والوسخ من الشيطان", source: "حكمة مأثورة" }
+];
+
+let currentHadithIndex = 0;
+function nextHadith() {
+  currentHadithIndex = (currentHadithIndex + 1) % cleanHadiths.length;
+  const h = cleanHadiths[currentHadithIndex];
+  document.getElementById('hadithContainer').innerHTML = `"${h.text}" <br><small style="color:#666">(${h.source})</small>`;
+}
+
+async function askCitizenAI() {
+  const q = document.getElementById('citizenAIInput').value;
+  if(!q) return;
+  const respDiv = document.getElementById('citizenAIResponse');
+  respDiv.style.display = 'block';
+  respDiv.innerHTML = "⏳ جاري البحث عن إجابة بيئية...";
+  
+  const prompt = `أنت مساعد بيئي ذكي لتطبيق "المدية نظيفة". أجب باختصار وودية على هذا السؤال حول النظافة وأهميتها في الحي: ${q}`;
+  const ans = await askAI(prompt);
+  respDiv.innerHTML = "<b>🌱 المساعد البيئي:</b> " + ans;
+}
+
+async function getAIReportAdvice() {
+  const addr = document.getElementById('addrInput').value;
+  const type = document.getElementById('wasteTypeSelect').value;
+  const adviceDiv = document.getElementById('reportAIAdvice');
+  adviceDiv.innerHTML = "⏳ جاري تحليل البيانات لتقديم نصيحة...";
+  
+  const prompt = `المواطن يريد إرسال بلاغ عن نفايات من نوع ${type} في منطقة ${addr || 'غير محددة'}. قدم له نصيحة قصيرة جداً (جملة واحدة) حول كيفية التعامل مع هذا النوع من النفايات أو تشجيعه على البلاغ.`;
+  const ans = await askAI(prompt);
+  adviceDiv.innerHTML = "<b>💡 نصيحة ذكية:</b> " + ans;
+}
+
+// تحسين وظيفة التقاط الصورة لتشمل تحليل تلقائي
+const originalTakePhoto = takePhoto;
+takePhoto = async function() {
+  await originalTakePhoto();
+  // بعد التقاط الصورة، يمكن إضافة تحليل تلقائي لنوع النفايات هنا مستقبلاً
+  const adviceDiv = document.getElementById('reportAIAdvice');
+  if(adviceDiv) adviceDiv.innerHTML = "📸 تم التقاط الصورة. هل تريد مني تحليل نوع النفايات؟";
+};
 
 </script>
 </body>
