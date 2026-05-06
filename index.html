@@ -3706,6 +3706,62 @@ setTimeout(() => {
   updateEconomicStats();
 }, 2000);
 
+
+// ===== نظام التصحيح والمراقبة =====
+function debugBinCollection() {
+  console.log("=== DEBUG: Bin Collection Status ===");
+  console.log("currentTripId:", currentTripId);
+  console.log("truckTrackingData.active:", truckTrackingData.active);
+  console.log("window.lastKnownPosition:", window.lastKnownPosition);
+  console.log("pendingBinData:", pendingBinData);
+  console.log("truckTrackingData.collectedBins:", truckTrackingData.collectedBins);
+  console.log("driverTrackingPositions.length:", driverTrackingPositions.length);
+  console.log("currentDriver:", currentDriver);
+  console.log("currentDriverSector:", currentDriverSector);
+}
+
+// تحسين getLocation للسائق
+const originalGetLocation = getLocation;
+getLocation = function() {
+  console.log("🔍 جاري جلب الموقع...");
+  navigator.geolocation.getCurrentPosition(
+    pos => {
+      window.lastKnownPosition = { 
+        lat: pos.coords.latitude, 
+        lng: pos.coords.longitude,
+        accuracy: pos.coords.accuracy 
+      };
+      console.log("✅ تم الحصول على الموقع:", window.lastKnownPosition);
+      showToast(`✅ تم تحديد الموقع (دقة: ${pos.coords.accuracy.toFixed(0)}م)`, 'success');
+    },
+    err => {
+      console.error("❌ خطأ في الحصول على الموقع:", err);
+      showToast(`⚠️ خطأ: ${err.message}`, 'error');
+    },
+    { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+  );
+};
+
+// إضافة زر تصحيح للسائق
+const debugBtnHTML = `
+<button class="btn ripple" style="background:#ff6d00; font-size:0.8rem; padding:5px 10px; margin-top:5px;" onclick="debugBinCollection()">
+  <i class="fas fa-bug"></i> تصحيح
+</button>`;
+
+// إضافة الزر بعد زر تسجيل الحاوية
+setTimeout(() => {
+  const recordBtn = document.getElementById('recordBinBtn');
+  if(recordBtn && !document.getElementById('debugBtn')) {
+    const debugBtn = document.createElement('button');
+    debugBtn.id = 'debugBtn';
+    debugBtn.className = 'btn ripple';
+    debugBtn.style.cssText = 'background:#ff6d00; font-size:0.8rem; padding:5px 10px; margin-top:5px; margin-left:5px;';
+    debugBtn.innerHTML = '<i class="fas fa-bug"></i> تصحيح';
+    debugBtn.onclick = debugBinCollection;
+    recordBtn.parentNode.appendChild(debugBtn);
+  }
+}, 1000);
+
 </script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js">
 function loadHeatmap() {
@@ -3992,6 +4048,62 @@ setTimeout(() => {
   updateActiveBids();
   updateEconomicStats();
 }, 2000);
+
+
+// ===== نظام التصحيح والمراقبة =====
+function debugBinCollection() {
+  console.log("=== DEBUG: Bin Collection Status ===");
+  console.log("currentTripId:", currentTripId);
+  console.log("truckTrackingData.active:", truckTrackingData.active);
+  console.log("window.lastKnownPosition:", window.lastKnownPosition);
+  console.log("pendingBinData:", pendingBinData);
+  console.log("truckTrackingData.collectedBins:", truckTrackingData.collectedBins);
+  console.log("driverTrackingPositions.length:", driverTrackingPositions.length);
+  console.log("currentDriver:", currentDriver);
+  console.log("currentDriverSector:", currentDriverSector);
+}
+
+// تحسين getLocation للسائق
+const originalGetLocation = getLocation;
+getLocation = function() {
+  console.log("🔍 جاري جلب الموقع...");
+  navigator.geolocation.getCurrentPosition(
+    pos => {
+      window.lastKnownPosition = { 
+        lat: pos.coords.latitude, 
+        lng: pos.coords.longitude,
+        accuracy: pos.coords.accuracy 
+      };
+      console.log("✅ تم الحصول على الموقع:", window.lastKnownPosition);
+      showToast(`✅ تم تحديد الموقع (دقة: ${pos.coords.accuracy.toFixed(0)}م)`, 'success');
+    },
+    err => {
+      console.error("❌ خطأ في الحصول على الموقع:", err);
+      showToast(`⚠️ خطأ: ${err.message}`, 'error');
+    },
+    { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+  );
+};
+
+// إضافة زر تصحيح للسائق
+const debugBtnHTML = `
+<button class="btn ripple" style="background:#ff6d00; font-size:0.8rem; padding:5px 10px; margin-top:5px;" onclick="debugBinCollection()">
+  <i class="fas fa-bug"></i> تصحيح
+</button>`;
+
+// إضافة الزر بعد زر تسجيل الحاوية
+setTimeout(() => {
+  const recordBtn = document.getElementById('recordBinBtn');
+  if(recordBtn && !document.getElementById('debugBtn')) {
+    const debugBtn = document.createElement('button');
+    debugBtn.id = 'debugBtn';
+    debugBtn.className = 'btn ripple';
+    debugBtn.style.cssText = 'background:#ff6d00; font-size:0.8rem; padding:5px 10px; margin-top:5px; margin-left:5px;';
+    debugBtn.innerHTML = '<i class="fas fa-bug"></i> تصحيح';
+    debugBtn.onclick = debugBinCollection;
+    recordBtn.parentNode.appendChild(debugBtn);
+  }
+}, 1000);
 
 </script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js">
@@ -4280,6 +4392,62 @@ setTimeout(() => {
   updateEconomicStats();
 }, 2000);
 
+
+// ===== نظام التصحيح والمراقبة =====
+function debugBinCollection() {
+  console.log("=== DEBUG: Bin Collection Status ===");
+  console.log("currentTripId:", currentTripId);
+  console.log("truckTrackingData.active:", truckTrackingData.active);
+  console.log("window.lastKnownPosition:", window.lastKnownPosition);
+  console.log("pendingBinData:", pendingBinData);
+  console.log("truckTrackingData.collectedBins:", truckTrackingData.collectedBins);
+  console.log("driverTrackingPositions.length:", driverTrackingPositions.length);
+  console.log("currentDriver:", currentDriver);
+  console.log("currentDriverSector:", currentDriverSector);
+}
+
+// تحسين getLocation للسائق
+const originalGetLocation = getLocation;
+getLocation = function() {
+  console.log("🔍 جاري جلب الموقع...");
+  navigator.geolocation.getCurrentPosition(
+    pos => {
+      window.lastKnownPosition = { 
+        lat: pos.coords.latitude, 
+        lng: pos.coords.longitude,
+        accuracy: pos.coords.accuracy 
+      };
+      console.log("✅ تم الحصول على الموقع:", window.lastKnownPosition);
+      showToast(`✅ تم تحديد الموقع (دقة: ${pos.coords.accuracy.toFixed(0)}م)`, 'success');
+    },
+    err => {
+      console.error("❌ خطأ في الحصول على الموقع:", err);
+      showToast(`⚠️ خطأ: ${err.message}`, 'error');
+    },
+    { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+  );
+};
+
+// إضافة زر تصحيح للسائق
+const debugBtnHTML = `
+<button class="btn ripple" style="background:#ff6d00; font-size:0.8rem; padding:5px 10px; margin-top:5px;" onclick="debugBinCollection()">
+  <i class="fas fa-bug"></i> تصحيح
+</button>`;
+
+// إضافة الزر بعد زر تسجيل الحاوية
+setTimeout(() => {
+  const recordBtn = document.getElementById('recordBinBtn');
+  if(recordBtn && !document.getElementById('debugBtn')) {
+    const debugBtn = document.createElement('button');
+    debugBtn.id = 'debugBtn';
+    debugBtn.className = 'btn ripple';
+    debugBtn.style.cssText = 'background:#ff6d00; font-size:0.8rem; padding:5px 10px; margin-top:5px; margin-left:5px;';
+    debugBtn.innerHTML = '<i class="fas fa-bug"></i> تصحيح';
+    debugBtn.onclick = debugBinCollection;
+    recordBtn.parentNode.appendChild(debugBtn);
+  }
+}, 1000);
+
 </script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js">
 function loadHeatmap() {
@@ -4566,6 +4734,62 @@ setTimeout(() => {
   updateActiveBids();
   updateEconomicStats();
 }, 2000);
+
+
+// ===== نظام التصحيح والمراقبة =====
+function debugBinCollection() {
+  console.log("=== DEBUG: Bin Collection Status ===");
+  console.log("currentTripId:", currentTripId);
+  console.log("truckTrackingData.active:", truckTrackingData.active);
+  console.log("window.lastKnownPosition:", window.lastKnownPosition);
+  console.log("pendingBinData:", pendingBinData);
+  console.log("truckTrackingData.collectedBins:", truckTrackingData.collectedBins);
+  console.log("driverTrackingPositions.length:", driverTrackingPositions.length);
+  console.log("currentDriver:", currentDriver);
+  console.log("currentDriverSector:", currentDriverSector);
+}
+
+// تحسين getLocation للسائق
+const originalGetLocation = getLocation;
+getLocation = function() {
+  console.log("🔍 جاري جلب الموقع...");
+  navigator.geolocation.getCurrentPosition(
+    pos => {
+      window.lastKnownPosition = { 
+        lat: pos.coords.latitude, 
+        lng: pos.coords.longitude,
+        accuracy: pos.coords.accuracy 
+      };
+      console.log("✅ تم الحصول على الموقع:", window.lastKnownPosition);
+      showToast(`✅ تم تحديد الموقع (دقة: ${pos.coords.accuracy.toFixed(0)}م)`, 'success');
+    },
+    err => {
+      console.error("❌ خطأ في الحصول على الموقع:", err);
+      showToast(`⚠️ خطأ: ${err.message}`, 'error');
+    },
+    { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+  );
+};
+
+// إضافة زر تصحيح للسائق
+const debugBtnHTML = `
+<button class="btn ripple" style="background:#ff6d00; font-size:0.8rem; padding:5px 10px; margin-top:5px;" onclick="debugBinCollection()">
+  <i class="fas fa-bug"></i> تصحيح
+</button>`;
+
+// إضافة الزر بعد زر تسجيل الحاوية
+setTimeout(() => {
+  const recordBtn = document.getElementById('recordBinBtn');
+  if(recordBtn && !document.getElementById('debugBtn')) {
+    const debugBtn = document.createElement('button');
+    debugBtn.id = 'debugBtn';
+    debugBtn.className = 'btn ripple';
+    debugBtn.style.cssText = 'background:#ff6d00; font-size:0.8rem; padding:5px 10px; margin-top:5px; margin-left:5px;';
+    debugBtn.innerHTML = '<i class="fas fa-bug"></i> تصحيح';
+    debugBtn.onclick = debugBinCollection;
+    recordBtn.parentNode.appendChild(debugBtn);
+  }
+}, 1000);
 
 </script>
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js">
@@ -4854,6 +5078,62 @@ setTimeout(() => {
   updateEconomicStats();
 }, 2000);
 
+
+// ===== نظام التصحيح والمراقبة =====
+function debugBinCollection() {
+  console.log("=== DEBUG: Bin Collection Status ===");
+  console.log("currentTripId:", currentTripId);
+  console.log("truckTrackingData.active:", truckTrackingData.active);
+  console.log("window.lastKnownPosition:", window.lastKnownPosition);
+  console.log("pendingBinData:", pendingBinData);
+  console.log("truckTrackingData.collectedBins:", truckTrackingData.collectedBins);
+  console.log("driverTrackingPositions.length:", driverTrackingPositions.length);
+  console.log("currentDriver:", currentDriver);
+  console.log("currentDriverSector:", currentDriverSector);
+}
+
+// تحسين getLocation للسائق
+const originalGetLocation = getLocation;
+getLocation = function() {
+  console.log("🔍 جاري جلب الموقع...");
+  navigator.geolocation.getCurrentPosition(
+    pos => {
+      window.lastKnownPosition = { 
+        lat: pos.coords.latitude, 
+        lng: pos.coords.longitude,
+        accuracy: pos.coords.accuracy 
+      };
+      console.log("✅ تم الحصول على الموقع:", window.lastKnownPosition);
+      showToast(`✅ تم تحديد الموقع (دقة: ${pos.coords.accuracy.toFixed(0)}م)`, 'success');
+    },
+    err => {
+      console.error("❌ خطأ في الحصول على الموقع:", err);
+      showToast(`⚠️ خطأ: ${err.message}`, 'error');
+    },
+    { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+  );
+};
+
+// إضافة زر تصحيح للسائق
+const debugBtnHTML = `
+<button class="btn ripple" style="background:#ff6d00; font-size:0.8rem; padding:5px 10px; margin-top:5px;" onclick="debugBinCollection()">
+  <i class="fas fa-bug"></i> تصحيح
+</button>`;
+
+// إضافة الزر بعد زر تسجيل الحاوية
+setTimeout(() => {
+  const recordBtn = document.getElementById('recordBinBtn');
+  if(recordBtn && !document.getElementById('debugBtn')) {
+    const debugBtn = document.createElement('button');
+    debugBtn.id = 'debugBtn';
+    debugBtn.className = 'btn ripple';
+    debugBtn.style.cssText = 'background:#ff6d00; font-size:0.8rem; padding:5px 10px; margin-top:5px; margin-left:5px;';
+    debugBtn.innerHTML = '<i class="fas fa-bug"></i> تصحيح';
+    debugBtn.onclick = debugBinCollection;
+    recordBtn.parentNode.appendChild(debugBtn);
+  }
+}, 1000);
+
 </script>
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js">
 function loadHeatmap() {
@@ -5140,6 +5420,62 @@ setTimeout(() => {
   updateActiveBids();
   updateEconomicStats();
 }, 2000);
+
+
+// ===== نظام التصحيح والمراقبة =====
+function debugBinCollection() {
+  console.log("=== DEBUG: Bin Collection Status ===");
+  console.log("currentTripId:", currentTripId);
+  console.log("truckTrackingData.active:", truckTrackingData.active);
+  console.log("window.lastKnownPosition:", window.lastKnownPosition);
+  console.log("pendingBinData:", pendingBinData);
+  console.log("truckTrackingData.collectedBins:", truckTrackingData.collectedBins);
+  console.log("driverTrackingPositions.length:", driverTrackingPositions.length);
+  console.log("currentDriver:", currentDriver);
+  console.log("currentDriverSector:", currentDriverSector);
+}
+
+// تحسين getLocation للسائق
+const originalGetLocation = getLocation;
+getLocation = function() {
+  console.log("🔍 جاري جلب الموقع...");
+  navigator.geolocation.getCurrentPosition(
+    pos => {
+      window.lastKnownPosition = { 
+        lat: pos.coords.latitude, 
+        lng: pos.coords.longitude,
+        accuracy: pos.coords.accuracy 
+      };
+      console.log("✅ تم الحصول على الموقع:", window.lastKnownPosition);
+      showToast(`✅ تم تحديد الموقع (دقة: ${pos.coords.accuracy.toFixed(0)}م)`, 'success');
+    },
+    err => {
+      console.error("❌ خطأ في الحصول على الموقع:", err);
+      showToast(`⚠️ خطأ: ${err.message}`, 'error');
+    },
+    { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+  );
+};
+
+// إضافة زر تصحيح للسائق
+const debugBtnHTML = `
+<button class="btn ripple" style="background:#ff6d00; font-size:0.8rem; padding:5px 10px; margin-top:5px;" onclick="debugBinCollection()">
+  <i class="fas fa-bug"></i> تصحيح
+</button>`;
+
+// إضافة الزر بعد زر تسجيل الحاوية
+setTimeout(() => {
+  const recordBtn = document.getElementById('recordBinBtn');
+  if(recordBtn && !document.getElementById('debugBtn')) {
+    const debugBtn = document.createElement('button');
+    debugBtn.id = 'debugBtn';
+    debugBtn.className = 'btn ripple';
+    debugBtn.style.cssText = 'background:#ff6d00; font-size:0.8rem; padding:5px 10px; margin-top:5px; margin-left:5px;';
+    debugBtn.innerHTML = '<i class="fas fa-bug"></i> تصحيح';
+    debugBtn.onclick = debugBinCollection;
+    recordBtn.parentNode.appendChild(debugBtn);
+  }
+}, 1000);
 
 </script>
 
@@ -7914,7 +8250,9 @@ function startDriverTracking() {
   document.getElementById('trackingOffPanel').style.display = 'none';
   document.getElementById('driverTrackingPanel').style.display = 'block';
   document.getElementById('driverBinCount').textContent = '0';
-  document.getElementById('driverDistCount').textContent = '0';
+    document.getElementById('driverDistCount').textContent = '0';
+  const recordBtn = document.getElementById('recordBinBtn');
+  if(recordBtn) recordBtn.style.display = 'block';
 
   // تشغيل مؤقت العرض
   driverTrackingInterval = setInterval(function() {
@@ -8104,6 +8442,7 @@ function recordBinCollection() {
     pendingBinData.address = addr;
   }).catch(e => { document.getElementById('binAddr').textContent = lat.toFixed(4) + ', ' + lng.toFixed(4); });
   showToast('📍 تم تحديد الموقع - أدخل عدد الحاويات', 'info');
+  console.log("📍 Bin location recorded:", pendingBinData);
 }
 
 function changeBinCount(delta) {
@@ -11064,6 +11403,62 @@ setTimeout(() => {
   updateActiveBids();
   updateEconomicStats();
 }, 2000);
+
+
+// ===== نظام التصحيح والمراقبة =====
+function debugBinCollection() {
+  console.log("=== DEBUG: Bin Collection Status ===");
+  console.log("currentTripId:", currentTripId);
+  console.log("truckTrackingData.active:", truckTrackingData.active);
+  console.log("window.lastKnownPosition:", window.lastKnownPosition);
+  console.log("pendingBinData:", pendingBinData);
+  console.log("truckTrackingData.collectedBins:", truckTrackingData.collectedBins);
+  console.log("driverTrackingPositions.length:", driverTrackingPositions.length);
+  console.log("currentDriver:", currentDriver);
+  console.log("currentDriverSector:", currentDriverSector);
+}
+
+// تحسين getLocation للسائق
+const originalGetLocation = getLocation;
+getLocation = function() {
+  console.log("🔍 جاري جلب الموقع...");
+  navigator.geolocation.getCurrentPosition(
+    pos => {
+      window.lastKnownPosition = { 
+        lat: pos.coords.latitude, 
+        lng: pos.coords.longitude,
+        accuracy: pos.coords.accuracy 
+      };
+      console.log("✅ تم الحصول على الموقع:", window.lastKnownPosition);
+      showToast(`✅ تم تحديد الموقع (دقة: ${pos.coords.accuracy.toFixed(0)}م)`, 'success');
+    },
+    err => {
+      console.error("❌ خطأ في الحصول على الموقع:", err);
+      showToast(`⚠️ خطأ: ${err.message}`, 'error');
+    },
+    { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+  );
+};
+
+// إضافة زر تصحيح للسائق
+const debugBtnHTML = `
+<button class="btn ripple" style="background:#ff6d00; font-size:0.8rem; padding:5px 10px; margin-top:5px;" onclick="debugBinCollection()">
+  <i class="fas fa-bug"></i> تصحيح
+</button>`;
+
+// إضافة الزر بعد زر تسجيل الحاوية
+setTimeout(() => {
+  const recordBtn = document.getElementById('recordBinBtn');
+  if(recordBtn && !document.getElementById('debugBtn')) {
+    const debugBtn = document.createElement('button');
+    debugBtn.id = 'debugBtn';
+    debugBtn.className = 'btn ripple';
+    debugBtn.style.cssText = 'background:#ff6d00; font-size:0.8rem; padding:5px 10px; margin-top:5px; margin-left:5px;';
+    debugBtn.innerHTML = '<i class="fas fa-bug"></i> تصحيح';
+    debugBtn.onclick = debugBinCollection;
+    recordBtn.parentNode.appendChild(debugBtn);
+  }
+}, 1000);
 
 </script>
 
