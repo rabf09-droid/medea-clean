@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
 <meta charset="UTF-8">
@@ -23,6 +23,9 @@
 /* ===== المتغيرات الأساسية ===== */
 :root {
   --primary: #006233;
+  --font-base: 18px;
+  --font-lg: 20px;
+  --font-xl: 22px;
   --primary-light: #008040;
   --primary-dark: #004d29;
   --secondary: #C41E3A;
@@ -84,7 +87,8 @@ body {
   background: var(--bg);
   color: var(--text);
   transition: var(--transition);
-  line-height: 1.6;
+  line-height: 1.7;
+  font-size: 17px;
 }
 
 /* ===== شريط التمرير المخصص ===== */
@@ -224,8 +228,8 @@ body {
   flex-direction: column;
   justify-content: center;
 }
-.role-btn-title { font-size: 0.98rem; font-weight: 800; display: block; margin-bottom: 2px; }
-.role-btn-desc  { font-size: 0.67rem; opacity: 0.88; display: block; line-height: 1.35; }
+.role-btn-title { font-size: 1.15rem; font-weight: 800; display: block; margin-bottom: 4px; }
+.role-btn-desc  { font-size: 0.82rem; opacity: 0.88; display: block; line-height: 1.4; }
 .role-btn-arrow {
   width: 28px;
   display: flex;
@@ -607,7 +611,7 @@ body {
 /* ===== الأزرار ===== */
 .btn {
   width: 100%;
-  padding: 14px;  border: none;
+  padding: 16px;  border: none;
   border-radius: var(--radius-sm);
   font-size: 1rem;
   font-weight: 700;
@@ -713,7 +717,8 @@ body {
 /* ===== حقول الإدخال ===== */
 .input {
   width: 100%;
-  padding: 12px 15px;
+  padding: 14px 16px;
+  font-size: 1rem;
   border: 2px solid var(--border);
   border-radius: var(--radius-sm);
   margin: 8px 0;
@@ -1711,6 +1716,45 @@ select.input {
 .bin-collected { background:var(--success);color:white;padding:8px 14px;border-radius:20px;margin:5px 0;text-align:center;font-weight:bold;font-size:0.85rem; }
 .voice-btn { background:#e91e63; }
 
+/* ===== زر الصوت TTS ===== */
+.tts-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--primary);
+  font-size: 1.1rem;
+  padding: 4px 6px;
+  border-radius: 50%;
+  transition: var(--transition);
+  vertical-align: middle;
+  opacity: 0.7;
+}
+.tts-btn:hover { opacity: 1; background: rgba(0,98,51,0.1); }
+.tts-btn:active { transform: scale(0.9); }
+.tts-btn.speaking { color: var(--secondary); animation: blink 0.8s infinite; }
+
+/* ===== Glassmorphism بطاقات ===== */
+.glass-card {
+  background: rgba(255,255,255,0.15);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255,255,255,0.3);
+  border-radius: var(--radius-lg);
+}
+[data-theme="dark"] .glass-card {
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.1);
+}
+
+/* ===== Hero Button ===== */
+.btn-hero {
+  padding: 20px !important;
+  font-size: 1.2rem !important;
+  border-radius: var(--radius-lg) !important;
+  box-shadow: 0 8px 30px rgba(0,98,51,0.35) !important;
+  letter-spacing: 0.5px;
+}
+
 /* ===== Hidden ===== */.hidden {
   display: none !important;
 }
@@ -1964,6 +2008,7 @@ select.input {
   <div class="device-card">
     <div class="flag-icon">🇩🇿</div>
     <h1 data-i18n="devTitle">النظافة من الإيمان</h1>
+    <button class="tts-btn" onclick="ttsBtn('مرحباً بكم في تطبيق المدية نظيفة. اختر دورك للمتابعة', this)" title="استمع"><i class="fas fa-volume-up"></i></button>
     <h2 data-i18n="devSubtitle">المدية نظيفة</h2>
     <p data-i18n="devDesc">اختر دورك للمتابعة</p>
     <div class="device-buttons">
@@ -2096,6 +2141,23 @@ select.input {
 
   <!-- ========== الصفحة الرئيسية ========== -->
   <div id="home" class="page active">
+    <!-- نظام المحفظة السريع -->
+    <div class="card" style="background: linear-gradient(135deg, var(--primary), #2e7d32); color: white; border: none;">
+      <div style="display:flex; justify-content:space-between; align-items:center;">
+        <div>
+          <p style="font-size:0.8rem; opacity:0.9;">رصيد المحفظة</p>
+          <h2 id="homeWalletBalance" style="margin:0;">0.00 DZD</h2>
+        </div>
+        <div style="text-align:right;">
+          <p style="font-size:0.8rem; opacity:0.9;">نقاطي البيئية</p>
+          <h3 id="homeWalletPoints" style="margin:0;"><i class="fas fa-leaf"></i> 0</h3>
+        </div>
+      </div>
+      <button class="btn ripple" style="background:rgba(255,255,255,0.2); margin-top:10px; color:white; font-size:0.8rem; border:1px solid rgba(255,255,255,0.3);" onclick="showPage('walletPage')">
+        <i class="fas fa-wallet"></i> إدارة المحفظة
+      </button>
+    </div>
+
 
     <!-- شريط إنجاز اليوم -->
     <div id="dailyAchievementBar">
@@ -2194,8 +2256,19 @@ select.input {
 
   <!-- ========== صفحة إرسال تبليغ ========== -->
   <div id="report" class="page">
+    <!-- مساعد البلاغات الذكي -->
+    <div class="card" style="border-right: 5px solid var(--secondary); background: #f9f9f9;">
+      <h4 style="color:var(--secondary); margin-bottom:10px;"><i class="fas fa-robot"></i> مساعد البلاغات الذكي</h4>
+      <p style="font-size:0.85rem; color:#666;">سأساعدك في وصف البلاغ بشكل دقيق. يمكنك سؤالي عن أي شيء يخص النظافة.</p>
+      <button class="btn btn-dark ripple" style="font-size:0.8rem; padding:8px;" onclick="getAIReportAdvice()">
+        <i class="fas fa-magic"></i> اطلب نصيحة للبلاغ
+      </button>
+      <div id="reportAIAdvice" style="margin-top:10px; font-size:0.85rem; color:var(--primary); font-style:italic;"></div>
+    </div>
+
     <h2 style="margin-bottom:15px;color:var(--primary);text-align:center">
       <i class="fas fa-file-alt"></i> <span data-i18n="newReport">بلاغ جديد</span>
+      <button class="tts-btn" onclick="ttsBtn('صفحة إرسال بلاغ جديد. التقط الصورة ثم حدد الموقع وأرسل البلاغ', this)" title="استمع"><i class="fas fa-volume-up"></i></button>
     </h2>
     <div class="card">
       <div class="cam-box" onclick="takePhoto()">
@@ -2229,7 +2302,7 @@ select.input {
         <input type="checkbox" id="recurringCheck">
         <span data-i18n="recurring">🔁 بلاغ متكرر أسبوعياً</span>
       </label>
-      <button class="btn btn-primary ripple" style="height:55px;font-size:1.1rem" onclick="sendReport()" id="sendBtn">
+      <button class="btn btn-primary ripple btn-hero" onclick="sendReport()" id="sendBtn">
         <i class="fas fa-paper-plane"></i> <span data-i18n="sendNow">إرسال البلاغ الآن</span>
       </button>
       <button class="btn ripple" style="background:#757575" onclick="showPage('home')">
@@ -2352,6 +2425,7 @@ select.input {
     <div id="driverLogin">
       <h2 style="margin-bottom:14px;color:var(--primary);text-align:center">
         <i class="fas fa-truck-loading"></i> دخول السائق
+        <button class="tts-btn" onclick="ttsBtn('صفحة دخول السائق. أدخل اسمك الكامل للمتابعة', this)" title="استمع"><i class="fas fa-volume-up"></i></button>
       </h2>
       <div class="card">
         <h3><i class="fas fa-sign-in-alt"></i> أدخل اسمك للمتابعة</h3>
@@ -2389,7 +2463,7 @@ select.input {
       <!-- أزرار التتبع والتسجيل -->
       <!-- زر التتبع -->
       <div id="trackingOffPanel">
-        <button class="btn btn-secondary ripple" style="margin-bottom:10px" onclick="startDriverTracking()">
+        <button class="btn btn-secondary ripple btn-hero" onclick="startDriverTracking()">
           <i class="fas fa-play"></i> بدء تتبع المسار
         </button>
       </div>
@@ -2418,7 +2492,7 @@ select.input {
             <div style="font-size:0.72rem;color:var(--text-light)">نقطة مسجّلة</div>
           </div>
         </div>
-        <button class="btn btn-success ripple" id="mainRecordBinBtn" onclick="recordBinFromDriver()" style="font-size:1rem;padding:14px;margin-bottom:8px">
+        <button class="btn btn-success ripple btn-hero" id="mainRecordBinBtn" onclick="recordBinFromDriver()" style="margin-bottom:8px">
           <i class="fas fa-trash-alt"></i> تسجيل موقع حاوية
         </button>
         <button class="btn btn-danger ripple" style="font-size:0.9rem;padding:10px" onclick="stopDriverTracking()">
@@ -2478,7 +2552,7 @@ select.input {
   <!-- ========== صفحة الإدارة ========== -->
   <div id="admin" class="page">
     <div style="display:flex;justify-content:space-between;margin-bottom:15px">
-      <h2 style="color:var(--primary)"><i class="fas fa-cogs"></i> <span data-i18n="controlPanel">لوحة التحكم</span></h2>
+      <h2 style="color:var(--primary)"><i class="fas fa-cogs"></i> <span data-i18n="controlPanel">لوحة التحكم</span> <button class="tts-btn" onclick="ttsBtn('لوحة تحكم الإدارة. اختر القسم المطلوب', this)" title="استمع"><i class="fas fa-volume-up"></i></button></h2>
     </div>
     <div id="adminLogin" class="card">
       <h3><i class="fas fa-lock"></i> <span data-i18n="adminLogin">الدخول للمشرفين</span></h3>
@@ -2676,6 +2750,29 @@ select.input {
 
   <!-- ========== لوحة الإحصائيات ========== -->
   <div id="dashboard" class="page">
+    <!-- إحصائيات الاقتصاد البيئي -->
+    <div class="card" style="border-right-color: var(--secondary);">
+      <h3><i class="fas fa-chart-pie"></i> إحصائيات الاقتصاد البيئي</h3>
+      <div class="grid-2">
+        <div style="text-align:center; padding:15px; background:var(--bg); border-radius:10px;">
+          <h2 id="totalWalletValue" style="color:var(--success); margin:0;">0 DZD</h2>
+          <p style="font-size:0.8rem; margin:5px 0;">إجمالي أرصدة المستخدمين</p>
+        </div>
+        <div style="text-align:center; padding:15px; background:var(--bg); border-radius:10px;">
+          <h2 id="totalMaterialsSold" style="color:var(--primary); margin:0;">0 طن</h2>
+          <p style="font-size:0.8rem; margin:5px 0;">المواد المباعة</p>
+        </div>
+      </div>
+      <div class="grid-2" style="margin-top:10px;">
+        <button class="btn btn-dark ripple" onclick="showPage('companiesPage')">
+          <i class="fas fa-industry"></i> إدارة الشركات
+        </button>
+        <button class="btn btn-purple ripple" onclick="showPage('biddingPage')">
+          <i class="fas fa-gavel"></i> نظام المزايدة
+        </button>
+      </div>
+    </div>
+
     <h2 style="margin-bottom:15px;color:var(--primary);text-align:center">
       <i class="fas fa-chart-pie"></i> <span data-i18n="statsPanel">لوحة الإحصائيات</span>
     </h2>
@@ -3032,6 +3129,27 @@ select.input {
   </div>
   <!-- ========== توعية ========== -->
   <div id="tips" class="page">
+    <!-- ركن التوعية والدردشة الذكية -->
+    <div class="card" style="background: linear-gradient(to left, #e8f5e9, #ffffff); border-right: 5px solid var(--success);">
+      <h3><i class="fas fa-mosque"></i> النظافة في قيمنا</h3>
+      <div id="hadithContainer" style="padding:15px; text-align:center; font-style:italic; color:#2e7d32; font-weight:bold;">
+        "الطُّهُورُ شَطْرُ الإِيمَانِ" (حديث شريف)
+      </div>
+      <button class="btn btn-primary ripple" style="width:auto; margin:0 auto; display:block;" onclick="nextHadith()">
+        <i class="fas fa-sync"></i> حديث آخر
+      </button>
+    </div>
+
+    <div class="card">
+      <h3><i class="fas fa-comments"></i> اسأل المساعد البيئي</h3>
+      <p style="font-size:0.9rem;">لديك سؤال حول أهمية النظافة في حيك؟ أنا هنا للإجابة.</p>
+      <div class="info-row">
+        <input type="text" id="citizenAIInput" class="input" placeholder="مثلاً: ما أهمية فرز النفايات؟">
+        <button class="btn btn-primary" onclick="askCitizenAI()" style="margin:0; padding:12px;"><i class="fas fa-paper-plane"></i></button>
+      </div>
+      <div id="citizenAIResponse" style="margin-top:10px; padding:10px; border-radius:10px; background:#f0f4f8; display:none;"></div>
+    </div>
+
     <h2 style="margin-bottom:15px;color:var(--primary);text-align:center">
       <i class="fas fa-lightbulb"></i> <span data-i18n="tipsPage">نصائح بيئية</span>
     </h2>
@@ -3141,7 +3259,46 @@ select.input {
     </button>
   </div>
 
-  <!-- ========== سوق التدوير ========== -->
+  
+  <!-- ========== صفحة المحفظة ========== -->
+  <div id="walletPage" class="page">
+    <h2 style="margin-bottom:15px;color:var(--primary);text-align:center">
+      <i class="fas fa-wallet"></i> محفظتي الرقمية
+    </h2>
+    <div class="card" style="text-align:center; padding:30px;">
+      <i class="fas fa-coins" style="font-size:3rem; color:var(--secondary); margin-bottom:15px;"></i>
+      <h1 id="walletBalanceBig" style="font-size:2.5rem; margin:0;">0.00 DZD</h1>
+      <p style="color:#666;">رصيدك القابل للسحب أو الاستخدام</p>
+    </div>
+    
+    <div class="grid-2">
+      <div class="card" style="text-align:center;">
+        <i class="fas fa-leaf" style="color:var(--success); font-size:1.5rem;"></i>
+        <h3 id="walletPointsBig">0</h3>
+        <p style="font-size:0.8rem;">نقطة بيئية</p>
+        <button class="btn btn-primary ripple" style="font-size:0.8rem; padding:5px 10px;" onclick="convertPoints()">تحويل لنقود</button>
+      </div>
+      <div class="card" style="text-align:center;">
+        <i class="fas fa-exchange-alt" style="color:var(--primary); font-size:1.5rem;"></i>
+        <h3>تحويل</h3>
+        <p style="font-size:0.8rem;">إلى مستخدم آخر</p>
+        <button class="btn btn-dark ripple" style="font-size:0.8rem; padding:5px 10px;">بدء التحويل</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3><i class="fas fa-history"></i> آخر المعاملات</h3>
+      <div id="walletTransactions" style="font-size:0.9rem;">
+        <p style="text-align:center; color:#999; padding:20px;">لا توجد معاملات حالياً</p>
+      </div>
+    </div>
+
+    <button class="btn ripple" style="background:#757575" onclick="showPage('home')">
+      <i class="fas fa-arrow-right"></i> <span data-i18n="back">رجوع</span>
+    </button>
+  </div>
+
+<!-- ========== سوق التدوير ========== -->
   <div id="recyclingMarket" class="page">
     <h2 style="margin-bottom:15px;color:var(--primary);text-align:center">
       <i class="fas fa-store"></i> <span data-i18n="marketPage">سوق المواد المعاد تدويرها</span>
@@ -3163,7 +3320,15 @@ select.input {
         </select>
       </div>
     </div>
-    <div id="marketMaterialsList"></div>
+    
+    <div class="card" style="background:#fff9c4; border-left:5px solid #fbc02d;">
+      <h4 style="margin:0;"><i class="fas fa-chart-line"></i> أسعار السوق اليوم (للكيلوغرام)</h4>
+      <div id="marketPriceTicker" style="display:flex; gap:15px; overflow-x:auto; padding:10px 0; font-size:0.85rem; font-weight:bold;">
+        <!-- يتم ملؤه بواسطة JS -->
+      </div>
+    </div>
+
+<div id="marketMaterialsList"></div>
     <div class="card" id="requestForm" style="display:none">
       <h3><i class="fas fa-file-alt"></i> طلب الاستفادة من المادة</h3>
       <input type="text" class="input" id="companyName" placeholder="🏢 اسم المؤسسة/الشركة" data-i18n-ph="compName">
@@ -3255,12 +3420,1728 @@ select.input {
 </div>
 
 <!-- مكتبات خارجية -->
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
-<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js">
+function loadHeatmap() {
+  if(!allReports || allReports.length === 0) { showToast("لا توجد بيانات كافية", "info"); return; }
+  showToast("جاري تحميل خريطة التلوث...", "info");
+  const heatPoints = allReports.filter(r => r.gps).map(r => {
+    const parts = r.gps.split(',');
+    return [parseFloat(parts[0]), parseFloat(parts[1]), 0.5];
+  });
+  
+  if(typeof L.heatLayer === 'undefined') {
+    const script = document.createElement('script');
+    script.src = "https://leaflet.github.io/Leaflet.heat/dist/leaflet-heat.js";
+    script.onload = () => { L.heatLayer(heatPoints, {radius: 25}).addTo(map); };
+    document.head.appendChild(script);
+  } else {
+    L.heatLayer(heatPoints, {radius: 25}).addTo(map);
+  }
+}
+
+function showAIAssistant() {
+  const box = document.getElementById('aiChatBox');
+  box.style.display = box.style.display === 'none' ? 'block' : 'none';
+}
+
+async function handleAISend() {
+  const q = document.getElementById('aiInput').value;
+  if(!q) return;
+  const respDiv = document.getElementById('aiResponse');
+  respDiv.innerHTML = "⏳ جاري التفكير...";
+  const ans = await askAI(q);
+  respDiv.innerHTML = "<b>🤖 المساعد:</b> " + ans;
+}
+
+
+// ===== نظام الذكاء الاصطناعي للمواطن =====
+const cleanHadiths = [
+  { text: "الطُّهُورُ شَطْرُ الإِيمَانِ", source: "صحيح مسلم" },
+  { text: "إِنَّ اللَّهَ طَيِّبٌ يُحِبُّ الطِّيبَ، نَظِيفٌ يُحِبُّ النَّظَافَةَ", source: "سنن الترمذي" },
+  { text: "إِمَاطَةُ الأَذَى عَنِ الطَّرِيقِ صَدَقَةٌ", source: "متفق عليه" },
+  { text: "بَيْنَمَا رَجُلٌ يَمْشِي بِطَرِيقٍ وَجَدَ غُصْنَ شَوْكٍ عَلَى الطَّرِيقِ فَأَخَّرَهُ، فَشَكَرَ اللَّهُ لَهُ فَغَفَرَ لَهُ", source: "صحيح البخاري" },
+  { text: "النظافة من الإيمان، والوسخ من الشيطان", source: "حكمة مأثورة" }
+];
+
+let currentHadithIndex = 0;
+function nextHadith() {
+  currentHadithIndex = (currentHadithIndex + 1) % cleanHadiths.length;
+  const h = cleanHadiths[currentHadithIndex];
+  document.getElementById('hadithContainer').innerHTML = `"${h.text}" <br><small style="color:#666">(${h.source})</small>`;
+}
+
+async function askCitizenAI() {
+  const q = document.getElementById('citizenAIInput').value;
+  if(!q) return;
+  const respDiv = document.getElementById('citizenAIResponse');
+  respDiv.style.display = 'block';
+  respDiv.innerHTML = "⏳ جاري البحث عن إجابة بيئية...";
+  
+  const prompt = `أنت مساعد بيئي ذكي لتطبيق "المدية نظيفة". أجب باختصار وودية على هذا السؤال حول النظافة وأهميتها في الحي: ${q}`;
+  const ans = await askAI(prompt);
+  respDiv.innerHTML = "<b>🌱 المساعد البيئي:</b> " + ans;
+}
+
+async function getAIReportAdvice() {
+  const addr = document.getElementById('addrInput').value;
+  const type = document.getElementById('wasteTypeSelect').value;
+  const adviceDiv = document.getElementById('reportAIAdvice');
+  adviceDiv.innerHTML = "⏳ جاري تحليل البيانات لتقديم نصيحة...";
+  
+  const prompt = `المواطن يريد إرسال بلاغ عن نفايات من نوع ${type} في منطقة ${addr || 'غير محددة'}. قدم له نصيحة قصيرة جداً (جملة واحدة) حول كيفية التعامل مع هذا النوع من النفايات أو تشجيعه على البلاغ.`;
+  const ans = await askAI(prompt);
+  adviceDiv.innerHTML = "<b>💡 نصيحة ذكية:</b> " + ans;
+}
+
+// تحسين وظيفة التقاط الصورة لتشمل تحليل تلقائي
+const originalTakePhoto = takePhoto;
+takePhoto = async function() {
+  await originalTakePhoto();
+  // بعد التقاط الصورة، يمكن إضافة تحليل تلقائي لنوع النفايات هنا مستقبلاً
+  const adviceDiv = document.getElementById('reportAIAdvice');
+  if(adviceDiv) adviceDiv.innerHTML = "📸 تم التقاط الصورة. هل تريد مني تحليل نوع النفايات؟";
+};
+
+
+// ===== النظام الاقتصادي والمحفظة =====
+function updateWalletUI() {
+  const balStr = userWallet.balance.toFixed(2) + " " + userWallet.currency;
+  if(document.getElementById('homeWalletBalance')) document.getElementById('homeWalletBalance').textContent = balStr;
+  if(document.getElementById('homeWalletPoints')) document.getElementById('homeWalletPoints').innerHTML = `<i class="fas fa-leaf"></i> ${userWallet.points}`;
+  if(document.getElementById('walletBalanceBig')) document.getElementById('walletBalanceBig').textContent = balStr;
+  if(document.getElementById('walletPointsBig')) document.getElementById('walletPointsBig').textContent = userWallet.points;
+}
+
+function updateMarketPricesUI() {
+  const ticker = document.getElementById('marketPriceTicker');
+  if(!ticker) return;
+  let html = "";
+  for(let m in materialPrices) {
+    const p = materialPrices[m];
+    const icon = p.trend === "up" ? "fa-caret-up" : (p.trend === "down" ? "fa-caret-down" : "fa-minus");
+    const color = p.trend === "up" ? "var(--success)" : (p.trend === "down" ? "var(--error)" : "#757575");
+    html += `<div style="white-space:nowrap; padding:5px 10px; background:white; border-radius:5px; border:1px solid #ddd;">
+      ${m}: ${p.price} <i class="fas ${icon}" style="color:${color}"></i>
+    </div>`;
+  }
+  ticker.innerHTML = html;
+}
+
+function convertPoints() {
+  if(userWallet.points < 100) {
+    showToast("⚠️ تحتاج على الأقل 100 نقطة للتحويل", "error");
+    return;
+  }
+  const cash = userWallet.points * 0.5; // كل نقطة بنصف دينار مثلاً
+  userWallet.balance += cash;
+  addTransaction("تحويل نقاط", cash, "earn");
+  userWallet.points = 0;
+  updateWalletUI();
+  showToast(`✅ تم تحويل النقاط إلى ${cash} DZD`, "success");
+}
+
+function addTransaction(title, amount, type) {
+  const list = document.getElementById('walletTransactions');
+  if(!list) return;
+  if(list.innerHTML.includes("لا توجد معاملات")) list.innerHTML = "";
+  
+  const date = new Date().toLocaleDateString('ar-DZ');
+  const color = type === "earn" ? "var(--success)" : "var(--error)";
+  const sign = type === "earn" ? "+" : "-";
+  
+  const html = `<div style="display:flex; justify-content:space-between; padding:10px 0; border-bottom:1px solid #eee;">
+    <div><b>${title}</b><br><small style="color:#999">${date}</small></div>
+    <div style="color:${color}; font-weight:bold;">${sign}${amount} DZD</div>
+  </div>`;
+  list.innerHTML = html + list.innerHTML;
+  
+  // حفظ في Firebase
+  if(currentUid) {
+    db.ref(`wallets/${currentUid}/transactions`).push({ title, amount, type, date: Date.now() });
+    db.ref(`wallets/${currentUid}/balance`).set(userWallet.balance);
+    db.ref(`wallets/${currentUid}/points`).set(userWallet.points);
+  }
+}
+
+// ربط نظام المكافآت بالبلاغات
+const originalSendReport = sendReport;
+sendReport = async function() {
+  const res = await originalSendReport();
+  // إذا نجح الإرسال، نمنح نقاطاً
+  userWallet.points += 10;
+  updateWalletUI();
+  showToast("🎁 حصلت على 10 نقاط بيئية لمساهمتك!", "success");
+  return res;
+};
+
+// تهيئة عند التشغيل
+setTimeout(() => {
+  updateWalletUI();
+  updateMarketPricesUI();
+}, 2000);
+
+
+// ===== نظام السوق المتقدم والشركات =====
+let companies = [];
+let activeBids = [];
+
+function addNewCompany() {
+  const name = document.getElementById('compNewName').value;
+  const license = document.getElementById('compNewLicense').value;
+  const email = document.getElementById('compNewEmail').value;
+  const phone = document.getElementById('compNewPhone').value;
+  
+  if(!name || !license) { showToast("⚠️ أكمل البيانات المطلوبة", "error"); return; }
+  
+  const company = {
+    id: Date.now(),
+    name, license, email, phone,
+    materials: [],
+    createdAt: new Date().toISOString()
+  };
+  
+  companies.push(company);
+  db.ref(`companies/${company.id}`).set(company);
+  updateCompaniesList();
+  showToast("✅ تم إضافة الشركة بنجاح", "success");
+  document.getElementById('compNewName').value = '';
+  document.getElementById('compNewLicense').value = '';
+}
+
+function updateCompaniesList() {
+  const list = document.getElementById('companiesList');
+  if(!list) return;
+  if(companies.length === 0) {
+    list.innerHTML = '<p style="text-align:center; color:#999;">لا توجد شركات مسجلة حالياً</p>';
+    return;
+  }
+  let html = "";
+  companies.forEach(c => {
+    html += `<div style="padding:10px; border:1px solid #ddd; border-radius:5px; margin-bottom:10px;">
+      <b>${c.name}</b> (${c.license})<br>
+      <small style="color:#666;">${c.email} | ${c.phone}</small>
+      <button class="btn btn-dark ripple" style="font-size:0.7rem; padding:3px 8px; margin-top:5px;" onclick="editCompany(${c.id})">
+        <i class="fas fa-edit"></i> تعديل
+      </button>
+    </div>`;
+  });
+  list.innerHTML = html;
+}
+
+function createBid() {
+  const type = document.getElementById('bidMaterialType').value;
+  const qty = parseFloat(document.getElementById('bidQuantity').value);
+  const minPrice = parseFloat(document.getElementById('bidMinPrice').value);
+  const duration = parseInt(document.getElementById('bidDuration').value);
+  
+  if(!type || !qty || !minPrice) { showToast("⚠️ أكمل البيانات", "error"); return; }
+  
+  const bid = {
+    id: Date.now(),
+    type, qty, minPrice, duration,
+    startTime: Date.now(),
+    endTime: Date.now() + (duration * 3600000),
+    bids: {},
+    winner: null,
+    status: "active"
+  };
+  
+  activeBids.push(bid);
+  db.ref(`bids/${bid.id}`).set(bid);
+  updateActiveBids();
+  showToast("✅ تم إنشاء المزايدة بنجاح", "success");
+}
+
+function updateActiveBids() {
+  const list = document.getElementById('activeBids');
+  if(!list) return;
+  if(activeBids.length === 0) {
+    list.innerHTML = '<p style="text-align:center; color:#999;">لا توجد مزايدات جارية</p>';
+    return;
+  }
+  let html = "";
+  activeBids.forEach(b => {
+    const remaining = Math.max(0, b.endTime - Date.now());
+    const hours = Math.floor(remaining / 3600000);
+    html += `<div style="padding:10px; background:#f5f5f5; border-radius:5px; margin-bottom:10px;">
+      <b>${b.type.toUpperCase()}</b> - ${b.qty} طن | السعر الأدنى: ${b.minPrice} DZD<br>
+      <small style="color:#666;">الوقت المتبقي: ${hours} ساعات</small>
+    </div>`;
+  });
+  list.innerHTML = html;
+}
+
+// تحديث الإحصائيات
+function updateEconomicStats() {
+  let totalWallet = 0;
+  let totalMaterials = 0;
+  
+  // حساب إجمالي الأرصدة (يمكن جلبها من Firebase)
+  if(document.getElementById('totalWalletValue')) {
+    document.getElementById('totalWalletValue').textContent = totalWallet.toFixed(2) + " DZD";
+  }
+  if(document.getElementById('totalMaterialsSold')) {
+    document.getElementById('totalMaterialsSold').textContent = totalMaterials + " طن";
+  }
+}
+
+// تحديث الأسعار الديناميكية
+function updateDynamicPrices() {
+  for(let m in materialPrices) {
+    const p = materialPrices[m];
+    const change = (Math.random() - 0.5) * 10;
+    p.price = Math.max(5, p.price + change);
+    p.trend = change > 0 ? "up" : (change < 0 ? "down" : "stable");
+  }
+  updateMarketPricesUI();
+}
+
+// تحديث الأسعار كل 30 دقيقة
+setInterval(updateDynamicPrices, 30 * 60000);
+
+// تحديث الإحصائيات عند التحميل
+setTimeout(() => {
+  updateCompaniesList();
+  updateActiveBids();
+  updateEconomicStats();
+}, 2000);
+
+</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js">
+function loadHeatmap() {
+  if(!allReports || allReports.length === 0) { showToast("لا توجد بيانات كافية", "info"); return; }
+  showToast("جاري تحميل خريطة التلوث...", "info");
+  const heatPoints = allReports.filter(r => r.gps).map(r => {
+    const parts = r.gps.split(',');
+    return [parseFloat(parts[0]), parseFloat(parts[1]), 0.5];
+  });
+  
+  if(typeof L.heatLayer === 'undefined') {
+    const script = document.createElement('script');
+    script.src = "https://leaflet.github.io/Leaflet.heat/dist/leaflet-heat.js";
+    script.onload = () => { L.heatLayer(heatPoints, {radius: 25}).addTo(map); };
+    document.head.appendChild(script);
+  } else {
+    L.heatLayer(heatPoints, {radius: 25}).addTo(map);
+  }
+}
+
+function showAIAssistant() {
+  const box = document.getElementById('aiChatBox');
+  box.style.display = box.style.display === 'none' ? 'block' : 'none';
+}
+
+async function handleAISend() {
+  const q = document.getElementById('aiInput').value;
+  if(!q) return;
+  const respDiv = document.getElementById('aiResponse');
+  respDiv.innerHTML = "⏳ جاري التفكير...";
+  const ans = await askAI(q);
+  respDiv.innerHTML = "<b>🤖 المساعد:</b> " + ans;
+}
+
+
+// ===== نظام الذكاء الاصطناعي للمواطن =====
+const cleanHadiths = [
+  { text: "الطُّهُورُ شَطْرُ الإِيمَانِ", source: "صحيح مسلم" },
+  { text: "إِنَّ اللَّهَ طَيِّبٌ يُحِبُّ الطِّيبَ، نَظِيفٌ يُحِبُّ النَّظَافَةَ", source: "سنن الترمذي" },
+  { text: "إِمَاطَةُ الأَذَى عَنِ الطَّرِيقِ صَدَقَةٌ", source: "متفق عليه" },
+  { text: "بَيْنَمَا رَجُلٌ يَمْشِي بِطَرِيقٍ وَجَدَ غُصْنَ شَوْكٍ عَلَى الطَّرِيقِ فَأَخَّرَهُ، فَشَكَرَ اللَّهُ لَهُ فَغَفَرَ لَهُ", source: "صحيح البخاري" },
+  { text: "النظافة من الإيمان، والوسخ من الشيطان", source: "حكمة مأثورة" }
+];
+
+let currentHadithIndex = 0;
+function nextHadith() {
+  currentHadithIndex = (currentHadithIndex + 1) % cleanHadiths.length;
+  const h = cleanHadiths[currentHadithIndex];
+  document.getElementById('hadithContainer').innerHTML = `"${h.text}" <br><small style="color:#666">(${h.source})</small>`;
+}
+
+async function askCitizenAI() {
+  const q = document.getElementById('citizenAIInput').value;
+  if(!q) return;
+  const respDiv = document.getElementById('citizenAIResponse');
+  respDiv.style.display = 'block';
+  respDiv.innerHTML = "⏳ جاري البحث عن إجابة بيئية...";
+  
+  const prompt = `أنت مساعد بيئي ذكي لتطبيق "المدية نظيفة". أجب باختصار وودية على هذا السؤال حول النظافة وأهميتها في الحي: ${q}`;
+  const ans = await askAI(prompt);
+  respDiv.innerHTML = "<b>🌱 المساعد البيئي:</b> " + ans;
+}
+
+async function getAIReportAdvice() {
+  const addr = document.getElementById('addrInput').value;
+  const type = document.getElementById('wasteTypeSelect').value;
+  const adviceDiv = document.getElementById('reportAIAdvice');
+  adviceDiv.innerHTML = "⏳ جاري تحليل البيانات لتقديم نصيحة...";
+  
+  const prompt = `المواطن يريد إرسال بلاغ عن نفايات من نوع ${type} في منطقة ${addr || 'غير محددة'}. قدم له نصيحة قصيرة جداً (جملة واحدة) حول كيفية التعامل مع هذا النوع من النفايات أو تشجيعه على البلاغ.`;
+  const ans = await askAI(prompt);
+  adviceDiv.innerHTML = "<b>💡 نصيحة ذكية:</b> " + ans;
+}
+
+// تحسين وظيفة التقاط الصورة لتشمل تحليل تلقائي
+const originalTakePhoto = takePhoto;
+takePhoto = async function() {
+  await originalTakePhoto();
+  // بعد التقاط الصورة، يمكن إضافة تحليل تلقائي لنوع النفايات هنا مستقبلاً
+  const adviceDiv = document.getElementById('reportAIAdvice');
+  if(adviceDiv) adviceDiv.innerHTML = "📸 تم التقاط الصورة. هل تريد مني تحليل نوع النفايات؟";
+};
+
+
+// ===== النظام الاقتصادي والمحفظة =====
+function updateWalletUI() {
+  const balStr = userWallet.balance.toFixed(2) + " " + userWallet.currency;
+  if(document.getElementById('homeWalletBalance')) document.getElementById('homeWalletBalance').textContent = balStr;
+  if(document.getElementById('homeWalletPoints')) document.getElementById('homeWalletPoints').innerHTML = `<i class="fas fa-leaf"></i> ${userWallet.points}`;
+  if(document.getElementById('walletBalanceBig')) document.getElementById('walletBalanceBig').textContent = balStr;
+  if(document.getElementById('walletPointsBig')) document.getElementById('walletPointsBig').textContent = userWallet.points;
+}
+
+function updateMarketPricesUI() {
+  const ticker = document.getElementById('marketPriceTicker');
+  if(!ticker) return;
+  let html = "";
+  for(let m in materialPrices) {
+    const p = materialPrices[m];
+    const icon = p.trend === "up" ? "fa-caret-up" : (p.trend === "down" ? "fa-caret-down" : "fa-minus");
+    const color = p.trend === "up" ? "var(--success)" : (p.trend === "down" ? "var(--error)" : "#757575");
+    html += `<div style="white-space:nowrap; padding:5px 10px; background:white; border-radius:5px; border:1px solid #ddd;">
+      ${m}: ${p.price} <i class="fas ${icon}" style="color:${color}"></i>
+    </div>`;
+  }
+  ticker.innerHTML = html;
+}
+
+function convertPoints() {
+  if(userWallet.points < 100) {
+    showToast("⚠️ تحتاج على الأقل 100 نقطة للتحويل", "error");
+    return;
+  }
+  const cash = userWallet.points * 0.5; // كل نقطة بنصف دينار مثلاً
+  userWallet.balance += cash;
+  addTransaction("تحويل نقاط", cash, "earn");
+  userWallet.points = 0;
+  updateWalletUI();
+  showToast(`✅ تم تحويل النقاط إلى ${cash} DZD`, "success");
+}
+
+function addTransaction(title, amount, type) {
+  const list = document.getElementById('walletTransactions');
+  if(!list) return;
+  if(list.innerHTML.includes("لا توجد معاملات")) list.innerHTML = "";
+  
+  const date = new Date().toLocaleDateString('ar-DZ');
+  const color = type === "earn" ? "var(--success)" : "var(--error)";
+  const sign = type === "earn" ? "+" : "-";
+  
+  const html = `<div style="display:flex; justify-content:space-between; padding:10px 0; border-bottom:1px solid #eee;">
+    <div><b>${title}</b><br><small style="color:#999">${date}</small></div>
+    <div style="color:${color}; font-weight:bold;">${sign}${amount} DZD</div>
+  </div>`;
+  list.innerHTML = html + list.innerHTML;
+  
+  // حفظ في Firebase
+  if(currentUid) {
+    db.ref(`wallets/${currentUid}/transactions`).push({ title, amount, type, date: Date.now() });
+    db.ref(`wallets/${currentUid}/balance`).set(userWallet.balance);
+    db.ref(`wallets/${currentUid}/points`).set(userWallet.points);
+  }
+}
+
+// ربط نظام المكافآت بالبلاغات
+const originalSendReport = sendReport;
+sendReport = async function() {
+  const res = await originalSendReport();
+  // إذا نجح الإرسال، نمنح نقاطاً
+  userWallet.points += 10;
+  updateWalletUI();
+  showToast("🎁 حصلت على 10 نقاط بيئية لمساهمتك!", "success");
+  return res;
+};
+
+// تهيئة عند التشغيل
+setTimeout(() => {
+  updateWalletUI();
+  updateMarketPricesUI();
+}, 2000);
+
+
+// ===== نظام السوق المتقدم والشركات =====
+let companies = [];
+let activeBids = [];
+
+function addNewCompany() {
+  const name = document.getElementById('compNewName').value;
+  const license = document.getElementById('compNewLicense').value;
+  const email = document.getElementById('compNewEmail').value;
+  const phone = document.getElementById('compNewPhone').value;
+  
+  if(!name || !license) { showToast("⚠️ أكمل البيانات المطلوبة", "error"); return; }
+  
+  const company = {
+    id: Date.now(),
+    name, license, email, phone,
+    materials: [],
+    createdAt: new Date().toISOString()
+  };
+  
+  companies.push(company);
+  db.ref(`companies/${company.id}`).set(company);
+  updateCompaniesList();
+  showToast("✅ تم إضافة الشركة بنجاح", "success");
+  document.getElementById('compNewName').value = '';
+  document.getElementById('compNewLicense').value = '';
+}
+
+function updateCompaniesList() {
+  const list = document.getElementById('companiesList');
+  if(!list) return;
+  if(companies.length === 0) {
+    list.innerHTML = '<p style="text-align:center; color:#999;">لا توجد شركات مسجلة حالياً</p>';
+    return;
+  }
+  let html = "";
+  companies.forEach(c => {
+    html += `<div style="padding:10px; border:1px solid #ddd; border-radius:5px; margin-bottom:10px;">
+      <b>${c.name}</b> (${c.license})<br>
+      <small style="color:#666;">${c.email} | ${c.phone}</small>
+      <button class="btn btn-dark ripple" style="font-size:0.7rem; padding:3px 8px; margin-top:5px;" onclick="editCompany(${c.id})">
+        <i class="fas fa-edit"></i> تعديل
+      </button>
+    </div>`;
+  });
+  list.innerHTML = html;
+}
+
+function createBid() {
+  const type = document.getElementById('bidMaterialType').value;
+  const qty = parseFloat(document.getElementById('bidQuantity').value);
+  const minPrice = parseFloat(document.getElementById('bidMinPrice').value);
+  const duration = parseInt(document.getElementById('bidDuration').value);
+  
+  if(!type || !qty || !minPrice) { showToast("⚠️ أكمل البيانات", "error"); return; }
+  
+  const bid = {
+    id: Date.now(),
+    type, qty, minPrice, duration,
+    startTime: Date.now(),
+    endTime: Date.now() + (duration * 3600000),
+    bids: {},
+    winner: null,
+    status: "active"
+  };
+  
+  activeBids.push(bid);
+  db.ref(`bids/${bid.id}`).set(bid);
+  updateActiveBids();
+  showToast("✅ تم إنشاء المزايدة بنجاح", "success");
+}
+
+function updateActiveBids() {
+  const list = document.getElementById('activeBids');
+  if(!list) return;
+  if(activeBids.length === 0) {
+    list.innerHTML = '<p style="text-align:center; color:#999;">لا توجد مزايدات جارية</p>';
+    return;
+  }
+  let html = "";
+  activeBids.forEach(b => {
+    const remaining = Math.max(0, b.endTime - Date.now());
+    const hours = Math.floor(remaining / 3600000);
+    html += `<div style="padding:10px; background:#f5f5f5; border-radius:5px; margin-bottom:10px;">
+      <b>${b.type.toUpperCase()}</b> - ${b.qty} طن | السعر الأدنى: ${b.minPrice} DZD<br>
+      <small style="color:#666;">الوقت المتبقي: ${hours} ساعات</small>
+    </div>`;
+  });
+  list.innerHTML = html;
+}
+
+// تحديث الإحصائيات
+function updateEconomicStats() {
+  let totalWallet = 0;
+  let totalMaterials = 0;
+  
+  // حساب إجمالي الأرصدة (يمكن جلبها من Firebase)
+  if(document.getElementById('totalWalletValue')) {
+    document.getElementById('totalWalletValue').textContent = totalWallet.toFixed(2) + " DZD";
+  }
+  if(document.getElementById('totalMaterialsSold')) {
+    document.getElementById('totalMaterialsSold').textContent = totalMaterials + " طن";
+  }
+}
+
+// تحديث الأسعار الديناميكية
+function updateDynamicPrices() {
+  for(let m in materialPrices) {
+    const p = materialPrices[m];
+    const change = (Math.random() - 0.5) * 10;
+    p.price = Math.max(5, p.price + change);
+    p.trend = change > 0 ? "up" : (change < 0 ? "down" : "stable");
+  }
+  updateMarketPricesUI();
+}
+
+// تحديث الأسعار كل 30 دقيقة
+setInterval(updateDynamicPrices, 30 * 60000);
+
+// تحديث الإحصائيات عند التحميل
+setTimeout(() => {
+  updateCompaniesList();
+  updateActiveBids();
+  updateEconomicStats();
+}, 2000);
+
+</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js">
+function loadHeatmap() {
+  if(!allReports || allReports.length === 0) { showToast("لا توجد بيانات كافية", "info"); return; }
+  showToast("جاري تحميل خريطة التلوث...", "info");
+  const heatPoints = allReports.filter(r => r.gps).map(r => {
+    const parts = r.gps.split(',');
+    return [parseFloat(parts[0]), parseFloat(parts[1]), 0.5];
+  });
+  
+  if(typeof L.heatLayer === 'undefined') {
+    const script = document.createElement('script');
+    script.src = "https://leaflet.github.io/Leaflet.heat/dist/leaflet-heat.js";
+    script.onload = () => { L.heatLayer(heatPoints, {radius: 25}).addTo(map); };
+    document.head.appendChild(script);
+  } else {
+    L.heatLayer(heatPoints, {radius: 25}).addTo(map);
+  }
+}
+
+function showAIAssistant() {
+  const box = document.getElementById('aiChatBox');
+  box.style.display = box.style.display === 'none' ? 'block' : 'none';
+}
+
+async function handleAISend() {
+  const q = document.getElementById('aiInput').value;
+  if(!q) return;
+  const respDiv = document.getElementById('aiResponse');
+  respDiv.innerHTML = "⏳ جاري التفكير...";
+  const ans = await askAI(q);
+  respDiv.innerHTML = "<b>🤖 المساعد:</b> " + ans;
+}
+
+
+// ===== نظام الذكاء الاصطناعي للمواطن =====
+const cleanHadiths = [
+  { text: "الطُّهُورُ شَطْرُ الإِيمَانِ", source: "صحيح مسلم" },
+  { text: "إِنَّ اللَّهَ طَيِّبٌ يُحِبُّ الطِّيبَ، نَظِيفٌ يُحِبُّ النَّظَافَةَ", source: "سنن الترمذي" },
+  { text: "إِمَاطَةُ الأَذَى عَنِ الطَّرِيقِ صَدَقَةٌ", source: "متفق عليه" },
+  { text: "بَيْنَمَا رَجُلٌ يَمْشِي بِطَرِيقٍ وَجَدَ غُصْنَ شَوْكٍ عَلَى الطَّرِيقِ فَأَخَّرَهُ، فَشَكَرَ اللَّهُ لَهُ فَغَفَرَ لَهُ", source: "صحيح البخاري" },
+  { text: "النظافة من الإيمان، والوسخ من الشيطان", source: "حكمة مأثورة" }
+];
+
+let currentHadithIndex = 0;
+function nextHadith() {
+  currentHadithIndex = (currentHadithIndex + 1) % cleanHadiths.length;
+  const h = cleanHadiths[currentHadithIndex];
+  document.getElementById('hadithContainer').innerHTML = `"${h.text}" <br><small style="color:#666">(${h.source})</small>`;
+}
+
+async function askCitizenAI() {
+  const q = document.getElementById('citizenAIInput').value;
+  if(!q) return;
+  const respDiv = document.getElementById('citizenAIResponse');
+  respDiv.style.display = 'block';
+  respDiv.innerHTML = "⏳ جاري البحث عن إجابة بيئية...";
+  
+  const prompt = `أنت مساعد بيئي ذكي لتطبيق "المدية نظيفة". أجب باختصار وودية على هذا السؤال حول النظافة وأهميتها في الحي: ${q}`;
+  const ans = await askAI(prompt);
+  respDiv.innerHTML = "<b>🌱 المساعد البيئي:</b> " + ans;
+}
+
+async function getAIReportAdvice() {
+  const addr = document.getElementById('addrInput').value;
+  const type = document.getElementById('wasteTypeSelect').value;
+  const adviceDiv = document.getElementById('reportAIAdvice');
+  adviceDiv.innerHTML = "⏳ جاري تحليل البيانات لتقديم نصيحة...";
+  
+  const prompt = `المواطن يريد إرسال بلاغ عن نفايات من نوع ${type} في منطقة ${addr || 'غير محددة'}. قدم له نصيحة قصيرة جداً (جملة واحدة) حول كيفية التعامل مع هذا النوع من النفايات أو تشجيعه على البلاغ.`;
+  const ans = await askAI(prompt);
+  adviceDiv.innerHTML = "<b>💡 نصيحة ذكية:</b> " + ans;
+}
+
+// تحسين وظيفة التقاط الصورة لتشمل تحليل تلقائي
+const originalTakePhoto = takePhoto;
+takePhoto = async function() {
+  await originalTakePhoto();
+  // بعد التقاط الصورة، يمكن إضافة تحليل تلقائي لنوع النفايات هنا مستقبلاً
+  const adviceDiv = document.getElementById('reportAIAdvice');
+  if(adviceDiv) adviceDiv.innerHTML = "📸 تم التقاط الصورة. هل تريد مني تحليل نوع النفايات؟";
+};
+
+
+// ===== النظام الاقتصادي والمحفظة =====
+function updateWalletUI() {
+  const balStr = userWallet.balance.toFixed(2) + " " + userWallet.currency;
+  if(document.getElementById('homeWalletBalance')) document.getElementById('homeWalletBalance').textContent = balStr;
+  if(document.getElementById('homeWalletPoints')) document.getElementById('homeWalletPoints').innerHTML = `<i class="fas fa-leaf"></i> ${userWallet.points}`;
+  if(document.getElementById('walletBalanceBig')) document.getElementById('walletBalanceBig').textContent = balStr;
+  if(document.getElementById('walletPointsBig')) document.getElementById('walletPointsBig').textContent = userWallet.points;
+}
+
+function updateMarketPricesUI() {
+  const ticker = document.getElementById('marketPriceTicker');
+  if(!ticker) return;
+  let html = "";
+  for(let m in materialPrices) {
+    const p = materialPrices[m];
+    const icon = p.trend === "up" ? "fa-caret-up" : (p.trend === "down" ? "fa-caret-down" : "fa-minus");
+    const color = p.trend === "up" ? "var(--success)" : (p.trend === "down" ? "var(--error)" : "#757575");
+    html += `<div style="white-space:nowrap; padding:5px 10px; background:white; border-radius:5px; border:1px solid #ddd;">
+      ${m}: ${p.price} <i class="fas ${icon}" style="color:${color}"></i>
+    </div>`;
+  }
+  ticker.innerHTML = html;
+}
+
+function convertPoints() {
+  if(userWallet.points < 100) {
+    showToast("⚠️ تحتاج على الأقل 100 نقطة للتحويل", "error");
+    return;
+  }
+  const cash = userWallet.points * 0.5; // كل نقطة بنصف دينار مثلاً
+  userWallet.balance += cash;
+  addTransaction("تحويل نقاط", cash, "earn");
+  userWallet.points = 0;
+  updateWalletUI();
+  showToast(`✅ تم تحويل النقاط إلى ${cash} DZD`, "success");
+}
+
+function addTransaction(title, amount, type) {
+  const list = document.getElementById('walletTransactions');
+  if(!list) return;
+  if(list.innerHTML.includes("لا توجد معاملات")) list.innerHTML = "";
+  
+  const date = new Date().toLocaleDateString('ar-DZ');
+  const color = type === "earn" ? "var(--success)" : "var(--error)";
+  const sign = type === "earn" ? "+" : "-";
+  
+  const html = `<div style="display:flex; justify-content:space-between; padding:10px 0; border-bottom:1px solid #eee;">
+    <div><b>${title}</b><br><small style="color:#999">${date}</small></div>
+    <div style="color:${color}; font-weight:bold;">${sign}${amount} DZD</div>
+  </div>`;
+  list.innerHTML = html + list.innerHTML;
+  
+  // حفظ في Firebase
+  if(currentUid) {
+    db.ref(`wallets/${currentUid}/transactions`).push({ title, amount, type, date: Date.now() });
+    db.ref(`wallets/${currentUid}/balance`).set(userWallet.balance);
+    db.ref(`wallets/${currentUid}/points`).set(userWallet.points);
+  }
+}
+
+// ربط نظام المكافآت بالبلاغات
+const originalSendReport = sendReport;
+sendReport = async function() {
+  const res = await originalSendReport();
+  // إذا نجح الإرسال، نمنح نقاطاً
+  userWallet.points += 10;
+  updateWalletUI();
+  showToast("🎁 حصلت على 10 نقاط بيئية لمساهمتك!", "success");
+  return res;
+};
+
+// تهيئة عند التشغيل
+setTimeout(() => {
+  updateWalletUI();
+  updateMarketPricesUI();
+}, 2000);
+
+
+// ===== نظام السوق المتقدم والشركات =====
+let companies = [];
+let activeBids = [];
+
+function addNewCompany() {
+  const name = document.getElementById('compNewName').value;
+  const license = document.getElementById('compNewLicense').value;
+  const email = document.getElementById('compNewEmail').value;
+  const phone = document.getElementById('compNewPhone').value;
+  
+  if(!name || !license) { showToast("⚠️ أكمل البيانات المطلوبة", "error"); return; }
+  
+  const company = {
+    id: Date.now(),
+    name, license, email, phone,
+    materials: [],
+    createdAt: new Date().toISOString()
+  };
+  
+  companies.push(company);
+  db.ref(`companies/${company.id}`).set(company);
+  updateCompaniesList();
+  showToast("✅ تم إضافة الشركة بنجاح", "success");
+  document.getElementById('compNewName').value = '';
+  document.getElementById('compNewLicense').value = '';
+}
+
+function updateCompaniesList() {
+  const list = document.getElementById('companiesList');
+  if(!list) return;
+  if(companies.length === 0) {
+    list.innerHTML = '<p style="text-align:center; color:#999;">لا توجد شركات مسجلة حالياً</p>';
+    return;
+  }
+  let html = "";
+  companies.forEach(c => {
+    html += `<div style="padding:10px; border:1px solid #ddd; border-radius:5px; margin-bottom:10px;">
+      <b>${c.name}</b> (${c.license})<br>
+      <small style="color:#666;">${c.email} | ${c.phone}</small>
+      <button class="btn btn-dark ripple" style="font-size:0.7rem; padding:3px 8px; margin-top:5px;" onclick="editCompany(${c.id})">
+        <i class="fas fa-edit"></i> تعديل
+      </button>
+    </div>`;
+  });
+  list.innerHTML = html;
+}
+
+function createBid() {
+  const type = document.getElementById('bidMaterialType').value;
+  const qty = parseFloat(document.getElementById('bidQuantity').value);
+  const minPrice = parseFloat(document.getElementById('bidMinPrice').value);
+  const duration = parseInt(document.getElementById('bidDuration').value);
+  
+  if(!type || !qty || !minPrice) { showToast("⚠️ أكمل البيانات", "error"); return; }
+  
+  const bid = {
+    id: Date.now(),
+    type, qty, minPrice, duration,
+    startTime: Date.now(),
+    endTime: Date.now() + (duration * 3600000),
+    bids: {},
+    winner: null,
+    status: "active"
+  };
+  
+  activeBids.push(bid);
+  db.ref(`bids/${bid.id}`).set(bid);
+  updateActiveBids();
+  showToast("✅ تم إنشاء المزايدة بنجاح", "success");
+}
+
+function updateActiveBids() {
+  const list = document.getElementById('activeBids');
+  if(!list) return;
+  if(activeBids.length === 0) {
+    list.innerHTML = '<p style="text-align:center; color:#999;">لا توجد مزايدات جارية</p>';
+    return;
+  }
+  let html = "";
+  activeBids.forEach(b => {
+    const remaining = Math.max(0, b.endTime - Date.now());
+    const hours = Math.floor(remaining / 3600000);
+    html += `<div style="padding:10px; background:#f5f5f5; border-radius:5px; margin-bottom:10px;">
+      <b>${b.type.toUpperCase()}</b> - ${b.qty} طن | السعر الأدنى: ${b.minPrice} DZD<br>
+      <small style="color:#666;">الوقت المتبقي: ${hours} ساعات</small>
+    </div>`;
+  });
+  list.innerHTML = html;
+}
+
+// تحديث الإحصائيات
+function updateEconomicStats() {
+  let totalWallet = 0;
+  let totalMaterials = 0;
+  
+  // حساب إجمالي الأرصدة (يمكن جلبها من Firebase)
+  if(document.getElementById('totalWalletValue')) {
+    document.getElementById('totalWalletValue').textContent = totalWallet.toFixed(2) + " DZD";
+  }
+  if(document.getElementById('totalMaterialsSold')) {
+    document.getElementById('totalMaterialsSold').textContent = totalMaterials + " طن";
+  }
+}
+
+// تحديث الأسعار الديناميكية
+function updateDynamicPrices() {
+  for(let m in materialPrices) {
+    const p = materialPrices[m];
+    const change = (Math.random() - 0.5) * 10;
+    p.price = Math.max(5, p.price + change);
+    p.trend = change > 0 ? "up" : (change < 0 ? "down" : "stable");
+  }
+  updateMarketPricesUI();
+}
+
+// تحديث الأسعار كل 30 دقيقة
+setInterval(updateDynamicPrices, 30 * 60000);
+
+// تحديث الإحصائيات عند التحميل
+setTimeout(() => {
+  updateCompaniesList();
+  updateActiveBids();
+  updateEconomicStats();
+}, 2000);
+
+</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js">
+function loadHeatmap() {
+  if(!allReports || allReports.length === 0) { showToast("لا توجد بيانات كافية", "info"); return; }
+  showToast("جاري تحميل خريطة التلوث...", "info");
+  const heatPoints = allReports.filter(r => r.gps).map(r => {
+    const parts = r.gps.split(',');
+    return [parseFloat(parts[0]), parseFloat(parts[1]), 0.5];
+  });
+  
+  if(typeof L.heatLayer === 'undefined') {
+    const script = document.createElement('script');
+    script.src = "https://leaflet.github.io/Leaflet.heat/dist/leaflet-heat.js";
+    script.onload = () => { L.heatLayer(heatPoints, {radius: 25}).addTo(map); };
+    document.head.appendChild(script);
+  } else {
+    L.heatLayer(heatPoints, {radius: 25}).addTo(map);
+  }
+}
+
+function showAIAssistant() {
+  const box = document.getElementById('aiChatBox');
+  box.style.display = box.style.display === 'none' ? 'block' : 'none';
+}
+
+async function handleAISend() {
+  const q = document.getElementById('aiInput').value;
+  if(!q) return;
+  const respDiv = document.getElementById('aiResponse');
+  respDiv.innerHTML = "⏳ جاري التفكير...";
+  const ans = await askAI(q);
+  respDiv.innerHTML = "<b>🤖 المساعد:</b> " + ans;
+}
+
+
+// ===== نظام الذكاء الاصطناعي للمواطن =====
+const cleanHadiths = [
+  { text: "الطُّهُورُ شَطْرُ الإِيمَانِ", source: "صحيح مسلم" },
+  { text: "إِنَّ اللَّهَ طَيِّبٌ يُحِبُّ الطِّيبَ، نَظِيفٌ يُحِبُّ النَّظَافَةَ", source: "سنن الترمذي" },
+  { text: "إِمَاطَةُ الأَذَى عَنِ الطَّرِيقِ صَدَقَةٌ", source: "متفق عليه" },
+  { text: "بَيْنَمَا رَجُلٌ يَمْشِي بِطَرِيقٍ وَجَدَ غُصْنَ شَوْكٍ عَلَى الطَّرِيقِ فَأَخَّرَهُ، فَشَكَرَ اللَّهُ لَهُ فَغَفَرَ لَهُ", source: "صحيح البخاري" },
+  { text: "النظافة من الإيمان، والوسخ من الشيطان", source: "حكمة مأثورة" }
+];
+
+let currentHadithIndex = 0;
+function nextHadith() {
+  currentHadithIndex = (currentHadithIndex + 1) % cleanHadiths.length;
+  const h = cleanHadiths[currentHadithIndex];
+  document.getElementById('hadithContainer').innerHTML = `"${h.text}" <br><small style="color:#666">(${h.source})</small>`;
+}
+
+async function askCitizenAI() {
+  const q = document.getElementById('citizenAIInput').value;
+  if(!q) return;
+  const respDiv = document.getElementById('citizenAIResponse');
+  respDiv.style.display = 'block';
+  respDiv.innerHTML = "⏳ جاري البحث عن إجابة بيئية...";
+  
+  const prompt = `أنت مساعد بيئي ذكي لتطبيق "المدية نظيفة". أجب باختصار وودية على هذا السؤال حول النظافة وأهميتها في الحي: ${q}`;
+  const ans = await askAI(prompt);
+  respDiv.innerHTML = "<b>🌱 المساعد البيئي:</b> " + ans;
+}
+
+async function getAIReportAdvice() {
+  const addr = document.getElementById('addrInput').value;
+  const type = document.getElementById('wasteTypeSelect').value;
+  const adviceDiv = document.getElementById('reportAIAdvice');
+  adviceDiv.innerHTML = "⏳ جاري تحليل البيانات لتقديم نصيحة...";
+  
+  const prompt = `المواطن يريد إرسال بلاغ عن نفايات من نوع ${type} في منطقة ${addr || 'غير محددة'}. قدم له نصيحة قصيرة جداً (جملة واحدة) حول كيفية التعامل مع هذا النوع من النفايات أو تشجيعه على البلاغ.`;
+  const ans = await askAI(prompt);
+  adviceDiv.innerHTML = "<b>💡 نصيحة ذكية:</b> " + ans;
+}
+
+// تحسين وظيفة التقاط الصورة لتشمل تحليل تلقائي
+const originalTakePhoto = takePhoto;
+takePhoto = async function() {
+  await originalTakePhoto();
+  // بعد التقاط الصورة، يمكن إضافة تحليل تلقائي لنوع النفايات هنا مستقبلاً
+  const adviceDiv = document.getElementById('reportAIAdvice');
+  if(adviceDiv) adviceDiv.innerHTML = "📸 تم التقاط الصورة. هل تريد مني تحليل نوع النفايات؟";
+};
+
+
+// ===== النظام الاقتصادي والمحفظة =====
+function updateWalletUI() {
+  const balStr = userWallet.balance.toFixed(2) + " " + userWallet.currency;
+  if(document.getElementById('homeWalletBalance')) document.getElementById('homeWalletBalance').textContent = balStr;
+  if(document.getElementById('homeWalletPoints')) document.getElementById('homeWalletPoints').innerHTML = `<i class="fas fa-leaf"></i> ${userWallet.points}`;
+  if(document.getElementById('walletBalanceBig')) document.getElementById('walletBalanceBig').textContent = balStr;
+  if(document.getElementById('walletPointsBig')) document.getElementById('walletPointsBig').textContent = userWallet.points;
+}
+
+function updateMarketPricesUI() {
+  const ticker = document.getElementById('marketPriceTicker');
+  if(!ticker) return;
+  let html = "";
+  for(let m in materialPrices) {
+    const p = materialPrices[m];
+    const icon = p.trend === "up" ? "fa-caret-up" : (p.trend === "down" ? "fa-caret-down" : "fa-minus");
+    const color = p.trend === "up" ? "var(--success)" : (p.trend === "down" ? "var(--error)" : "#757575");
+    html += `<div style="white-space:nowrap; padding:5px 10px; background:white; border-radius:5px; border:1px solid #ddd;">
+      ${m}: ${p.price} <i class="fas ${icon}" style="color:${color}"></i>
+    </div>`;
+  }
+  ticker.innerHTML = html;
+}
+
+function convertPoints() {
+  if(userWallet.points < 100) {
+    showToast("⚠️ تحتاج على الأقل 100 نقطة للتحويل", "error");
+    return;
+  }
+  const cash = userWallet.points * 0.5; // كل نقطة بنصف دينار مثلاً
+  userWallet.balance += cash;
+  addTransaction("تحويل نقاط", cash, "earn");
+  userWallet.points = 0;
+  updateWalletUI();
+  showToast(`✅ تم تحويل النقاط إلى ${cash} DZD`, "success");
+}
+
+function addTransaction(title, amount, type) {
+  const list = document.getElementById('walletTransactions');
+  if(!list) return;
+  if(list.innerHTML.includes("لا توجد معاملات")) list.innerHTML = "";
+  
+  const date = new Date().toLocaleDateString('ar-DZ');
+  const color = type === "earn" ? "var(--success)" : "var(--error)";
+  const sign = type === "earn" ? "+" : "-";
+  
+  const html = `<div style="display:flex; justify-content:space-between; padding:10px 0; border-bottom:1px solid #eee;">
+    <div><b>${title}</b><br><small style="color:#999">${date}</small></div>
+    <div style="color:${color}; font-weight:bold;">${sign}${amount} DZD</div>
+  </div>`;
+  list.innerHTML = html + list.innerHTML;
+  
+  // حفظ في Firebase
+  if(currentUid) {
+    db.ref(`wallets/${currentUid}/transactions`).push({ title, amount, type, date: Date.now() });
+    db.ref(`wallets/${currentUid}/balance`).set(userWallet.balance);
+    db.ref(`wallets/${currentUid}/points`).set(userWallet.points);
+  }
+}
+
+// ربط نظام المكافآت بالبلاغات
+const originalSendReport = sendReport;
+sendReport = async function() {
+  const res = await originalSendReport();
+  // إذا نجح الإرسال، نمنح نقاطاً
+  userWallet.points += 10;
+  updateWalletUI();
+  showToast("🎁 حصلت على 10 نقاط بيئية لمساهمتك!", "success");
+  return res;
+};
+
+// تهيئة عند التشغيل
+setTimeout(() => {
+  updateWalletUI();
+  updateMarketPricesUI();
+}, 2000);
+
+
+// ===== نظام السوق المتقدم والشركات =====
+let companies = [];
+let activeBids = [];
+
+function addNewCompany() {
+  const name = document.getElementById('compNewName').value;
+  const license = document.getElementById('compNewLicense').value;
+  const email = document.getElementById('compNewEmail').value;
+  const phone = document.getElementById('compNewPhone').value;
+  
+  if(!name || !license) { showToast("⚠️ أكمل البيانات المطلوبة", "error"); return; }
+  
+  const company = {
+    id: Date.now(),
+    name, license, email, phone,
+    materials: [],
+    createdAt: new Date().toISOString()
+  };
+  
+  companies.push(company);
+  db.ref(`companies/${company.id}`).set(company);
+  updateCompaniesList();
+  showToast("✅ تم إضافة الشركة بنجاح", "success");
+  document.getElementById('compNewName').value = '';
+  document.getElementById('compNewLicense').value = '';
+}
+
+function updateCompaniesList() {
+  const list = document.getElementById('companiesList');
+  if(!list) return;
+  if(companies.length === 0) {
+    list.innerHTML = '<p style="text-align:center; color:#999;">لا توجد شركات مسجلة حالياً</p>';
+    return;
+  }
+  let html = "";
+  companies.forEach(c => {
+    html += `<div style="padding:10px; border:1px solid #ddd; border-radius:5px; margin-bottom:10px;">
+      <b>${c.name}</b> (${c.license})<br>
+      <small style="color:#666;">${c.email} | ${c.phone}</small>
+      <button class="btn btn-dark ripple" style="font-size:0.7rem; padding:3px 8px; margin-top:5px;" onclick="editCompany(${c.id})">
+        <i class="fas fa-edit"></i> تعديل
+      </button>
+    </div>`;
+  });
+  list.innerHTML = html;
+}
+
+function createBid() {
+  const type = document.getElementById('bidMaterialType').value;
+  const qty = parseFloat(document.getElementById('bidQuantity').value);
+  const minPrice = parseFloat(document.getElementById('bidMinPrice').value);
+  const duration = parseInt(document.getElementById('bidDuration').value);
+  
+  if(!type || !qty || !minPrice) { showToast("⚠️ أكمل البيانات", "error"); return; }
+  
+  const bid = {
+    id: Date.now(),
+    type, qty, minPrice, duration,
+    startTime: Date.now(),
+    endTime: Date.now() + (duration * 3600000),
+    bids: {},
+    winner: null,
+    status: "active"
+  };
+  
+  activeBids.push(bid);
+  db.ref(`bids/${bid.id}`).set(bid);
+  updateActiveBids();
+  showToast("✅ تم إنشاء المزايدة بنجاح", "success");
+}
+
+function updateActiveBids() {
+  const list = document.getElementById('activeBids');
+  if(!list) return;
+  if(activeBids.length === 0) {
+    list.innerHTML = '<p style="text-align:center; color:#999;">لا توجد مزايدات جارية</p>';
+    return;
+  }
+  let html = "";
+  activeBids.forEach(b => {
+    const remaining = Math.max(0, b.endTime - Date.now());
+    const hours = Math.floor(remaining / 3600000);
+    html += `<div style="padding:10px; background:#f5f5f5; border-radius:5px; margin-bottom:10px;">
+      <b>${b.type.toUpperCase()}</b> - ${b.qty} طن | السعر الأدنى: ${b.minPrice} DZD<br>
+      <small style="color:#666;">الوقت المتبقي: ${hours} ساعات</small>
+    </div>`;
+  });
+  list.innerHTML = html;
+}
+
+// تحديث الإحصائيات
+function updateEconomicStats() {
+  let totalWallet = 0;
+  let totalMaterials = 0;
+  
+  // حساب إجمالي الأرصدة (يمكن جلبها من Firebase)
+  if(document.getElementById('totalWalletValue')) {
+    document.getElementById('totalWalletValue').textContent = totalWallet.toFixed(2) + " DZD";
+  }
+  if(document.getElementById('totalMaterialsSold')) {
+    document.getElementById('totalMaterialsSold').textContent = totalMaterials + " طن";
+  }
+}
+
+// تحديث الأسعار الديناميكية
+function updateDynamicPrices() {
+  for(let m in materialPrices) {
+    const p = materialPrices[m];
+    const change = (Math.random() - 0.5) * 10;
+    p.price = Math.max(5, p.price + change);
+    p.trend = change > 0 ? "up" : (change < 0 ? "down" : "stable");
+  }
+  updateMarketPricesUI();
+}
+
+// تحديث الأسعار كل 30 دقيقة
+setInterval(updateDynamicPrices, 30 * 60000);
+
+// تحديث الإحصائيات عند التحميل
+setTimeout(() => {
+  updateCompaniesList();
+  updateActiveBids();
+  updateEconomicStats();
+}, 2000);
+
+</script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js">
+function loadHeatmap() {
+  if(!allReports || allReports.length === 0) { showToast("لا توجد بيانات كافية", "info"); return; }
+  showToast("جاري تحميل خريطة التلوث...", "info");
+  const heatPoints = allReports.filter(r => r.gps).map(r => {
+    const parts = r.gps.split(',');
+    return [parseFloat(parts[0]), parseFloat(parts[1]), 0.5];
+  });
+  
+  if(typeof L.heatLayer === 'undefined') {
+    const script = document.createElement('script');
+    script.src = "https://leaflet.github.io/Leaflet.heat/dist/leaflet-heat.js";
+    script.onload = () => { L.heatLayer(heatPoints, {radius: 25}).addTo(map); };
+    document.head.appendChild(script);
+  } else {
+    L.heatLayer(heatPoints, {radius: 25}).addTo(map);
+  }
+}
+
+function showAIAssistant() {
+  const box = document.getElementById('aiChatBox');
+  box.style.display = box.style.display === 'none' ? 'block' : 'none';
+}
+
+async function handleAISend() {
+  const q = document.getElementById('aiInput').value;
+  if(!q) return;
+  const respDiv = document.getElementById('aiResponse');
+  respDiv.innerHTML = "⏳ جاري التفكير...";
+  const ans = await askAI(q);
+  respDiv.innerHTML = "<b>🤖 المساعد:</b> " + ans;
+}
+
+
+// ===== نظام الذكاء الاصطناعي للمواطن =====
+const cleanHadiths = [
+  { text: "الطُّهُورُ شَطْرُ الإِيمَانِ", source: "صحيح مسلم" },
+  { text: "إِنَّ اللَّهَ طَيِّبٌ يُحِبُّ الطِّيبَ، نَظِيفٌ يُحِبُّ النَّظَافَةَ", source: "سنن الترمذي" },
+  { text: "إِمَاطَةُ الأَذَى عَنِ الطَّرِيقِ صَدَقَةٌ", source: "متفق عليه" },
+  { text: "بَيْنَمَا رَجُلٌ يَمْشِي بِطَرِيقٍ وَجَدَ غُصْنَ شَوْكٍ عَلَى الطَّرِيقِ فَأَخَّرَهُ، فَشَكَرَ اللَّهُ لَهُ فَغَفَرَ لَهُ", source: "صحيح البخاري" },
+  { text: "النظافة من الإيمان، والوسخ من الشيطان", source: "حكمة مأثورة" }
+];
+
+let currentHadithIndex = 0;
+function nextHadith() {
+  currentHadithIndex = (currentHadithIndex + 1) % cleanHadiths.length;
+  const h = cleanHadiths[currentHadithIndex];
+  document.getElementById('hadithContainer').innerHTML = `"${h.text}" <br><small style="color:#666">(${h.source})</small>`;
+}
+
+async function askCitizenAI() {
+  const q = document.getElementById('citizenAIInput').value;
+  if(!q) return;
+  const respDiv = document.getElementById('citizenAIResponse');
+  respDiv.style.display = 'block';
+  respDiv.innerHTML = "⏳ جاري البحث عن إجابة بيئية...";
+  
+  const prompt = `أنت مساعد بيئي ذكي لتطبيق "المدية نظيفة". أجب باختصار وودية على هذا السؤال حول النظافة وأهميتها في الحي: ${q}`;
+  const ans = await askAI(prompt);
+  respDiv.innerHTML = "<b>🌱 المساعد البيئي:</b> " + ans;
+}
+
+async function getAIReportAdvice() {
+  const addr = document.getElementById('addrInput').value;
+  const type = document.getElementById('wasteTypeSelect').value;
+  const adviceDiv = document.getElementById('reportAIAdvice');
+  adviceDiv.innerHTML = "⏳ جاري تحليل البيانات لتقديم نصيحة...";
+  
+  const prompt = `المواطن يريد إرسال بلاغ عن نفايات من نوع ${type} في منطقة ${addr || 'غير محددة'}. قدم له نصيحة قصيرة جداً (جملة واحدة) حول كيفية التعامل مع هذا النوع من النفايات أو تشجيعه على البلاغ.`;
+  const ans = await askAI(prompt);
+  adviceDiv.innerHTML = "<b>💡 نصيحة ذكية:</b> " + ans;
+}
+
+// تحسين وظيفة التقاط الصورة لتشمل تحليل تلقائي
+const originalTakePhoto = takePhoto;
+takePhoto = async function() {
+  await originalTakePhoto();
+  // بعد التقاط الصورة، يمكن إضافة تحليل تلقائي لنوع النفايات هنا مستقبلاً
+  const adviceDiv = document.getElementById('reportAIAdvice');
+  if(adviceDiv) adviceDiv.innerHTML = "📸 تم التقاط الصورة. هل تريد مني تحليل نوع النفايات؟";
+};
+
+
+// ===== النظام الاقتصادي والمحفظة =====
+function updateWalletUI() {
+  const balStr = userWallet.balance.toFixed(2) + " " + userWallet.currency;
+  if(document.getElementById('homeWalletBalance')) document.getElementById('homeWalletBalance').textContent = balStr;
+  if(document.getElementById('homeWalletPoints')) document.getElementById('homeWalletPoints').innerHTML = `<i class="fas fa-leaf"></i> ${userWallet.points}`;
+  if(document.getElementById('walletBalanceBig')) document.getElementById('walletBalanceBig').textContent = balStr;
+  if(document.getElementById('walletPointsBig')) document.getElementById('walletPointsBig').textContent = userWallet.points;
+}
+
+function updateMarketPricesUI() {
+  const ticker = document.getElementById('marketPriceTicker');
+  if(!ticker) return;
+  let html = "";
+  for(let m in materialPrices) {
+    const p = materialPrices[m];
+    const icon = p.trend === "up" ? "fa-caret-up" : (p.trend === "down" ? "fa-caret-down" : "fa-minus");
+    const color = p.trend === "up" ? "var(--success)" : (p.trend === "down" ? "var(--error)" : "#757575");
+    html += `<div style="white-space:nowrap; padding:5px 10px; background:white; border-radius:5px; border:1px solid #ddd;">
+      ${m}: ${p.price} <i class="fas ${icon}" style="color:${color}"></i>
+    </div>`;
+  }
+  ticker.innerHTML = html;
+}
+
+function convertPoints() {
+  if(userWallet.points < 100) {
+    showToast("⚠️ تحتاج على الأقل 100 نقطة للتحويل", "error");
+    return;
+  }
+  const cash = userWallet.points * 0.5; // كل نقطة بنصف دينار مثلاً
+  userWallet.balance += cash;
+  addTransaction("تحويل نقاط", cash, "earn");
+  userWallet.points = 0;
+  updateWalletUI();
+  showToast(`✅ تم تحويل النقاط إلى ${cash} DZD`, "success");
+}
+
+function addTransaction(title, amount, type) {
+  const list = document.getElementById('walletTransactions');
+  if(!list) return;
+  if(list.innerHTML.includes("لا توجد معاملات")) list.innerHTML = "";
+  
+  const date = new Date().toLocaleDateString('ar-DZ');
+  const color = type === "earn" ? "var(--success)" : "var(--error)";
+  const sign = type === "earn" ? "+" : "-";
+  
+  const html = `<div style="display:flex; justify-content:space-between; padding:10px 0; border-bottom:1px solid #eee;">
+    <div><b>${title}</b><br><small style="color:#999">${date}</small></div>
+    <div style="color:${color}; font-weight:bold;">${sign}${amount} DZD</div>
+  </div>`;
+  list.innerHTML = html + list.innerHTML;
+  
+  // حفظ في Firebase
+  if(currentUid) {
+    db.ref(`wallets/${currentUid}/transactions`).push({ title, amount, type, date: Date.now() });
+    db.ref(`wallets/${currentUid}/balance`).set(userWallet.balance);
+    db.ref(`wallets/${currentUid}/points`).set(userWallet.points);
+  }
+}
+
+// ربط نظام المكافآت بالبلاغات
+const originalSendReport = sendReport;
+sendReport = async function() {
+  const res = await originalSendReport();
+  // إذا نجح الإرسال، نمنح نقاطاً
+  userWallet.points += 10;
+  updateWalletUI();
+  showToast("🎁 حصلت على 10 نقاط بيئية لمساهمتك!", "success");
+  return res;
+};
+
+// تهيئة عند التشغيل
+setTimeout(() => {
+  updateWalletUI();
+  updateMarketPricesUI();
+}, 2000);
+
+
+// ===== نظام السوق المتقدم والشركات =====
+let companies = [];
+let activeBids = [];
+
+function addNewCompany() {
+  const name = document.getElementById('compNewName').value;
+  const license = document.getElementById('compNewLicense').value;
+  const email = document.getElementById('compNewEmail').value;
+  const phone = document.getElementById('compNewPhone').value;
+  
+  if(!name || !license) { showToast("⚠️ أكمل البيانات المطلوبة", "error"); return; }
+  
+  const company = {
+    id: Date.now(),
+    name, license, email, phone,
+    materials: [],
+    createdAt: new Date().toISOString()
+  };
+  
+  companies.push(company);
+  db.ref(`companies/${company.id}`).set(company);
+  updateCompaniesList();
+  showToast("✅ تم إضافة الشركة بنجاح", "success");
+  document.getElementById('compNewName').value = '';
+  document.getElementById('compNewLicense').value = '';
+}
+
+function updateCompaniesList() {
+  const list = document.getElementById('companiesList');
+  if(!list) return;
+  if(companies.length === 0) {
+    list.innerHTML = '<p style="text-align:center; color:#999;">لا توجد شركات مسجلة حالياً</p>';
+    return;
+  }
+  let html = "";
+  companies.forEach(c => {
+    html += `<div style="padding:10px; border:1px solid #ddd; border-radius:5px; margin-bottom:10px;">
+      <b>${c.name}</b> (${c.license})<br>
+      <small style="color:#666;">${c.email} | ${c.phone}</small>
+      <button class="btn btn-dark ripple" style="font-size:0.7rem; padding:3px 8px; margin-top:5px;" onclick="editCompany(${c.id})">
+        <i class="fas fa-edit"></i> تعديل
+      </button>
+    </div>`;
+  });
+  list.innerHTML = html;
+}
+
+function createBid() {
+  const type = document.getElementById('bidMaterialType').value;
+  const qty = parseFloat(document.getElementById('bidQuantity').value);
+  const minPrice = parseFloat(document.getElementById('bidMinPrice').value);
+  const duration = parseInt(document.getElementById('bidDuration').value);
+  
+  if(!type || !qty || !minPrice) { showToast("⚠️ أكمل البيانات", "error"); return; }
+  
+  const bid = {
+    id: Date.now(),
+    type, qty, minPrice, duration,
+    startTime: Date.now(),
+    endTime: Date.now() + (duration * 3600000),
+    bids: {},
+    winner: null,
+    status: "active"
+  };
+  
+  activeBids.push(bid);
+  db.ref(`bids/${bid.id}`).set(bid);
+  updateActiveBids();
+  showToast("✅ تم إنشاء المزايدة بنجاح", "success");
+}
+
+function updateActiveBids() {
+  const list = document.getElementById('activeBids');
+  if(!list) return;
+  if(activeBids.length === 0) {
+    list.innerHTML = '<p style="text-align:center; color:#999;">لا توجد مزايدات جارية</p>';
+    return;
+  }
+  let html = "";
+  activeBids.forEach(b => {
+    const remaining = Math.max(0, b.endTime - Date.now());
+    const hours = Math.floor(remaining / 3600000);
+    html += `<div style="padding:10px; background:#f5f5f5; border-radius:5px; margin-bottom:10px;">
+      <b>${b.type.toUpperCase()}</b> - ${b.qty} طن | السعر الأدنى: ${b.minPrice} DZD<br>
+      <small style="color:#666;">الوقت المتبقي: ${hours} ساعات</small>
+    </div>`;
+  });
+  list.innerHTML = html;
+}
+
+// تحديث الإحصائيات
+function updateEconomicStats() {
+  let totalWallet = 0;
+  let totalMaterials = 0;
+  
+  // حساب إجمالي الأرصدة (يمكن جلبها من Firebase)
+  if(document.getElementById('totalWalletValue')) {
+    document.getElementById('totalWalletValue').textContent = totalWallet.toFixed(2) + " DZD";
+  }
+  if(document.getElementById('totalMaterialsSold')) {
+    document.getElementById('totalMaterialsSold').textContent = totalMaterials + " طن";
+  }
+}
+
+// تحديث الأسعار الديناميكية
+function updateDynamicPrices() {
+  for(let m in materialPrices) {
+    const p = materialPrices[m];
+    const change = (Math.random() - 0.5) * 10;
+    p.price = Math.max(5, p.price + change);
+    p.trend = change > 0 ? "up" : (change < 0 ? "down" : "stable");
+  }
+  updateMarketPricesUI();
+}
+
+// تحديث الأسعار كل 30 دقيقة
+setInterval(updateDynamicPrices, 30 * 60000);
+
+// تحديث الإحصائيات عند التحميل
+setTimeout(() => {
+  updateCompaniesList();
+  updateActiveBids();
+  updateEconomicStats();
+}, 2000);
+
+</script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js">
+function loadHeatmap() {
+  if(!allReports || allReports.length === 0) { showToast("لا توجد بيانات كافية", "info"); return; }
+  showToast("جاري تحميل خريطة التلوث...", "info");
+  const heatPoints = allReports.filter(r => r.gps).map(r => {
+    const parts = r.gps.split(',');
+    return [parseFloat(parts[0]), parseFloat(parts[1]), 0.5];
+  });
+  
+  if(typeof L.heatLayer === 'undefined') {
+    const script = document.createElement('script');
+    script.src = "https://leaflet.github.io/Leaflet.heat/dist/leaflet-heat.js";
+    script.onload = () => { L.heatLayer(heatPoints, {radius: 25}).addTo(map); };
+    document.head.appendChild(script);
+  } else {
+    L.heatLayer(heatPoints, {radius: 25}).addTo(map);
+  }
+}
+
+function showAIAssistant() {
+  const box = document.getElementById('aiChatBox');
+  box.style.display = box.style.display === 'none' ? 'block' : 'none';
+}
+
+async function handleAISend() {
+  const q = document.getElementById('aiInput').value;
+  if(!q) return;
+  const respDiv = document.getElementById('aiResponse');
+  respDiv.innerHTML = "⏳ جاري التفكير...";
+  const ans = await askAI(q);
+  respDiv.innerHTML = "<b>🤖 المساعد:</b> " + ans;
+}
+
+
+// ===== نظام الذكاء الاصطناعي للمواطن =====
+const cleanHadiths = [
+  { text: "الطُّهُورُ شَطْرُ الإِيمَانِ", source: "صحيح مسلم" },
+  { text: "إِنَّ اللَّهَ طَيِّبٌ يُحِبُّ الطِّيبَ، نَظِيفٌ يُحِبُّ النَّظَافَةَ", source: "سنن الترمذي" },
+  { text: "إِمَاطَةُ الأَذَى عَنِ الطَّرِيقِ صَدَقَةٌ", source: "متفق عليه" },
+  { text: "بَيْنَمَا رَجُلٌ يَمْشِي بِطَرِيقٍ وَجَدَ غُصْنَ شَوْكٍ عَلَى الطَّرِيقِ فَأَخَّرَهُ، فَشَكَرَ اللَّهُ لَهُ فَغَفَرَ لَهُ", source: "صحيح البخاري" },
+  { text: "النظافة من الإيمان، والوسخ من الشيطان", source: "حكمة مأثورة" }
+];
+
+let currentHadithIndex = 0;
+function nextHadith() {
+  currentHadithIndex = (currentHadithIndex + 1) % cleanHadiths.length;
+  const h = cleanHadiths[currentHadithIndex];
+  document.getElementById('hadithContainer').innerHTML = `"${h.text}" <br><small style="color:#666">(${h.source})</small>`;
+}
+
+async function askCitizenAI() {
+  const q = document.getElementById('citizenAIInput').value;
+  if(!q) return;
+  const respDiv = document.getElementById('citizenAIResponse');
+  respDiv.style.display = 'block';
+  respDiv.innerHTML = "⏳ جاري البحث عن إجابة بيئية...";
+  
+  const prompt = `أنت مساعد بيئي ذكي لتطبيق "المدية نظيفة". أجب باختصار وودية على هذا السؤال حول النظافة وأهميتها في الحي: ${q}`;
+  const ans = await askAI(prompt);
+  respDiv.innerHTML = "<b>🌱 المساعد البيئي:</b> " + ans;
+}
+
+async function getAIReportAdvice() {
+  const addr = document.getElementById('addrInput').value;
+  const type = document.getElementById('wasteTypeSelect').value;
+  const adviceDiv = document.getElementById('reportAIAdvice');
+  adviceDiv.innerHTML = "⏳ جاري تحليل البيانات لتقديم نصيحة...";
+  
+  const prompt = `المواطن يريد إرسال بلاغ عن نفايات من نوع ${type} في منطقة ${addr || 'غير محددة'}. قدم له نصيحة قصيرة جداً (جملة واحدة) حول كيفية التعامل مع هذا النوع من النفايات أو تشجيعه على البلاغ.`;
+  const ans = await askAI(prompt);
+  adviceDiv.innerHTML = "<b>💡 نصيحة ذكية:</b> " + ans;
+}
+
+// تحسين وظيفة التقاط الصورة لتشمل تحليل تلقائي
+const originalTakePhoto = takePhoto;
+takePhoto = async function() {
+  await originalTakePhoto();
+  // بعد التقاط الصورة، يمكن إضافة تحليل تلقائي لنوع النفايات هنا مستقبلاً
+  const adviceDiv = document.getElementById('reportAIAdvice');
+  if(adviceDiv) adviceDiv.innerHTML = "📸 تم التقاط الصورة. هل تريد مني تحليل نوع النفايات؟";
+};
+
+
+// ===== النظام الاقتصادي والمحفظة =====
+function updateWalletUI() {
+  const balStr = userWallet.balance.toFixed(2) + " " + userWallet.currency;
+  if(document.getElementById('homeWalletBalance')) document.getElementById('homeWalletBalance').textContent = balStr;
+  if(document.getElementById('homeWalletPoints')) document.getElementById('homeWalletPoints').innerHTML = `<i class="fas fa-leaf"></i> ${userWallet.points}`;
+  if(document.getElementById('walletBalanceBig')) document.getElementById('walletBalanceBig').textContent = balStr;
+  if(document.getElementById('walletPointsBig')) document.getElementById('walletPointsBig').textContent = userWallet.points;
+}
+
+function updateMarketPricesUI() {
+  const ticker = document.getElementById('marketPriceTicker');
+  if(!ticker) return;
+  let html = "";
+  for(let m in materialPrices) {
+    const p = materialPrices[m];
+    const icon = p.trend === "up" ? "fa-caret-up" : (p.trend === "down" ? "fa-caret-down" : "fa-minus");
+    const color = p.trend === "up" ? "var(--success)" : (p.trend === "down" ? "var(--error)" : "#757575");
+    html += `<div style="white-space:nowrap; padding:5px 10px; background:white; border-radius:5px; border:1px solid #ddd;">
+      ${m}: ${p.price} <i class="fas ${icon}" style="color:${color}"></i>
+    </div>`;
+  }
+  ticker.innerHTML = html;
+}
+
+function convertPoints() {
+  if(userWallet.points < 100) {
+    showToast("⚠️ تحتاج على الأقل 100 نقطة للتحويل", "error");
+    return;
+  }
+  const cash = userWallet.points * 0.5; // كل نقطة بنصف دينار مثلاً
+  userWallet.balance += cash;
+  addTransaction("تحويل نقاط", cash, "earn");
+  userWallet.points = 0;
+  updateWalletUI();
+  showToast(`✅ تم تحويل النقاط إلى ${cash} DZD`, "success");
+}
+
+function addTransaction(title, amount, type) {
+  const list = document.getElementById('walletTransactions');
+  if(!list) return;
+  if(list.innerHTML.includes("لا توجد معاملات")) list.innerHTML = "";
+  
+  const date = new Date().toLocaleDateString('ar-DZ');
+  const color = type === "earn" ? "var(--success)" : "var(--error)";
+  const sign = type === "earn" ? "+" : "-";
+  
+  const html = `<div style="display:flex; justify-content:space-between; padding:10px 0; border-bottom:1px solid #eee;">
+    <div><b>${title}</b><br><small style="color:#999">${date}</small></div>
+    <div style="color:${color}; font-weight:bold;">${sign}${amount} DZD</div>
+  </div>`;
+  list.innerHTML = html + list.innerHTML;
+  
+  // حفظ في Firebase
+  if(currentUid) {
+    db.ref(`wallets/${currentUid}/transactions`).push({ title, amount, type, date: Date.now() });
+    db.ref(`wallets/${currentUid}/balance`).set(userWallet.balance);
+    db.ref(`wallets/${currentUid}/points`).set(userWallet.points);
+  }
+}
+
+// ربط نظام المكافآت بالبلاغات
+const originalSendReport = sendReport;
+sendReport = async function() {
+  const res = await originalSendReport();
+  // إذا نجح الإرسال، نمنح نقاطاً
+  userWallet.points += 10;
+  updateWalletUI();
+  showToast("🎁 حصلت على 10 نقاط بيئية لمساهمتك!", "success");
+  return res;
+};
+
+// تهيئة عند التشغيل
+setTimeout(() => {
+  updateWalletUI();
+  updateMarketPricesUI();
+}, 2000);
+
+
+// ===== نظام السوق المتقدم والشركات =====
+let companies = [];
+let activeBids = [];
+
+function addNewCompany() {
+  const name = document.getElementById('compNewName').value;
+  const license = document.getElementById('compNewLicense').value;
+  const email = document.getElementById('compNewEmail').value;
+  const phone = document.getElementById('compNewPhone').value;
+  
+  if(!name || !license) { showToast("⚠️ أكمل البيانات المطلوبة", "error"); return; }
+  
+  const company = {
+    id: Date.now(),
+    name, license, email, phone,
+    materials: [],
+    createdAt: new Date().toISOString()
+  };
+  
+  companies.push(company);
+  db.ref(`companies/${company.id}`).set(company);
+  updateCompaniesList();
+  showToast("✅ تم إضافة الشركة بنجاح", "success");
+  document.getElementById('compNewName').value = '';
+  document.getElementById('compNewLicense').value = '';
+}
+
+function updateCompaniesList() {
+  const list = document.getElementById('companiesList');
+  if(!list) return;
+  if(companies.length === 0) {
+    list.innerHTML = '<p style="text-align:center; color:#999;">لا توجد شركات مسجلة حالياً</p>';
+    return;
+  }
+  let html = "";
+  companies.forEach(c => {
+    html += `<div style="padding:10px; border:1px solid #ddd; border-radius:5px; margin-bottom:10px;">
+      <b>${c.name}</b> (${c.license})<br>
+      <small style="color:#666;">${c.email} | ${c.phone}</small>
+      <button class="btn btn-dark ripple" style="font-size:0.7rem; padding:3px 8px; margin-top:5px;" onclick="editCompany(${c.id})">
+        <i class="fas fa-edit"></i> تعديل
+      </button>
+    </div>`;
+  });
+  list.innerHTML = html;
+}
+
+function createBid() {
+  const type = document.getElementById('bidMaterialType').value;
+  const qty = parseFloat(document.getElementById('bidQuantity').value);
+  const minPrice = parseFloat(document.getElementById('bidMinPrice').value);
+  const duration = parseInt(document.getElementById('bidDuration').value);
+  
+  if(!type || !qty || !minPrice) { showToast("⚠️ أكمل البيانات", "error"); return; }
+  
+  const bid = {
+    id: Date.now(),
+    type, qty, minPrice, duration,
+    startTime: Date.now(),
+    endTime: Date.now() + (duration * 3600000),
+    bids: {},
+    winner: null,
+    status: "active"
+  };
+  
+  activeBids.push(bid);
+  db.ref(`bids/${bid.id}`).set(bid);
+  updateActiveBids();
+  showToast("✅ تم إنشاء المزايدة بنجاح", "success");
+}
+
+function updateActiveBids() {
+  const list = document.getElementById('activeBids');
+  if(!list) return;
+  if(activeBids.length === 0) {
+    list.innerHTML = '<p style="text-align:center; color:#999;">لا توجد مزايدات جارية</p>';
+    return;
+  }
+  let html = "";
+  activeBids.forEach(b => {
+    const remaining = Math.max(0, b.endTime - Date.now());
+    const hours = Math.floor(remaining / 3600000);
+    html += `<div style="padding:10px; background:#f5f5f5; border-radius:5px; margin-bottom:10px;">
+      <b>${b.type.toUpperCase()}</b> - ${b.qty} طن | السعر الأدنى: ${b.minPrice} DZD<br>
+      <small style="color:#666;">الوقت المتبقي: ${hours} ساعات</small>
+    </div>`;
+  });
+  list.innerHTML = html;
+}
+
+// تحديث الإحصائيات
+function updateEconomicStats() {
+  let totalWallet = 0;
+  let totalMaterials = 0;
+  
+  // حساب إجمالي الأرصدة (يمكن جلبها من Firebase)
+  if(document.getElementById('totalWalletValue')) {
+    document.getElementById('totalWalletValue').textContent = totalWallet.toFixed(2) + " DZD";
+  }
+  if(document.getElementById('totalMaterialsSold')) {
+    document.getElementById('totalMaterialsSold').textContent = totalMaterials + " طن";
+  }
+}
+
+// تحديث الأسعار الديناميكية
+function updateDynamicPrices() {
+  for(let m in materialPrices) {
+    const p = materialPrices[m];
+    const change = (Math.random() - 0.5) * 10;
+    p.price = Math.max(5, p.price + change);
+    p.trend = change > 0 ? "up" : (change < 0 ? "down" : "stable");
+  }
+  updateMarketPricesUI();
+}
+
+// تحديث الأسعار كل 30 دقيقة
+setInterval(updateDynamicPrices, 30 * 60000);
+
+// تحديث الإحصائيات عند التحميل
+setTimeout(() => {
+  updateCompaniesList();
+  updateActiveBids();
+  updateEconomicStats();
+}, 2000);
+
+</script>
 
 <script>
 // ===== Firebase Configuration =====
@@ -3293,7 +5174,24 @@ try {  if(typeof firebase !== 'undefined'){
 }
 
 // ===== المتغيرات العامة =====
-let allReports=[], currentLang='ar', tempImage=null, tempAfterImage=null, currentDriver='', userPoints=0, currentDriverSector='';
+let currentTripId = null;
+let watchId = null;
+const truckId = "truck_1"; // يمكن تغييرها حسب السائق
+let lastPosition = null;
+let lastMoveTime = Date.now();
+let polylines = [];
+let driverHeartbeatInterval = null;
+let userWallet = { balance: 0, points: 0, currency: "DZD" };
+let materialPrices = {
+  plastic: { price: 65, trend: "up" },
+  metal: { price: 120, trend: "stable" },
+  paper: { price: 30, trend: "down" },
+  glass: { price: 45, trend: "up" },
+  organic: { price: 15, trend: "stable" }
+};
+
+
+let allReports=[], currentLang='ar', tempImage=null, tempAfterImage=null, currentDriver='', userPoints=0, currentDriverSector='', lastMissionRefNum='';
 let wasteTracking=[], marketMaterials=[], marketRequests=[];
 let truckTrackingData = {active:false, driver:'', sector:'', startTime:null, positions:[], collectedBins:[]};
 let map=null, trackingMarker=null, trackingPath=null;
@@ -3888,6 +5786,10 @@ function showPage(id) {
 // ===== نظام الإشعارات (Toast) =====
 function showToast(msg, type='success') {
   try {
+    // Voice feedback للإجراءات المهمة
+    if(type === 'error') {
+      try { tts(msg.replace(/[⚠️✅❌🎉]/g,'')); } catch(e){}
+    }
     const container = document.getElementById('toast-container');
     if(!container) return;
     
@@ -4476,6 +6378,47 @@ function emergencyClearData() {
 }
 
 
+// ===== نظام Text-to-Speech عربي =====
+var _ttsCurrent = null;
+function tts(text) {
+  try {
+    if(!('speechSynthesis' in window)) return;
+    if(_ttsCurrent) { window.speechSynthesis.cancel(); _ttsCurrent = null; }
+    var utt = new SpeechSynthesisUtterance(text);
+    utt.lang = 'ar-DZ'; utt.rate = 0.9; utt.pitch = 1.0; utt.volume = 1.0;
+    var voices = window.speechSynthesis.getVoices();
+    var arVoice = voices.find(function(v){ return v.lang && v.lang.startsWith('ar'); });
+    if(arVoice) utt.voice = arVoice;
+    utt.onend = function(){ _ttsCurrent = null; };
+    _ttsCurrent = utt;
+    window.speechSynthesis.speak(utt);
+  } catch(e) {}
+}
+
+function ttsBtn(text, el) {
+  try {
+    if(_ttsCurrent) {
+      window.speechSynthesis.cancel();
+      _ttsCurrent = null;
+      document.querySelectorAll('.tts-btn.speaking').forEach(function(b){ b.classList.remove('speaking'); });
+      if(el) el.classList.remove('speaking');
+      return;
+    }
+    if(el) el.classList.add('speaking');
+    var utt = new SpeechSynthesisUtterance(text);
+    utt.lang = 'ar-DZ'; utt.rate = 0.9; utt.pitch = 1.0; utt.volume = 1.0;
+    var voices = window.speechSynthesis.getVoices();
+    var arVoice = voices.find(function(v){ return v.lang && v.lang.startsWith('ar'); });
+    if(arVoice) utt.voice = arVoice;
+    utt.onend = function(){
+      _ttsCurrent = null;
+      if(el) el.classList.remove('speaking');
+    };
+    _ttsCurrent = utt;
+    window.speechSynthesis.speak(utt);
+  } catch(e) {}
+}
+
 function toggleForgotPass() {
   var p = document.getElementById('forgotPassPanel');
   if(p) p.style.display = p.style.display === 'none' ? 'block' : 'none';
@@ -4658,12 +6601,13 @@ function saveDriverTonnage() {
     try { db.ref('tonnage/' + rec.id).set(rec).catch(function(){}); } catch(e) {}
 
     // ===== ربط الوزن والسند بالمهمة في الأرشيف =====
-    if(truckTrackingData.refNum) {
+    var targetRef = truckTrackingData.refNum || lastMissionRefNum;
+    if(targetRef) {
       try {
         // تحديث الأرشيف المحلي
         var loc = [];
         try { loc = JSON.parse(localStorage.getItem('medea_truckArchive')||'[]'); } catch(e2){}
-        var idx = loc.findIndex(function(x){ return x.refNum === truckTrackingData.refNum; });
+        var idx = loc.findIndex(function(x){ return x.refNum === targetRef; });
         if(idx !== -1) {
           loc[idx].weight    = parseFloat(weight);
           loc[idx].regNum    = regNum;
@@ -4671,9 +6615,9 @@ function saveDriverTonnage() {
           localStorage.setItem('medea_truckArchive', JSON.stringify(loc));
         }
         // تحديث Firebase
-        db.ref('truckArchive/' + truckTrackingData.refNum + '/weight').set(parseFloat(weight)).catch(function(){});
-        db.ref('truckArchive/' + truckTrackingData.refNum + '/regNum').set(regNum).catch(function(){});
-        db.ref('truckArchive/' + truckTrackingData.refNum + '/wasteType').set(wasteType).catch(function(){});
+        db.ref('truckArchive/' + targetRef + '/weight').set(parseFloat(weight)).catch(function(){});
+        db.ref('truckArchive/' + targetRef + '/regNum').set(regNum).catch(function(){});
+        db.ref('truckArchive/' + targetRef + '/wasteType').set(wasteType).catch(function(){});
       } catch(e2) {}
     }
 
@@ -5706,7 +7650,87 @@ function generateStatsTable() {
 function printNow() {
   const content = document.getElementById('printContent').innerHTML;
   const win = window.open('', '_blank', 'width=900,height=700');
-  win.document.write(`<html dir="rtl"><head><meta charset="UTF-8"><title>طباعة</title><style>body{font-family:'Cairo',sans-serif;padding:20px}table{width:100%;border-collapse:collapse}th{background:#1B5E20;color:#fff;padding:8px}td{padding:8px;border:1px solid #ddd}@media print{.no-print{display:none}}</style></head><body>${content}<script>window.print()<\/script></body></html>`);
+  win.document.write(`<html dir="rtl"><head><meta charset="UTF-8"><title>طباعة</title><style>body{font-family:'Cairo',sans-serif;padding:20px}table{width:100%;border-collapse:collapse}th{background:#1B5E20;color:#fff;padding:8px}td{padding:8px;border:1px solid #ddd}@media print{.no-print{display:none}}</style></head><body>${content}<script>window.print()<\/script>
+  <!-- ========== واجهة الشركات (B2B) ========== -->
+  <div id="companiesPage" class="page">
+    <h2 style="margin-bottom:15px;color:var(--primary);text-align:center">
+      <i class="fas fa-industry"></i> إدارة الشركات المشترية
+    </h2>
+    
+    <div class="card">
+      <h3><i class="fas fa-plus-circle"></i> إضافة شركة جديدة</h3>
+      <input type="text" class="input" id="compNewName" placeholder="🏢 اسم الشركة">
+      <input type="text" class="input" id="compNewLicense" placeholder="📄 رقم السجل التجاري">
+      <input type="email" class="input" id="compNewEmail" placeholder="📧 البريد الإلكتروني">
+      <input type="tel" class="input" id="compNewPhone" placeholder="📞 الهاتف">
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <label style="flex:1; min-width:150px;">
+          <input type="checkbox" value="plastic"> 🧴 بلاستيك
+        </label>
+        <label style="flex:1; min-width:150px;">
+          <input type="checkbox" value="metal"> ⚙️ معادن
+        </label>
+        <label style="flex:1; min-width:150px;">
+          <input type="checkbox" value="paper"> 📄 ورق
+        </label>
+        <label style="flex:1; min-width:150px;">
+          <input type="checkbox" value="glass"> 🥃 زجاج
+        </label>
+      </div>
+      <button class="btn btn-primary ripple" onclick="addNewCompany()">
+        <i class="fas fa-save"></i> حفظ الشركة
+      </button>
+    </div>
+
+    <div class="card">
+      <h3><i class="fas fa-list"></i> قائمة الشركات المسجلة</h3>
+      <div id="companiesList" style="font-size:0.9rem;">
+        <p style="text-align:center; color:#999;">لا توجد شركات مسجلة حالياً</p>
+      </div>
+    </div>
+
+    <button class="btn ripple" style="background:#757575" onclick="showPage('admin')">
+      <i class="fas fa-arrow-right"></i> رجوع
+    </button>
+  </div>
+
+
+  <!-- ========== نظام المزايدة ========== -->
+  <div id="biddingPage" class="page">
+    <h2 style="margin-bottom:15px;color:var(--primary);text-align:center">
+      <i class="fas fa-gavel"></i> نظام المزايدة على النفايات
+    </h2>
+    
+    <div class="card">
+      <h3><i class="fas fa-hourglass-start"></i> مزايدات جارية</h3>
+      <div id="activeBids" style="font-size:0.9rem;">
+        <p style="text-align:center; color:#999;">لا توجد مزايدات جارية</p>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3><i class="fas fa-plus-circle"></i> إنشاء مزايدة جديدة</h3>
+      <select class="in input" id="bidMaterialType">
+        <option value="">اختر نوع المادة</option>
+        <option value="plastic">🧴 بلاستيك</option>
+        <option value="metal">⚙️ معادن</option>
+        <option value="paper">📄 ورق</option>
+        <option value="glass">🥃 زجاج</option>
+      </select>
+      <input type="number" class="input" id="bidQuantity" placeholder="الكمية (طن)">
+      <input type="number" class="input" id="bidMinPrice" placeholder="السعر الأدنى (DZD)">
+      <input type="number" class="input" id="bidDuration" placeholder="مدة المزايدة (ساعات)" value="24">
+      <button class="btn btn-primary ripple" onclick="createBid()">
+        <i class="fas fa-gavel"></i> بدء المزايدة
+      </button>
+    </div>
+
+    <button class="btn ripple" style="background:#757575" onclick="showPage('admin')">
+      <i class="fas fa-arrow-right"></i> رجوع
+    </button>
+  </div>
+
+</body></html>`);
   win.document.close();
 }
 
@@ -5758,6 +7782,86 @@ function calculateConversion() {
   showToast('✅ تم الحساب', 'success');
 }
 
+
+// ===== دوال مساعدة للتحسينات الجديدة =====
+function shouldSavePoint(lat, lng) {
+  if (!lastPosition) {
+    lastPosition = { lat, lng };
+    return true;
+  }
+  if (lat === lastPosition.lat && lng === lastPosition.lng) return false;
+  const distance = Math.sqrt(Math.pow(lat - lastPosition.lat, 2) + Math.pow(lng - lastPosition.lng, 2));
+  if (distance > 0.0003) { // حوالي 30 متر
+    lastPosition = { lat, lng };
+    return true;
+  }
+  return false;
+}
+
+function getRandomColor() {
+  return "#" + Math.floor(Math.random()*16777215).toString(16);
+}
+
+function calculateDistance(points) {
+  let total = 0;
+  for (let i = 1; i < points.length; i++) {
+    const dx = points[i].lat - points[i-1].lat;
+    const dy = points[i].lng - points[i-1].lng;
+    total += Math.sqrt(dx*dx + dy*dy) * 111; // تقريباً كم
+  }
+  return total;
+}
+
+function clearMap() {
+  polylines.forEach(line => map.removeLayer(line));
+  polylines = [];
+}
+
+// نظام Heartbeat
+function startHeartbeat() {
+  if(driverHeartbeatInterval) clearInterval(driverHeartbeatInterval);
+  driverHeartbeatInterval = setInterval(() => {
+    if(currentDriver) {
+      db.ref(`truckTracking/${truckId}/heartbeat`).set(Date.now());
+    }
+  }, 10000);
+}
+
+function stopHeartbeat() {
+  if(driverHeartbeatInterval) {
+    clearInterval(driverHeartbeatInterval);
+    driverHeartbeatInterval = null;
+  }
+}
+
+// ذكاء اصطناعي: تعيين تلقائي
+async function autoAssign(report) {
+  const driversSnap = await db.ref("users/drivers").once('value');
+  const drivers = Object.values(driversSnap.val() || {});
+  const best = drivers
+    .filter(d => d.online)
+    .map(d => {
+      const d1 = Math.hypot(d.lat - report.lat, d.lng - report.lng);
+      return { id: d.id, score: d1 + (d.tasks || 0) };
+    })
+    .sort((a,b)=>a.score-b.score)[0];
+  if (!best) return;
+  await db.ref(`assignments/${report.id}`).set({ driverId: best.id, status: "assigned", time: Date.now() });
+}
+
+// ذكاء اصطناعي: المساعد الذكي
+async function askAI(question) {
+  try {
+    const res = await fetch("https://api.openai.com/v1/responses", {
+      method: "POST",
+      headers: { "Authorization": "Bearer YOUR_API_KEY", "Content-Type": "application/json" },
+      body: JSON.stringify({ model: "gpt-4.1-mini", input: question })
+    });
+    const data = await res.json();
+    return data.output[0].content[0].text;
+  } catch(e) { return "عذراً، تعذر الاتصال بالذكاء الاصطناعي حالياً."; }
+}
+
 // ===== تتبع الشاحنة =====
 function startTruckTracking() {
   // نبقي هذه الدالة للتوافق الخلفي (تستخدمها صفحة التتبع المستقلة)
@@ -5786,44 +7890,25 @@ var driverTrackingPositions = [];
 function startDriverTracking() {
   if(!currentDriver) { showToast('⚠️ يجب تسجيل الدخول أولاً', 'error'); return; }
   const now = new Date();
-  const refNum = 'REF-' + currentDriverSector + '-' + now.toISOString().slice(0,10).replace(/-/g,'') + '-' + Math.floor(Math.random()*1000).toString().padStart(3,'0');
-  // أرشفة المهمة القديمة — نسخة عميقة قبل تعديل أي شيء
-  try {
-    // حفظ positions الحية في truckTrackingData قبل الأرشفة
-    if(driverTrackingPositions && driverTrackingPositions.length > 0) {
-      truckTrackingData.positions = driverTrackingPositions.slice();
-    }
-    var prevTD = JSON.parse(JSON.stringify(truckTrackingData));
-    if(prevTD && prevTD.refNum && ((prevTD.collectedBins||[]).length > 0 || (prevTD.positions||[]).length > 0)) {
-      prevTD.active = false;
-      prevTD.endTime = prevTD.endTime || new Date().toISOString();
-      prevTD.archivedAt = new Date().toISOString();
-      var arKey = 'truckArchive/' + prevTD.refNum;
-      try { db.ref(arKey).set(prevTD).catch(function(){}); } catch(e) {}
-      // حفظ محلي
-      try {
-        var loc = [];
-        try { loc = JSON.parse(localStorage.getItem('medea_truckArchive')||'[]'); } catch(e2) {}
-        var ex = loc.findIndex(function(x){ return x.refNum === prevTD.refNum; });
-        if(ex !== -1) loc[ex] = prevTD; else loc.unshift(prevTD);
-        if(loc.length > 50) loc = loc.slice(0,50);
-        localStorage.setItem('medea_truckArchive', JSON.stringify(loc));
-      } catch(e) {}
-      showToast('تم حفظ المهمة السابقة في الأرشيف', 'info');
-    }
-  } catch(e) {}
-
-  truckTrackingData = {
-    active: true, driver: currentDriver,
-    sector: currentDriverSector,
-    startTime: now.toISOString(),
-    dayKey: now.toISOString().slice(0,10),
-    refNum: refNum,
-    positions: [], collectedBins: []
-  };
-  driverTrackingPositions = [];
-  driverTrackingStartTime = Date.now();
-  saveToCloud('truckTracking', truckTrackingData);
+  
+  // نظام الرحلات الجديد
+  const tripRef = db.ref(`truckTracking/${truckId}/trips`).push();
+  currentTripId = tripRef.key;
+  
+  db.ref(`truckTracking/${truckId}/trips/${currentTripId}`).set({
+    startTime: Date.now(),
+    status: "active",
+    driver: currentDriver,
+    sector: currentDriverSector
+  });
+  
+  // تتبع الحالة
+  db.ref(`truckTracking/${truckId}/status`).set({ online: true, lastUpdate: Date.now() });
+  startHeartbeat();
+  
+  lastPosition = null;
+  lastMoveTime = Date.now();
+  totalDistanceTraveled = 0;
 
   // إظهار اللوحة المضمنة وإخفاء زر البداية
   document.getElementById('trackingOffPanel').style.display = 'none';
@@ -5861,81 +7946,101 @@ function startInlineGPS() {
   } catch(e) {}
 
   window.driverGPSWatch = navigator.geolocation.watchPosition(function(pos) {
-    var lat = pos.coords.latitude, lng = pos.coords.longitude;
-    // ✅ الإصلاح: نحفظ آخر موقع معروف فقط — لا نضيف للمصفوفة ولا نحدّث العداد
-    window.lastKnownPosition = { lat:lat, lng:lng, timestamp: new Date().toISOString() };
+    const lat = pos.coords.latitude, lng = pos.coords.longitude;
+    window.lastKnownPosition = { lat: lat, lng: lng, timestamp: new Date().toISOString() };
 
-    // تحديث الخريطة فقط (بدون تحديث العداد)
+    if (shouldSavePoint(lat, lng)) {
+      lastMoveTime = Date.now();
+      const point = { lat: +lat.toFixed(5), lng: +lng.toFixed(5), time: Date.now() };
+      
+      // حفظ في الرحلة الحالية
+      if (currentTripId) {
+        db.ref(`truckTracking/${truckId}/trips/${currentTripId}/points`).push(point);
+      }
+      
+      // حفظ الموقع المباشر
+      db.ref(`truckTracking/${truckId}/currentLocation`).set(point);
+      
+      driverTrackingPositions.push(point);
+      const dist = calculateDistance(driverTrackingPositions);
+      const distEl = document.getElementById('driverDistCount');
+      if(distEl) distEl.textContent = dist.toFixed(2) + ' كم';
+    }
+
+    // كشف التوقف
+    if (Date.now() - lastMoveTime > 300000) {
+      console.log("السائق متوقف 5 دقائق");
+      db.ref(`truckTracking/${truckId}/alerts`).push({ type: "idle", time: Date.now() });
+    }
+
     try {
       if(driverTrackingMap) {
         if(driverTrackingMarker) driverTrackingMap.removeLayer(driverTrackingMarker);
         driverTrackingMarker = L.marker([lat,lng]).addTo(driverTrackingMap);
         driverTrackingMap.setView([lat,lng], 16);
-      } else {
-        // بدون Leaflet: عرض نصي
-        var mapDiv2 = document.getElementById('driverInlineMap');
-        if(mapDiv2) mapDiv2.innerHTML = '<div style="text-align:center;padding:20px;color:var(--primary)"><i class="fas fa-map-marker-alt" style="font-size:2rem;margin-bottom:8px;display:block"></i><b>موقعك الحالي</b><br><small>'+lat.toFixed(5)+', '+lng.toFixed(5)+'</small></div>';
+        
+        if(driverTrackingPolyline) driverTrackingMap.removeLayer(driverTrackingPolyline);
+        driverTrackingPolyline = L.polyline(driverTrackingPositions.map(p=>[p.lat,p.lng]), {color: 'blue'}).addTo(driverTrackingMap);
       }
     } catch(e) {}
   }, function(err) {
     showToast('⚠️ تعذر تحديد الموقع', 'error');
-  }, {enableHighAccuracy:true, timeout:15000, maximumAge:0});
+  }, {enableHighAccuracy:true, timeout:10000, maximumAge:10000});
 }
 
 function recordBinFromDriver() {
-  // إخفاء الزر الرئيسي مؤقتاً لإظهار لوحة التحكم في التسجيل
-  const mainBtn = document.getElementById('mainRecordBinBtn');
-  if(mainBtn) mainBtn.style.display = 'none';
-  
-  // إظهار لوحة التحكم في التسجيل
-  const controls = document.getElementById('binTrackingControls');
-  if(controls) {
-    controls.style.display = 'block';
-    // التمرير للأسفل لرؤية اللوحة
-    controls.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  if(!truckTrackingData.active) { showToast('⚠️ يجب بدء التتبع أولاً', 'error'); return; }
+
+  var mainBtn  = document.getElementById('mainRecordBinBtn');
+  var controls = document.getElementById('binTrackingControls');
+  var result   = document.getElementById('binRecordResult');
+
+  if(mainBtn)  mainBtn.style.display  = 'none';
+  if(controls) controls.style.display = 'block';
+  if(result)   result.style.display   = 'none';
+
+  // إذا كان الموقع جاهزاً — استخدمه مباشرة
+  if(window.lastKnownPosition) {
+    recordBinCollection();
+    if(controls) controls.scrollIntoView({ behavior:'smooth', block:'center' });
+    return;
   }
-  
-  // استدعاء وظيفة جلب الموقع والعنوان تلقائياً
-  recordBinCollection();
+
+  // إذا لم يكن جاهزاً — اجلبه الآن
+  showToast('📡 جاري تحديد موقعك...', 'info');
+  navigator.geolocation.getCurrentPosition(function(pos) {
+    window.lastKnownPosition = {
+      lat: pos.coords.latitude,
+      lng: pos.coords.longitude,
+      timestamp: new Date().toISOString()
+    };
+    recordBinCollection();
+    if(controls) controls.scrollIntoView({ behavior:'smooth', block:'center' });
+  }, function(err) {
+    showToast('⚠️ تعذّر تحديد الموقع — تأكد من تفعيل GPS', 'error');
+    if(mainBtn)  mainBtn.style.display  = 'block';
+    if(controls) controls.style.display = 'none';
+  }, { enableHighAccuracy:true, timeout:15000, maximumAge:5000 });
 }
 
 function stopDriverTracking() {
-  // 1) إيقاف GPS والخريطة
-  if(driverTrackingInterval) { clearInterval(driverTrackingInterval); driverTrackingInterval = null; }
   if(window.driverGPSWatch) { navigator.geolocation.clearWatch(window.driverGPSWatch); window.driverGPSWatch = null; }
-  if(driverTrackingMap) { try { driverTrackingMap.remove(); } catch(e) {} driverTrackingMap = null; }
-  driverTrackingMarker = null;
-  driverTrackingPolyline = null;
-  window.lastKnownPosition = null;
-
-  // 2) حفظ positions قبل مسحها
-  if(driverTrackingPositions && driverTrackingPositions.length > 0) {
-    truckTrackingData.positions = driverTrackingPositions.slice();
+  if(driverTrackingInterval) { clearInterval(driverTrackingInterval); driverTrackingInterval = null; }
+  stopHeartbeat();
+  
+  if (currentTripId) {
+    db.ref(`truckTracking/${truckId}/trips/${currentTripId}`).update({
+      endTime: Date.now(),
+      status: "finished",
+      distance: calculateDistance(driverTrackingPositions)
+    });
   }
-  driverTrackingPositions = []; // المسح بعد الحفظ
-
-  // 3) إنهاء المهمة
-  truckTrackingData.active  = false;
-  truckTrackingData.endTime = new Date().toISOString();
-  var bins = (truckTrackingData.collectedBins || []).length;
-
-  // 4) أرشفة نسخة عميقة في Firebase + localStorage
-  try {
-    var archived = JSON.parse(JSON.stringify(truckTrackingData));
-    var arKey = 'truckArchive/' + (archived.refNum || ('STOP-'+Date.now()));
-    try { db.ref(arKey).set(archived).catch(function(){}); } catch(e) {}
-    try {
-      var loc = [];
-      try { loc = JSON.parse(localStorage.getItem('medea_truckArchive')||'[]'); } catch(e2){}
-      var ei = loc.findIndex(function(x){ return x.refNum === archived.refNum; });
-      if(ei !== -1) loc[ei] = archived; else loc.unshift(archived);
-      if(loc.length > 50) loc = loc.slice(0,50);
-      localStorage.setItem('medea_truckArchive', JSON.stringify(loc));
-    } catch(e2){}
-  } catch(e) {}
-
-  // 5) حفظ truckTracking الحالي في Firebase
-  saveToCloud('truckTracking', truckTrackingData);
+  
+  db.ref(`truckTracking/${truckId}/status`).set({ online: false, lastUpdate: Date.now() });
+  
+  currentTripId = null;
+  driverTrackingPositions = [];
+  if(driverTrackingMap) { try { driverTrackingMap.remove(); } catch(e) {} driverTrackingMap = null; }
 
   // 6) إخفاء لوحة التتبع
   var tp = document.getElementById('driverTrackingPanel');
@@ -6408,7 +8513,120 @@ function loadSectorRoute() {
     document.getElementById('routeBinsList').style.display = 'none';
   }
 
-  if(td) showRouteOnMap();
+  // ===== جمع رحلات اليوم من truckArchive =====
+  try {
+    var todayISO = new Date().toISOString().slice(0,10);
+    var selSec   = String(sectorId);
+    db.ref('truckArchive').once('value').then(function(snap) {
+      var arch = snap && snap.val ? snap.val() : {};
+      var allM = Object.values(arch || {});
+      // إضافة المهمة الحالية إن كانت نشطة لنفس القطاع
+      if(truckTrackingData && truckTrackingData.active && String(truckTrackingData.sector) === selSec) {
+        var cur = JSON.parse(JSON.stringify(truckTrackingData));
+        if(driverTrackingPositions && driverTrackingPositions.length > 0) cur.positions = driverTrackingPositions.slice();
+        allM.push(cur);
+      }
+      // فلترة: نفس القطاع + نفس اليوم
+      var todayTrips = allM.filter(function(m) {
+        if(!m || !m.startTime) return false;
+        return m.startTime.slice(0,10) === todayISO && String(m.sector||'') === selSec;
+      });
+      todayTrips.sort(function(a,b){ return new Date(a.startTime) - new Date(b.startTime); });
+
+      if(todayTrips.length > 1) {
+        // --- عدة رحلات: اجمعهم مع ألوان مختلفة ---
+        var COLORS = ['#006233','#1565C0','#7B1FA2','#E65100','#00838F','#AD1457'];
+        var allBins = [], allPaths = [], totalBinsAll = 0, actualWeight = 0;
+        var tripsData = todayTrips.map(function(m, ti) {
+          var bins = (m.collectedBins||[]);
+          var bc   = bins.reduce(function(s,b){return s+(parseInt(b.count)||1);},0);
+          totalBinsAll += bc;
+          if(m.weight) actualWeight += parseFloat(m.weight);
+          bins.forEach(function(b){ allBins.push(b); });
+          return { path:(m.positions||[]), bins:bins, color:COLORS[ti%COLORS.length],
+            startTime:m.startTime, endTime:m.endTime, active:!!m.active,
+            refNum:m.refNum, weight:m.weight||null, regNum:m.regNum||null };
+        });
+
+        // تحديث currentSectorData
+        currentSectorData.trips    = tripsData;
+        currentSectorData.totalBins = totalBinsAll;
+        currentSectorData.totalTons = actualWeight > 0 ? actualWeight.toFixed(2) : (totalBinsAll*0.08).toFixed(2);
+        currentSectorData.actualWeight = actualWeight > 0 ? actualWeight : null;
+
+        // تحديث الواجهة
+        var ri = document.getElementById('routeInfo');
+        if(ri) {
+          var extra = document.getElementById('routeTripsInfo');
+          if(!extra){ extra=document.createElement('div'); extra.id='routeTripsInfo'; ri.appendChild(extra); }
+          var th = '<div style="background:var(--bg);border-radius:8px;padding:10px;margin-top:8px">';
+          th += '<b style="color:var(--primary)">🚛 رحلات اليوم: '+todayTrips.length+'</b>';
+          todayTrips.forEach(function(m,i){
+            var c  = COLORS[i%COLORS.length];
+            var t1 = m.startTime ? new Date(m.startTime).toLocaleTimeString('ar-DZ') : '-';
+            var t2 = m.active ? 'نشطة' : (m.endTime ? new Date(m.endTime).toLocaleTimeString('ar-DZ') : '-');
+            var bc = (m.collectedBins||[]).reduce(function(s,b){return s+(parseInt(b.count)||1);},0);
+            var wt = m.weight ? ' | ' + m.weight + ' طن' : '';
+            th += '<div style="display:flex;align-items:center;gap:8px;margin-top:5px;font-size:0.82rem">';
+            th += '<span style="width:14px;height:14px;border-radius:50%;background:'+c+';flex-shrink:0;display:inline-block"></span>';
+            th += '<span>رحلة '+(i+1)+': '+t1+' → '+t2+' — '+bc+' حاوية'+wt+'</span></div>';
+          });
+          th += '</div>';
+          extra.innerHTML = th;
+        }
+        showMultiTripRoute(tripsData);
+      } else if(td) {
+        currentSectorData.trips = null;
+        // الوزن الفعلي إن وُجد
+        if(td.weight) currentSectorData.totalTons = parseFloat(td.weight).toFixed(2);
+        showRouteOnMap();
+      }
+    }).catch(function(){ if(td) showRouteOnMap(); });
+  } catch(e) { if(td) showRouteOnMap(); }
+}
+
+function showMultiTripRoute(trips) {
+  try {
+    var routeMapDiv = document.getElementById('routeMap');
+    if(!routeMapDiv) return;
+    routeMapDiv.style.height = '350px';
+    if(routeMap) { routeMap.remove(); routeMap = null; }
+    routeMap = L.map('routeMap').setView([36.2642,2.7545],14);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{attribution:'© OpenStreetMap'}).addTo(routeMap);
+    var COLORS = ['#006233','#1565C0','#7B1FA2','#E65100','#00838F','#AD1457'];
+    var bounds = [];
+    trips.forEach(function(trip,ti) {
+      var color = trip.color || COLORS[ti%COLORS.length];
+      var path  = trip.path || [];
+      var bins  = trip.bins || [];
+      var t1 = trip.startTime ? new Date(trip.startTime).toLocaleTimeString('ar-DZ') : '-';
+      var t2 = trip.active ? 'نشطة' : (trip.endTime ? new Date(trip.endTime).toLocaleTimeString('ar-DZ') : '-');
+      if(path.length > 1) {
+        var pts = path.map(function(p){return [p.lat,p.lng];});
+        var line = L.polyline(pts,{color:color,weight:6,opacity:0.9}).addTo(routeMap);
+        line.bindPopup('<b style="color:'+color+'">رحلة '+(ti+1)+'</b><br>'+t1+' → '+t2);
+        bounds.push(line.getBounds());
+        L.circleMarker(pts[0],{radius:11,fillColor:color,color:'#fff',weight:3,fillOpacity:1})
+          .addTo(routeMap).bindPopup('▶ بداية رحلة '+(ti+1)+'<br>'+t1);
+        if(!trip.active) {
+          L.circleMarker(pts[pts.length-1],{radius:9,fillColor:'#f44336',color:'#fff',weight:2,fillOpacity:1})
+            .addTo(routeMap).bindPopup('■ نهاية رحلة '+(ti+1)+'<br>'+t2);
+        }
+      }
+      bins.forEach(function(bin,bi){
+        L.circleMarker([bin.lat,bin.lng],{radius:9,fillColor:color,color:'#fff',weight:2,fillOpacity:0.9})
+          .addTo(routeMap)
+          .bindPopup('رحلة '+(ti+1)+' — موقع #'+(bi+1)+'<br>'+(bin.count||1)+' حاوية'+(bin.address?'<br>'+bin.address:''));
+      });
+    });
+    if(bounds.length > 0) {
+      var cb = bounds[0];
+      for(var i=1;i<bounds.length;i++) cb.extend(bounds[i]);
+      routeMap.fitBounds(cb,{padding:[40,40]});
+    }
+    setTimeout(function(){try{routeMap.invalidateSize();}catch(e){}},300);
+    showToast(trips.length + ' رحلات — ألوان مختلفة', 'success');
+  } catch(e) {}
 }
 
 function showRouteOnMap() {
@@ -6754,6 +8972,8 @@ async function buildRealMapDataUrl(path, bins) {
 async function downloadPreviewPDF() {
   const sd = currentSectorData || {};
   const totalBins = (sd.bins||[]).reduce((s,b)=>s+(parseInt(b.count)||1),0);
+  // استخدام الوزن الفعلي إن وُجد
+  if(sd.actualWeight) sd.totalTons = parseFloat(sd.actualWeight).toFixed(2);
 
   // رسم الخريطة الحقيقية (OSM tiles + مسار) وتحويلها إلى PNG مضمّن في PDF
   let mapHTML = '<div class="map-placeholder">⚠️ لا توجد نقاط مسار مسجّلة</div>';
@@ -6943,6 +9163,86 @@ async function downloadPreviewPDF() {
     setTimeout(function() { window.print(); }, 800);
   };
 <\/script>
+
+  <!-- ========== واجهة الشركات (B2B) ========== -->
+  <div id="companiesPage" class="page">
+    <h2 style="margin-bottom:15px;color:var(--primary);text-align:center">
+      <i class="fas fa-industry"></i> إدارة الشركات المشترية
+    </h2>
+    
+    <div class="card">
+      <h3><i class="fas fa-plus-circle"></i> إضافة شركة جديدة</h3>
+      <input type="text" class="input" id="compNewName" placeholder="🏢 اسم الشركة">
+      <input type="text" class="input" id="compNewLicense" placeholder="📄 رقم السجل التجاري">
+      <input type="email" class="input" id="compNewEmail" placeholder="📧 البريد الإلكتروني">
+      <input type="tel" class="input" id="compNewPhone" placeholder="📞 الهاتف">
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <label style="flex:1; min-width:150px;">
+          <input type="checkbox" value="plastic"> 🧴 بلاستيك
+        </label>
+        <label style="flex:1; min-width:150px;">
+          <input type="checkbox" value="metal"> ⚙️ معادن
+        </label>
+        <label style="flex:1; min-width:150px;">
+          <input type="checkbox" value="paper"> 📄 ورق
+        </label>
+        <label style="flex:1; min-width:150px;">
+          <input type="checkbox" value="glass"> 🥃 زجاج
+        </label>
+      </div>
+      <button class="btn btn-primary ripple" onclick="addNewCompany()">
+        <i class="fas fa-save"></i> حفظ الشركة
+      </button>
+    </div>
+
+    <div class="card">
+      <h3><i class="fas fa-list"></i> قائمة الشركات المسجلة</h3>
+      <div id="companiesList" style="font-size:0.9rem;">
+        <p style="text-align:center; color:#999;">لا توجد شركات مسجلة حالياً</p>
+      </div>
+    </div>
+
+    <button class="btn ripple" style="background:#757575" onclick="showPage('admin')">
+      <i class="fas fa-arrow-right"></i> رجوع
+    </button>
+  </div>
+
+
+  <!-- ========== نظام المزايدة ========== -->
+  <div id="biddingPage" class="page">
+    <h2 style="margin-bottom:15px;color:var(--primary);text-align:center">
+      <i class="fas fa-gavel"></i> نظام المزايدة على النفايات
+    </h2>
+    
+    <div class="card">
+      <h3><i class="fas fa-hourglass-start"></i> مزايدات جارية</h3>
+      <div id="activeBids" style="font-size:0.9rem;">
+        <p style="text-align:center; color:#999;">لا توجد مزايدات جارية</p>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3><i class="fas fa-plus-circle"></i> إنشاء مزايدة جديدة</h3>
+      <select class="in input" id="bidMaterialType">
+        <option value="">اختر نوع المادة</option>
+        <option value="plastic">🧴 بلاستيك</option>
+        <option value="metal">⚙️ معادن</option>
+        <option value="paper">📄 ورق</option>
+        <option value="glass">🥃 زجاج</option>
+      </select>
+      <input type="number" class="input" id="bidQuantity" placeholder="الكمية (طن)">
+      <input type="number" class="input" id="bidMinPrice" placeholder="السعر الأدنى (DZD)">
+      <input type="number" class="input" id="bidDuration" placeholder="مدة المزايدة (ساعات)" value="24">
+      <button class="btn btn-primary ripple" onclick="createBid()">
+        <i class="fas fa-gavel"></i> بدء المزايدة
+      </button>
+    </div>
+
+    <button class="btn ripple" style="background:#757575" onclick="showPage('admin')">
+      <i class="fas fa-arrow-right"></i> رجوع
+    </button>
+  </div>
+
 </body></html>`);
   win.document.close();
 }
@@ -7070,7 +9370,87 @@ function printSingleReport(id) {
         <div><div class="img-lbl after-lbl">✅ صورة بعد التنفيذ</div>${afterImg}</div>
       </div>
       <div class="footer">مصلحة النظافة والوقاية الصحية — بلدية المدية | إعداد د. رابحي فتحي 2026</div>
-    <script>window.print();setTimeout(()=>window.close(),2000);<\/script></body></html>`);
+    <script>window.print();setTimeout(()=>window.close(),2000);<\/script>
+  <!-- ========== واجهة الشركات (B2B) ========== -->
+  <div id="companiesPage" class="page">
+    <h2 style="margin-bottom:15px;color:var(--primary);text-align:center">
+      <i class="fas fa-industry"></i> إدارة الشركات المشترية
+    </h2>
+    
+    <div class="card">
+      <h3><i class="fas fa-plus-circle"></i> إضافة شركة جديدة</h3>
+      <input type="text" class="input" id="compNewName" placeholder="🏢 اسم الشركة">
+      <input type="text" class="input" id="compNewLicense" placeholder="📄 رقم السجل التجاري">
+      <input type="email" class="input" id="compNewEmail" placeholder="📧 البريد الإلكتروني">
+      <input type="tel" class="input" id="compNewPhone" placeholder="📞 الهاتف">
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <label style="flex:1; min-width:150px;">
+          <input type="checkbox" value="plastic"> 🧴 بلاستيك
+        </label>
+        <label style="flex:1; min-width:150px;">
+          <input type="checkbox" value="metal"> ⚙️ معادن
+        </label>
+        <label style="flex:1; min-width:150px;">
+          <input type="checkbox" value="paper"> 📄 ورق
+        </label>
+        <label style="flex:1; min-width:150px;">
+          <input type="checkbox" value="glass"> 🥃 زجاج
+        </label>
+      </div>
+      <button class="btn btn-primary ripple" onclick="addNewCompany()">
+        <i class="fas fa-save"></i> حفظ الشركة
+      </button>
+    </div>
+
+    <div class="card">
+      <h3><i class="fas fa-list"></i> قائمة الشركات المسجلة</h3>
+      <div id="companiesList" style="font-size:0.9rem;">
+        <p style="text-align:center; color:#999;">لا توجد شركات مسجلة حالياً</p>
+      </div>
+    </div>
+
+    <button class="btn ripple" style="background:#757575" onclick="showPage('admin')">
+      <i class="fas fa-arrow-right"></i> رجوع
+    </button>
+  </div>
+
+
+  <!-- ========== نظام المزايدة ========== -->
+  <div id="biddingPage" class="page">
+    <h2 style="margin-bottom:15px;color:var(--primary);text-align:center">
+      <i class="fas fa-gavel"></i> نظام المزايدة على النفايات
+    </h2>
+    
+    <div class="card">
+      <h3><i class="fas fa-hourglass-start"></i> مزايدات جارية</h3>
+      <div id="activeBids" style="font-size:0.9rem;">
+        <p style="text-align:center; color:#999;">لا توجد مزايدات جارية</p>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3><i class="fas fa-plus-circle"></i> إنشاء مزايدة جديدة</h3>
+      <select class="in input" id="bidMaterialType">
+        <option value="">اختر نوع المادة</option>
+        <option value="plastic">🧴 بلاستيك</option>
+        <option value="metal">⚙️ معادن</option>
+        <option value="paper">📄 ورق</option>
+        <option value="glass">🥃 زجاج</option>
+      </select>
+      <input type="number" class="input" id="bidQuantity" placeholder="الكمية (طن)">
+      <input type="number" class="input" id="bidMinPrice" placeholder="السعر الأدنى (DZD)">
+      <input type="number" class="input" id="bidDuration" placeholder="مدة المزايدة (ساعات)" value="24">
+      <button class="btn btn-primary ripple" onclick="createBid()">
+        <i class="fas fa-gavel"></i> بدء المزايدة
+      </button>
+    </div>
+
+    <button class="btn ripple" style="background:#757575" onclick="showPage('admin')">
+      <i class="fas fa-arrow-right"></i> رجوع
+    </button>
+  </div>
+
+</body></html>`);
     win.document.close();
   } catch(e) { showToast('⚠️ خطأ في الطباعة','error'); }
 }
@@ -7932,7 +10312,87 @@ function printMonthlyCertificate() {
       </div>
       <div class="mvp"><b>🥇 السائق المتميز:</b> ${mvp}</div>
       <div class="footer">مصلحة النظافة والوقاية الصحية — بلدية المدية</div>
-    </div><script>window.print();setTimeout(()=>window.close(),1500);<\/script></body></html>`);
+    </div><script>window.print();setTimeout(()=>window.close(),1500);<\/script>
+  <!-- ========== واجهة الشركات (B2B) ========== -->
+  <div id="companiesPage" class="page">
+    <h2 style="margin-bottom:15px;color:var(--primary);text-align:center">
+      <i class="fas fa-industry"></i> إدارة الشركات المشترية
+    </h2>
+    
+    <div class="card">
+      <h3><i class="fas fa-plus-circle"></i> إضافة شركة جديدة</h3>
+      <input type="text" class="input" id="compNewName" placeholder="🏢 اسم الشركة">
+      <input type="text" class="input" id="compNewLicense" placeholder="📄 رقم السجل التجاري">
+      <input type="email" class="input" id="compNewEmail" placeholder="📧 البريد الإلكتروني">
+      <input type="tel" class="input" id="compNewPhone" placeholder="📞 الهاتف">
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <label style="flex:1; min-width:150px;">
+          <input type="checkbox" value="plastic"> 🧴 بلاستيك
+        </label>
+        <label style="flex:1; min-width:150px;">
+          <input type="checkbox" value="metal"> ⚙️ معادن
+        </label>
+        <label style="flex:1; min-width:150px;">
+          <input type="checkbox" value="paper"> 📄 ورق
+        </label>
+        <label style="flex:1; min-width:150px;">
+          <input type="checkbox" value="glass"> 🥃 زجاج
+        </label>
+      </div>
+      <button class="btn btn-primary ripple" onclick="addNewCompany()">
+        <i class="fas fa-save"></i> حفظ الشركة
+      </button>
+    </div>
+
+    <div class="card">
+      <h3><i class="fas fa-list"></i> قائمة الشركات المسجلة</h3>
+      <div id="companiesList" style="font-size:0.9rem;">
+        <p style="text-align:center; color:#999;">لا توجد شركات مسجلة حالياً</p>
+      </div>
+    </div>
+
+    <button class="btn ripple" style="background:#757575" onclick="showPage('admin')">
+      <i class="fas fa-arrow-right"></i> رجوع
+    </button>
+  </div>
+
+
+  <!-- ========== نظام المزايدة ========== -->
+  <div id="biddingPage" class="page">
+    <h2 style="margin-bottom:15px;color:var(--primary);text-align:center">
+      <i class="fas fa-gavel"></i> نظام المزايدة على النفايات
+    </h2>
+    
+    <div class="card">
+      <h3><i class="fas fa-hourglass-start"></i> مزايدات جارية</h3>
+      <div id="activeBids" style="font-size:0.9rem;">
+        <p style="text-align:center; color:#999;">لا توجد مزايدات جارية</p>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3><i class="fas fa-plus-circle"></i> إنشاء مزايدة جديدة</h3>
+      <select class="in input" id="bidMaterialType">
+        <option value="">اختر نوع المادة</option>
+        <option value="plastic">🧴 بلاستيك</option>
+        <option value="metal">⚙️ معادن</option>
+        <option value="paper">📄 ورق</option>
+        <option value="glass">🥃 زجاج</option>
+      </select>
+      <input type="number" class="input" id="bidQuantity" placeholder="الكمية (طن)">
+      <input type="number" class="input" id="bidMinPrice" placeholder="السعر الأدنى (DZD)">
+      <input type="number" class="input" id="bidDuration" placeholder="مدة المزايدة (ساعات)" value="24">
+      <button class="btn btn-primary ripple" onclick="createBid()">
+        <i class="fas fa-gavel"></i> بدء المزايدة
+      </button>
+    </div>
+
+    <button class="btn ripple" style="background:#757575" onclick="showPage('admin')">
+      <i class="fas fa-arrow-right"></i> رجوع
+    </button>
+  </div>
+
+</body></html>`);
     win.document.close();
   } catch(e) { showToast('⚠️ خطأ في الطباعة','error'); }
 }
@@ -8319,6 +10779,372 @@ window.addEventListener('DOMContentLoaded', function() {
 
 })();
 // ===== نهاية نظام المؤثرات الصوتية =====
+
+function loadHeatmap() {
+  if(!allReports || allReports.length === 0) { showToast("لا توجد بيانات كافية", "info"); return; }
+  showToast("جاري تحميل خريطة التلوث...", "info");
+  const heatPoints = allReports.filter(r => r.gps).map(r => {
+    const parts = r.gps.split(',');
+    return [parseFloat(parts[0]), parseFloat(parts[1]), 0.5];
+  });
+  
+  if(typeof L.heatLayer === 'undefined') {
+    const script = document.createElement('script');
+    script.src = "https://leaflet.github.io/Leaflet.heat/dist/leaflet-heat.js";
+    script.onload = () => { L.heatLayer(heatPoints, {radius: 25}).addTo(map); };
+    document.head.appendChild(script);
+  } else {
+    L.heatLayer(heatPoints, {radius: 25}).addTo(map);
+  }
+}
+
+function showAIAssistant() {
+  const box = document.getElementById('aiChatBox');
+  box.style.display = box.style.display === 'none' ? 'block' : 'none';
+}
+
+async function handleAISend() {
+  const q = document.getElementById('aiInput').value;
+  if(!q) return;
+  const respDiv = document.getElementById('aiResponse');
+  respDiv.innerHTML = "⏳ جاري التفكير...";
+  const ans = await askAI(q);
+  respDiv.innerHTML = "<b>🤖 المساعد:</b> " + ans;
+}
+
+
+// ===== نظام الذكاء الاصطناعي للمواطن =====
+const cleanHadiths = [
+  { text: "الطُّهُورُ شَطْرُ الإِيمَانِ", source: "صحيح مسلم" },
+  { text: "إِنَّ اللَّهَ طَيِّبٌ يُحِبُّ الطِّيبَ، نَظِيفٌ يُحِبُّ النَّظَافَةَ", source: "سنن الترمذي" },
+  { text: "إِمَاطَةُ الأَذَى عَنِ الطَّرِيقِ صَدَقَةٌ", source: "متفق عليه" },
+  { text: "بَيْنَمَا رَجُلٌ يَمْشِي بِطَرِيقٍ وَجَدَ غُصْنَ شَوْكٍ عَلَى الطَّرِيقِ فَأَخَّرَهُ، فَشَكَرَ اللَّهُ لَهُ فَغَفَرَ لَهُ", source: "صحيح البخاري" },
+  { text: "النظافة من الإيمان، والوسخ من الشيطان", source: "حكمة مأثورة" }
+];
+
+let currentHadithIndex = 0;
+function nextHadith() {
+  currentHadithIndex = (currentHadithIndex + 1) % cleanHadiths.length;
+  const h = cleanHadiths[currentHadithIndex];
+  document.getElementById('hadithContainer').innerHTML = `"${h.text}" <br><small style="color:#666">(${h.source})</small>`;
+}
+
+async function askCitizenAI() {
+  const q = document.getElementById('citizenAIInput').value;
+  if(!q) return;
+  const respDiv = document.getElementById('citizenAIResponse');
+  respDiv.style.display = 'block';
+  respDiv.innerHTML = "⏳ جاري البحث عن إجابة بيئية...";
+  
+  const prompt = `أنت مساعد بيئي ذكي لتطبيق "المدية نظيفة". أجب باختصار وودية على هذا السؤال حول النظافة وأهميتها في الحي: ${q}`;
+  const ans = await askAI(prompt);
+  respDiv.innerHTML = "<b>🌱 المساعد البيئي:</b> " + ans;
+}
+
+async function getAIReportAdvice() {
+  const addr = document.getElementById('addrInput').value;
+  const type = document.getElementById('wasteTypeSelect').value;
+  const adviceDiv = document.getElementById('reportAIAdvice');
+  adviceDiv.innerHTML = "⏳ جاري تحليل البيانات لتقديم نصيحة...";
+  
+  const prompt = `المواطن يريد إرسال بلاغ عن نفايات من نوع ${type} في منطقة ${addr || 'غير محددة'}. قدم له نصيحة قصيرة جداً (جملة واحدة) حول كيفية التعامل مع هذا النوع من النفايات أو تشجيعه على البلاغ.`;
+  const ans = await askAI(prompt);
+  adviceDiv.innerHTML = "<b>💡 نصيحة ذكية:</b> " + ans;
+}
+
+// تحسين وظيفة التقاط الصورة لتشمل تحليل تلقائي
+const originalTakePhoto = takePhoto;
+takePhoto = async function() {
+  await originalTakePhoto();
+  // بعد التقاط الصورة، يمكن إضافة تحليل تلقائي لنوع النفايات هنا مستقبلاً
+  const adviceDiv = document.getElementById('reportAIAdvice');
+  if(adviceDiv) adviceDiv.innerHTML = "📸 تم التقاط الصورة. هل تريد مني تحليل نوع النفايات؟";
+};
+
+
+// ===== النظام الاقتصادي والمحفظة =====
+function updateWalletUI() {
+  const balStr = userWallet.balance.toFixed(2) + " " + userWallet.currency;
+  if(document.getElementById('homeWalletBalance')) document.getElementById('homeWalletBalance').textContent = balStr;
+  if(document.getElementById('homeWalletPoints')) document.getElementById('homeWalletPoints').innerHTML = `<i class="fas fa-leaf"></i> ${userWallet.points}`;
+  if(document.getElementById('walletBalanceBig')) document.getElementById('walletBalanceBig').textContent = balStr;
+  if(document.getElementById('walletPointsBig')) document.getElementById('walletPointsBig').textContent = userWallet.points;
+}
+
+function updateMarketPricesUI() {
+  const ticker = document.getElementById('marketPriceTicker');
+  if(!ticker) return;
+  let html = "";
+  for(let m in materialPrices) {
+    const p = materialPrices[m];
+    const icon = p.trend === "up" ? "fa-caret-up" : (p.trend === "down" ? "fa-caret-down" : "fa-minus");
+    const color = p.trend === "up" ? "var(--success)" : (p.trend === "down" ? "var(--error)" : "#757575");
+    html += `<div style="white-space:nowrap; padding:5px 10px; background:white; border-radius:5px; border:1px solid #ddd;">
+      ${m}: ${p.price} <i class="fas ${icon}" style="color:${color}"></i>
+    </div>`;
+  }
+  ticker.innerHTML = html;
+}
+
+function convertPoints() {
+  if(userWallet.points < 100) {
+    showToast("⚠️ تحتاج على الأقل 100 نقطة للتحويل", "error");
+    return;
+  }
+  const cash = userWallet.points * 0.5; // كل نقطة بنصف دينار مثلاً
+  userWallet.balance += cash;
+  addTransaction("تحويل نقاط", cash, "earn");
+  userWallet.points = 0;
+  updateWalletUI();
+  showToast(`✅ تم تحويل النقاط إلى ${cash} DZD`, "success");
+}
+
+function addTransaction(title, amount, type) {
+  const list = document.getElementById('walletTransactions');
+  if(!list) return;
+  if(list.innerHTML.includes("لا توجد معاملات")) list.innerHTML = "";
+  
+  const date = new Date().toLocaleDateString('ar-DZ');
+  const color = type === "earn" ? "var(--success)" : "var(--error)";
+  const sign = type === "earn" ? "+" : "-";
+  
+  const html = `<div style="display:flex; justify-content:space-between; padding:10px 0; border-bottom:1px solid #eee;">
+    <div><b>${title}</b><br><small style="color:#999">${date}</small></div>
+    <div style="color:${color}; font-weight:bold;">${sign}${amount} DZD</div>
+  </div>`;
+  list.innerHTML = html + list.innerHTML;
+  
+  // حفظ في Firebase
+  if(currentUid) {
+    db.ref(`wallets/${currentUid}/transactions`).push({ title, amount, type, date: Date.now() });
+    db.ref(`wallets/${currentUid}/balance`).set(userWallet.balance);
+    db.ref(`wallets/${currentUid}/points`).set(userWallet.points);
+  }
+}
+
+// ربط نظام المكافآت بالبلاغات
+const originalSendReport = sendReport;
+sendReport = async function() {
+  const res = await originalSendReport();
+  // إذا نجح الإرسال، نمنح نقاطاً
+  userWallet.points += 10;
+  updateWalletUI();
+  showToast("🎁 حصلت على 10 نقاط بيئية لمساهمتك!", "success");
+  return res;
+};
+
+// تهيئة عند التشغيل
+setTimeout(() => {
+  updateWalletUI();
+  updateMarketPricesUI();
+}, 2000);
+
+
+// ===== نظام السوق المتقدم والشركات =====
+let companies = [];
+let activeBids = [];
+
+function addNewCompany() {
+  const name = document.getElementById('compNewName').value;
+  const license = document.getElementById('compNewLicense').value;
+  const email = document.getElementById('compNewEmail').value;
+  const phone = document.getElementById('compNewPhone').value;
+  
+  if(!name || !license) { showToast("⚠️ أكمل البيانات المطلوبة", "error"); return; }
+  
+  const company = {
+    id: Date.now(),
+    name, license, email, phone,
+    materials: [],
+    createdAt: new Date().toISOString()
+  };
+  
+  companies.push(company);
+  db.ref(`companies/${company.id}`).set(company);
+  updateCompaniesList();
+  showToast("✅ تم إضافة الشركة بنجاح", "success");
+  document.getElementById('compNewName').value = '';
+  document.getElementById('compNewLicense').value = '';
+}
+
+function updateCompaniesList() {
+  const list = document.getElementById('companiesList');
+  if(!list) return;
+  if(companies.length === 0) {
+    list.innerHTML = '<p style="text-align:center; color:#999;">لا توجد شركات مسجلة حالياً</p>';
+    return;
+  }
+  let html = "";
+  companies.forEach(c => {
+    html += `<div style="padding:10px; border:1px solid #ddd; border-radius:5px; margin-bottom:10px;">
+      <b>${c.name}</b> (${c.license})<br>
+      <small style="color:#666;">${c.email} | ${c.phone}</small>
+      <button class="btn btn-dark ripple" style="font-size:0.7rem; padding:3px 8px; margin-top:5px;" onclick="editCompany(${c.id})">
+        <i class="fas fa-edit"></i> تعديل
+      </button>
+    </div>`;
+  });
+  list.innerHTML = html;
+}
+
+function createBid() {
+  const type = document.getElementById('bidMaterialType').value;
+  const qty = parseFloat(document.getElementById('bidQuantity').value);
+  const minPrice = parseFloat(document.getElementById('bidMinPrice').value);
+  const duration = parseInt(document.getElementById('bidDuration').value);
+  
+  if(!type || !qty || !minPrice) { showToast("⚠️ أكمل البيانات", "error"); return; }
+  
+  const bid = {
+    id: Date.now(),
+    type, qty, minPrice, duration,
+    startTime: Date.now(),
+    endTime: Date.now() + (duration * 3600000),
+    bids: {},
+    winner: null,
+    status: "active"
+  };
+  
+  activeBids.push(bid);
+  db.ref(`bids/${bid.id}`).set(bid);
+  updateActiveBids();
+  showToast("✅ تم إنشاء المزايدة بنجاح", "success");
+}
+
+function updateActiveBids() {
+  const list = document.getElementById('activeBids');
+  if(!list) return;
+  if(activeBids.length === 0) {
+    list.innerHTML = '<p style="text-align:center; color:#999;">لا توجد مزايدات جارية</p>';
+    return;
+  }
+  let html = "";
+  activeBids.forEach(b => {
+    const remaining = Math.max(0, b.endTime - Date.now());
+    const hours = Math.floor(remaining / 3600000);
+    html += `<div style="padding:10px; background:#f5f5f5; border-radius:5px; margin-bottom:10px;">
+      <b>${b.type.toUpperCase()}</b> - ${b.qty} طن | السعر الأدنى: ${b.minPrice} DZD<br>
+      <small style="color:#666;">الوقت المتبقي: ${hours} ساعات</small>
+    </div>`;
+  });
+  list.innerHTML = html;
+}
+
+// تحديث الإحصائيات
+function updateEconomicStats() {
+  let totalWallet = 0;
+  let totalMaterials = 0;
+  
+  // حساب إجمالي الأرصدة (يمكن جلبها من Firebase)
+  if(document.getElementById('totalWalletValue')) {
+    document.getElementById('totalWalletValue').textContent = totalWallet.toFixed(2) + " DZD";
+  }
+  if(document.getElementById('totalMaterialsSold')) {
+    document.getElementById('totalMaterialsSold').textContent = totalMaterials + " طن";
+  }
+}
+
+// تحديث الأسعار الديناميكية
+function updateDynamicPrices() {
+  for(let m in materialPrices) {
+    const p = materialPrices[m];
+    const change = (Math.random() - 0.5) * 10;
+    p.price = Math.max(5, p.price + change);
+    p.trend = change > 0 ? "up" : (change < 0 ? "down" : "stable");
+  }
+  updateMarketPricesUI();
+}
+
+// تحديث الأسعار كل 30 دقيقة
+setInterval(updateDynamicPrices, 30 * 60000);
+
+// تحديث الإحصائيات عند التحميل
+setTimeout(() => {
+  updateCompaniesList();
+  updateActiveBids();
+  updateEconomicStats();
+}, 2000);
+
 </script>
+
+  <!-- ========== واجهة الشركات (B2B) ========== -->
+  <div id="companiesPage" class="page">
+    <h2 style="margin-bottom:15px;color:var(--primary);text-align:center">
+      <i class="fas fa-industry"></i> إدارة الشركات المشترية
+    </h2>
+    
+    <div class="card">
+      <h3><i class="fas fa-plus-circle"></i> إضافة شركة جديدة</h3>
+      <input type="text" class="input" id="compNewName" placeholder="🏢 اسم الشركة">
+      <input type="text" class="input" id="compNewLicense" placeholder="📄 رقم السجل التجاري">
+      <input type="email" class="input" id="compNewEmail" placeholder="📧 البريد الإلكتروني">
+      <input type="tel" class="input" id="compNewPhone" placeholder="📞 الهاتف">
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <label style="flex:1; min-width:150px;">
+          <input type="checkbox" value="plastic"> 🧴 بلاستيك
+        </label>
+        <label style="flex:1; min-width:150px;">
+          <input type="checkbox" value="metal"> ⚙️ معادن
+        </label>
+        <label style="flex:1; min-width:150px;">
+          <input type="checkbox" value="paper"> 📄 ورق
+        </label>
+        <label style="flex:1; min-width:150px;">
+          <input type="checkbox" value="glass"> 🥃 زجاج
+        </label>
+      </div>
+      <button class="btn btn-primary ripple" onclick="addNewCompany()">
+        <i class="fas fa-save"></i> حفظ الشركة
+      </button>
+    </div>
+
+    <div class="card">
+      <h3><i class="fas fa-list"></i> قائمة الشركات المسجلة</h3>
+      <div id="companiesList" style="font-size:0.9rem;">
+        <p style="text-align:center; color:#999;">لا توجد شركات مسجلة حالياً</p>
+      </div>
+    </div>
+
+    <button class="btn ripple" style="background:#757575" onclick="showPage('admin')">
+      <i class="fas fa-arrow-right"></i> رجوع
+    </button>
+  </div>
+
+
+  <!-- ========== نظام المزايدة ========== -->
+  <div id="biddingPage" class="page">
+    <h2 style="margin-bottom:15px;color:var(--primary);text-align:center">
+      <i class="fas fa-gavel"></i> نظام المزايدة على النفايات
+    </h2>
+    
+    <div class="card">
+      <h3><i class="fas fa-hourglass-start"></i> مزايدات جارية</h3>
+      <div id="activeBids" style="font-size:0.9rem;">
+        <p style="text-align:center; color:#999;">لا توجد مزايدات جارية</p>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3><i class="fas fa-plus-circle"></i> إنشاء مزايدة جديدة</h3>
+      <select class="in input" id="bidMaterialType">
+        <option value="">اختر نوع المادة</option>
+        <option value="plastic">🧴 بلاستيك</option>
+        <option value="metal">⚙️ معادن</option>
+        <option value="paper">📄 ورق</option>
+        <option value="glass">🥃 زجاج</option>
+      </select>
+      <input type="number" class="input" id="bidQuantity" placeholder="الكمية (طن)">
+      <input type="number" class="input" id="bidMinPrice" placeholder="السعر الأدنى (DZD)">
+      <input type="number" class="input" id="bidDuration" placeholder="مدة المزايدة (ساعات)" value="24">
+      <button class="btn btn-primary ripple" onclick="createBid()">
+        <i class="fas fa-gavel"></i> بدء المزايدة
+      </button>
+    </div>
+
+    <button class="btn ripple" style="background:#757575" onclick="showPage('admin')">
+      <i class="fas fa-arrow-right"></i> رجوع
+    </button>
+  </div>
+
 </body>
 </html>
