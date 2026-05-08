@@ -2542,7 +2542,7 @@ select.input {
           <span id="trackingTimer" style="font-size:0.82rem;opacity:0.9">00:00:00</span>
         </div>
         <!-- خريطة مصغرة -->
-        <div id="driverInlineMap" style="width:100%;height:220px;border-radius:var(--radius-sm);overflow:hidden;margin-bottom:10px;border:2px solid var(--primary);background:#e8f5e9;display:flex;align-items:center;justify-content:center">
+        <div id="driverInlineMap" style="width:100%;height:220px;border-radius:var(--radius-sm);overflow:hidden;margin-bottom:10px;border:2px solid var(--primary);background:#e8f5e9;position:relative;z-index:1">
           <div style="text-align:center;color:var(--primary)">
             <i class="fas fa-map-marker-alt" style="font-size:2rem;margin-bottom:6px;display:block"></i>
             <span style="font-size:0.82rem">جاري تحديد موقعك...</span>
@@ -6337,6 +6337,7 @@ function resumeTrackingUI() {
   if(binEl) binEl.textContent = (truckTrackingData.collectedBins || []).length;
   
   if(!driverTrackingMap) initDriverInlineMap();
+  else setTimeout(() => { driverTrackingMap.invalidateSize(); }, 300);
   
   if(driverTrackingPositions.length > 0 && driverTrackingMap) {
     const latlngs = driverTrackingPositions.map(p => [p.lat, p.lng]);
@@ -6406,6 +6407,25 @@ function resumeTrackingUI() {
   }, 30000); // كل 30 ثانية
   
   showToast('✅ التتبع نشط — يمكنك تسجيل الحاويات', 'success');
+}
+
+function initDriverInlineMap() {
+  try {
+    var mapDiv = document.getElementById('driverInlineMap');
+    if(mapDiv && !driverTrackingMap) {
+      mapDiv.innerHTML = '';
+      driverTrackingMap = L.map('driverInlineMap').setView([36.264, 2.754], 14);
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '© OpenStreetMap', maxZoom: 19
+      }).addTo(driverTrackingMap);
+      
+      // إضافة الطبقات للمسار والحاويات
+      window.driverPathLayer = L.polyline([], {color: '#1B5E20', weight: 4}).addTo(driverTrackingMap);
+      window.driverBinsLayer = L.layerGroup().addTo(driverTrackingMap);
+      
+      setTimeout(() => { driverTrackingMap.invalidateSize(); }, 500);
+    }
+  } catch(e) { console.error("Map Init Error:", e); }
 }
 
 function startInlineGPS() {
@@ -6693,14 +6713,23 @@ function confirmBinCollection() {
     truckTrackingData.positions = driverTrackingPositions;
     // تحديث الخط على الخريطة
     try {
-      if(driverTrackingMap && driverTrackingPositions.length > 1) {
-        if(driverTrackingPolyline) driverTrackingMap.removeLayer(driverTrackingPolyline);
-        driverTrackingPolyline = L.polyline(
-          driverTrackingPositions.map(function(p){return [p.lat,p.lng];}),
-          {color:'#006233', weight:4}
-        ).addTo(driverTrackingMap);
+      if(driverTrackingMap) {
+        if(window.driverPathLayer) {
+          window.driverPathLayer.setLatLngs(driverTrackingPositions.map(p => [p.lat, p.lng]));
+        }
+        // إضافة ماركر الحاوية على الخريطة فوراً
+        if(window.driverBinsLayer) {
+          L.marker([bin.lat, bin.lng], {
+            icon: L.divIcon({
+              className: 'custom-div-icon',
+              html: "<div style='background-color:#c62828; color:white; border-radius:50%; width:24px; height:24px; display:flex; align-items:center; justify-content:center; border:2px solid white; font-weight:bold; font-size:12px;'>"+bin.count+"</div>",
+              iconSize: [24, 24],
+              iconAnchor: [12, 12]
+            })
+          }).addTo(window.driverBinsLayer).bindPopup("حاوية مسجلة: " + bin.count);
+        }
       }
-    } catch(e) {}
+    } catch(e) { console.error("Map Update Error:", e); }
   }
   saveToCloud('truckTracking', truckTrackingData);
   
