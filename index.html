@@ -5006,7 +5006,6 @@ function saveDriverTonnage() {
     // ===== ربط الوزن والسند بالمهمة الحالية والأرشيف =====
     var targetRef = truckTrackingData.refNum || lastMissionRefNum;
     if(targetRef) {
-      // تحديث البيانات في الكائن النشط لضمان ظهورها في تقرير الإدارة
       truckTrackingData.weight = parseFloat(weight);
       truckTrackingData.regNum = regNum;
       truckTrackingData.wasteType = wasteType;
@@ -6154,20 +6153,7 @@ function shouldSavePoint(lat, lng) {
   return false;
 }
 
-  // حساب المسافة باستخدام الصيغة البسيطة
-  const distance = Math.sqrt(
-    Math.pow(lat - lastPosition.lat, 2) +
-    Math.pow(lng - lastPosition.lng, 2)
-  );
 
-  // إذا كانت المسافة > 0.0003 درجة (حوالي 30 متر)
-  if (distance > 0.0003) {
-    lastPosition = { lat, lng };
-    return true;
-  }
-
-  return false;
-}
 
 /**
  * حساب المسافة بين نقطتين
@@ -6350,10 +6336,8 @@ function resumeTrackingUI() {
   const distEl = document.getElementById('driverDistCount');
   if(binEl) binEl.textContent = (truckTrackingData.collectedBins || []).length;
   
-  // تهيئة الخريطة إذا لم تكن موجودة
   if(!driverTrackingMap) initDriverInlineMap();
   
-  // رسم المسار القديم إذا وجد
   if(driverTrackingPositions.length > 0 && driverTrackingMap) {
     const latlngs = driverTrackingPositions.map(p => [p.lat, p.lng]);
     if(driverTrackingPolyline) {
