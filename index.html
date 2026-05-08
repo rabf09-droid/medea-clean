@@ -2525,18 +2525,27 @@ select.input {
       <!-- أزرار التتبع والتسجيل -->
       <!-- زر التتبع -->
       <div id="trackingOffPanel">
-          <div style="text-align:center;padding:20px">
-            <i class="fas fa-truck-loading" style="font-size:3rem;color:var(--text-muted);margin-bottom:15px"></i>
-            <h3 style="margin-bottom:10px">إدارة المسار</h3>
-            <p style="color:var(--text-light);font-size:0.9rem;margin-bottom:20px">ابدأ تتبعاً جديداً أو واصل المسار السابق</p>
-            <div style="display:flex;gap:10px;flex-direction:column">
-              <button class="btn btn-primary ripple" style="width:100%;padding:15px;font-size:1.1rem" onclick="startDriverTracking(false)">
-                <i class="fas fa-play-circle"></i> بدء تتبع جديد
-              </button>
-              <button id="continueTrackingBtn" class="btn btn-success ripple" style="width:100%;padding:15px;font-size:1.1rem;display:none" onclick="startDriverTracking(true)">
-                <i class="fas fa-redo"></i> مواصلة المسار السابق
-              </button>
-            </div>
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <button class="btn btn-secondary ripple btn-hero" onclick="startDriverTracking(false)">
+            <i class="fas fa-play"></i> بدء تتبع جديد
+          </button>
+          <button id="continueTrackingBtn" class="btn btn-success ripple btn-hero" style="display:none;background:linear-gradient(135deg,#2e7d32,#1b5e20)" onclick="startDriverTracking(true)">
+            <i class="fas fa-redo"></i> مواصلة المسار السابق
+          </button>
+        </div>
+      </div>
+
+      <!-- لوحة التتبع المضمنة داخل صفحة السائق -->
+      <div id="driverTrackingPanel" style="display:none;margin-bottom:12px">
+        <div style="background:linear-gradient(135deg,#1b5e20,#2e7d32);color:#fff;border-radius:var(--radius-sm);padding:10px 14px;margin-bottom:8px;display:flex;align-items:center;justify-content:space-between">
+          <span style="font-weight:700;font-size:0.9rem"><i class="fas fa-signal"></i> التتبع نشط</span>
+          <span id="trackingTimer" style="font-size:0.82rem;opacity:0.9">00:00:00</span>
+        </div>
+        <!-- خريطة مصغرة -->
+        <div id="driverInlineMap" style="width:100%;height:220px;border-radius:var(--radius-sm);overflow:hidden;margin-bottom:10px;border:2px solid var(--primary);background:#e8f5e9;display:flex;align-items:center;justify-content:center">
+          <div style="text-align:center;color:var(--primary)">
+            <i class="fas fa-map-marker-alt" style="font-size:2rem;margin-bottom:6px;display:block"></i>
+            <span style="font-size:0.82rem">جاري تحديد موقعك...</span>
           </div>
         </div>
         <!-- إحصاء سريع محسن -->
@@ -4997,7 +5006,7 @@ function saveDriverTonnage() {
     // ===== ربط الوزن والسند بالمهمة الحالية والأرشيف =====
     var targetRef = truckTrackingData.refNum || lastMissionRefNum;
     if(targetRef) {
-      // تحديث البيانات في الكائن النشط
+      // تحديث البيانات في الكائن النشط لضمان ظهورها في تقرير الإدارة
       truckTrackingData.weight = parseFloat(weight);
       truckTrackingData.regNum = regNum;
       truckTrackingData.wasteType = wasteType;
@@ -6132,18 +6141,27 @@ function shouldSavePoint(lat, lng) {
     lastPosition = { lat, lng };
     return true;
   }
+  if (lat === lastPosition.lat && lng === lastPosition.lng) return false;
 
-  // منع التكرار
-  if (lat === lastPosition.lat && lng === lastPosition.lng) {
-    return false;
-  }
-
-  // حساب المسافة الحقيقية بالمتر
+  // حساب المسافة الحقيقية بالكيلومتر
   const distKm = calculateDistanceBetweenPoints(lastPosition, { lat, lng });
-  const distMeters = distKm * 1000;
+  
+  // إذا كانت المسافة > 15 متر (0.015 كم)
+  if (distKm > 0.015) {
+    lastPosition = { lat, lng };
+    return true;
+  }
+  return false;
+}
 
-  // إذا كانت المسافة > 10 أمتار (أكثر دقة من 30 متر)
-  if (distMeters > 10) {
+  // حساب المسافة باستخدام الصيغة البسيطة
+  const distance = Math.sqrt(
+    Math.pow(lat - lastPosition.lat, 2) +
+    Math.pow(lng - lastPosition.lng, 2)
+  );
+
+  // إذا كانت المسافة > 0.0003 درجة (حوالي 30 متر)
+  if (distance > 0.0003) {
     lastPosition = { lat, lng };
     return true;
   }
@@ -6301,9 +6319,8 @@ function startDriverTracking(isContinue = false) {
     return;
   }
 
-  // إذا كان بدء جديد، نطلب التأكيد إذا كان هناك مسار سابق
   if (!isContinue && savedActive) {
-    if(!confirm('هناك مسار سابق مسجل، هل أنت متأكد من بدء مسار جديد؟ سيتم أرشفة المسار القديم.')) return;
+    if(!confirm('هناك مسار سابق مسجل، هل تريد بدء مسار جديد؟ سيتم أرشفة المسار القديم.')) return;
   }
 
   const refNum = 'REF-' + currentDriverSector + '-' + dayKey.replace(/-/g,'') + '-' + Math.floor(Math.random()*1000).toString().padStart(3,'0');
@@ -6329,25 +6346,41 @@ function resumeTrackingUI() {
   document.getElementById('trackingOffPanel').style.display = 'none';
   document.getElementById('driverTrackingPanel').style.display = 'block';
   
-  // تحديث العدادات فوراً عند الاستعادة
   const binEl = document.getElementById('driverBinCount');
   const distEl = document.getElementById('driverDistCount');
   if(binEl) binEl.textContent = (truckTrackingData.collectedBins || []).length;
+  
+  // تهيئة الخريطة إذا لم تكن موجودة
+  if(!driverTrackingMap) initDriverInlineMap();
+  
+  // رسم المسار القديم إذا وجد
+  if(driverTrackingPositions.length > 0 && driverTrackingMap) {
+    const latlngs = driverTrackingPositions.map(p => [p.lat, p.lng]);
+    if(driverTrackingPolyline) {
+      driverTrackingPolyline.setLatLngs(latlngs);
+    } else {
+      driverTrackingPolyline = L.polyline(latlngs, {color: '#1B5E20', weight: 4}).addTo(driverTrackingMap);
+    }
+    driverTrackingMap.fitBounds(driverTrackingPolyline.getBounds());
+    
+    const lastP = driverTrackingPositions[driverTrackingPositions.length - 1];
+    if(driverTrackingMarker) {
+      driverTrackingMarker.setLatLng([lastP.lat, lastP.lng]);
+    } else {
+      driverTrackingMarker = L.marker([lastP.lat, lastP.lng]).addTo(driverTrackingMap);
+    }
+  }
+
   if(distEl) distEl.textContent = calculateTotalDistance(driverTrackingPositions).toFixed(2) + ' كم';
 
-  // تشغيل مؤقت العرض
   driverTrackingInterval = setInterval(function() {
-    var elapsed = Math.floor((Date.now() - driverTrackingStartTime) / 1000);
+    var elapsed = Math.floor((Date.now() - (driverTrackingStartTime || Date.now())) / 1000);
     var h = Math.floor(elapsed/3600), m = Math.floor((elapsed%3600)/60), s = elapsed%60;
     var timer = document.getElementById('trackingTimer');
-    if(timer) timer.textContent =
-      String(h).padStart(2,'0')+':'+String(m).padStart(2,'0')+':'+String(s).padStart(2,'0');
+    if(timer) timer.textContent = String(h).padStart(2,'0')+':'+String(m).padStart(2,'0')+':'+String(s).padStart(2,'0');
   }, 1000);
 
-  // تشغيل GPS
   startInlineGPS();
-  
-  // تشغيل نظام Heartbeat
   startHeartbeat();
   
   // إعادة تعيين المسافة بناءً على البيانات المستعادة
