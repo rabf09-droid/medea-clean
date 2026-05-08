@@ -9411,19 +9411,55 @@ async function showAllSectorsOverview() {
 }
 
 /**
- * حفظ التقرير التحليلي في Firebase
+ * حفظ التقرير التحليلي في Firebase وتحديث المناطق الساخنة (Hot Zones)
  */
-function saveAnalyticsToCloud() {
+async function saveAnalyticsToCloud() {
   try {
     const report = generateAnalyticsReport();
     if (report) {
-      db.ref(`analytics/${new Date().toISOString().slice(0, 10)}`).set(report).catch(() => {});
-      localStorage.setItem('medea_lastAnalytics', JSON.stringify(report));
-      showToast('✅ تم حفظ التقرير التحليلي', 'success');
+      await db.ref(`analytics/${new Date().toISOString().slice(0, 10)}`).set(report);
+      
+      // تحديث المناطق الساخنة (Hot Zones) بناءً على البلاغات
+      const snapshot = await db.ref('reports').once('value');
+      const reports = Object.values(snapshot.val() || {});
+      const zones = {};
+      reports.forEach(r => {
+        if(r.lat && r.lng) {
+          const key = `${r.lat.toFixed(2)}_${r.lng.toFixed(2)}`;
+          zones[key] = (zones[key] || 0) + 1;
+        }
+      });
+      await db.ref("analytics/hotZones").set(zones);
     }
   } catch (e) {
-    console.error('Error saving analytics:', e);
+    console.error("Save Analytics Error:", e);
   }
+}
+
+/**
+ * تحسين مسار الشاحنة بناءً على نقاط البلاغات النشطة
+ */
+function optimizeDriverRoute(start, points) {
+  if (!points || points.length === 0) return [start];
+  let route = [start];
+  let remaining = [...points];
+
+  while (remaining.length) {
+    let last = route[route.length - 1];
+    let nearestIndex = 0;
+    let minDist = Infinity;
+
+    remaining.forEach((p, i) => {
+      const d = calculateDistanceBetweenPoints(last, p);
+      if (d < minDist) {
+        minDist = d;
+        nearestIndex = i;
+      }
+    });
+
+    route.push(remaining.splice(nearestIndex, 1)[0]);
+  }
+  return route;
 }
 </script>
 </body>
