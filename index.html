@@ -2525,22 +2525,18 @@ select.input {
       <!-- أزرار التتبع والتسجيل -->
       <!-- زر التتبع -->
       <div id="trackingOffPanel">
-        <button class="btn btn-secondary ripple btn-hero" onclick="startDriverTracking()">
-          <i class="fas fa-play"></i> بدء تتبع المسار
-        </button>
-      </div>
-
-      <!-- لوحة التتبع المضمنة داخل صفحة السائق -->
-      <div id="driverTrackingPanel" style="display:none;margin-bottom:12px">
-        <div style="background:linear-gradient(135deg,#1b5e20,#2e7d32);color:#fff;border-radius:var(--radius-sm);padding:10px 14px;margin-bottom:8px;display:flex;align-items:center;justify-content:space-between">
-          <span style="font-weight:700;font-size:0.9rem"><i class="fas fa-signal"></i> التتبع نشط</span>
-          <span id="trackingTimer" style="font-size:0.82rem;opacity:0.9">00:00:00</span>
-        </div>
-        <!-- خريطة مصغرة -->
-        <div id="driverInlineMap" style="width:100%;height:220px;border-radius:var(--radius-sm);overflow:hidden;margin-bottom:10px;border:2px solid var(--primary);background:#e8f5e9;display:flex;align-items:center;justify-content:center">
-          <div style="text-align:center;color:var(--primary)">
-            <i class="fas fa-map-marker-alt" style="font-size:2rem;margin-bottom:6px;display:block"></i>
-            <span style="font-size:0.82rem">جاري تحديد موقعك...</span>
+          <div style="text-align:center;padding:20px">
+            <i class="fas fa-truck-loading" style="font-size:3rem;color:var(--text-muted);margin-bottom:15px"></i>
+            <h3 style="margin-bottom:10px">إدارة المسار</h3>
+            <p style="color:var(--text-light);font-size:0.9rem;margin-bottom:20px">ابدأ تتبعاً جديداً أو واصل المسار السابق</p>
+            <div style="display:flex;gap:10px;flex-direction:column">
+              <button class="btn btn-primary ripple" style="width:100%;padding:15px;font-size:1.1rem" onclick="startDriverTracking(false)">
+                <i class="fas fa-play-circle"></i> بدء تتبع جديد
+              </button>
+              <button id="continueTrackingBtn" class="btn btn-success ripple" style="width:100%;padding:15px;font-size:1.1rem;display:none" onclick="startDriverTracking(true)">
+                <i class="fas fa-redo"></i> مواصلة المسار السابق
+              </button>
+            </div>
           </div>
         </div>
         <!-- إحصاء سريع محسن -->
@@ -4003,6 +3999,21 @@ function showPage(id) {
     if(id === 'publicStats') updatePublicStats();
     if(id === 'schedule') displaySchedule();
     if(id === 'tonnageRecords') loadTonnageRecords();
+    
+    // تحديث زر المتابعة عند الدخول لصفحة السائق
+    if(id === 'driver') {
+      const saved = localStorage.getItem('medea_lastMission_' + currentDriver);
+      const contBtn = document.getElementById('continueTrackingBtn');
+      if(contBtn) {
+        if(saved) {
+          const parsed = JSON.parse(saved);
+          const today = new Date().toISOString().slice(0,10);
+          contBtn.style.display = (parsed.dayKey === today) ? 'block' : 'none';
+        } else {
+          contBtn.style.display = 'none';
+        }
+      }
+    }
     if(id === 'scheduleManager') loadScheduleSectors();
     if(id === 'adminRequests') loadAdminRequests();
     if(id === 'requests') loadMyRequests();
@@ -4983,9 +4994,16 @@ function saveDriverTonnage() {
     localStorage.setItem('medea_tonnage', JSON.stringify(records));
     try { db.ref('tonnage/' + rec.id).set(rec).catch(function(){}); } catch(e) {}
 
-    // ===== ربط الوزن والسند بالمهمة في الأرشيف =====
+    // ===== ربط الوزن والسند بالمهمة الحالية والأرشيف =====
     var targetRef = truckTrackingData.refNum || lastMissionRefNum;
     if(targetRef) {
+      // تحديث البيانات في الكائن النشط
+      truckTrackingData.weight = parseFloat(weight);
+      truckTrackingData.regNum = regNum;
+      truckTrackingData.wasteType = wasteType;
+      saveToCloud('truckTracking', truckTrackingData);
+      localStorage.setItem('medea_activeMission_' + currentDriver, JSON.stringify(truckTrackingData));
+
       try {
         // تحديث الأرشيف المحلي
         var loc = [];
@@ -4996,11 +5014,30 @@ function saveDriverTonnage() {
           loc[idx].regNum    = regNum;
           loc[idx].wasteType = wasteType;
           localStorage.setItem('medea_truckArchive', JSON.stringify(loc));
+        } else {
+          // إذا لم يكن موجوداً في الأرشيف المحلي، نقوم بإضافته
+          var archiveRec = {
+            refNum: targetRef,
+            driver: currentDriver,
+            sector: currentDriverSector,
+            startTime: truckTrackingData.startTime,
+            weight: parseFloat(weight),
+            regNum: regNum,
+            wasteType: wasteType,
+            positions: truckTrackingData.positions || [],
+            collectedBins: truckTrackingData.collectedBins || []
+          };
+          loc.push(archiveRec);
+          localStorage.setItem('medea_truckArchive', JSON.stringify(loc));
         }
-        // تحديث Firebase
-        db.ref('truckArchive/' + targetRef + '/weight').set(parseFloat(weight)).catch(function(){});
-        db.ref('truckArchive/' + targetRef + '/regNum').set(regNum).catch(function(){});
-        db.ref('truckArchive/' + targetRef + '/wasteType').set(wasteType).catch(function(){});
+        // تحديث Firebase - نستخدم update لضمان عدم مسح البيانات الأخرى
+        db.ref('truckArchive/' + targetRef).update({
+          weight: parseFloat(weight),
+          regNum: regNum,
+          wasteType: wasteType,
+          driver: currentDriver,
+          sector: currentDriverSector
+        }).catch(function(){});
       } catch(e2) {}
     }
 
@@ -6101,14 +6138,12 @@ function shouldSavePoint(lat, lng) {
     return false;
   }
 
-  // حساب المسافة باستخدام الصيغة البسيطة
-  const distance = Math.sqrt(
-    Math.pow(lat - lastPosition.lat, 2) +
-    Math.pow(lng - lastPosition.lng, 2)
-  );
+  // حساب المسافة الحقيقية بالمتر
+  const distKm = calculateDistanceBetweenPoints(lastPosition, { lat, lng });
+  const distMeters = distKm * 1000;
 
-  // إذا كانت المسافة > 0.0003 درجة (حوالي 30 متر)
-  if (distance > 0.0003) {
+  // إذا كانت المسافة > 10 أمتار (أكثر دقة من 30 متر)
+  if (distMeters > 10) {
     lastPosition = { lat, lng };
     return true;
   }
@@ -6248,23 +6283,27 @@ var driverTrackingMarker = null;
 var driverTrackingPolyline = null;
 var driverTrackingPositions = [];
 
-function startDriverTracking() {
+function startDriverTracking(isContinue = false) {
   if(!currentDriver) { showToast('⚠️ يجب تسجيل الدخول أولاً', 'error'); return; }
   const now = new Date();
   const dayKey = now.toISOString().slice(0,10);
   
-  // التحقق من وجود مهمة نشطة مخزنة محلياً لهذا اليوم
   const savedActive = localStorage.getItem('medea_activeMission_' + currentDriver);
-  if(savedActive) {
+  
+  if (isContinue && savedActive) {
     const parsed = JSON.parse(savedActive);
-    if(parsed.dayKey === dayKey) {
-      truckTrackingData = parsed;
-      driverTrackingPositions = parsed.positions || [];
-      lastMissionRefNum = parsed.refNum;
-      showToast('🔄 تم استعادة مهمتك النشطة لهذا اليوم', 'info');
-      resumeTrackingUI();
-      return;
-    }
+    truckTrackingData = parsed;
+    truckTrackingData.active = true;
+    driverTrackingPositions = parsed.positions || [];
+    lastMissionRefNum = parsed.refNum;
+    showToast('🔄 تم مواصلة المسار السابق', 'info');
+    resumeTrackingUI();
+    return;
+  }
+
+  // إذا كان بدء جديد، نطلب التأكيد إذا كان هناك مسار سابق
+  if (!isContinue && savedActive) {
+    if(!confirm('هناك مسار سابق مسجل، هل أنت متأكد من بدء مسار جديد؟ سيتم أرشفة المسار القديم.')) return;
   }
 
   const refNum = 'REF-' + currentDriverSector + '-' + dayKey.replace(/-/g,'') + '-' + Math.floor(Math.random()*1000).toString().padStart(3,'0');
@@ -6294,9 +6333,7 @@ function resumeTrackingUI() {
   const binEl = document.getElementById('driverBinCount');
   const distEl = document.getElementById('driverDistCount');
   if(binEl) binEl.textContent = (truckTrackingData.collectedBins || []).length;
-  if(distEl) distEl.textContent = calculateTotalDistance(driverTrackingPositions).toFixed(2);
-  document.getElementById('driverBinCount').textContent = '0';
-  document.getElementById('driverDistCount').textContent = '0';
+  if(distEl) distEl.textContent = calculateTotalDistance(driverTrackingPositions).toFixed(2) + ' كم';
 
   // تشغيل مؤقت العرض
   driverTrackingInterval = setInterval(function() {
@@ -6313,9 +6350,9 @@ function resumeTrackingUI() {
   // تشغيل نظام Heartbeat
   startHeartbeat();
   
-  // إعادة تعيين المسافة
-  totalDistanceTraveled = 0;
-  lastPosition = null;
+  // إعادة تعيين المسافة بناءً على البيانات المستعادة
+  totalDistanceTraveled = calculateTotalDistance(driverTrackingPositions);
+  lastPosition = driverTrackingPositions.length > 0 ? driverTrackingPositions[driverTrackingPositions.length - 1] : null;
   lastMoveTime = Date.now();
   
     // تحديث حالة السائق
@@ -6392,7 +6429,7 @@ function startInlineGPS() {
       
       // تحديث العداد في الواجهة
       const distEl = document.getElementById('driverDistCount');
-      if(distEl) distEl.textContent = totalDistanceTraveled.toFixed(2);
+      if(distEl) distEl.textContent = totalDistanceTraveled.toFixed(2) + ' كم';
 
       // حفظ المهمة النشطة محلياً لمنع الفقدان
       truckTrackingData.positions = driverTrackingPositions;
@@ -6485,12 +6522,15 @@ function stopDriverTracking() {
     truckTrackingData.positions = driverTrackingPositions.slice();
   }
 
-  // 3) إنهاء المهمة ومسح المهمة النشطة من التخزين المحلي
+  // 3) إنهاء المهمة مؤقتاً وتحديث التخزين المحلي
   truckTrackingData.active  = false;
   truckTrackingData.endTime = new Date().toISOString();
-  localStorage.removeItem('medea_activeMission_' + currentDriver);
+  truckTrackingData.positions = driverTrackingPositions.slice();
+  localStorage.setItem('medea_activeMission_' + currentDriver, JSON.stringify(truckTrackingData));
   
-  driverTrackingPositions = []; // المسح بعد الحفظ النهائي
+  // إظهار زر المواصلة
+  const contBtn = document.getElementById('continueTrackingBtn');
+  if(contBtn) contBtn.style.display = 'block';
   // حفظ refNum قبل أي إعادة تعيين
   if(truckTrackingData.refNum) lastMissionRefNum = truckTrackingData.refNum;
   var bins = (truckTrackingData.collectedBins || []).length;
