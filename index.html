@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
 <meta charset="UTF-8">
@@ -4011,14 +4011,25 @@ function showPage(id) {
     
     // تحديث زر المتابعة عند الدخول لصفحة السائق
     if(id === 'driver') {
-      const saved = localStorage.getItem('medea_lastMission_' + currentDriver);
       const contBtn = document.getElementById('continueTrackingBtn');
       if(contBtn) {
-        if(saved) {
-          const parsed = JSON.parse(saved);
-          const today = new Date().toISOString().slice(0,10);
-          contBtn.style.display = (parsed.dayKey === today) ? 'block' : 'none';
-        } else {
+        try {
+          const saved = localStorage.getItem('medea_activeMission_' + currentDriver);
+          if(saved) {
+            const parsed = JSON.parse(saved);
+            const today = new Date().toISOString().slice(0,10);
+            const isToday = parsed.dayKey === today ||
+                            (parsed.startTime && parsed.startTime.slice(0,10) === today);
+            contBtn.style.display = isToday ? 'block' : 'none';
+            if(isToday) {
+              const bins = (parsed.collectedBins || []).length;
+              contBtn.innerHTML = '<i class="fas fa-redo"></i> مواصلة المسار السابق' +
+                (bins > 0 ? ' (' + bins + ' حاوية مسجلة)' : '');
+            }
+          } else {
+            contBtn.style.display = 'none';
+          }
+        } catch(e) {
           contBtn.style.display = 'none';
         }
       }
@@ -6735,7 +6746,7 @@ function confirmBinCollection() {
   
   // ✅ تحديث عداد "نقطة مسجّلة" — يزيد بـ 1 فقط عند كل تثبيت
   const distEl = document.getElementById('driverDistCount');
-  if(distEl) distEl.textContent = driverTrackingPositions.length;
+  if(distEl) distEl.textContent = totalDistanceTraveled.toFixed(2) + ' كم';
 
   // تحديث عداد الحاويات الحقيقي
   const countEl = document.getElementById('driverBinCount');
