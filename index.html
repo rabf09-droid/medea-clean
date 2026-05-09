@@ -9936,5 +9936,218 @@ function optimizeDriverRoute(start, points) {
         }, 1000);
     });
 })();
+
+
+// ===== MEDEA CLEAN 2026 - DIAMOND EDITION =====
+/**
+ * MEDEA CLEAN 2026 - ULTIMATE MASTER CODE
+ * الإصدار النهائي الشامل لولاية المدية
+ */
+
+const MedeaUltimate = {
+    // 1. الإعدادات والقطاعات والصلاحيات
+    config: {
+        commission: 0.05, // 5% عمولة المنصة
+        withdrawFee: 20,  // 20 دج رسوم السحب
+        sectors: {
+            "muni": { name: "بلدية المدية", color: "#006233", icon: "fa-university", tel: "025112233" },
+            "priv": { name: "القطاع الخاص", color: "#1d4ed8", icon: "fa-truck", tel: "0550112233" },
+            "sweep": { name: "فرق الكنس", color: "#f59e0b", icon: "fa-broom", tel: "0660445566" }
+        }
+    },
+
+    // 2. إدارة الخزينة والأرباح (صلاحيات المشرف الرئيسي)
+    Vault: {
+        // معالجة المبيعات واقتطاع العمولة
+        processSale: async function(sellerId, buyerId, amount, isCash = false) {
+            const fee = amount * MedeaUltimate.config.commission;
+            const net = amount - fee;
+
+            if (isCash) {
+                // تسجيل دين على المشتري لصالح صاحب التطبيق
+                await db.ref(`admin_vault/debts/${buyerId}`).transaction(c => (c || 0) + fee);
+                MedeaUltimate.Utils.speak("تم توثيق البيع النقدي وتسجيل العمولة كدين");
+            } else {
+                // تحويل رقمي مباشر
+                await db.ref(`users/${sellerId}/wallet`).transaction(c => (c || 0) + net);
+                await db.ref(`admin_vault/revenue`).transaction(c => (c || 0) + fee);
+                MedeaUltimate.Utils.speak(`تمت العملية بنجاح. صافي ربحك ${net} دج`);
+            }
+            MedeaUltimate.Utils.awardPoints(sellerId, 50);
+        },
+
+        // تأكيد سحب الأموال (للمدير فقط)
+        confirmWithdrawal: async function(requestId) {
+            await db.ref(`payouts/${requestId}`).update({ status: 'completed', date: Date.now() });
+            MedeaUltimate.Utils.speak("تم تأكيد تحويل الأموال للمواطن");
+        }
+    },
+
+    // 3. ركن التبرعات والجانب الإنساني
+    Charity: {
+        donate: async function(userId, amount) {
+            await db.ref(`users/${userId}/wallet`).transaction(bal => {
+                if (bal >= amount) {
+                    db.ref(`admin_vault/workers_fund`).transaction(c => (c || 0) + amount);
+                    return bal - amount;
+                }
+                return bal;
+            });
+            MedeaUltimate.Utils.speak("شكراً لتبرعك لصالح عمال نظافة المدية");
+        }
+    },
+
+    // 4. الخرائط والتتبع والقطاعات
+    Mapping: {
+        getMarker: function(sectorId) {
+            const s = MedeaUltimate.config.sectors[sectorId];
+            return L.divIcon({
+                html: `<div class="m-marker" style="background:${s.color}"><i class="fas ${s.icon}"></i></div>`,
+                className: 'medea-icon'
+            });
+        },
+        
+        drawLegend: function() {
+            const leg = document.createElement('div');
+            leg.className = 'medea-legend-panel';
+            let html = '<b><i class="fas fa-crown"></i> إدارة المدية 2026</b><hr>';
+            for (let k in MedeaUltimate.config.sectors) {
+                const s = MedeaUltimate.config.sectors[k];
+                html += `<div><span style="background:${s.color}"></span> ${s.name}</div>`;
+            }
+            leg.innerHTML = html;
+            document.body.appendChild(leg);
+        }
+    },
+
+    // 5. الأدوات المساعدة (AI، صوت، شهادات)
+    Utils: {
+        speak: function(text) {
+            if ('speechSynthesis' in window) {
+                const msg = new SpeechSynthesisUtterance(text);
+                msg.lang = 'ar-SA';
+                window.speechSynthesis.speak(msg);
+            }
+        },
+        awardPoints: async function(uid, p) {
+            await db.ref(`users/${uid}/points`).transaction(c => (c || 0) + p);
+        },
+        issueCertificate: function(name, pts) {
+            const canvas = document.createElement('canvas');
+            canvas.width = 800; canvas.height = 500;
+            const ctx = canvas.getContext('2d');
+            ctx.fillStyle = "white"; ctx.fillRect(0,0,800,500);
+            ctx.strokeStyle = "#006233"; ctx.lineWidth = 15; ctx.strokeRect(10,10,780,480);
+            ctx.textAlign = "center"; ctx.fillStyle = "#006233"; ctx.font = "bold 40px Cairo";
+            ctx.fillText("شهادة شكر وتقدير: ولاية المدية", 400, 80);
+            ctx.fillStyle = "#333"; ctx.font = "30px Cairo";
+            ctx.fillText(`للمواطن المتميز: ${name}`, 400, 230);
+            ctx.fillText(`لمساهمته البيئية بـ ${pts} نقطة`, 400, 350);
+            const link = document.createElement('a');
+            link.download = `MedeaCert_${name}.png`;
+            link.href = canvas.toDataURL();
+            link.click();
+        }
+    }
+};
+
+// واجهة المشرف الرئيسي (تظهر الأرباح له فقط)
+function renderAdminPrivateUI(isSuperAdmin) {
+    if (!isSuperAdmin) return;
+    const vaultDiv = document.createElement('div');
+    vaultDiv.className = 'admin-vault-box';
+    vaultDiv.innerHTML = `
+        <h5><i class="fas fa-university"></i> الخزينة المركزية</h5>
+        <p id="totalRev">جاري التحميل...</p>
+        <button onclick="viewPayouts()" class="v-btn">إدارة التحويلات</button>
+    `;
+    document.body.appendChild(vaultDiv);
+}
+
+// الأنماط البصرية
+const styles = document.createElement('style');
+styles.innerHTML = `
+    .medea-legend-panel { position:fixed; top:20px; right:20px; background:white; padding:15px; border-radius:12px; box-shadow:0 4px 20px rgba(0,0,0,0.15); z-index:2000; border-left:5px solid #006233; width:200px; }
+    .medea-legend-panel div { display:flex; align-items:center; margin-bottom:8px; font-size:0.9rem; font-weight:bold; }
+    .medea-legend-panel span { width:15px; height:15px; border-radius:4px; margin-left:10px; }
+    .m-marker { width:35px; height:35px; border-radius:50%; display:flex; align-items:center; justify-content:center; color:white; border:2px solid white; box-shadow:0 2px 5px rgba(0,0,0,0.2); }
+    .admin-vault-box { position:fixed; bottom:20px; left:20px; background:#006233; color:white; padding:20px; border-radius:15px; z-index:2000; width:250px; }
+    .v-btn { width:100%; padding:8px; border-radius:8px; border:none; background:#ffd700; color:#333; font-weight:bold; cursor:pointer; }
+`;
+document.head.appendChild(styles);
+
+// تفعيل النظام
+window.addEventListener('load', () => { 
+    MedeaUltimate.Mapping.drawLegend(); 
+    // مثال: تفعيل واجهة المدير (يتم ربطها بنظام تسجيل الدخول)
+    renderAdminPrivateUI(true); 
+});
+
+// ===== نظام الحقن المرئي للنسخة الماسية (Diamond UI Injection) =====
+(function() {
+    function injectDiamondUI() {
+        // 1. إضافة ركن التبرعات في الصفحة الرئيسية
+        const homePage = document.getElementById('home');
+        if (homePage && !document.getElementById('diamondCharitySection')) {
+            const charitySection = document.createElement('div');
+            charitySection.id = 'diamondCharitySection';
+            charitySection.className = 'card hover-lift';
+            charitySection.style.borderColor = '#f59e0b';
+            charitySection.style.background = 'linear-gradient(135deg, #fffbeb, #fef3c7)';
+            charitySection.innerHTML = `
+                <h3 style="color:#d97706"><i class="fas fa-heart"></i> ركن المسؤولية الاجتماعية</h3>
+                <p style="font-size:0.85rem; margin-bottom:10px">صندوق "إكرام العمال" لجمع الصدقات والهبات وتوزيعها كمكافآت لعمال نظافة المدية.</p>
+                <div style="display:flex; gap:8px">
+                    <input type="number" id="donationAmount" class="input" style="margin:0" placeholder="المبلغ (دج)">
+                    <button class="btn ripple" style="background:#f59e0b; color:white; margin:0; width:auto; padding:0 20px" onclick="MedeaUltimate.Charity.donate(currentDriver || 'user', document.getElementById('donationAmount').value)">
+                        تصدق الآن
+                    </button>
+                </div>
+            `;
+            // إدراج قبل قسم الاقتصاد الدائري
+            const circularSection = homePage.querySelector('h3[data-i18n="circularEconomy"]')?.parentElement;
+            if (circularSection) {
+                homePage.insertBefore(charitySection, circularSection);
+            } else {
+                homePage.appendChild(charitySection);
+            }
+        }
+
+        // 2. إضافة واجهة الخزينة في لوحة الإدارة
+        const adminPanel = document.getElementById('adminPanel');
+        if (adminPanel && !document.querySelector('.admin-vault-box')) {
+            // سيتم استدعاء renderAdminPrivateUI من خلال الجسر عند دخول فتحي
+        }
+    }
+
+    // ربط الوظائف
+    const _origLoginAdmin = window.loginAdmin;
+    if (typeof _origLoginAdmin === 'function') {
+        window.loginAdmin = function() {
+            _origLoginAdmin.apply(this, arguments);
+            setTimeout(() => {
+                if (window.currentAdminName === 'فتحي') {
+                    if (typeof renderAdminPrivateUI === 'function') renderAdminPrivateUI(true);
+                    // تحديث مبلغ الخزينة (محاكاة)
+                    const revEl = document.getElementById('totalRev');
+                    if (revEl) revEl.innerText = "إجمالي الأرباح: 15,420 دج";
+                }
+            }, 1000);
+        };
+    }
+
+    // تشغيل الحقن عند التحميل
+    window.addEventListener('load', () => {
+        setTimeout(injectDiamondUI, 1500);
+        if (typeof MedeaUltimate !== 'undefined' && MedeaUltimate.Mapping.drawLegend) {
+            MedeaUltimate.Mapping.drawLegend();
+        }
+    });
+
+    // إضافة وظيفة عرض التحويلات (مطلوبة في الكود الماسي)
+    window.viewPayouts = function() {
+        showToast("جاري فتح سجل التحويلات البنكية...", "info");
+    };
+})();
 </script>
 </body></html>
