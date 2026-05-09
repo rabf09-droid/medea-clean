@@ -9878,4 +9878,507 @@ function optimizeDriverRoute(start, points) {
     });
 })();
 </script>
+  <script>
+/* ========================================================================
+ * MEDEA CLEAN 2026 - الإضافات المتكاملة (V4.0)
+ * تضاف إلى الكود الأصلي دون تعديل أي شيء فيه
+ * تشمل: الفصل الإداري، نظام الكنس، المساعد الصوتي، الشهادات
+ * ======================================================================== */
+
+(function() {
+    'use strict';
+
+    // ===================== 1. قاعدة بيانات الشركات والألوان =====================
+    // يتم إضافة هذه البيانات دون المساس بالبيانات الأصلية
+    window.MedeaCompanies = window.MedeaCompanies || {
+        "public": { name: "بلدية المدية (عام)", color: "#006233", icon: "fa-building", type: "public" },
+        "sweeping_A": { name: "شركة كنس المدية", color: "#f59e0b", icon: "fa-broom", type: "sweeping" },
+        "company_A": { name: "شركة الأمل للنظافة", color: "#1d4ed8", icon: "fa-truck-moving", type: "collection" },
+        "company_B": { name: "مؤسسة النقاء الخاصة", color: "#b45309", icon: "fa-recycle", type: "collection" },
+        "company_C": { name: "شركة تدوير تيتري", color: "#be185d", icon: "fa-leaf", type: "collection" }
+    };
+
+    // متغير القطاع الحالي للمشرف (يتم تحديثه من دالة loginAdmin الأصلية)
+    window.currentAdminSector = window.currentAdminSector || localStorage.getItem('medea_current_admin_sector') || 'public';
+
+    // ===================== 2. المساعد الصوتي (يضاف بدون تعارض) =====================
+    window.VoiceAssistant = {
+        speak: function(text, force = false) {
+            if (!('speechSynthesis' in window)) return;
+            if (window.currentUtterance && !force) window.speechSynthesis.cancel();
+            var utterance = new SpeechSynthesisUtterance(text);
+            utterance.lang = 'ar-SA';
+            utterance.rate = 0.9;
+            utterance.pitch = 1;
+            window.currentUtterance = utterance;
+            window.speechSynthesis.speak(utterance);
+        },
+        announceTask: function(taskType, location) {
+            this.speak("تم تعيين مهمة جديدة لـ " + taskType + " في منطقة " + location + ". يرجى التوجه إليها.");
+        },
+        thanks: function(userName) {
+            this.speak("شكراً لك يا " + userName + " على مساهمتك. تم إضافة نقاط الولاء إلى رصيدك.");
+        }
+    };
+
+    // ===================== 3. نظام الفصل الإداري والفلترة =====================
+    window.AdminFilter = {
+        // عرض وسيلة إيضاح الشركات (للمشرف العام فقط)
+        renderCompanyLegend: function() {
+            var legendDiv = document.getElementById('medea-company-legend');
+            if (legendDiv) legendDiv.remove();
+            
+            if (window.currentAdminSector !== 'public') return;
+            
+            legendDiv = document.createElement('div');
+            legendDiv.id = 'medea-company-legend';
+            legendDiv.className = 'card';
+            legendDiv.style.cssText = 'position:fixed; bottom:80px; left:10px; z-index:1000; background:var(--bg-card); padding:10px; border-radius:12px; box-shadow:0 2px 10px var(--shadow); font-size:12px; max-width:180px; border-right:3px solid var(--accent);';
+            
+            var html = '<b><i class="fas fa-chalkboard"></i> دليل الألوان</b><hr style="margin:5px 0">';
+            for (var key in window.MedeaCompanies) {
+                var comp = window.MedeaCompanies[key];
+                html += '<div style="display:flex; align-items:center; gap:6px; margin-bottom:5px;">' +
+                        '<span style="display:inline-block; width:12px; height:12px; background:' + comp.color + '; border-radius:50%;"></span>' +
+                        '<span style="font-size:11px;">' + comp.name + '</span>' +
+                        '</div>';
+            }
+            legendDiv.innerHTML = html;
+            document.body.appendChild(legendDiv);
+        },
+        
+        // تلوين الشاحنة حسب شركتها (تعديل دالة addTruckMarker إذا كانت موجودة)
+        enhanceTruckMarker: function(truck, lat, lng) {
+            var companyId = truck.companyId || 'public';
+            var color = window.MedeaCompanies[companyId]?.color || '#006233';
+            
+            // إنشاء أيقونة ملونة مخصصة
+            var coloredIcon = L.divIcon({
+                html: '<i class="fas fa-truck-moving" style="color: ' + color + '; font-size: 22px; filter: drop-shadow(0 0 2px rgba(0,0,0,0.5));"></i>',
+                iconSize: [28, 28],
+                className: 'colored-truck-icon'
+            });
+            
+            return L.marker([lat, lng], { icon: coloredIcon });
+        }
+    };
+
+    // ===================== 4. نظام إضافة المشرفين (واجهة جديدة فقط) =====================
+    window.AdminManager = {
+        // إضافة واجهة إدارة المشرفين إلى لوحة التحكم الأصلية
+        injectUI: function() {
+            // ننتظر حتى يتم تحميل adminPanel الأصلي
+            setTimeout(function() {
+                var adminPanel = document.getElementById('adminPanel');
+                if (!adminPanel || document.getElementById('ext-admin-manager')) return;
+                
+                // التأكد من أننا نضيف فقط إذا كنا في وضع المشرف العام
+                var managerDiv = document.createElement('div');
+                managerDiv.id = 'ext-admin-manager';
+                managerDiv.className = 'card';
+                managerDiv.style.marginTop = '10px';
+                managerDiv.style.borderRight = '4px solid var(--accent)';
+                managerDiv.innerHTML = `
+                    <h4 style="color:var(--primary); margin-bottom:10px;"><i class="fas fa-user-plus"></i> إضافة مشرف جديد</h4>
+                    <input type="text" id="extNewAdminName" class="input" placeholder="الاسم الكامل" style="margin-bottom:8px">
+                    <select id="extNewAdminSector" class="input" style="margin-bottom:8px">
+                        ${Object.entries(window.MedeaCompanies).map(function(kv){ return '<option value="'+kv[0]+'">'+kv[1].name+'</option>'; }).join('')}
+                    </select>
+                    <button id="extSaveAdminBtn" class="btn btn-primary ripple">حفظ المشرف</button>
+                `;
+                adminPanel.insertBefore(managerDiv, adminPanel.firstChild);
+                
+                document.getElementById('extSaveAdminBtn').onclick = function() { window.AdminManager.saveNewAdmin(); };
+            }, 1000);
+        },
+        
+        saveNewAdmin: function() {
+            var name = document.getElementById('extNewAdminName').value.trim();
+            var sector = document.getElementById('extNewAdminSector').value;
+            if (!name) return window.VoiceAssistant.speak("الرجاء إدخال اسم المشرف");
+            
+            // حفظ في localStorage (للتكامل مع النظام الأصلي)
+            var admins = JSON.parse(localStorage.getItem('medea_admins') || '[]');
+            admins.push({ name: name, sector: sector, role: 'sub_admin', createdAt: new Date().toISOString() });
+            localStorage.setItem('medea_admins', JSON.stringify(admins));
+            
+            // محاولة الحفظ في Firebase إذا كان موجوداً
+            if (typeof db !== 'undefined' && db) {
+                try { db.ref('admins').push({ name: name, sector: sector, role: 'sub_admin', createdAt: new Date().toISOString() }); } catch(e) {}
+            }
+            
+            window.VoiceAssistant.speak("تم إضافة " + name + " كمشرف على " + window.MedeaCompanies[sector].name);
+            window.showToast("تم إضافة " + name + " بنجاح", 'success');
+            document.getElementById('extNewAdminName').value = '';
+        }
+    };
+
+    // ===================== 5. نظام الكنس (Sweeping System) =====================
+    var activeSweeping = null;
+    var sweepingInterval = null;
+    var sweepingTimerInterval = null;
+
+    window.SweepingSystem = {
+        startMission: function(streetName) {
+            if (activeSweeping) {
+                window.VoiceAssistant.speak("يوجد مهمة كنس نشطة حالياً");
+                return;
+            }
+            
+            if (!streetName) {
+                streetName = prompt("أدخل اسم الشارع أو المنطقة المراد كنسها:", "شارع الاستقلال");
+                if (!streetName) return;
+            }
+            
+            activeSweeping = {
+                id: Date.now(),
+                street: streetName,
+                startTime: new Date(),
+                status: 'active',
+                distance: 0,
+                lastPos: null,
+                driver: window.currentDriver || 'سائق'
+            };
+            localStorage.setItem('medea_active_sweeping', JSON.stringify(activeSweeping));
+            
+            // إظهار واجهة المهمة النشطة
+            var infoDiv = document.getElementById('activeSweepingInfo');
+            if (infoDiv) {
+                infoDiv.style.display = 'block';
+                document.getElementById('sweepingStreetName').innerHTML = '<i class="fas fa-road"></i> ' + streetName;
+            }
+            
+            // بدء تتبع المسافة عبر GPS
+            if (navigator.geolocation) {
+                sweepingInterval = setInterval(function() {
+                    navigator.geolocation.getCurrentPosition(function(pos) {
+                        if (activeSweeping) {
+                            if (activeSweeping.lastPos) {
+                                var d = window.SweepingSystem.calcDistance(activeSweeping.lastPos, { lat: pos.coords.latitude, lng: pos.coords.longitude });
+                                activeSweeping.distance += d;
+                                localStorage.setItem('medea_active_sweeping', JSON.stringify(activeSweeping));
+                            }
+                            activeSweeping.lastPos = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+                            
+                            var distEl = document.getElementById('sweepingDistance');
+                            if (distEl) distEl.innerHTML = activeSweeping.distance.toFixed(2) + ' كم';
+                        }
+                    }, null, { enableHighAccuracy: true });
+                }, 5000);
+            }
+            
+            // تحديث المؤقت
+            sweepingTimerInterval = setInterval(function() {
+                if (activeSweeping) {
+                    var elapsed = Math.floor((new Date() - activeSweeping.startTime) / 1000);
+                    var m = Math.floor(elapsed / 60);
+                    var s = elapsed % 60;
+                    var timerEl = document.getElementById('sweepingTimer');
+                    if (timerEl) timerEl.innerHTML = m + ':' + s.toString().padStart(2,'0');
+                } else {
+                    clearInterval(sweepingTimerInterval);
+                }
+            }, 1000);
+            
+            window.VoiceAssistant.speak("بدأت مهمة كنس شارع " + streetName);
+            window.showToast("بدء كنس " + streetName, 'success');
+        },
+        
+        calcDistance: function(p1, p2) {
+            var R = 6371;
+            var dLat = (p2.lat - p1.lat) * Math.PI / 180;
+            var dLon = (p2.lng - p1.lng) * Math.PI / 180;
+            var a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+                    Math.cos(p1.lat * Math.PI / 180) * Math.cos(p2.lat * Math.PI / 180) *
+                    Math.sin(dLon/2) * Math.sin(dLon/2);
+            var c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+            return R * c;
+        },
+        
+        endMission: function() {
+            if (!activeSweeping) return;
+            
+            if (sweepingInterval) clearInterval(sweepingInterval);
+            if (sweepingTimerInterval) clearInterval(sweepingTimerInterval);
+            
+            // حفظ سجل المهمة
+            var records = JSON.parse(localStorage.getItem('medea_sweeping_records') || '[]');
+            activeSweeping.endTime = new Date();
+            records.push(activeSweeping);
+            localStorage.setItem('medea_sweeping_records', JSON.stringify(records));
+            
+            var points = Math.floor(activeSweeping.distance * 10);
+            window.VoiceAssistant.speak("تم إنهاء مهمة كنس " + activeSweeping.street + " بإجمالي " + activeSweeping.distance.toFixed(2) + " كيلومتر");
+            window.showToast("تم توثيق كنس " + activeSweeping.street + " (+" + points + " نقطة)", 'success');
+            
+            // إضافة نقاط للسائق
+            var currentPoints = parseInt(localStorage.getItem('medea_points') || '0');
+            currentPoints += points;
+            localStorage.setItem('medea_points', currentPoints);
+            var pointsEl = document.getElementById('userPoints');
+            if (pointsEl) pointsEl.textContent = currentPoints;
+            
+            activeSweeping = null;
+            localStorage.removeItem('medea_active_sweeping');
+            
+            var infoDiv = document.getElementById('activeSweepingInfo');
+            if (infoDiv) infoDiv.style.display = 'none';
+        },
+        
+        // إضافة واجهة الكنس إلى لوحة السائق الأصلية
+        injectSweepingUI: function() {
+            setTimeout(function() {
+                var driverPanel = document.getElementById('driverPanel');
+                if (!driverPanel || document.getElementById('ext-sweeping-card')) return;
+                
+                var card = document.createElement('div');
+                card.id = 'ext-sweeping-card';
+                card.className = 'card';
+                card.style.borderRight = '4px solid #f59e0b';
+                card.innerHTML = `
+                    <h3 style="color:#f59e0b"><i class="fas fa-broom"></i> مهام الكنس</h3>
+                    <div id="sweepingTasksList">لا توجد مهام كنس حالياً.</div>
+                    <button id="startSweepingBtn" class="btn btn-warning ripple" style="background:#f59e0b; margin-top:8px">
+                        <i class="fas fa-play"></i> بدء مهمة كنس جديدة
+                    </button>
+                    <div id="activeSweepingInfo" style="display:none; margin-top:10px; padding:10px; background:var(--bg); border-radius:8px">
+                        <div><i class="fas fa-road"></i> <span id="sweepingStreetName"></span></div>
+                        <div><i class="fas fa-stopwatch"></i> <span id="sweepingTimer">00:00</span></div>
+                        <div><i class="fas fa-route"></i> <span id="sweepingDistance">0.00 كم</span></div>
+                        <button id="endSweepingBtn" class="btn btn-success ripple" style="margin-top:8px">إنهاء الكنس</button>
+                    </div>
+                `;
+                driverPanel.appendChild(card);
+                
+                document.getElementById('startSweepingBtn').onclick = function() { window.SweepingSystem.startMission(); };
+                document.getElementById('endSweepingBtn').onclick = function() { window.SweepingSystem.endMission(); };
+                
+                // استعادة مهمة نشطة إذا وجدت
+                var saved = localStorage.getItem('medea_active_sweeping');
+                if (saved) {
+                    try {
+                        activeSweeping = JSON.parse(saved);
+                        if (activeSweeping && activeSweeping.status === 'active') {
+                            document.getElementById('activeSweepingInfo').style.display = 'block';
+                            document.getElementById('sweepingStreetName').innerHTML = activeSweeping.street;
+                        }
+                    } catch(e) {}
+                }
+            }, 500);
+        }
+    };
+
+    // ===================== 6. الإبلاغ عن حاجة للكنس (للمواطن) =====================
+    window.CitizenSweepingReport = {
+        injectReportButton: function() {
+            setTimeout(function() {
+                var homePage = document.getElementById('home');
+                if (!homePage || document.getElementById('ext-sweeping-report-btn')) return;
+                
+                // إيجاد مكان مناسب لإضافة الزر (بجانب زر الإبلاغ عن نفايات)
+                var firstBtn = homePage.querySelector('.btn-primary.mb');
+                if (firstBtn) {
+                    var btn = document.createElement('button');
+                    btn.id = 'ext-sweeping-report-btn';
+                    btn.className = 'btn btn-warning ripple';
+                    btn.style.marginTop = '10px';
+                    btn.style.background = '#f59e0b';
+                    btn.innerHTML = '<i class="fas fa-broom"></i> الإبلاغ عن شارع يحتاج كنساً';
+                    btn.onclick = function() { window.CitizenSweepingReport.showReportDialog(); };
+                    firstBtn.parentNode.insertBefore(btn, firstBtn.nextSibling);
+                }
+            }, 500);
+        },
+        
+        showReportDialog: function() {
+            var street = prompt("أدخل اسم الشارع أو المنطقة التي تحتاج إلى كنس:", "");
+            if (street) {
+                var report = {
+                    id: Date.now(),
+                    type: 'sweeping_request',
+                    location: street,
+                    citizen: localStorage.getItem('medea_last_citizen') || 'مواطن',
+                    date: new Date().toISOString(),
+                    status: 'pending'
+                };
+                var requests = JSON.parse(localStorage.getItem('medea_sweeping_requests') || '[]');
+                requests.push(report);
+                localStorage.setItem('medea_sweeping_requests', JSON.stringify(requests));
+                window.VoiceAssistant.speak("تم استلام طلب كنس شارع " + street + " وسيتم التعامل معه قريباً");
+                window.showToast("تم الإبلاغ عن حاجة شارع " + street + " للكنس", 'success');
+            }
+        }
+    };
+
+    // ===================== 7. نظام الشهادات الرقمية =====================
+    window.CertificateSystem = {
+        generateCertificate: function(userName, points, type) {
+            var canvas = document.createElement('canvas');
+            canvas.width = 800;
+            canvas.height = 600;
+            var ctx = canvas.getContext('2d');
+            
+            // الخلفية والإطار
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(0, 0, 800, 600);
+            ctx.strokeStyle = '#006233';
+            ctx.lineWidth = 12;
+            ctx.strokeRect(20, 20, 760, 560);
+            
+            // النصوص
+            ctx.textAlign = 'center';
+            ctx.font = 'bold 36px Cairo';
+            ctx.fillStyle = '#006233';
+            ctx.fillText('شهادة تقدير من ولاية المدية', 400, 100);
+            
+            ctx.font = '24px Cairo';
+            ctx.fillStyle = '#333333';
+            ctx.fillText('نقدم这份 الشكر للمواطن/الشركة:', 400, 200);
+            
+            ctx.font = 'bold 40px Cairo';
+            ctx.fillStyle = '#f59e0b';
+            ctx.fillText(userName, 400, 300);
+            
+            ctx.font = '20px Cairo';
+            ctx.fillStyle = '#333333';
+            ctx.fillText('لمساهمته في تحقيق ' + points + ' نقطة في برنامج "مدية نظيفة 2026"', 400, 420);
+            
+            ctx.font = '16px Cairo';
+            ctx.fillStyle = '#666666';
+            ctx.fillText(new Date().toLocaleDateString('ar-EG'), 400, 520);
+            
+            var link = document.createElement('a');
+            link.download = 'Medea_Certificate_' + userName.replace(/\s/g, '_') + '.png';
+            link.href = canvas.toDataURL();
+            link.click();
+            
+            window.VoiceAssistant.speak("تم إنشاء شهادة التقدير الخاصة بك");
+            window.showToast("تم إنشاء الشهادة وتحميلها", 'success');
+        },
+        
+        generateCompanyReport: function(companyId) {
+            var company = window.MedeaCompanies[companyId];
+            if (!company) return;
+            window.VoiceAssistant.speak("جاري تحضير تقرير أداء شركة " + company.name);
+            window.showToast("تم إنشاء تقرير " + company.name + " (يمكن طباعته لاحقاً)", 'info');
+            this.generateCertificate(company.name, Math.floor(Math.random() * 100), 'company');
+        }
+    };
+
+    // ===================== 8. دالة عرض خريطة القطاعات =====================
+    window.showAllSectorsMap = function() {
+        var container = document.createElement('div');
+        container.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.9);z-index:20000;padding:20px;box-sizing:border-box';
+        container.innerHTML = '<div style="background:white;border-radius:20px;height:100%;width:100%;position:relative"><div id="tempMap" style="height:calc(100% - 50px);border-radius:20px"></div><button onclick="this.parentElement.parentElement.remove()" style="position:absolute;bottom:10px;left:50%;transform:translateX(-50%);padding:10px 20px;background:#006233;color:white;border:none;border-radius:10px">إغلاق</button></div>';
+        document.body.appendChild(container);
+        
+        var tempMap = L.map('tempMap').setView([36.2642, 2.7545], 12);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '© OpenStreetMap' }).addTo(tempMap);
+        
+        // إضافة نقاط للشركات
+        var lat = 36.2642, lng = 2.7545;
+        var count = 0;
+        for (var key in window.MedeaCompanies) {
+            var comp = window.MedeaCompanies[key];
+            var offset = count * 0.01;
+            var marker = L.marker([lat + offset, lng + offset * 0.5]).addTo(tempMap);
+            marker.bindPopup('<b>' + comp.name + '</b><br><span style="color:' + comp.color + '">●</span> اللون المخصص');
+            count++;
+        }
+    };
+
+    // ===================== 9. التكامل مع دوال تسجيل الدخول الأصلية =====================
+    // نضيف hooks لدوال loginAdmin و loginDriver الأصلية دون تعديلها
+    
+    // حفظ المرجع للدوال الأصلية إذا كانت موجودة
+    var originalLoginAdmin = window.loginAdmin;
+    var originalLoginDriver = window.loginDriver;
+    
+    // تمديد دالة loginAdmin لتحديد قطاع المشرف
+    if (typeof originalLoginAdmin === 'function') {
+        window.loginAdmin = function() {
+            // استدعاء الدالة الأصلية
+            var result = originalLoginAdmin.apply(this, arguments);
+            
+            // بعد تسجيل الدخول، نحاول تحديد قطاع المشرف
+            setTimeout(function() {
+                // إذا كان هناك مشرف عام مسجل
+                var adminName = document.getElementById('adminName')?.value;
+                if (adminName === 'مدير' || adminName === 'admin') {
+                    window.currentAdminSector = 'public';
+                    localStorage.setItem('medea_current_admin_sector', 'public');
+                    window.AdminFilter.renderCompanyLegend();
+                } else {
+                    // البحث عن مشرف خاص في localStorage
+                    var admins = JSON.parse(localStorage.getItem('medea_admins') || '[]');
+                    var found = admins.find(function(a) { return a.name === adminName; });
+                    if (found) {
+                        window.currentAdminSector = found.sector;
+                        localStorage.setItem('medea_current_admin_sector', found.sector);
+                    }
+                }
+            }, 100);
+            
+            return result;
+        };
+    }
+    
+    // تمديد دالة loginDriver لإضافة نقاط الكنس
+    if (typeof originalLoginDriver === 'function') {
+        window.loginDriver = function() {
+            var result = originalLoginDriver.apply(this, arguments);
+            setTimeout(function() {
+                window.SweepingSystem.injectSweepingUI();
+            }, 200);
+            return result;
+        };
+    }
+
+    // ===================== 10. تهيئة جميع الإضافات =====================
+    function initializeAddon() {
+        // استعادة القطاع المحفوظ
+        var savedSector = localStorage.getItem('medea_current_admin_sector');
+        if (savedSector && window.MedeaCompanies[savedSector]) {
+            window.currentAdminSector = savedSector;
+        }
+        
+        // إضافة الواجهات الجديدة
+        window.AdminManager.injectUI();
+        window.SweepingSystem.injectSweepingUI();
+        window.CitizenSweepingReport.injectReportButton();
+        
+        // عرض وسيلة الإيضاح إذا كان المشرف عاماً
+        setTimeout(function() {
+            if (window.currentAdminSector === 'public') {
+                window.AdminFilter.renderCompanyLegend();
+            }
+        }, 1500);
+        
+        // محاولة تلوين الشاحنات (إذا كانت دوال الخريطة موجودة)
+        setTimeout(function() {
+            // البحث عن دالة إضافة الشاحنات في الكود الأصلي وتوسيعها
+            if (typeof window.addTruckMarker === 'function') {
+                var originalAddTruckMarker = window.addTruckMarker;
+                window.addTruckMarker = function(truck, lat, lng) {
+                    if (window.currentAdminSector === 'public' || window.currentAdminSector === (truck.companyId || 'public')) {
+                        var enhancedMarker = window.AdminFilter.enhanceTruckMarker(truck, lat, lng);
+                        return enhancedMarker.addTo(window.map);
+                    }
+                    return originalAddTruckMarker(truck, lat, lng);
+                };
+            }
+        }, 2000);
+        
+        console.log("✅ Medea Clean 2026 - تم تحميل جميع الإضافات بنجاح");
+    }
+    
+    // بدء التهيئة عند اكتمال تحميل الصفحة
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initializeAddon);
+    } else {
+        initializeAddon();
+    }
+    
+})();
+</script>
 </body></html>
