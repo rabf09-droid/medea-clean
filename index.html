@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
 <meta charset="UTF-8">
@@ -2255,11 +2255,7 @@ select.input {
         </button>
         <button class="btn btn-success ripple" onclick="showPage('recycling')">
           <i class="fas fa-recycle"></i> <span data-i18n="recyclingCalc">حاسبة التدوير</span>
-        </button>
-        <button class="btn ripple" style="background:var(--accent); color:white" onclick="MedeaExtension.generateCertificate(prompt('أدخل اسمك للشهادة:'), userPoints)">
-          <i class="fas fa-award"></i> <span>شهادتي الرقمية</span>
-        </button>
-      </div>
+        </button>      </div>
     </div>
 
     <div class="card hover-lift">
@@ -2899,23 +2895,11 @@ select.input {
     <div class="card">
       <h3><i class="fas fa-user-plus"></i> <span data-i18n="addStaffTitle">إضافة موظف</span></h3>
       <input type="text" id="newStaffName" class="input" placeholder="👤 الاسم" data-i18n-ph="nameFullPh">
-      <select id="newStaffRole" class="input" style="cursor:pointer;color:var(--text)" onchange="toggleSectorSelect()">
+      <select id="newStaffRole" class="input" style="cursor:pointer;color:var(--text)">
         <option value="" disabled selected>💼 اختر المنصب</option>
         <option value="سائق">🚛 سائق</option>
         <option value="مشرف">🏛️ مسؤول (مشرف)</option>
       </select>
-      <select id="newStaffSector" class="input" style="cursor:pointer;color:var(--text);display:none">
-        <option value="all">🏛️ مشرف عام (بلدية المدية)</option>
-        <option value="company_A">🔵 مشرف قطاع خاص (شركة أ)</option>
-        <option value="company_B">🔵 مشرف قطاع خاص (شركة ب)</option>
-      </select>
-      <script>
-        function toggleSectorSelect() {
-          const role = document.getElementById('newStaffRole').value;
-          const sectorSelect = document.getElementById('newStaffSector');
-          sectorSelect.style.display = (role === 'مشرف') ? 'block' : 'none';
-        }
-      </script>
       <input type="tel" id="newStaffPhone" class="input" placeholder="📞 الهاتف" data-i18n-ph="phonePh">
       <button class="btn btn-primary ripple" onclick="addStaff()">
         <i class="fas fa-save"></i> <span data-i18n="save">حفظ</span>
@@ -4710,12 +4694,10 @@ function loginAdmin() {
       (s.role.includes('مشرف') || s.role.includes('مسؤول'))
     );
     if(isApprovedAdmin) {
-      const adminData = staff.find(s => s.name && s.name.trim() === subName);
-      window.currentAdminSector = adminData ? (adminData.sector || 'all') : 'all';
       document.getElementById('adminLogin').classList.add('hidden');
       document.getElementById('adminPanel').classList.remove('hidden');
       currentAdminName = subName;
-      document.getElementById('adminCurrentUser').textContent = 'المسؤول: ' + subName + (window.currentAdminSector !== 'all' ? ' (' + window.currentAdminSector + ')' : '');
+      document.getElementById('adminCurrentUser').textContent = 'المسؤول: ' + subName;
       // إخفاء الإعدادات الرئيسية عن المسؤول الفرعي
       const settingsSection = document.getElementById('adminSettingsSection');
       if(settingsSection) settingsSection.style.display = 'none';
@@ -5251,27 +5233,20 @@ function completeTask(id) {
     if(!window._driverAfterImages) window._driverAfterImages = {};
     const afterImg = window._driverAfterImages[id] || tempAfterImage;
     
-    if(!afterImg) {
-        if(confirm('نظام "قبل وبعد" يتطلب صورة للنتيجة النهائية. هل تريد التقاط صورة الآن؟')) {
-            driverTakeAfterPhoto(id);
-        }
-        return;
-    }
-    
-    // استخدام الدالة الجديدة المدمجة
-    MedeaExtension.closeTaskWithImage(id, afterImg);
+    if(!afterImg && !confirm('لم يتم التصوير بعد التنفيذ. متابعة بدون صورة؟')) return;
     
     const now = new Date();
     const u = {
       status: 'done',
       doneTime: now.toLocaleTimeString('ar-DZ'),
       doneDate: now.toLocaleDateString('ar-DZ'),
-      doneByDriver: currentDriver,
-      doneImage: afterImg
+      doneByDriver: currentDriver
     };
+    if(afterImg) u.doneImage = afterImg;
     
     updateReport(id, u);
     
+    // تنظيف الصورة المؤقتة
     if(window._driverAfterImages[id]) delete window._driverAfterImages[id];
     tempAfterImage = null;
     
@@ -5295,8 +5270,7 @@ function submitRequest() {
       return;
     }
     
-    let requests = JSON.parse(localStorage.getItem('medea_requests') || '[]');
-    requests = window.getFilteredData(requests, 'sector');
+    const requests = JSON.parse(localStorage.getItem('medea_requests') || '[]');
     requests.push({
       id: Date.now(),
       type: type,      desc: desc,
@@ -5319,8 +5293,7 @@ function submitRequest() {
 
 function loadMyRequests() {
   try {
-    let requests = JSON.parse(localStorage.getItem('medea_requests') || '[]');
-    requests = window.getFilteredData(requests, 'sector');
+    const requests = JSON.parse(localStorage.getItem('medea_requests') || '[]');
     const list = document.getElementById('myRequestsList');
     
     if(!requests.length) {
@@ -5348,8 +5321,7 @@ function loadMyRequests() {
 
 function loadAdminRequests() {
   try {
-    let requests = JSON.parse(localStorage.getItem('medea_requests') || '[]');
-    requests = window.getFilteredData(requests, 'sector');
+    const requests = JSON.parse(localStorage.getItem('medea_requests') || '[]');
     const list = document.getElementById('adminRequestsList');    
     if(!requests.length) {
       list.innerHTML = '<div class="empty-state"><i class="fas fa-clipboard-list"></i><p>لا توجد طلبات</p></div>';
@@ -8126,11 +8098,9 @@ function addStaff() {
     s = stored ? JSON.parse(stored) : []; 
   } catch(e) { s = []; }
   
-  const sector = (r === 'مشرف') ? document.getElementById('newStaffSector').value : 'all';
   s.push({
     name: n, 
     role: r, 
-    sector: sector,
     phone: p, 
     addedBy: 'فتحي', 
     addedDate: new Date().toLocaleDateString('ar-DZ')
@@ -9589,592 +9559,5 @@ function optimizeDriverRoute(start, points) {
   return route;
 }
 </script>
-<script>
-
-/* 
-================================================================================
-تطبيق "المدية نظيفة" - ملحق التحسينات الذكية (V3 - Marketplace Edition)
-تاريخ التحديث: مايو 2026
-إضافة "سوق التدوير الحر" لتمكين المواطنين من بيع وشراء النفايات المفروزة.
-================================================================================
-*/
-
-(function() {
-    console.log("Medea Clean Extension V3: Loading Marketplace...");
-
-    // 1. تحميل المكتبات
-    const libs = [
-        "https://cdn.jsdelivr.net/npm/@tensorflow/tfjs",
-        "https://cdn.jsdelivr.net/npm/@tensorflow-models/mobilenet",
-        "https://cdn.jsdelivr.net/npm/leaflet.heat@0.2.0/dist/leaflet-heat.js"
-    ];
-    libs.forEach(src => {
-        const s = document.createElement('script'); s.src = src; document.head.appendChild(s);
-    });
-
-    window.MedeaExtension = {
-        // --- سوق التدوير الحر ---
-        showMarketplace: function() {
-            let marketDiv = document.getElementById('recyclingMarketPage');
-            if (!marketDiv) {
-                marketDiv = document.createElement('div');
-                marketDiv.id = 'recyclingMarketPage';
-                marketDiv.className = 'page';
-                marketDiv.innerHTML = `
-                    <div style="padding:20px">
-                        <h2 style="text-align:center; color:var(--primary); margin-bottom:20px">
-                            <i class="fas fa-store"></i> سوق التدوير الحر (المنطقة الحرة)
-                        </h2>
-                        
-                        <div style="display:flex; gap:10px; margin-bottom:20px">
-                            <button class="btn ripple" style="flex:1; background:var(--primary); color:white" onclick="MedeaExtension.showAddProduct()">
-                                <i class="fas fa-plus-circle"></i> عرض منتج للبيع
-                            </button>
-                            <button class="btn ripple" style="flex:1; background:var(--accent); color:white" onclick="MedeaExtension.renderMarketItems()">
-                                <i class="fas fa-sync"></i> تحديث السوق
-                            </button>
-                        </div>
-
-                        <div id="addProductForm" class="card" style="display:none; margin-bottom:20px; border:2px dashed var(--primary)">
-                            <h3><i class="fas fa-tag"></i> إضافة منتج جديد</h3>
-                            <input type="text" id="mProdName" class="input" placeholder="اسم المنتج (مثال: 50 كغ بلاستيك)">
-                            <select id="mProdType" class="input">
-                                <option value="plastic">بلاستيك</option>
-                                <option value="metal">معادن</option>
-                                <option value="paper">ورق/كرتون</option>
-                                <option value="other">أخرى</option>
-                            </select>
-                            <input type="number" id="mProdPrice" class="input" placeholder="السعر المطلوب (دج)">
-                            <div style="font-size:0.8rem; color:var(--secondary); margin-bottom:10px">
-                                * رسوم العرض الرمزية: <span id="mFee">0</span> دج (تخصم عند البيع)
-                            </div>
-                            <button class="btn ripple" style="background:var(--primary); color:white; width:100%" onclick="MedeaExtension.submitProduct()">
-                                تأكيد العرض
-                            </button>
-                        </div>
-
-                        <div id="marketItemsGrid" style="display:grid; gap:15px">
-                            <!-- المنتجات المعروضة -->
-                        </div>
-
-                        <button class="btn ripple" style="background:#757575; margin-top:25px; width:100%" onclick="showPage('home')">
-                            <i class="fas fa-arrow-right"></i> العودة للرئيسية
-                        </button>
-                    </div>
-                `;
-                document.body.appendChild(marketDiv);
-                
-                // حساب الرسوم تلقائياً
-                document.getElementById('mProdPrice').oninput = function() {
-                    const price = parseFloat(this.value) || 0;
-                    document.getElementById('mFee').innerText = (price * 0.05).toFixed(2); // 5% رسوم
-                };
-            }
-            this.renderMarketItems();
-            showPage('recyclingMarketPage');
-        },
-
-        showAddProduct: function() {
-            const form = document.getElementById('addProductForm');
-            form.style.display = form.style.display === 'none' ? 'block' : 'none';
-        },
-
-        submitProduct: function() {
-            const name = document.getElementById('mProdName').value;
-            const price = document.getElementById('mProdPrice').value;
-            const type = document.getElementById('mProdType').value;
-            if (!name || !price) return showToast('يرجى ملء كافة البيانات', 'danger');
-
-            const products = JSON.parse(localStorage.getItem('medea_market_items') || '[]');
-            products.unshift({
-                id: Date.now(),
-                seller: "مواطن من المدية",
-                name, price, type,
-                date: new Date().toLocaleDateString(),
-                fee: (price * 0.05).toFixed(2)
-            });
-            localStorage.setItem('medea_market_items', JSON.stringify(products));
-            showToast('تم إدراج منتجك في السوق بنجاح!', 'success');
-            document.getElementById('addProductForm').style.display = 'none';
-            this.renderMarketItems();
-        },
-
-        renderMarketItems: function() {
-            const items = JSON.parse(localStorage.getItem('medea_market_items') || '[]');
-            const grid = document.getElementById('marketItemsGrid');
-            if (items.length === 0) {
-                grid.innerHTML = '<div style="text-align:center; padding:40px; color:#999">السوق فارغ حالياً. كن أول من يعرض منتجاته!</div>';
-                return;
-            }
-            grid.innerHTML = items.map(item => `
-                <div class="card hover-lift" style="border-right:6px solid var(--primary)">
-                    <div style="display:flex; justify-content:space-between; align-items:start">
-                        <div>
-                            <h4 style="margin:0; color:var(--primary)">${item.name}</h4>
-                            <small style="color:#666"><i class="fas fa-user"></i> البائع: ${item.seller}</small>
-                            <div style="margin-top:5px; font-size:0.85rem">النوع: <b>${item.type}</b></div>
-                        </div>
-                        <div style="text-align:right">
-                            <div style="font-size:1.2rem; font-weight:900; color:var(--secondary)">${item.price} دج</div>
-                            <small style="color:#999">${item.date}</small>
-                        </div>
-                    </div>
-                    <div style="margin-top:15px; display:flex; gap:10px">
-                        <button class="btn ripple" style="flex:2; margin:0; background:var(--primary); color:white" onclick="MedeaExtension.buyProduct(${item.id}, ${item.price})">
-                            <i class="fas fa-shopping-cart"></i> شراء الآن
-                        </button>
-                        <button class="btn ripple" style="flex:1; margin:0; background:var(--bg); color:var(--text)" onclick="showToast('سيتم التواصل مع البائع قريباً', 'info')">
-                            <i class="fas fa-comment"></i> تواصل
-                        </button>
-                    </div>
-                </div>
-            `).join('');
-        },
-
-        buyProduct: function(id, price) {
-            const fee = (price * 0.02).toFixed(2); // 2% رسوم على المشتري
-            if (confirm(`هل تريد شراء هذا المنتج؟\nالسعر: ${price} دج\nرسوم الخدمة: ${fee} دج\nالإجمالي: ${parseFloat(price) + parseFloat(fee)} دج`)) {
-                let items = JSON.parse(localStorage.getItem('medea_market_items') || '[]');
-                items = items.filter(i => i.id !== id);
-                localStorage.setItem('medea_market_items', JSON.stringify(items));
-                showToast('تمت عملية الشراء بنجاح! سيتم التنسيق للاستلام.', 'success');
-                this.renderMarketItems();
-            }
-        },
-
-        // --- الميزات السابقة (متجر النقاط، التنبيهات، AI، أوفلاين) ---
-        showPointsStore: function() {
-            let storeDiv = document.getElementById('pointsStorePage');
-            if (!storeDiv) {
-                storeDiv = document.createElement('div');
-                storeDiv.id = 'pointsStorePage';
-                storeDiv.className = 'page';
-                storeDiv.innerHTML = `
-                    <div style="padding:20px">
-                        <h2 style="text-align:center; color:var(--primary); margin-bottom:20px"><i class="fas fa-star"></i> متجر النقاط الرقمي</h2>
-                        <div class="card" style="background:linear-gradient(135deg, var(--primary), var(--primary-light)); color:white; text-align:center; padding:20px">
-                            <div style="font-size:1rem; opacity:0.9">رصيدك الحالي</div>
-                            <div style="font-size:2.5rem; font-weight:900" id="extPointsVal">0</div>
-                            <div style="font-size:1rem">نقطة خضراء 🌿</div>
-                        </div>
-                        <div id="storeItemsGrid" style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:20px"></div>
-                        <button class="btn ripple" style="background:#757575; margin-top:25px; width:100%" onclick="showPage('home')">العودة للرئيسية</button>
-                    </div>
-                `;
-                document.body.appendChild(storeDiv);
-            }
-            const pts = parseInt(localStorage.getItem('medea_points') || '0');
-            document.getElementById('extPointsVal').innerText = pts;
-            const items = [{id:1, name:"قسيمة 500 دج", cost:100}, {id:2, name:"تخفيض 10%", cost:250}];
-            document.getElementById('storeItemsGrid').innerHTML = items.map(item => `
-                <div class="card" style="text-align:center; padding:10px; border:2px solid ${pts >= item.cost ? 'var(--primary)' : '#ddd'}">
-                    <div style="font-weight:700">${item.name}</div>
-                    <div style="color:var(--primary); font-weight:bold">${item.cost} نقطة</div>
-                    <button class="btn ripple" style="font-size:0.8rem; background:${pts >= item.cost ? 'var(--primary)' : '#ccc'}" onclick="MedeaExtension.redeem(${item.cost}, '${item.name}')">استبدال</button>
-                </div>
-            `).join('');
-            showPage('pointsStorePage');
-        },
-
-        redeem: function(cost, name) {
-            let pts = parseInt(localStorage.getItem('medea_points') || '0');
-            if (pts >= cost) {
-                pts -= cost; localStorage.setItem('medea_points', pts);
-                showToast('تم الاستبدال بنجاح!', 'success'); this.showPointsStore();
-            }
-        },
-
-        saveHomeLoc: function() {
-            navigator.geolocation.getCurrentPosition(pos => {
-                localStorage.setItem('medea_home_loc', JSON.stringify({lat: pos.coords.latitude, lng: pos.coords.longitude}));
-                showToast('تم حفظ موقع منزلك!', 'success');
-            });
-        },
-
-        checkProximity: function(truckLoc) {
-            const home = JSON.parse(localStorage.getItem('medea_home_loc'));
-            if (home && truckLoc && calculateDistanceBetweenPoints(home, truckLoc) <= 0.5) {
-                showToast('⚠️ الشاحنة تقترب من منزلك!', 'warning');
-                // استدعاء المساعد الصوتي
-                if (!window._lastVoiceAlert || Date.now() - window._lastVoiceAlert > 60000) {
-                    this.speakAlert("تنبيه: أنت الآن على بعد أقل من مئتي متر من نقطة تجمع نفايات");
-                    window._lastVoiceAlert = Date.now();
-                }
-            }
-        },
-
-        toggleVoice: function() {
-            if (!('webkitSpeechRecognition' in window)) return showToast('غير مدعوم', 'danger');
-            if (this.rec) { this.rec.stop(); this.rec = null; return; }
-            this.rec = new webkitSpeechRecognition(); this.rec.lang = 'ar-DZ';
-            this.rec.onresult = (e) => { document.getElementById('addrInput').value = e.results[0][0].transcript; };
-            this.rec.start(); showToast('تحدث الآن...', 'info');
-        },
-
-        startAiSort: async function() {
-            const video = document.getElementById('extAiVideo'); video.style.display = 'block';
-            if (!this.model) this.model = await mobilenet.load();
-            const stream = await navigator.mediaDevices.getUserMedia({video: true}); video.srcObject = stream;
-            const frame = async () => {
-                if (video.style.display === 'none') return;
-                const pred = await this.model.classify(video);
-                document.getElementById('extAiRes').innerHTML = `النتيجة: <b>${pred[0].className}</b>`;
-                setTimeout(frame, 2000);
-            };
-            frame();
-        },
-
-        initOffline: function() {
-            window.addEventListener('online', () => {
-                const q = JSON.parse(localStorage.getItem('medea_offline_q') || '[]');
-                if (q.length > 0) { q.forEach(r => db.ref('reports').push(r)); localStorage.removeItem('medea_offline_q'); showToast('تمت المزامنة', 'success'); }
-            });
-            const oldSend = window.sendReport;
-            window.sendReport = function() {
-                if (!navigator.onLine) {
-                    const q = JSON.parse(localStorage.getItem('medea_offline_q') || '[]');
-                    q.push({id:Date.now(), type:document.getElementById('wasteTypeSelect').value});
-                    localStorage.setItem('medea_offline_q', JSON.stringify(q));
-                    showToast('تم الحفظ أوفلاين', 'warning'); showPage('home');
-                } else oldSend();
-            };
-        },
-
-        // 1. ميزة النطق الصوتي للتنبيهات
-        speakAlert: function(message) {
-            if ('speechSynthesis' in window) {
-                const msg = new SpeechSynthesisUtterance(message);
-                msg.lang = 'ar-SA'; // لغة عربية فصيحة
-                msg.pitch = 1;      // طبقة الصوت
-                msg.rate = 0.9;     // السرعة
-                window.speechSynthesis.speak(msg);
-            }
-        },
-
-        // 2. كود الشهادة الرقمية
-        generateCertificate: function(userName, points) {
-            const canvas = document.createElement('canvas');
-            const ctx = canvas.getContext('2d');
-            canvas.width = 800; canvas.height = 600;
-            ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, 800, 600);
-            ctx.strokeStyle = '#006233'; ctx.lineWidth = 20; ctx.strokeRect(10, 10, 780, 580);
-            ctx.fillStyle = '#333'; ctx.font = 'bold 40px Cairo'; ctx.textAlign = 'center';
-            ctx.fillText("شهادة تقدير ومواطنة", 400, 100);
-            ctx.font = '30px Cairo'; ctx.fillText("تمنح ولاية المدية هذه الشهادة للفخر للمواطن(ة):", 400, 200);
-            ctx.fillStyle = '#c09300'; ctx.font = 'bold 45px Cairo'; ctx.fillText(userName || "مواطن مخلص", 400, 300);
-            ctx.fillStyle = '#333'; ctx.font = '25px Cairo';
-            ctx.fillText(`لمساهمته الفعالة في نظافة المدينة بجمع ${points || 0} نقطة`, 400, 400);
-            const link = document.createElement('a');
-            link.download = `شهادة_المدية_${userName || 'مواطن'}.png`;
-            link.href = canvas.toDataURL(); link.click();
-        },
-
-        // 3. نظام "قبل وبعد"
-        closeTaskWithImage: async function(taskId, imageFile) {
-            const updates = {};
-            updates[`reports/${taskId}/status`] = 'completed';
-            updates[`reports/${taskId}/afterImage`] = imageFile || "رابط_الصورة_هنا";
-            updates[`reports/${taskId}/completionTime`] = new Date().toISOString();
-            if (typeof db !== 'undefined') await db.ref().update(updates);
-            alert("تم إنهاء المهمة بنجاح، شكراً لجهودك في تنظيف المدية!");
-            renderDriverTasks();
-        }
-    };
-
-    // 3. حقن الواجهة
-    function injectUI() {
-        const homePage = document.getElementById('home');
-        if (homePage) {
-            const servicesHeader = homePage.querySelector('h3[data-i18n="servicesTitle"]')?.parentElement;
-            if (servicesHeader) {
-                const smartSection = document.createElement('div');
-                smartSection.className = 'card hover-lift';
-                smartSection.style.borderColor = 'var(--accent)';
-                smartSection.innerHTML = `
-                    <h3 style="color:var(--accent)"><i class="fas fa-magic"></i> المنطقة الحرة والخدمات الذكية</h3>
-                    <div class="grid-2">
-                        <button class="btn ripple" style="background:var(--secondary); color:white" onclick="MedeaExtension.showMarketplace()">
-                            <i class="fas fa-store"></i> سوق التدوير الحر
-                        </button>
-                        <button class="btn ripple" style="background:var(--accent); color:white" onclick="MedeaExtension.showPointsStore()">
-                            <i class="fas fa-shopping-basket"></i> متجر النقاط
-                        </button>
-                        <button class="btn ripple" style="background:var(--primary); color:white" onclick="MedeaExtension.saveHomeLoc()">
-                            <i class="fas fa-home"></i> تنبيهات الوصول
-                        </button>
-                        <button class="btn ripple" style="background:var(--accent); color:white" onclick="MedeaExtension.generateCertificate(prompt('أدخل اسمك للشهادة:'), userPoints)">
-                            <i class="fas fa-award"></i> شهادتي الرقمية
-                        </button>
-                        <button class="btn ripple" style="background:#4b6cb7; color:white" onclick="showPage('report')">
-                            <i class="fas fa-microphone"></i> إبلاغ ذكي
-                        </button>
-                    </div>
-                `;
-                homePage.insertBefore(smartSection, servicesHeader);
-            }
-        }
-
-        // حقن أزرار AI في صفحة البلاغات
-        const reportPage = document.getElementById('report');
-        if (reportPage) {
-            const addrInput = document.getElementById('addrInput');
-            if (addrInput && !document.getElementById('extAiVideo')) {
-                const aiControls = document.createElement('div');
-                aiControls.style.margin = "10px 0";
-                aiControls.innerHTML = `
-                    <div style="display:flex; gap:8px; margin-bottom:8px">
-                        <button class="btn ripple" style="flex:1; background:#4b6cb7; margin:0" onclick="MedeaExtension.toggleVoice()">
-                            <i class="fas fa-microphone"></i> إملاء صوتي
-                        </button>
-                        <button class="btn ripple" style="flex:1; background:#00b09b; margin:0" onclick="MedeaExtension.startAiSort()">
-                            <i class="fas fa-robot"></i> فرز AI
-                        </button>
-                    </div>
-                    <video id="extAiVideo" autoplay playsinline muted style="width:100%; border-radius:10px; display:none; border:2px solid var(--primary)"></video>
-                    <div id="extAiRes" style="font-size:0.85rem; color:var(--primary); text-align:center; margin-top:5px"></div>
-                `;
-                addrInput.parentElement.insertBefore(aiControls, addrInput);
-            }
-        }
-    }
-
-    window.addEventListener('load', () => {
-        setTimeout(() => {
-            injectUI();
-            MedeaExtension.initOffline();
-            const oldUpdate = window.updateTruckTrackingMap;
-            window.updateTruckTrackingMap = function(pos) { if (oldUpdate) oldUpdate(pos); MedeaExtension.checkProximity(pos); };
-            
-            // بيانات تجريبية للسوق إذا كان فارغاً
-            if (!localStorage.getItem('medea_market_items')) {
-                localStorage.setItem('medea_market_items', JSON.stringify([
-                    {id:101, seller:"أحمد م.", name:"20 كغ ورق مقوى", price:400, type:"paper", date:"2026/05/08", fee:20},
-                    {id:102, seller:"ليلى س.", name:"15 كغ قارورات بلاستيك", price:600, type:"plastic", date:"2026/05/09", fee:30}
-                ]));
-            }
-        }, 1000);
-    });
-})();
-
-
-// ===== MEDEA CLEAN 2026 - DIAMOND EDITION =====
-/**
- * MEDEA CLEAN 2026 - ULTIMATE MASTER CODE
- * الإصدار النهائي الشامل لولاية المدية
- */
-
-const MedeaUltimate = {
-    // 1. الإعدادات والقطاعات والصلاحيات
-    config: {
-        commission: 0.05, // 5% عمولة المنصة
-        withdrawFee: 20,  // 20 دج رسوم السحب
-        sectors: {
-            "muni": { name: "بلدية المدية", color: "#006233", icon: "fa-university", tel: "025112233" },
-            "priv": { name: "القطاع الخاص", color: "#1d4ed8", icon: "fa-truck", tel: "0550112233" },
-            "sweep": { name: "فرق الكنس", color: "#f59e0b", icon: "fa-broom", tel: "0660445566" }
-        }
-    },
-
-    // 2. إدارة الخزينة والأرباح (صلاحيات المشرف الرئيسي)
-    Vault: {
-        // معالجة المبيعات واقتطاع العمولة
-        processSale: async function(sellerId, buyerId, amount, isCash = false) {
-            const fee = amount * MedeaUltimate.config.commission;
-            const net = amount - fee;
-
-            if (isCash) {
-                // تسجيل دين على المشتري لصالح صاحب التطبيق
-                await db.ref(`admin_vault/debts/${buyerId}`).transaction(c => (c || 0) + fee);
-                MedeaUltimate.Utils.speak("تم توثيق البيع النقدي وتسجيل العمولة كدين");
-            } else {
-                // تحويل رقمي مباشر
-                await db.ref(`users/${sellerId}/wallet`).transaction(c => (c || 0) + net);
-                await db.ref(`admin_vault/revenue`).transaction(c => (c || 0) + fee);
-                MedeaUltimate.Utils.speak(`تمت العملية بنجاح. صافي ربحك ${net} دج`);
-            }
-            MedeaUltimate.Utils.awardPoints(sellerId, 50);
-        },
-
-        // تأكيد سحب الأموال (للمدير فقط)
-        confirmWithdrawal: async function(requestId) {
-            await db.ref(`payouts/${requestId}`).update({ status: 'completed', date: Date.now() });
-            MedeaUltimate.Utils.speak("تم تأكيد تحويل الأموال للمواطن");
-        }
-    },
-
-    // 3. ركن التبرعات والجانب الإنساني
-    Charity: {
-        donate: async function(userId, amount) {
-            await db.ref(`users/${userId}/wallet`).transaction(bal => {
-                if (bal >= amount) {
-                    db.ref(`admin_vault/workers_fund`).transaction(c => (c || 0) + amount);
-                    return bal - amount;
-                }
-                return bal;
-            });
-            MedeaUltimate.Utils.speak("شكراً لتبرعك لصالح عمال نظافة المدية");
-        }
-    },
-
-    // 4. الخرائط والتتبع والقطاعات
-    Mapping: {
-        getMarker: function(sectorId) {
-            const s = MedeaUltimate.config.sectors[sectorId];
-            return L.divIcon({
-                html: `<div class="m-marker" style="background:${s.color}"><i class="fas ${s.icon}"></i></div>`,
-                className: 'medea-icon'
-            });
-        },
-        
-        drawLegend: function() {
-            const leg = document.createElement('div');
-            leg.className = 'medea-legend-panel';
-            let html = '<b><i class="fas fa-crown"></i> إدارة المدية 2026</b><hr>';
-            for (let k in MedeaUltimate.config.sectors) {
-                const s = MedeaUltimate.config.sectors[k];
-                html += `<div><span style="background:${s.color}"></span> ${s.name}</div>`;
-            }
-            leg.innerHTML = html;
-            document.body.appendChild(leg);
-        }
-    },
-
-    // 5. الأدوات المساعدة (AI، صوت، شهادات)
-    Utils: {
-        speak: function(text) {
-            if ('speechSynthesis' in window) {
-                const msg = new SpeechSynthesisUtterance(text);
-                msg.lang = 'ar-SA';
-                window.speechSynthesis.speak(msg);
-            }
-        },
-        awardPoints: async function(uid, p) {
-            await db.ref(`users/${uid}/points`).transaction(c => (c || 0) + p);
-        },
-        issueCertificate: function(name, pts) {
-            const canvas = document.createElement('canvas');
-            canvas.width = 800; canvas.height = 500;
-            const ctx = canvas.getContext('2d');
-            ctx.fillStyle = "white"; ctx.fillRect(0,0,800,500);
-            ctx.strokeStyle = "#006233"; ctx.lineWidth = 15; ctx.strokeRect(10,10,780,480);
-            ctx.textAlign = "center"; ctx.fillStyle = "#006233"; ctx.font = "bold 40px Cairo";
-            ctx.fillText("شهادة شكر وتقدير: ولاية المدية", 400, 80);
-            ctx.fillStyle = "#333"; ctx.font = "30px Cairo";
-            ctx.fillText(`للمواطن المتميز: ${name}`, 400, 230);
-            ctx.fillText(`لمساهمته البيئية بـ ${pts} نقطة`, 400, 350);
-            const link = document.createElement('a');
-            link.download = `MedeaCert_${name}.png`;
-            link.href = canvas.toDataURL();
-            link.click();
-        }
-    }
-};
-
-// واجهة المشرف الرئيسي (تظهر الأرباح له فقط)
-function renderAdminPrivateUI(isSuperAdmin) {
-    if (!isSuperAdmin) return;
-    const vaultDiv = document.createElement('div');
-    vaultDiv.className = 'admin-vault-box';
-    vaultDiv.innerHTML = `
-        <h5><i class="fas fa-university"></i> الخزينة المركزية</h5>
-        <p id="totalRev">جاري التحميل...</p>
-        <button onclick="viewPayouts()" class="v-btn">إدارة التحويلات</button>
-    `;
-    document.body.appendChild(vaultDiv);
-}
-
-// الأنماط البصرية
-const styles = document.createElement('style');
-styles.innerHTML = `
-    .medea-legend-panel { position:fixed; top:20px; right:20px; background:white; padding:15px; border-radius:12px; box-shadow:0 4px 20px rgba(0,0,0,0.15); z-index:2000; border-left:5px solid #006233; width:200px; }
-    .medea-legend-panel div { display:flex; align-items:center; margin-bottom:8px; font-size:0.9rem; font-weight:bold; }
-    .medea-legend-panel span { width:15px; height:15px; border-radius:4px; margin-left:10px; }
-    .m-marker { width:35px; height:35px; border-radius:50%; display:flex; align-items:center; justify-content:center; color:white; border:2px solid white; box-shadow:0 2px 5px rgba(0,0,0,0.2); }
-    .admin-vault-box { position:fixed; bottom:20px; left:20px; background:#006233; color:white; padding:20px; border-radius:15px; z-index:2000; width:250px; }
-    .v-btn { width:100%; padding:8px; border-radius:8px; border:none; background:#ffd700; color:#333; font-weight:bold; cursor:pointer; }
-`;
-document.head.appendChild(styles);
-
-// تفعيل النظام
-window.addEventListener('load', () => { 
-    MedeaUltimate.Mapping.drawLegend(); 
-    // مثال: تفعيل واجهة المدير (يتم ربطها بنظام تسجيل الدخول)
-    renderAdminPrivateUI(true); 
-});
-
-// ===== نظام الحقن المرئي للنسخة الماسية (Diamond UI Injection) =====
-(function() {
-    function injectDiamondUI() {
-        // 1. إضافة ركن التبرعات في الصفحة الرئيسية
-        const homePage = document.getElementById('home');
-        if (homePage && !document.getElementById('diamondCharitySection')) {
-            const charitySection = document.createElement('div');
-            charitySection.id = 'diamondCharitySection';
-            charitySection.className = 'card hover-lift';
-            charitySection.style.borderColor = '#f59e0b';
-            charitySection.style.background = 'linear-gradient(135deg, #fffbeb, #fef3c7)';
-            charitySection.innerHTML = `
-                <h3 style="color:#d97706"><i class="fas fa-heart"></i> ركن المسؤولية الاجتماعية</h3>
-                <p style="font-size:0.85rem; margin-bottom:10px">صندوق "إكرام العمال" لجمع الصدقات والهبات وتوزيعها كمكافآت لعمال نظافة المدية.</p>
-                <div style="display:flex; gap:8px">
-                    <input type="number" id="donationAmount" class="input" style="margin:0" placeholder="المبلغ (دج)">
-                    <button class="btn ripple" style="background:#f59e0b; color:white; margin:0; width:auto; padding:0 20px" onclick="MedeaUltimate.Charity.donate(currentDriver || 'user', document.getElementById('donationAmount').value)">
-                        تصدق الآن
-                    </button>
-                </div>
-            `;
-            // إدراج قبل قسم الاقتصاد الدائري
-            const circularSection = homePage.querySelector('h3[data-i18n="circularEconomy"]')?.parentElement;
-            if (circularSection) {
-                homePage.insertBefore(charitySection, circularSection);
-            } else {
-                homePage.appendChild(charitySection);
-            }
-        }
-
-        // 2. إضافة واجهة الخزينة في لوحة الإدارة
-        const adminPanel = document.getElementById('adminPanel');
-        if (adminPanel && !document.querySelector('.admin-vault-box')) {
-            // سيتم استدعاء renderAdminPrivateUI من خلال الجسر عند دخول فتحي
-        }
-    }
-
-    // ربط الوظائف
-    const _origLoginAdmin = window.loginAdmin;
-    if (typeof _origLoginAdmin === 'function') {
-        window.loginAdmin = function() {
-            _origLoginAdmin.apply(this, arguments);
-            setTimeout(() => {
-                if (window.currentAdminName === 'فتحي') {
-                    if (typeof renderAdminPrivateUI === 'function') renderAdminPrivateUI(true);
-                    // تحديث مبلغ الخزينة (محاكاة)
-                    const revEl = document.getElementById('totalRev');
-                    if (revEl) revEl.innerText = "إجمالي الأرباح: 15,420 دج";
-                }
-            }, 1000);
-        };
-    }
-
-    // تشغيل الحقن عند التحميل
-    window.addEventListener('load', () => {
-        setTimeout(injectDiamondUI, 1500);
-        if (typeof MedeaUltimate !== 'undefined' && MedeaUltimate.Mapping.drawLegend) {
-            MedeaUltimate.Mapping.drawLegend();
-        }
-    });
-
-    // إضافة وظيفة عرض التحويلات (مطلوبة في الكود الماسي)
-    window.viewPayouts = function() {
-        showToast("جاري فتح سجل التحويلات البنكية...", "info");
-    };
-})();
-
-// ===== نظام الفلترة للقطاع الخاص (PPP Filtering) =====
-window.getFilteredData = function(dataArray, sectorKey = 'sector') {
-    if (!window.currentAdminSector || window.currentAdminSector === 'all' || window.currentAdminName === 'فتحي') {
-        return dataArray;
-    }
-    return dataArray.filter(item => item[sectorKey] === window.currentAdminSector);
-};
-</script>
-</body></html>
+</body>
+</html>
