@@ -9880,638 +9880,360 @@ function optimizeDriverRoute(start, points) {
 </script>
 <script>
 /* ========================================================================
- * MEDEA CLEAN 2026 - نظام الشركات والموظفين الديناميكي (V6.0)
- * - المشرف الرئيسي يضيف الشركات (جمع نفايات / كنس)
- * - المشرف الرئيسي يضيف مشرفين خاصين لكل شركة
- * - المشرف الرئيسي يضيف سائقين لكل شركة
- * - كل موظف يرتبط بشركته ويتم فلترة البيانات تلقائياً عند تسجيل الدخول
+ * MEDEA CLEAN 2026 - نظام إدارة الشركات والموظفين (الإصدار النهائي)
+ * يضيف واجهة كاملة لإدارة الشركات والمشرفين والسائقين في لوحة تحكم المشرف العام
  * ======================================================================== */
 
 (function() {
     'use strict';
 
-    // ===================== قاعدة البيانات الأساسية =====================
-    let MedeaCompanies = {};      // الشركات
-    let MedeaSubAdmins = [];      // المشرفين الخاصين (مرتبطين بشركة)
-    let MedeaDrivers = [];        // السائقين (مرتبطين بشركة)
-    
-    // تحميل جميع البيانات من localStorage
+    // ===================== قاعدة البيانات =====================
+    let MedeaCompanies = {};
+    let MedeaSubAdmins = [];
+    let MedeaDrivers = [];
+
     function loadAllData() {
-        // تحميل الشركات
-        var savedCompanies = localStorage.getItem('medea_companies_list');
-        if (savedCompanies) {
-            try { MedeaCompanies = JSON.parse(savedCompanies); } catch(e) {}
-        }
-        
-        // تحميل المشرفين الخاصين
-        var savedSubAdmins = localStorage.getItem('medea_sub_admins_list');
-        if (savedSubAdmins) {
-            try { MedeaSubAdmins = JSON.parse(savedSubAdmins); } catch(e) {}
-        }
-        
-        // تحميل السائقين
-        var savedDrivers = localStorage.getItem('medea_drivers_list');
-        if (savedDrivers) {
-            try { MedeaDrivers = JSON.parse(savedDrivers); } catch(e) {}
-        }
-        
-        // إذا لم تكن هناك شركات، نضيف شركة البلدية فقط
-        if (Object.keys(MedeaCompanies).length === 0) {
-            MedeaCompanies = {
-                "public": {
-                    id: "public",
-                    name: "بلدية المدية (المشرف العام)",
-                    color: "#006233",
-                    activity: "all",
-                    phone: "025123456",
-                    createdAt: new Date().toISOString()
-                }
-            };
-            saveCompanies();
-        }
+        try { MedeaCompanies = JSON.parse(localStorage.getItem('medea_companies_list') || '{"public":{"id":"public","name":"بلدية المدية","color":"#006233","activity":"all","phone":"025123456"}}'); } catch(e) {}
+        try { MedeaSubAdmins = JSON.parse(localStorage.getItem('medea_sub_admins_list') || '[]'); } catch(e) {}
+        try { MedeaDrivers = JSON.parse(localStorage.getItem('medea_drivers_list') || '[]'); } catch(e) {}
     }
-    
+
     function saveCompanies() { localStorage.setItem('medea_companies_list', JSON.stringify(MedeaCompanies)); }
     function saveSubAdmins() { localStorage.setItem('medea_sub_admins_list', JSON.stringify(MedeaSubAdmins)); }
     function saveDrivers() { localStorage.setItem('medea_drivers_list', JSON.stringify(MedeaDrivers)); }
-    
-    // إنشاء لون عشوائي فريد
-    function getUniqueColor() {
+
+    function getCompanyName(id) { return MedeaCompanies[id]?.name || 'غير محدد'; }
+    function getCompanyColor(id) { return MedeaCompanies[id]?.color || '#006233'; }
+
+    // إنشاء لون عشوائي
+    function getRandomColor() {
         var letters = '0123456789ABCDEF';
-        var colors = Object.values(MedeaCompanies).map(c => c.color);
-        var newColor;
-        do {
-            newColor = '#';
-            for (var i = 0; i < 6; i++) newColor += letters[Math.floor(Math.random() * 16)];
-        } while (colors.includes(newColor));
-        return newColor;
-    }
-    
-    // الحصول على اسم الشركة من ID
-    function getCompanyName(companyId) {
-        return MedeaCompanies[companyId]?.name || 'غير محدد';
-    }
-    
-    // الحصول على لون الشركة
-    function getCompanyColor(companyId) {
-        return MedeaCompanies[companyId]?.color || '#006233';
+        var color = '#';
+        for (var i = 0; i < 6; i++) color += letters[Math.floor(Math.random() * 16)];
+        return color;
     }
 
-    // ===================== المساعد الصوتي =====================
-    window.VoiceAssistant = {
-        speak: function(text) {
-            if (!('speechSynthesis' in window)) return;
-            window.speechSynthesis.cancel();
-            var utterance = new SpeechSynthesisUtterance(text);
-            utterance.lang = 'ar-SA';
-            utterance.rate = 0.9;
-            window.speechSynthesis.speak(utterance);
-        }
-    };
-
-    // ===================== عرض وسيلة إيضاح الشركات =====================
-    function renderCompanyLegend() {
-        var legendDiv = document.getElementById('medea-companies-legend');
-        if (legendDiv) legendDiv.remove();
+    // عرض وسيلة إيضاح الشركات على الخريطة
+    function showCompanyLegend() {
+        var oldLegend = document.getElementById('medea-companies-legend');
+        if (oldLegend) oldLegend.remove();
         
-        var currentSector = localStorage.getItem('medea_current_admin_sector') || 'public';
+        var currentSector = localStorage.getItem('medea_current_admin_sector');
         if (currentSector !== 'public') return;
         
-        legendDiv = document.createElement('div');
-        legendDiv.id = 'medea-companies-legend';
-        legendDiv.className = 'card';
-        legendDiv.style.cssText = 'position:fixed; bottom:80px; left:10px; z-index:1000; background:var(--bg-card); padding:10px; border-radius:12px; box-shadow:0 2px 10px var(--shadow); font-size:12px; max-width:220px; border-right:3px solid var(--accent);';
+        var legend = document.createElement('div');
+        legend.id = 'medea-companies-legend';
+        legend.style.cssText = 'position:fixed; bottom:80px; right:10px; z-index:1000; background:var(--bg-card); padding:12px; border-radius:12px; box-shadow:0 2px 10px rgba(0,0,0,0.2); font-size:12px; min-width:180px; border-right:3px solid #D4AF37';
+        legend.innerHTML = '<b style="color:var(--primary)">🏢 الشركات المتعاقدة</b><hr style="margin:5px 0">';
         
-        var html = '<b><i class="fas fa-chalkboard"></i> 📋 الشركات المتعاقدة</b><hr style="margin:5px 0">';
-        for (var key in MedeaCompanies) {
-            var comp = MedeaCompanies[key];
-            var activityName = comp.activity === 'collection' ? '🗑️ جمع نفايات' : (comp.activity === 'sweeping' ? '🧹 كنس شوارع' : '🏢 إدارة عامة');
-            html += '<div style="display:flex; align-items:center; gap:8px; margin-bottom:6px;">' +
-                    '<span style="display:inline-block; width:14px; height:14px; background:' + comp.color + '; border-radius:50%;"></span>' +
-                    '<span style="font-size:11px; flex:1"><b>' + comp.name + '</b><br><small>' + activityName + '</small></span>' +
-                    '</div>';
+        for (var id in MedeaCompanies) {
+            var comp = MedeaCompanies[id];
+            var typeIcon = comp.activity === 'collection' ? '🗑️' : (comp.activity === 'sweeping' ? '🧹' : '🏛️');
+            legend.innerHTML += '<div style="display:flex; align-items:center; gap:8px; margin-bottom:5px">' +
+                                '<span style="display:inline-block; width:12px; height:12px; background:' + comp.color + '; border-radius:50%"></span>' +
+                                '<span>' + typeIcon + ' ' + comp.name + '</span></div>';
         }
-        legendDiv.innerHTML = html;
-        document.body.appendChild(legendDiv);
+        document.body.appendChild(legend);
     }
 
-    // ===================== واجهة إدارة الشركات والموظفين =====================
-    window.CompanyManager = {
-        injectUI: function() {
-            setTimeout(function() {
-                var adminPanel = document.getElementById('adminPanel');
-                if (!adminPanel || document.getElementById('ext-company-manager')) return;
-                
-                var currentAdmin = localStorage.getItem('medea_current_admin_name');
-                if (currentAdmin !== 'مدير' && currentAdmin !== 'admin') return;
-                
-                var managerDiv = document.createElement('div');
-                managerDiv.id = 'ext-company-manager';
-                managerDiv.className = 'card';
-                managerDiv.style.marginTop = '10px';
-                managerDiv.style.borderRight = '4px solid var(--accent)';
-                managerDiv.innerHTML = `
-                    <h4 style="color:var(--primary); margin-bottom:15px;"><i class="fas fa-building"></i> 🏢 إدارة الشركات والموظفين</h4>
-                    
-                    <!-- ===== قسم إضافة شركة جديدة ===== -->
-                    <div style="margin-bottom:20px; padding:12px; background:var(--bg); border-radius:10px">
-                        <h5 style="color:var(--primary); margin-bottom:10px">➕ إضافة شركة جديدة</h5>
-                        <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px">
-                            <input type="text" id="newCompanyName" class="input" placeholder="اسم الشركة" style="margin:0">
-                            <select id="newCompanyActivity" class="input" style="margin:0">
-                                <option value="collection">🗑️ جمع النفايات</option>
-                                <option value="sweeping">🧹 كنس الشوارع</option>
-                            </select>
-                        </div>
-                        <div style="display:flex; gap:10px; margin-top:10px">
-                            <input type="color" id="newCompanyColor" class="input" style="flex:1; height:45px">
-                            <input type="text" id="newCompanyPhone" class="input" placeholder="📞 رقم الهاتف" style="flex:2">
-                        </div>
-                        <button id="addCompanyBtn" class="btn btn-primary ripple" style="margin-top:10px">✅ إضافة الشركة</button>
-                    </div>
-                    
-                    <!-- ===== قسم إضافة مشرف خاص ===== -->
-                    <div style="margin-bottom:20px; padding:12px; background:var(--bg); border-radius:10px">
-                        <h5 style="color:var(--primary); margin-bottom:10px">👨‍💼 إضافة مشرف خاص لشركة</h5>
-                        <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px">
-                            <input type="text" id="newSubAdminName" class="input" placeholder="اسم المشرف" style="margin:0">
-                            <select id="newSubAdminCompany" class="input" style="margin:0">
-                                <option value="">-- اختر الشركة --</option>
-                            </select>
-                        </div>
-                        <button id="addSubAdminBtn" class="btn btn-warning ripple" style="margin-top:10px">➕ إضافة مشرف خاص</button>
-                    </div>
-                    
-                    <!-- ===== قسم إضافة سائق ===== -->
-                    <div style="margin-bottom:20px; padding:12px; background:var(--bg); border-radius:10px">
-                        <h5 style="color:var(--primary); margin-bottom:10px">🚛 إضافة سائق لشركة</h5>
-                        <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px">
-                            <input type="text" id="newDriverName" class="input" placeholder="اسم السائق" style="margin:0">
-                            <select id="newDriverCompany" class="input" style="margin:0">
-                                <option value="">-- اختر الشركة --</option>
-                            </select>
-                        </div>
-                        <input type="text" id="newDriverPhone" class="input" placeholder="📞 رقم هاتف السائق" style="margin-top:10px">
-                        <button id="addDriverBtn" class="btn btn-success ripple" style="margin-top:10px">➕ إضافة سائق</button>
-                    </div>
-                    
-                    <!-- ===== عرض قائمة الشركات ===== -->
-                    <div id="companiesListSection" style="margin-top:15px">
-                        <h5 style="color:var(--primary); margin-bottom:10px"><i class="fas fa-list"></i> 📋 قائمة الشركات</h5>
-                        <div id="companiesListContainer" style="max-height:250px; overflow-y:auto"></div>
-                    </div>
-                    
-                    <!-- ===== عرض قائمة المشرفين الخاصين ===== -->
-                    <div style="margin-top:15px">
-                        <h5 style="color:var(--primary); margin-bottom:10px"><i class="fas fa-user-shield"></i> 👨‍💼 المشرفون الخاصون</h5>
-                        <div id="subAdminsListContainer" style="max-height:200px; overflow-y:auto"></div>
-                    </div>
-                    
-                    <!-- ===== عرض قائمة السائقين ===== -->
-                    <div style="margin-top:15px">
-                        <h5 style="color:var(--primary); margin-bottom:10px"><i class="fas fa-truck"></i> 🚛 السائقون</h5>
-                        <div id="driversListContainer" style="max-height:200px; overflow-y:auto"></div>
-                    </div>
-                `;
-                adminPanel.insertBefore(managerDiv, adminPanel.firstChild);
-                
-                // تحديث القوائم المنسدلة
-                function updateSelects() {
-                    var companySelect = document.getElementById('newSubAdminCompany');
-                    var driverCompanySelect = document.getElementById('newDriverCompany');
-                    
-                    var options = '<option value="">-- اختر الشركة --</option>';
-                    for (var key in MedeaCompanies) {
-                        if (key !== 'public') {
-                            var comp = MedeaCompanies[key];
-                            var icon = comp.activity === 'collection' ? '🗑️' : '🧹';
-                            options += '<option value="' + key + '">' + icon + ' ' + comp.name + '</option>';
-                        }
-                    }
-                    if (companySelect) companySelect.innerHTML = options;
-                    if (driverCompanySelect) driverCompanySelect.innerHTML = options;
-                }
-                
-                // عرض قائمة الشركات
-                function renderCompaniesList() {
-                    var container = document.getElementById('companiesListContainer');
-                    if (!container) return;
-                    
-                    var html = '';
-                    for (var key in MedeaCompanies) {
-                        if (key !== 'public') {
-                            var comp = MedeaCompanies[key];
-                            var activityName = comp.activity === 'collection' ? '🗑️ جمع نفايات' : '🧹 كنس شوارع';
-                            html += `
-                                <div style="display:flex; justify-content:space-between; align-items:center; padding:8px; margin:5px 0; background:var(--bg-card); border-radius:8px; border-right:4px solid ${comp.color}">
-                                    <div>
-                                        <div style="font-weight:700">${comp.name}</div>
-                                        <div style="font-size:10px; color:#888">${activityName} | 📞 ${comp.phone || 'غير مسجل'}</div>
-                                    </div>
-                                    <div style="display:flex; gap:5px">
-                                        <span style="display:inline-block; width:20px; height:20px; background:${comp.color}; border-radius:50%; border:2px solid #fff"></span>
-                                        <button class="delete-company-btn" data-id="${key}" style="background:#dc3545; color:white; border:none; border-radius:50%; width:28px; height:28px; cursor:pointer; font-size:12px">🗑️</button>
-                                    </div>
-                                </div>
-                            `;
-                        }
-                    }
-                    
-                    if (Object.keys(MedeaCompanies).filter(k => k !== 'public').length === 0) {
-                        html = '<div style="text-align:center; padding:15px; color:#888">📭 لا توجد شركات خاصة مسجلة</div>';
-                    }
-                    container.innerHTML = html;
-                    
-                    document.querySelectorAll('.delete-company-btn').forEach(btn => {
-                        btn.onclick = function() {
-                            var companyId = this.getAttribute('data-id');
-                            if (confirm('⚠️ هل أنت متأكد من حذف شركة "' + MedeaCompanies[companyId]?.name + '"؟\nسيتم حذف جميع المشرفين والسائقين المرتبطين بها!')) {
-                                // حذف الشركة
-                                delete MedeaCompanies[companyId];
-                                saveCompanies();
-                                
-                                // حذف المشرفين المرتبطين بهذه الشركة
-                                MedeaSubAdmins = MedeaSubAdmins.filter(a => a.companyId !== companyId);
-                                saveSubAdmins();
-                                
-                                // حذف السائقين المرتبطين بهذه الشركة
-                                MedeaDrivers = MedeaDrivers.filter(d => d.companyId !== companyId);
-                                saveDrivers();
-                                
-                                renderCompaniesList();
-                                renderSubAdminsList();
-                                renderDriversList();
-                                updateSelects();
-                                renderCompanyLegend();
-                                window.VoiceAssistant.speak("تم حذف الشركة وجميع موظفيها");
-                                window.showToast("تم حذف الشركة", 'success');
-                            }
-                        };
-                    });
-                }
-                
-                // عرض قائمة المشرفين الخاصين
-                function renderSubAdminsList() {
-                    var container = document.getElementById('subAdminsListContainer');
-                    if (!container) return;
-                    
-                    if (MedeaSubAdmins.length === 0) {
-                        container.innerHTML = '<div style="text-align:center; padding:15px; color:#888">📭 لا يوجد مشرفون خاصون</div>';
-                        return;
-                    }
-                    
-                    var html = '';
-                    MedeaSubAdmins.forEach((admin, idx) => {
-                        var companyName = getCompanyName(admin.companyId);
-                        var companyColor = getCompanyColor(admin.companyId);
-                        html += `
-                            <div style="display:flex; justify-content:space-between; align-items:center; padding:8px; margin:5px 0; background:var(--bg-card); border-radius:8px; border-right:3px solid ${companyColor}">
-                                <div>
-                                    <div style="font-weight:700">👤 ${admin.name}</div>
-                                    <div style="font-size:11px; color:#888">🏢 ${companyName}</div>
-                                </div>
-                                <button class="delete-subadmin-btn" data-idx="${idx}" style="background:#dc3545; color:white; border:none; border-radius:50%; width:28px; height:28px; cursor:pointer">🗑️</button>
-                            </div>
-                        `;
-                    });
-                    container.innerHTML = html;
-                    
-                    document.querySelectorAll('.delete-subadmin-btn').forEach(btn => {
-                        btn.onclick = function() {
-                            var idx = parseInt(this.getAttribute('data-idx'));
-                            if (confirm('⚠️ هل أنت متأكد من حذف المشرف "' + MedeaSubAdmins[idx]?.name + '"؟')) {
-                                MedeaSubAdmins.splice(idx, 1);
-                                saveSubAdmins();
-                                renderSubAdminsList();
-                                window.showToast("تم حذف المشرف", 'success');
-                            }
-                        };
-                    });
-                }
-                
-                // عرض قائمة السائقين
-                function renderDriversList() {
-                    var container = document.getElementById('driversListContainer');
-                    if (!container) return;
-                    
-                    if (MedeaDrivers.length === 0) {
-                        container.innerHTML = '<div style="text-align:center; padding:15px; color:#888">📭 لا يوجد سائقون مسجلون</div>';
-                        return;
-                    }
-                    
-                    var html = '';
-                    MedeaDrivers.forEach((driver, idx) => {
-                        var companyName = getCompanyName(driver.companyId);
-                        var companyColor = getCompanyColor(driver.companyId);
-                        html += `
-                            <div style="display:flex; justify-content:space-between; align-items:center; padding:8px; margin:5px 0; background:var(--bg-card); border-radius:8px; border-right:3px solid ${companyColor}">
-                                <div>
-                                    <div style="font-weight:700">🚛 ${driver.name}</div>
-                                    <div style="font-size:11px; color:#888">🏢 ${companyName} | 📞 ${driver.phone || 'غير مسجل'}</div>
-                                </div>
-                                <button class="delete-driver-btn" data-idx="${idx}" style="background:#dc3545; color:white; border:none; border-radius:50%; width:28px; height:28px; cursor:pointer">🗑️</button>
-                            </div>
-                        `;
-                    });
-                    container.innerHTML = html;
-                    
-                    document.querySelectorAll('.delete-driver-btn').forEach(btn => {
-                        btn.onclick = function() {
-                            var idx = parseInt(this.getAttribute('data-idx'));
-                            if (confirm('⚠️ هل أنت متأكد من حذف السائق "' + MedeaDrivers[idx]?.name + '"؟')) {
-                                MedeaDrivers.splice(idx, 1);
-                                saveDrivers();
-                                renderDriversList();
-                                window.showToast("تم حذف السائق", 'success');
-                            }
-                        };
-                    });
-                }
-                
-                // إضافة شركة جديدة
-                document.getElementById('addCompanyBtn').onclick = function() {
-                    var name = document.getElementById('newCompanyName').value.trim();
-                    var activity = document.getElementById('newCompanyActivity').value;
-                    var color = document.getElementById('newCompanyColor').value;
-                    var phone = document.getElementById('newCompanyPhone').value.trim();
-                    
-                    if (!name) { window.showToast("⚠️ الرجاء إدخال اسم الشركة", 'error'); return; }
-                    
-                    var companyId = 'company_' + Date.now();
-                    MedeaCompanies[companyId] = {
-                        id: companyId,
-                        name: name,
-                        color: color || getUniqueColor(),
-                        activity: activity,
-                        phone: phone,
-                        createdAt: new Date().toISOString()
-                    };
-                    saveCompanies();
-                    
-                    document.getElementById('newCompanyName').value = '';
-                    document.getElementById('newCompanyPhone').value = '';
-                    document.getElementById('newCompanyColor').value = getUniqueColor();
-                    
-                    renderCompaniesList();
-                    updateSelects();
-                    renderCompanyLegend();
-                    window.VoiceAssistant.speak("تم إضافة شركة " + name);
-                    window.showToast("✅ تم إضافة الشركة " + name, 'success');
-                };
-                
-                // إضافة مشرف خاص
-                document.getElementById('addSubAdminBtn').onclick = function() {
-                    var name = document.getElementById('newSubAdminName').value.trim();
-                    var companyId = document.getElementById('newSubAdminCompany').value;
-                    
-                    if (!name) { window.showToast("⚠️ الرجاء إدخال اسم المشرف", 'error'); return; }
-                    if (!companyId) { window.showToast("⚠️ الرجاء اختيار الشركة", 'error'); return; }
-                    
-                    MedeaSubAdmins.push({
-                        name: name,
-                        companyId: companyId,
-                        createdAt: new Date().toISOString()
-                    });
-                    saveSubAdmins();
-                    
-                    document.getElementById('newSubAdminName').value = '';
-                    renderSubAdminsList();
-                    window.VoiceAssistant.speak("تم إضافة المشرف " + name + " لشركة " + getCompanyName(companyId));
-                    window.showToast("✅ تم إضافة المشرف " + name, 'success');
-                };
-                
-                // إضافة سائق
-                document.getElementById('addDriverBtn').onclick = function() {
-                    var name = document.getElementById('newDriverName').value.trim();
-                    var companyId = document.getElementById('newDriverCompany').value;
-                    var phone = document.getElementById('newDriverPhone').value.trim();
-                    
-                    if (!name) { window.showToast("⚠️ الرجاء إدخال اسم السائق", 'error'); return; }
-                    if (!companyId) { window.showToast("⚠️ الرجاء اختيار الشركة", 'error'); return; }
-                    
-                    MedeaDrivers.push({
-                        name: name,
-                        companyId: companyId,
-                        phone: phone,
-                        createdAt: new Date().toISOString()
-                    });
-                    saveDrivers();
-                    
-                    document.getElementById('newDriverName').value = '';
-                    document.getElementById('newDriverPhone').value = '';
-                    renderDriversList();
-                    window.VoiceAssistant.speak("تم إضافة السائق " + name + " لشركة " + getCompanyName(companyId));
-                    window.showToast("✅ تم إضافة السائق " + name, 'success');
-                };
-                
-                // التهيئة الأولية
-                renderCompaniesList();
-                renderSubAdminsList();
-                renderDriversList();
-                updateSelects();
-            }, 1000);
-        }
-    };
-
-    // ===================== نظام الكنس =====================
-    let activeSweeping = null;
-    let sweepingInterval = null;
-    let sweepingTimerInterval = null;
-
-    window.SweepingSystem = {
-        startMission: function(streetName) {
-            if (activeSweeping) { window.VoiceAssistant.speak("يوجد مهمة كنس نشطة"); return; }
-            
-            if (!streetName) {
-                streetName = prompt("📍 أدخل اسم الشارع المراد كنسه:", "شارع الاستقلال");
-                if (!streetName) return;
+    // ===================== الواجهة الرئيسية لإدارة الشركات =====================
+    function injectCompanyManagementUI() {
+        // ننتظر حتى يتم تحميل واجهة المشرف الأصلي
+        setTimeout(function() {
+            var adminPanel = document.getElementById('adminPanel');
+            if (!adminPanel) {
+                console.log("adminPanel not found, retrying...");
+                setTimeout(injectCompanyManagementUI, 1000);
+                return;
             }
             
-            var currentDriverCompany = localStorage.getItem('medea_current_driver_company') || 'public';
-            var companyColor = getCompanyColor(currentDriverCompany);
+            // التأكد من عدم إضافة الواجهة مسبقاً
+            if (document.getElementById('ext-company-management-card')) return;
             
-            activeSweeping = {
-                id: Date.now(),
-                street: streetName,
-                startTime: new Date(),
-                status: 'active',
-                distance: 0,
-                lastPos: null,
-                driver: window.currentDriver || 'سائق',
-                companyId: currentDriverCompany
-            };
-            localStorage.setItem('medea_active_sweeping', JSON.stringify(activeSweeping));
+            // التحقق من أن المستخدم هو المشرف العام
+            var adminName = document.getElementById('adminName')?.value;
+            var isSuperAdmin = (adminName === 'مدير' || adminName === 'admin' || localStorage.getItem('medea_is_super_admin') === 'true');
             
-            var infoDiv = document.getElementById('activeSweepingInfo');
-            if (infoDiv) {
-                infoDiv.style.display = 'block';
-                document.getElementById('sweepingStreetName').innerHTML = '<i class="fas fa-road"></i> ' + streetName;
-                infoDiv.style.borderRight = '4px solid ' + companyColor;
-            }
-            
-            if (navigator.geolocation) {
-                sweepingInterval = setInterval(function() {
-                    navigator.geolocation.getCurrentPosition(function(pos) {
-                        if (activeSweeping && activeSweeping.lastPos) {
-                            var d = window.SweepingSystem.calcDistance(activeSweeping.lastPos, { lat: pos.coords.latitude, lng: pos.coords.longitude });
-                            activeSweeping.distance += d;
-                            localStorage.setItem('medea_active_sweeping', JSON.stringify(activeSweeping));
-                            var distEl = document.getElementById('sweepingDistance');
-                            if (distEl) distEl.innerHTML = activeSweeping.distance.toFixed(2) + ' كم';
-                        }
-                        if (activeSweeping) activeSweeping.lastPos = { lat: pos.coords.latitude, lng: pos.coords.longitude };
-                    }, null, { enableHighAccuracy: true });
-                }, 5000);
-            }
-            
-            sweepingTimerInterval = setInterval(function() {
-                if (activeSweeping) {
-                    var elapsed = Math.floor((new Date() - activeSweeping.startTime) / 1000);
-                    var m = Math.floor(elapsed / 60);
-                    var s = elapsed % 60;
-                    var timerEl = document.getElementById('sweepingTimer');
-                    if (timerEl) timerEl.innerHTML = m + ':' + s.toString().padStart(2,'0');
-                }
-            }, 1000);
-            
-            window.VoiceAssistant.speak("بدأت مهمة كنس شارع " + streetName);
-            window.showToast("🧹 بدء كنس " + streetName, 'success');
-        },
-        
-        calcDistance: function(p1, p2) {
-            var R = 6371;
-            var dLat = (p2.lat - p1.lat) * Math.PI / 180;
-            var dLon = (p2.lng - p1.lng) * Math.PI / 180;
-            var a = Math.sin(dLat/2) * Math.sin(dLat/2) + Math.cos(p1.lat * Math.PI / 180) * Math.cos(p2.lat * Math.PI / 180) * Math.sin(dLon/2) * Math.sin(dLon/2);
-            return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-        },
-        
-        endMission: function() {
-            if (!activeSweeping) return;
-            if (sweepingInterval) clearInterval(sweepingInterval);
-            if (sweepingTimerInterval) clearInterval(sweepingTimerInterval);
-            
-            var records = JSON.parse(localStorage.getItem('medea_sweeping_records') || '[]');
-            activeSweeping.endTime = new Date();
-            records.push(activeSweeping);
-            localStorage.setItem('medea_sweeping_records', JSON.stringify(records));
-            
-            var points = Math.floor(activeSweeping.distance * 10);
-            window.VoiceAssistant.speak("تم إنهاء كنس " + activeSweeping.street + " بمسافة " + activeSweeping.distance.toFixed(2) + " كم");
-            window.showToast("✅ تم توثيق كنس " + activeSweeping.street + " (+" + points + " نقطة)", 'success');
-            
-            var currentPoints = parseInt(localStorage.getItem('medea_points') || '0') + points;
-            localStorage.setItem('medea_points', currentPoints);
-            var pointsEl = document.getElementById('userPoints');
-            if (pointsEl) pointsEl.textContent = currentPoints;
-            
-            activeSweeping = null;
-            localStorage.removeItem('medea_active_sweeping');
-            var infoDiv = document.getElementById('activeSweepingInfo');
-            if (infoDiv) infoDiv.style.display = 'none';
-        },
-        
-        injectSweepingUI: function() {
-            setTimeout(function() {
-                var driverPanel = document.getElementById('driverPanel');
-                if (!driverPanel || document.getElementById('ext-sweeping-card')) return;
+            // إنشاء البطاقة الرئيسية
+            var card = document.createElement('div');
+            card.id = 'ext-company-management-card';
+            card.className = 'card';
+            card.style.marginTop = '15px';
+            card.style.borderRight = '5px solid #D4AF37';
+            card.style.background = 'linear-gradient(135deg, var(--bg-card), #f8f9fa)';
+            card.innerHTML = `
+                <h3 style="color:var(--primary); margin-bottom:15px; display:flex; align-items:center; gap:10px">
+                    <i class="fas fa-building"></i> 🏢 إدارة الشركات الخاصة المتعاقدة
+                </h3>
                 
-                var currentCompany = localStorage.getItem('medea_current_driver_company') || 'public';
-                var companyColor = getCompanyColor(currentCompany);
-                var companyName = getCompanyName(currentCompany);
-                
-                var card = document.createElement('div');
-                card.id = 'ext-sweeping-card';
-                card.className = 'card';
-                card.style.borderRight = '4px solid ' + companyColor;
-                card.innerHTML = `
-                    <h3 style="color:${companyColor}"><i class="fas fa-broom"></i> 🧹 مهام الكنس - ${companyName}</h3>
-                    <div id="sweepingTasksList">✨ يمكنك بدء مهمة كنس جديدة</div>
-                    <button id="startSweepingBtn" class="btn btn-warning ripple" style="background:${companyColor}; margin-top:8px">
-                        <i class="fas fa-play"></i> ▶️ بدء مهمة كنس جديدة
+                <!-- ===== نموذج إضافة شركة جديدة ===== -->
+                <div style="background:var(--bg); padding:15px; border-radius:12px; margin-bottom:15px">
+                    <h4 style="color:var(--primary); margin-bottom:10px">➕ إضافة شركة جديدة</h4>
+                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:10px">
+                        <input type="text" id="extCompanyName" class="input" placeholder="📛 اسم الشركة" style="margin:0">
+                        <select id="extCompanyActivity" class="input" style="margin:0">
+                            <option value="collection">🗑️ جمع النفايات</option>
+                            <option value="sweeping">🧹 كنس الشوارع</option>
+                        </select>
+                    </div>
+                    <div style="display:flex; gap:10px; margin-bottom:10px">
+                        <input type="color" id="extCompanyColor" class="input" value="${getRandomColor()}" style="flex:1; height:42px">
+                        <input type="text" id="extCompanyPhone" class="input" placeholder="📞 رقم الهاتف" style="flex:2">
+                    </div>
+                    <button id="extAddCompanyBtn" class="btn btn-primary ripple" style="width:100%">
+                        <i class="fas fa-save"></i> 💾 إضافة الشركة
                     </button>
-                    <div id="activeSweepingInfo" style="display:none; margin-top:10px; padding:10px; background:var(--bg); border-radius:8px">
-                        <div><i class="fas fa-road"></i> 🏞️ <span id="sweepingStreetName"></span></div>
-                        <div><i class="fas fa-stopwatch"></i> ⏱️ <span id="sweepingTimer">00:00</span></div>
-                        <div><i class="fas fa-route"></i> 📍 <span id="sweepingDistance">0.00 كم</span></div>
-                        <button id="endSweepingBtn" class="btn btn-success ripple" style="margin-top:8px">✅ إنهاء الكنس</button>
+                </div>
+                
+                <!-- ===== نموذج إضافة مشرف خاص ===== -->
+                <div style="background:var(--bg); padding:15px; border-radius:12px; margin-bottom:15px">
+                    <h4 style="color:var(--primary); margin-bottom:10px">👨‍💼 إضافة مشرف خاص لشركة</h4>
+                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:10px">
+                        <input type="text" id="extSubAdminName" class="input" placeholder="👤 اسم المشرف" style="margin:0">
+                        <select id="extSubAdminCompany" class="input" style="margin:0">
+                            <option value="">-- اختر الشركة --</option>
+                        </select>
                     </div>
-                `;
-                driverPanel.appendChild(card);
+                    <button id="extAddSubAdminBtn" class="btn btn-warning ripple" style="width:100%">
+                        <i class="fas fa-user-plus"></i> ➕ إضافة مشرف خاص
+                    </button>
+                </div>
                 
-                document.getElementById('startSweepingBtn').onclick = function() { window.SweepingSystem.startMission(); };
-                document.getElementById('endSweepingBtn').onclick = function() { window.SweepingSystem.endMission(); };
+                <!-- ===== نموذج إضافة سائق ===== -->
+                <div style="background:var(--bg); padding:15px; border-radius:12px; margin-bottom:15px">
+                    <h4 style="color:var(--primary); margin-bottom:10px">🚛 إضافة سائق لشركة</h4>
+                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:10px">
+                        <input type="text" id="extDriverName" class="input" placeholder="👤 اسم السائق" style="margin:0">
+                        <select id="extDriverCompany" class="input" style="margin:0">
+                            <option value="">-- اختر الشركة --</option>
+                        </select>
+                    </div>
+                    <input type="text" id="extDriverPhone" class="input" placeholder="📞 رقم هاتف السائق" style="margin-bottom:10px">
+                    <button id="extAddDriverBtn" class="btn btn-success ripple" style="width:100%">
+                        <i class="fas fa-truck"></i> ➕ إضافة سائق
+                    </button>
+                </div>
                 
-                var saved = localStorage.getItem('medea_active_sweeping');
-                if (saved) {
-                    try {
-                        activeSweeping = JSON.parse(saved);
-                        if (activeSweeping && activeSweeping.status === 'active') {
-                            document.getElementById('activeSweepingInfo').style.display = 'block';
-                            document.getElementById('sweepingStreetName').innerHTML = activeSweeping.street;
-                        }
-                    } catch(e) {}
-                }
-            }, 500);
-        }
-    };
-
-    // ===================== الإبلاغ عن حاجة للكنس =====================
-    window.CitizenSweepingReport = {
-        injectReportButton: function() {
-            setTimeout(function() {
-                var homePage = document.getElementById('home');
-                if (!homePage || document.getElementById('ext-sweeping-report-btn')) return;
+                <!-- ===== عرض قائمة الشركات ===== -->
+                <div style="margin-top:10px">
+                    <h4 style="color:var(--primary); margin-bottom:10px">📋 قائمة الشركات المسجلة</h4>
+                    <div id="extCompaniesList" style="max-height:200px; overflow-y:auto"></div>
+                </div>
                 
-                var firstBtn = homePage.querySelector('.btn-primary.mb');
-                if (firstBtn) {
-                    var btn = document.createElement('button');
-                    btn.id = 'ext-sweeping-report-btn';
-                    btn.className = 'btn btn-warning ripple';
-                    btn.style.marginTop = '10px';
-                    btn.style.background = '#f59e0b';
-                    btn.innerHTML = '<i class="fas fa-broom"></i> 🧹 الإبلاغ عن شارع يحتاج كنساً';
-                    btn.onclick = function() { window.CitizenSweepingReport.showReportDialog(); };
-                    firstBtn.parentNode.insertBefore(btn, firstBtn.nextSibling);
-                }
-            }, 500);
-        },
-        
-        showReportDialog: function() {
-            var street = prompt("📍 أدخل اسم الشارع أو المنطقة التي تحتاج إلى كنس:", "");
-            if (street) {
-                var report = { id: Date.now(), type: 'sweeping_request', location: street, citizen: 'مواطن', date: new Date().toISOString(), status: 'pending' };
-                var requests = JSON.parse(localStorage.getItem('medea_sweeping_requests') || '[]');
-                requests.push(report);
-                localStorage.setItem('medea_sweeping_requests', JSON.stringify(requests));
-                window.VoiceAssistant.speak("تم استلام طلب كنس شارع " + street);
-                window.showToast("📢 تم الإبلاغ عن حاجة شارع " + street + " للكنس", 'success');
+                <!-- ===== عرض قائمة المشرفين ===== -->
+                <div style="margin-top:15px">
+                    <h4 style="color:var(--primary); margin-bottom:10px">👨‍💼 المشرفون الخاصون</h4>
+                    <div id="extSubAdminsList" style="max-height:150px; overflow-y:auto"></div>
+                </div>
+                
+                <!-- ===== عرض قائمة السائقين ===== -->
+                <div style="margin-top:15px">
+                    <h4 style="color:var(--primary); margin-bottom:10px">🚛 السائقون المسجلون</h4>
+                    <div id="extDriversList" style="max-height:150px; overflow-y:auto"></div>
+                </div>
+            `;
+            
+            // إضافة البطاقة في بداية لوحة المشرف
+            if (adminPanel.firstChild) {
+                adminPanel.insertBefore(card, adminPanel.firstChild);
+            } else {
+                adminPanel.appendChild(card);
             }
-        }
-    };
+            
+            // تحديث القوائم المنسدلة
+            function updateSelects() {
+                var subSelect = document.getElementById('extSubAdminCompany');
+                var driverSelect = document.getElementById('extDriverCompany');
+                var options = '<option value="">-- اختر الشركة --</option>';
+                for (var id in MedeaCompanies) {
+                    if (id !== 'public') {
+                        var comp = MedeaCompanies[id];
+                        var icon = comp.activity === 'collection' ? '🗑️' : '🧹';
+                        options += '<option value="' + id + '">' + icon + ' ' + comp.name + '</option>';
+                    }
+                }
+                if (subSelect) subSelect.innerHTML = options;
+                if (driverSelect) driverSelect.innerHTML = options;
+            }
+            
+            // عرض قائمة الشركات
+            function renderCompaniesList() {
+                var container = document.getElementById('extCompaniesList');
+                if (!container) return;
+                var html = '';
+                for (var id in MedeaCompanies) {
+                    if (id !== 'public') {
+                        var comp = MedeaCompanies[id];
+                        var typeName = comp.activity === 'collection' ? '🗑️ جمع نفايات' : '🧹 كنس شوارع';
+                        html += `
+                            <div style="display:flex; justify-content:space-between; align-items:center; padding:8px; margin:5px 0; background:var(--bg-card); border-radius:8px; border-right:4px solid ${comp.color}">
+                                <div>
+                                    <div style="font-weight:700">${comp.name}</div>
+                                    <div style="font-size:11px; color:#888">${typeName} | 📞 ${comp.phone || 'غير مسجل'}</div>
+                                </div>
+                                <div style="display:flex; gap:5px">
+                                    <span style="display:inline-block; width:18px; height:18px; background:${comp.color}; border-radius:50%"></span>
+                                    <button class="ext-delete-company" data-id="${id}" style="background:#dc3545; color:white; border:none; border-radius:50%; width:28px; height:28px; cursor:pointer">🗑️</button>
+                                </div>
+                            </div>
+                        `;
+                    }
+                }
+                if (Object.keys(MedeaCompanies).filter(k => k !== 'public').length === 0) {
+                    html = '<div style="text-align:center; padding:15px; color:#888">📭 لا توجد شركات خاصة مسجلة</div>';
+                }
+                container.innerHTML = html;
+                
+                document.querySelectorAll('.ext-delete-company').forEach(btn => {
+                    btn.onclick = function() {
+                        var companyId = this.getAttribute('data-id');
+                        if (confirm('⚠️ هل أنت متأكد من حذف شركة "' + MedeaCompanies[companyId]?.name + '"؟\nسيتم حذف جميع المشرفين والسائقين المرتبطين بها!')) {
+                            delete MedeaCompanies[companyId];
+                            saveCompanies();
+                            MedeaSubAdmins = MedeaSubAdmins.filter(a => a.companyId !== companyId);
+                            saveSubAdmins();
+                            MedeaDrivers = MedeaDrivers.filter(d => d.companyId !== companyId);
+                            saveDrivers();
+                            renderCompaniesList();
+                            renderSubAdminsList();
+                            renderDriversList();
+                            updateSelects();
+                            showCompanyLegend();
+                            window.showToast("✅ تم حذف الشركة", 'success');
+                        }
+                    };
+                });
+            }
+            
+            // عرض قائمة المشرفين
+            function renderSubAdminsList() {
+                var container = document.getElementById('extSubAdminsList');
+                if (!container) return;
+                if (MedeaSubAdmins.length === 0) {
+                    container.innerHTML = '<div style="text-align:center; padding:15px; color:#888">📭 لا يوجد مشرفون خاصون</div>';
+                    return;
+                }
+                var html = '';
+                MedeaSubAdmins.forEach((admin, idx) => {
+                    html += `
+                        <div style="display:flex; justify-content:space-between; align-items:center; padding:8px; margin:5px 0; background:var(--bg-card); border-radius:8px">
+                            <div><span style="font-weight:700">👤 ${admin.name}</span><br><small style="color:#888">🏢 ${getCompanyName(admin.companyId)}</small></div>
+                            <button class="ext-delete-subadmin" data-idx="${idx}" style="background:#dc3545; color:white; border:none; border-radius:50%; width:28px; height:28px; cursor:pointer">🗑️</button>
+                        </div>
+                    `;
+                });
+                container.innerHTML = html;
+                document.querySelectorAll('.ext-delete-subadmin').forEach(btn => {
+                    btn.onclick = function() {
+                        var idx = parseInt(this.getAttribute('data-idx'));
+                        if (confirm('⚠️ هل أنت متأكد من حذف المشرف "' + MedeaSubAdmins[idx]?.name + '"؟')) {
+                            MedeaSubAdmins.splice(idx, 1);
+                            saveSubAdmins();
+                            renderSubAdminsList();
+                            window.showToast("✅ تم حذف المشرف", 'success');
+                        }
+                    };
+                });
+            }
+            
+            // عرض قائمة السائقين
+            function renderDriversList() {
+                var container = document.getElementById('extDriversList');
+                if (!container) return;
+                if (MedeaDrivers.length === 0) {
+                    container.innerHTML = '<div style="text-align:center; padding:15px; color:#888">📭 لا يوجد سائقون مسجلون</div>';
+                    return;
+                }
+                var html = '';
+                MedeaDrivers.forEach((driver, idx) => {
+                    html += `
+                        <div style="display:flex; justify-content:space-between; align-items:center; padding:8px; margin:5px 0; background:var(--bg-card); border-radius:8px">
+                            <div><span style="font-weight:700">🚛 ${driver.name}</span><br><small style="color:#888">🏢 ${getCompanyName(driver.companyId)} | 📞 ${driver.phone || 'غير مسجل'}</small></div>
+                            <button class="ext-delete-driver" data-idx="${idx}" style="background:#dc3545; color:white; border:none; border-radius:50%; width:28px; height:28px; cursor:pointer">🗑️</button>
+                        </div>
+                    `;
+                });
+                container.innerHTML = html;
+                document.querySelectorAll('.ext-delete-driver').forEach(btn => {
+                    btn.onclick = function() {
+                        var idx = parseInt(this.getAttribute('data-idx'));
+                        if (confirm('⚠️ هل أنت متأكد من حذف السائق "' + MedeaDrivers[idx]?.name + '"؟')) {
+                            MedeaDrivers.splice(idx, 1);
+                            saveDrivers();
+                            renderDriversList();
+                            window.showToast("✅ تم حذف السائق", 'success');
+                        }
+                    };
+                });
+            }
+            
+            // إضافة شركة جديدة
+            document.getElementById('extAddCompanyBtn').onclick = function() {
+                var name = document.getElementById('extCompanyName').value.trim();
+                var activity = document.getElementById('extCompanyActivity').value;
+                var color = document.getElementById('extCompanyColor').value;
+                var phone = document.getElementById('extCompanyPhone').value.trim();
+                
+                if (!name) { window.showToast("⚠️ الرجاء إدخال اسم الشركة", 'error'); return; }
+                
+                var companyId = 'company_' + Date.now();
+                MedeaCompanies[companyId] = {
+                    id: companyId, name: name, color: color || getRandomColor(),
+                    activity: activity, phone: phone, createdAt: new Date().toISOString()
+                };
+                saveCompanies();
+                
+                document.getElementById('extCompanyName').value = '';
+                document.getElementById('extCompanyPhone').value = '';
+                document.getElementById('extCompanyColor').value = getRandomColor();
+                
+                renderCompaniesList();
+                updateSelects();
+                showCompanyLegend();
+                window.VoiceAssistant?.speak("تم إضافة شركة " + name);
+                window.showToast("✅ تم إضافة الشركة " + name, 'success');
+            };
+            
+            // إضافة مشرف خاص
+            document.getElementById('extAddSubAdminBtn').onclick = function() {
+                var name = document.getElementById('extSubAdminName').value.trim();
+                var companyId = document.getElementById('extSubAdminCompany').value;
+                if (!name) { window.showToast("⚠️ الرجاء إدخال اسم المشرف", 'error'); return; }
+                if (!companyId) { window.showToast("⚠️ الرجاء اختيار الشركة", 'error'); return; }
+                
+                MedeaSubAdmins.push({ name: name, companyId: companyId, createdAt: new Date().toISOString() });
+                saveSubAdmins();
+                document.getElementById('extSubAdminName').value = '';
+                renderSubAdminsList();
+                window.showToast("✅ تم إضافة المشرف " + name + " لشركة " + getCompanyName(companyId), 'success');
+            };
+            
+            // إضافة سائق
+            document.getElementById('extAddDriverBtn').onclick = function() {
+                var name = document.getElementById('extDriverName').value.trim();
+                var companyId = document.getElementById('extDriverCompany').value;
+                var phone = document.getElementById('extDriverPhone').value.trim();
+                if (!name) { window.showToast("⚠️ الرجاء إدخال اسم السائق", 'error'); return; }
+                if (!companyId) { window.showToast("⚠️ الرجاء اختيار الشركة", 'error'); return; }
+                
+                MedeaDrivers.push({ name: name, companyId: companyId, phone: phone, createdAt: new Date().toISOString() });
+                saveDrivers();
+                document.getElementById('extDriverName').value = '';
+                document.getElementById('extDriverPhone').value = '';
+                renderDriversList();
+                window.showToast("✅ تم إضافة السائق " + name + " لشركة " + getCompanyName(companyId), 'success');
+            };
+            
+            // التهيئة الأولية
+            renderCompaniesList();
+            renderSubAdminsList();
+            renderDriversList();
+            updateSelects();
+            
+        }, 500);
+    }
 
-    // ===================== الشهادات =====================
-    window.CertificateSystem = {
-        generateCertificate: function(userName, points) {
-            var canvas = document.createElement('canvas');
-            canvas.width = 800; canvas.height = 600;
-            var ctx = canvas.getContext('2d');
-            ctx.fillStyle = '#ffffff'; ctx.fillRect(0, 0, 800, 600);
-            ctx.strokeStyle = '#006233'; ctx.lineWidth = 12; ctx.strokeRect(20, 20, 760, 560);
-            ctx.textAlign = 'center';
-            ctx.font = 'bold 36px Cairo'; ctx.fillStyle = '#006233'; ctx.fillText('🏆 شهادة تقدير من ولاية المدية', 400, 100);
-            ctx.font = '24px Cairo'; ctx.fillStyle = '#333333'; ctx.fillText('نقدم هذا الشكر للسائق المتميز:', 400, 200);
-            ctx.font = 'bold 40px Cairo'; ctx.fillStyle = '#f59e0b'; ctx.fillText(userName, 400, 300);
-            ctx.font = '20px Cairo'; ctx.fillStyle = '#333333'; ctx.fillText('لمساهمته في تحقيق ' + points + ' نقطة', 400, 420);
-            var link = document.createElement('a');
-            link.download = 'Medea_Certificate_' + userName.replace(/\s/g, '_') + '.png';
-            link.href = canvas.toDataURL();
-            link.click();
-            window.VoiceAssistant.speak("تم إنشاء شهادة التقدير");
-        }
-    };
-
-    // ===================== تكامل دوال تسجيل الدخول =====================
+    // ===================== تعديل دوال تسجيل الدخول =====================
     var originalLoginAdmin = window.loginAdmin;
     if (typeof originalLoginAdmin === 'function') {
         window.loginAdmin = function() {
@@ -10520,19 +10242,17 @@ function optimizeDriverRoute(start, points) {
                 var adminName = document.getElementById('adminName')?.value;
                 if (adminName === 'مدير' || adminName === 'admin') {
                     localStorage.setItem('medea_current_admin_sector', 'public');
-                    localStorage.setItem('medea_current_admin_name', 'مدير');
-                    renderCompanyLegend();
-                    window.CompanyManager.injectUI();
+                    localStorage.setItem('medea_is_super_admin', 'true');
+                    injectCompanyManagementUI();
+                    showCompanyLegend();
                 } else {
                     var found = MedeaSubAdmins.find(function(a) { return a.name === adminName; });
                     if (found) {
                         localStorage.setItem('medea_current_admin_sector', found.companyId);
-                        localStorage.setItem('medea_current_admin_name', adminName);
-                        localStorage.setItem('medea_current_admin_company', getCompanyName(found.companyId));
-                        window.showToast("👋 مرحباً مشرف شركة " + getCompanyName(found.companyId), 'success');
+                        localStorage.setItem('medea_is_super_admin', 'false');
                     }
                 }
-            }, 200);
+            }, 600);
             return result;
         };
     }
@@ -10544,734 +10264,45 @@ function optimizeDriverRoute(start, points) {
             var found = MedeaDrivers.find(function(d) { return d.name === driverName; });
             if (found) {
                 localStorage.setItem('medea_current_driver_company', found.companyId);
-                localStorage.setItem('medea_current_driver_company_name', getCompanyName(found.companyId));
             }
-            var result = originalLoginDriver.apply(this, arguments);
-            setTimeout(function() {
-                window.SweepingSystem.injectSweepingUI();
-                var companyName = localStorage.getItem('medea_current_driver_company_name') || 'البلدية';
-                var welcomeEl = document.getElementById('driverWelcomeName');
-                if (welcomeEl) welcomeEl.innerHTML = '🚛 مرحباً ' + driverName + ' - ' + companyName;
-            }, 200);
-            return result;
+            return originalLoginDriver.apply(this, arguments);
         };
     }
-
-    // ===================== التهيئة العامة =====================
-    function initializeAddon() {
-        loadAllData();
-        window.CompanyManager.injectUI();
-        window.CitizenSweepingReport.injectReportButton();
-        setTimeout(function() {
-            if (localStorage.getItem('medea_current_admin_sector') === 'public') renderCompanyLegend();
-        }, 1500);
-        console.log("✅ Medea Clean 2026 - تم تحميل نظام الشركات والموظفين");
-        console.log("📋 الشركات:", Object.keys(MedeaCompanies).length);
-        console.log("👨‍💼 المشرفون:", MedeaSubAdmins.length);
-        console.log("🚛 السائقون:", MedeaDrivers.length);
-    }
     
-    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', initializeAddon);
-    else initializeAddon();
-    
-})();
-</script>
-<script>
-/* ========================================================================
- * MEDEA CLEAN 2026 - نظام الشركات والموظفين الديناميكي (V6.0)
- * - المشرف الرئيسي يضيف الشركات (جمع نفايات / كنس)
- * - المشرف الرئيسي يضيف مشرفين خاصين لكل شركة
- * - المشرف الرئيسي يضيف سائقين لكل شركة
- * - كل موظف يرتبط بشركته ويتم فلترة البيانات تلقائياً عند تسجيل الدخول
- * ======================================================================== */
-
-(function() {
-    'use strict';
-
-    // ===================== قاعدة البيانات الأساسية =====================
-    let MedeaCompanies = {};      // الشركات
-    let MedeaSubAdmins = [];      // المشرفين الخاصين (مرتبطين بشركة)
-    let MedeaDrivers = [];        // السائقين (مرتبطين بشركة)
-    
-    // تحميل جميع البيانات من localStorage
-    function loadAllData() {
-        // تحميل الشركات
-        var savedCompanies = localStorage.getItem('medea_companies_list');
-        if (savedCompanies) {
-            try { MedeaCompanies = JSON.parse(savedCompanies); } catch(e) {}
-        }
-        
-        // تحميل المشرفين الخاصين
-        var savedSubAdmins = localStorage.getItem('medea_sub_admins_list');
-        if (savedSubAdmins) {
-            try { MedeaSubAdmins = JSON.parse(savedSubAdmins); } catch(e) {}
-        }
-        
-        // تحميل السائقين
-        var savedDrivers = localStorage.getItem('medea_drivers_list');
-        if (savedDrivers) {
-            try { MedeaDrivers = JSON.parse(savedDrivers); } catch(e) {}
-        }
-        
-        // إذا لم تكن هناك شركات، نضيف شركة البلدية فقط
-        if (Object.keys(MedeaCompanies).length === 0) {
-            MedeaCompanies = {
-                "public": {
-                    id: "public",
-                    name: "بلدية المدية (المشرف العام)",
-                    color: "#006233",
-                    activity: "all",
-                    phone: "025123456",
-                    createdAt: new Date().toISOString()
-                }
-            };
-            saveCompanies();
-        }
-    }
-    
-    function saveCompanies() { localStorage.setItem('medea_companies_list', JSON.stringify(MedeaCompanies)); }
-    function saveSubAdmins() { localStorage.setItem('medea_sub_admins_list', JSON.stringify(MedeaSubAdmins)); }
-    function saveDrivers() { localStorage.setItem('medea_drivers_list', JSON.stringify(MedeaDrivers)); }
-    
-    // إنشاء لون عشوائي فريد
-    function getUniqueColor() {
-        var letters = '0123456789ABCDEF';
-        var colors = Object.values(MedeaCompanies).map(c => c.color);
-        var newColor;
-        do {
-            newColor = '#';
-            for (var i = 0; i < 6; i++) newColor += letters[Math.floor(Math.random() * 16)];
-        } while (colors.includes(newColor));
-        return newColor;
-    }
-    
-    // الحصول على اسم الشركة من ID
-    function getCompanyName(companyId) {
-        return MedeaCompanies[companyId]?.name || 'غير محدد';
-    }
-    
-    // الحصول على لون الشركة
-    function getCompanyColor(companyId) {
-        return MedeaCompanies[companyId]?.color || '#006233';
-    }
-
-    // ===================== المساعد الصوتي =====================
-    window.VoiceAssistant = {
-        speak: function(text) {
-            if (!('speechSynthesis' in window)) return;
-            window.speechSynthesis.cancel();
-            var utterance = new SpeechSynthesisUtterance(text);
-            utterance.lang = 'ar-SA';
-            utterance.rate = 0.9;
-            window.speechSynthesis.speak(utterance);
-        }
-    };
-
-    // ===================== عرض وسيلة إيضاح الشركات =====================
-    function renderCompanyLegend() {
-        var legendDiv = document.getElementById('medea-companies-legend');
-        if (legendDiv) legendDiv.remove();
-        
-        var currentSector = localStorage.getItem('medea_current_admin_sector') || 'public';
-        if (currentSector !== 'public') return;
-        
-        legendDiv = document.createElement('div');
-        legendDiv.id = 'medea-companies-legend';
-        legendDiv.className = 'card';
-        legendDiv.style.cssText = 'position:fixed; bottom:80px; left:10px; z-index:1000; background:var(--bg-card); padding:10px; border-radius:12px; box-shadow:0 2px 10px var(--shadow); font-size:12px; max-width:220px; border-right:3px solid var(--accent);';
-        
-        var html = '<b><i class="fas fa-chalkboard"></i> 📋 الشركات المتعاقدة</b><hr style="margin:5px 0">';
-        for (var key in MedeaCompanies) {
-            var comp = MedeaCompanies[key];
-            var activityName = comp.activity === 'collection' ? '🗑️ جمع نفايات' : (comp.activity === 'sweeping' ? '🧹 كنس شوارع' : '🏢 إدارة عامة');
-            html += '<div style="display:flex; align-items:center; gap:8px; margin-bottom:6px;">' +
-                    '<span style="display:inline-block; width:14px; height:14px; background:' + comp.color + '; border-radius:50%;"></span>' +
-                    '<span style="font-size:11px; flex:1"><b>' + comp.name + '</b><br><small>' + activityName + '</small></span>' +
-                    '</div>';
-        }
-        legendDiv.innerHTML = html;
-        document.body.appendChild(legendDiv);
-    }
-
-    // ===================== واجهة إدارة الشركات والموظفين =====================
-    window.CompanyManager = {
-        injectUI: function() {
-            setTimeout(function() {
-                var adminPanel = document.getElementById('adminPanel');
-                if (!adminPanel || document.getElementById('ext-company-manager')) return;
-                
-                var currentAdmin = localStorage.getItem('medea_current_admin_name');
-                if (currentAdmin !== 'مدير' && currentAdmin !== 'admin') return;
-                
-                var managerDiv = document.createElement('div');
-                managerDiv.id = 'ext-company-manager';
-                managerDiv.className = 'card';
-                managerDiv.style.marginTop = '10px';
-                managerDiv.style.borderRight = '4px solid var(--accent)';
-                managerDiv.innerHTML = `
-                    <h4 style="color:var(--primary); margin-bottom:15px;"><i class="fas fa-building"></i> 🏢 إدارة الشركات والموظفين</h4>
-                    
-                    <!-- ===== قسم إضافة شركة جديدة ===== -->
-                    <div style="margin-bottom:20px; padding:12px; background:var(--bg); border-radius:10px">
-                        <h5 style="color:var(--primary); margin-bottom:10px">➕ إضافة شركة جديدة</h5>
-                        <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px">
-                            <input type="text" id="newCompanyName" class="input" placeholder="اسم الشركة" style="margin:0">
-                            <select id="newCompanyActivity" class="input" style="margin:0">
-                                <option value="collection">🗑️ جمع النفايات</option>
-                                <option value="sweeping">🧹 كنس الشوارع</option>
-                            </select>
-                        </div>
-                        <div style="display:flex; gap:10px; margin-top:10px">
-                            <input type="color" id="newCompanyColor" class="input" style="flex:1; height:45px">
-                            <input type="text" id="newCompanyPhone" class="input" placeholder="📞 رقم الهاتف" style="flex:2">
-                        </div>
-                        <button id="addCompanyBtn" class="btn btn-primary ripple" style="margin-top:10px">✅ إضافة الشركة</button>
-                    </div>
-                    
-                    <!-- ===== قسم إضافة مشرف خاص ===== -->
-                    <div style="margin-bottom:20px; padding:12px; background:var(--bg); border-radius:10px">
-                        <h5 style="color:var(--primary); margin-bottom:10px">👨‍💼 إضافة مشرف خاص لشركة</h5>
-                        <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px">
-                            <input type="text" id="newSubAdminName" class="input" placeholder="اسم المشرف" style="margin:0">
-                            <select id="newSubAdminCompany" class="input" style="margin:0">
-                                <option value="">-- اختر الشركة --</option>
-                            </select>
-                        </div>
-                        <button id="addSubAdminBtn" class="btn btn-warning ripple" style="margin-top:10px">➕ إضافة مشرف خاص</button>
-                    </div>
-                    
-                    <!-- ===== قسم إضافة سائق ===== -->
-                    <div style="margin-bottom:20px; padding:12px; background:var(--bg); border-radius:10px">
-                        <h5 style="color:var(--primary); margin-bottom:10px">🚛 إضافة سائق لشركة</h5>
-                        <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px">
-                            <input type="text" id="newDriverName" class="input" placeholder="اسم السائق" style="margin:0">
-                            <select id="newDriverCompany" class="input" style="margin:0">
-                                <option value="">-- اختر الشركة --</option>
-                            </select>
-                        </div>
-                        <input type="text" id="newDriverPhone" class="input" placeholder="📞 رقم هاتف السائق" style="margin-top:10px">
-                        <button id="addDriverBtn" class="btn btn-success ripple" style="margin-top:10px">➕ إضافة سائق</button>
-                    </div>
-                    
-                    <!-- ===== عرض قائمة الشركات ===== -->
-                    <div id="companiesListSection" style="margin-top:15px">
-                        <h5 style="color:var(--primary); margin-bottom:10px"><i class="fas fa-list"></i> 📋 قائمة الشركات</h5>
-                        <div id="companiesListContainer" style="max-height:250px; overflow-y:auto"></div>
-                    </div>
-                    
-                    <!-- ===== عرض قائمة المشرفين الخاصين ===== -->
-                    <div style="margin-top:15px">
-                        <h5 style="color:var(--primary); margin-bottom:10px"><i class="fas fa-user-shield"></i> 👨‍💼 المشرفون الخاصون</h5>
-                        <div id="subAdminsListContainer" style="max-height:200px; overflow-y:auto"></div>
-                    </div>
-                    
-                    <!-- ===== عرض قائمة السائقين ===== -->
-                    <div style="margin-top:15px">
-                        <h5 style="color:var(--primary); margin-bottom:10px"><i class="fas fa-truck"></i> 🚛 السائقون</h5>
-                        <div id="driversListContainer" style="max-height:200px; overflow-y:auto"></div>
-                    </div>
-                `;
-                adminPanel.insertBefore(managerDiv, adminPanel.firstChild);
-                
-                // تحديث القوائم المنسدلة
-                function updateSelects() {
-                    var companySelect = document.getElementById('newSubAdminCompany');
-                    var driverCompanySelect = document.getElementById('newDriverCompany');
-                    
-                    var options = '<option value="">-- اختر الشركة --</option>';
-                    for (var key in MedeaCompanies) {
-                        if (key !== 'public') {
-                            var comp = MedeaCompanies[key];
-                            var icon = comp.activity === 'collection' ? '🗑️' : '🧹';
-                            options += '<option value="' + key + '">' + icon + ' ' + comp.name + '</option>';
-                        }
-                    }
-                    if (companySelect) companySelect.innerHTML = options;
-                    if (driverCompanySelect) driverCompanySelect.innerHTML = options;
-                }
-                
-                // عرض قائمة الشركات
-                function renderCompaniesList() {
-                    var container = document.getElementById('companiesListContainer');
-                    if (!container) return;
-                    
-                    var html = '';
-                    for (var key in MedeaCompanies) {
-                        if (key !== 'public') {
-                            var comp = MedeaCompanies[key];
-                            var activityName = comp.activity === 'collection' ? '🗑️ جمع نفايات' : '🧹 كنس شوارع';
-                            html += `
-                                <div style="display:flex; justify-content:space-between; align-items:center; padding:8px; margin:5px 0; background:var(--bg-card); border-radius:8px; border-right:4px solid ${comp.color}">
-                                    <div>
-                                        <div style="font-weight:700">${comp.name}</div>
-                                        <div style="font-size:10px; color:#888">${activityName} | 📞 ${comp.phone || 'غير مسجل'}</div>
-                                    </div>
-                                    <div style="display:flex; gap:5px">
-                                        <span style="display:inline-block; width:20px; height:20px; background:${comp.color}; border-radius:50%; border:2px solid #fff"></span>
-                                        <button class="delete-company-btn" data-id="${key}" style="background:#dc3545; color:white; border:none; border-radius:50%; width:28px; height:28px; cursor:pointer; font-size:12px">🗑️</button>
-                                    </div>
-                                </div>
-                            `;
-                        }
-                    }
-                    
-                    if (Object.keys(MedeaCompanies).filter(k => k !== 'public').length === 0) {
-                        html = '<div style="text-align:center; padding:15px; color:#888">📭 لا توجد شركات خاصة مسجلة</div>';
-                    }
-                    container.innerHTML = html;
-                    
-                    document.querySelectorAll('.delete-company-btn').forEach(btn => {
-                        btn.onclick = function() {
-                            var companyId = this.getAttribute('data-id');
-                            if (confirm('⚠️ هل أنت متأكد من حذف شركة "' + MedeaCompanies[companyId]?.name + '"؟\nسيتم حذف جميع المشرفين والسائقين المرتبطين بها!')) {
-                                // حذف الشركة
-                                delete MedeaCompanies[companyId];
-                                saveCompanies();
-                                
-                                // حذف المشرفين المرتبطين بهذه الشركة
-                                MedeaSubAdmins = MedeaSubAdmins.filter(a => a.companyId !== companyId);
-                                saveSubAdmins();
-                                
-                                // حذف السائقين المرتبطين بهذه الشركة
-                                MedeaDrivers = MedeaDrivers.filter(d => d.companyId !== companyId);
-                                saveDrivers();
-                                
-                                renderCompaniesList();
-                                renderSubAdminsList();
-                                renderDriversList();
-                                updateSelects();
-                                renderCompanyLegend();
-                                window.VoiceAssistant.speak("تم حذف الشركة وجميع موظفيها");
-                                window.showToast("تم حذف الشركة", 'success');
-                            }
-                        };
-                    });
-                }
-                
-                // عرض قائمة المشرفين الخاصين
-                function renderSubAdminsList() {
-                    var container = document.getElementById('subAdminsListContainer');
-                    if (!container) return;
-                    
-                    if (MedeaSubAdmins.length === 0) {
-                        container.innerHTML = '<div style="text-align:center; padding:15px; color:#888">📭 لا يوجد مشرفون خاصون</div>';
-                        return;
-                    }
-                    
-                    var html = '';
-                    MedeaSubAdmins.forEach((admin, idx) => {
-                        var companyName = getCompanyName(admin.companyId);
-                        var companyColor = getCompanyColor(admin.companyId);
-                        html += `
-                            <div style="display:flex; justify-content:space-between; align-items:center; padding:8px; margin:5px 0; background:var(--bg-card); border-radius:8px; border-right:3px solid ${companyColor}">
-                                <div>
-                                    <div style="font-weight:700">👤 ${admin.name}</div>
-                                    <div style="font-size:11px; color:#888">🏢 ${companyName}</div>
-                                </div>
-                                <button class="delete-subadmin-btn" data-idx="${idx}" style="background:#dc3545; color:white; border:none; border-radius:50%; width:28px; height:28px; cursor:pointer">🗑️</button>
-                            </div>
-                        `;
-                    });
-                    container.innerHTML = html;
-                    
-                    document.querySelectorAll('.delete-subadmin-btn').forEach(btn => {
-                        btn.onclick = function() {
-                            var idx = parseInt(this.getAttribute('data-idx'));
-                            if (confirm('⚠️ هل أنت متأكد من حذف المشرف "' + MedeaSubAdmins[idx]?.name + '"؟')) {
-                                MedeaSubAdmins.splice(idx, 1);
-                                saveSubAdmins();
-                                renderSubAdminsList();
-                                window.showToast("تم حذف المشرف", 'success');
-                            }
-                        };
-                    });
-                }
-                
-                // عرض قائمة السائقين
-                function renderDriversList() {
-                    var container = document.getElementById('driversListContainer');
-                    if (!container) return;
-                    
-                    if (MedeaDrivers.length === 0) {
-                        container.innerHTML = '<div style="text-align:center; padding:15px; color:#888">📭 لا يوجد سائقون مسجلون</div>';
-                        return;
-                    }
-                    
-                    var html = '';
-                    MedeaDrivers.forEach((driver, idx) => {
-                        var companyName = getCompanyName(driver.companyId);
-                        var companyColor = getCompanyColor(driver.companyId);
-                        html += `
-                            <div style="display:flex; justify-content:space-between; align-items:center; padding:8px; margin:5px 0; background:var(--bg-card); border-radius:8px; border-right:3px solid ${companyColor}">
-                                <div>
-                                    <div style="font-weight:700">🚛 ${driver.name}</div>
-                                    <div style="font-size:11px; color:#888">🏢 ${companyName} | 📞 ${driver.phone || 'غير مسجل'}</div>
-                                </div>
-                                <button class="delete-driver-btn" data-idx="${idx}" style="background:#dc3545; color:white; border:none; border-radius:50%; width:28px; height:28px; cursor:pointer">🗑️</button>
-                            </div>
-                        `;
-                    });
-                    container.innerHTML = html;
-                    
-                    document.querySelectorAll('.delete-driver-btn').forEach(btn => {
-                        btn.onclick = function() {
-                            var idx = parseInt(this.getAttribute('data-idx'));
-                            if (confirm('⚠️ هل أنت متأكد من حذف السائق "' + MedeaDrivers[idx]?.name + '"؟')) {
-                                MedeaDrivers.splice(idx, 1);
-                                saveDrivers();
-                                renderDriversList();
-                                window.showToast("تم حذف السائق", 'success');
-                            }
-                        };
-                    });
-                }
-                
-                // إضافة شركة جديدة
-                document.getElementById('addCompanyBtn').onclick = function() {
-                    var name = document.getElementById('newCompanyName').value.trim();
-                    var activity = document.getElementById('newCompanyActivity').value;
-                    var color = document.getElementById('newCompanyColor').value;
-                    var phone = document.getElementById('newCompanyPhone').value.trim();
-                    
-                    if (!name) { window.showToast("⚠️ الرجاء إدخال اسم الشركة", 'error'); return; }
-                    
-                    var companyId = 'company_' + Date.now();
-                    MedeaCompanies[companyId] = {
-                        id: companyId,
-                        name: name,
-                        color: color || getUniqueColor(),
-                        activity: activity,
-                        phone: phone,
-                        createdAt: new Date().toISOString()
-                    };
-                    saveCompanies();
-                    
-                    document.getElementById('newCompanyName').value = '';
-                    document.getElementById('newCompanyPhone').value = '';
-                    document.getElementById('newCompanyColor').value = getUniqueColor();
-                    
-                    renderCompaniesList();
-                    updateSelects();
-                    renderCompanyLegend();
-                    window.VoiceAssistant.speak("تم إضافة شركة " + name);
-                    window.showToast("✅ تم إضافة الشركة " + name, 'success');
-                };
-                
-                // إضافة مشرف خاص
-                document.getElementById('addSubAdminBtn').onclick = function() {
-                    var name = document.getElementById('newSubAdminName').value.trim();
-                    var companyId = document.getElementById('newSubAdminCompany').value;
-                    
-                    if (!name) { window.showToast("⚠️ الرجاء إدخال اسم المشرف", 'error'); return; }
-                    if (!companyId) { window.showToast("⚠️ الرجاء اختيار الشركة", 'error'); return; }
-                    
-                    MedeaSubAdmins.push({
-                        name: name,
-                        companyId: companyId,
-                        createdAt: new Date().toISOString()
-                    });
-                    saveSubAdmins();
-                    
-                    document.getElementById('newSubAdminName').value = '';
-                    renderSubAdminsList();
-                    window.VoiceAssistant.speak("تم إضافة المشرف " + name + " لشركة " + getCompanyName(companyId));
-                    window.showToast("✅ تم إضافة المشرف " + name, 'success');
-                };
-                
-                // إضافة سائق
-                document.getElementById('addDriverBtn').onclick = function() {
-                    var name = document.getElementById('newDriverName').value.trim();
-                    var companyId = document.getElementById('newDriverCompany').value;
-                    var phone = document.getElementById('newDriverPhone').value.trim();
-                    
-                    if (!name) { window.showToast("⚠️ الرجاء إدخال اسم السائق", 'error'); return; }
-                    if (!companyId) { window.showToast("⚠️ الرجاء اختيار الشركة", 'error'); return; }
-                    
-                    MedeaDrivers.push({
-                        name: name,
-                        companyId: companyId,
-                        phone: phone,
-                        createdAt: new Date().toISOString()
-                    });
-                    saveDrivers();
-                    
-                    document.getElementById('newDriverName').value = '';
-                    document.getElementById('newDriverPhone').value = '';
-                    renderDriversList();
-                    window.VoiceAssistant.speak("تم إضافة السائق " + name + " لشركة " + getCompanyName(companyId));
-                    window.showToast("✅ تم إضافة السائق " + name, 'success');
-                };
-                
-                // التهيئة الأولية
-                renderCompaniesList();
-                renderSubAdminsList();
-                renderDriversList();
-                updateSelects();
-            }, 1000);
-        }
-    };
-
-    // ===================== نظام الكنس =====================
-    let activeSweeping = null;
-    let sweepingInterval = null;
-    let sweepingTimerInterval = null;
-
+    // واجهة نظام الكنس للسائقين
     window.SweepingSystem = {
         startMission: function(streetName) {
-            if (activeSweeping) { window.VoiceAssistant.speak("يوجد مهمة كنس نشطة"); return; }
-            
-            if (!streetName) {
-                streetName = prompt("📍 أدخل اسم الشارع المراد كنسه:", "شارع الاستقلال");
-                if (!streetName) return;
-            }
-            
-            var currentDriverCompany = localStorage.getItem('medea_current_driver_company') || 'public';
-            var companyColor = getCompanyColor(currentDriverCompany);
-            
-            activeSweeping = {
-                id: Date.now(),
-                street: streetName,
-                startTime: new Date(),
-                status: 'active',
-                distance: 0,
-                lastPos: null,
-                driver: window.currentDriver || 'سائق',
-                companyId: currentDriverCompany
-            };
-            localStorage.setItem('medea_active_sweeping', JSON.stringify(activeSweeping));
-            
-            var infoDiv = document.getElementById('activeSweepingInfo');
-            if (infoDiv) {
-                infoDiv.style.display = 'block';
-                document.getElementById('sweepingStreetName').innerHTML = '<i class="fas fa-road"></i> ' + streetName;
-                infoDiv.style.borderRight = '4px solid ' + companyColor;
-            }
-            
-            if (navigator.geolocation) {
-                sweepingInterval = setInterval(function() {
-                    navigator.geolocation.getCurrentPosition(function(pos) {
-                        if (activeSweeping && activeSweeping.lastPos) {
-                            var d = window.SweepingSystem.calcDistance(activeSweeping.lastPos, { lat: pos.coords.latitude, lng: pos.coords.longitude });
-                            activeSweeping.distance += d;
-                            localStorage.setItem('medea_active_sweeping', JSON.stringify(activeSweeping));
-                            var distEl = document.getElementById('sweepingDistance');
-                            if (distEl) distEl.innerHTML = activeSweeping.distance.toFixed(2) + ' كم';
-                        }
-                        if (activeSweeping) activeSweeping.lastPos = { lat: pos.coords.latitude, lng: pos.coords.longitude };
-                    }, null, { enableHighAccuracy: true });
-                }, 5000);
-            }
-            
-            sweepingTimerInterval = setInterval(function() {
-                if (activeSweeping) {
-                    var elapsed = Math.floor((new Date() - activeSweeping.startTime) / 1000);
-                    var m = Math.floor(elapsed / 60);
-                    var s = elapsed % 60;
-                    var timerEl = document.getElementById('sweepingTimer');
-                    if (timerEl) timerEl.innerHTML = m + ':' + s.toString().padStart(2,'0');
-                }
-            }, 1000);
-            
-            window.VoiceAssistant.speak("بدأت مهمة كنس شارع " + streetName);
+            if (!streetName) streetName = prompt("📍 أدخل اسم الشارع المراد كنسه:", "شارع الاستقلال");
+            if (!streetName) return;
             window.showToast("🧹 بدء كنس " + streetName, 'success');
-        },
-        
-        calcDistance: function(p1, p2) {
-            var R = 6371;
-            var dLat = (p2.lat - p1.lat) * Math.PI / 180;
-            var dLon = (p2.lng - p1.lng) * Math.PI / 180;
-            var a = Math.sin(dLat/2) * Math.sin(dLat/2) + Math.cos(p1.lat * Math.PI / 180) * Math.cos(p2.lat * Math.PI / 180) * Math.sin(dLon/2) * Math.sin(dLon/2);
-            return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-        },
-        
-        endMission: function() {
-            if (!activeSweeping) return;
-            if (sweepingInterval) clearInterval(sweepingInterval);
-            if (sweepingTimerInterval) clearInterval(sweepingTimerInterval);
-            
-            var records = JSON.parse(localStorage.getItem('medea_sweeping_records') || '[]');
-            activeSweeping.endTime = new Date();
-            records.push(activeSweeping);
-            localStorage.setItem('medea_sweeping_records', JSON.stringify(records));
-            
-            var points = Math.floor(activeSweeping.distance * 10);
-            window.VoiceAssistant.speak("تم إنهاء كنس " + activeSweeping.street + " بمسافة " + activeSweeping.distance.toFixed(2) + " كم");
-            window.showToast("✅ تم توثيق كنس " + activeSweeping.street + " (+" + points + " نقطة)", 'success');
-            
-            var currentPoints = parseInt(localStorage.getItem('medea_points') || '0') + points;
-            localStorage.setItem('medea_points', currentPoints);
-            var pointsEl = document.getElementById('userPoints');
-            if (pointsEl) pointsEl.textContent = currentPoints;
-            
-            activeSweeping = null;
-            localStorage.removeItem('medea_active_sweeping');
-            var infoDiv = document.getElementById('activeSweepingInfo');
-            if (infoDiv) infoDiv.style.display = 'none';
-        },
-        
-        injectSweepingUI: function() {
-            setTimeout(function() {
-                var driverPanel = document.getElementById('driverPanel');
-                if (!driverPanel || document.getElementById('ext-sweeping-card')) return;
-                
-                var currentCompany = localStorage.getItem('medea_current_driver_company') || 'public';
-                var companyColor = getCompanyColor(currentCompany);
-                var companyName = getCompanyName(currentCompany);
-                
-                var card = document.createElement('div');
-                card.id = 'ext-sweeping-card';
-                card.className = 'card';
-                card.style.borderRight = '4px solid ' + companyColor;
-                card.innerHTML = `
-                    <h3 style="color:${companyColor}"><i class="fas fa-broom"></i> 🧹 مهام الكنس - ${companyName}</h3>
-                    <div id="sweepingTasksList">✨ يمكنك بدء مهمة كنس جديدة</div>
-                    <button id="startSweepingBtn" class="btn btn-warning ripple" style="background:${companyColor}; margin-top:8px">
-                        <i class="fas fa-play"></i> ▶️ بدء مهمة كنس جديدة
-                    </button>
-                    <div id="activeSweepingInfo" style="display:none; margin-top:10px; padding:10px; background:var(--bg); border-radius:8px">
-                        <div><i class="fas fa-road"></i> 🏞️ <span id="sweepingStreetName"></span></div>
-                        <div><i class="fas fa-stopwatch"></i> ⏱️ <span id="sweepingTimer">00:00</span></div>
-                        <div><i class="fas fa-route"></i> 📍 <span id="sweepingDistance">0.00 كم</span></div>
-                        <button id="endSweepingBtn" class="btn btn-success ripple" style="margin-top:8px">✅ إنهاء الكنس</button>
-                    </div>
-                `;
-                driverPanel.appendChild(card);
-                
-                document.getElementById('startSweepingBtn').onclick = function() { window.SweepingSystem.startMission(); };
-                document.getElementById('endSweepingBtn').onclick = function() { window.SweepingSystem.endMission(); };
-                
-                var saved = localStorage.getItem('medea_active_sweeping');
-                if (saved) {
-                    try {
-                        activeSweeping = JSON.parse(saved);
-                        if (activeSweeping && activeSweeping.status === 'active') {
-                            document.getElementById('activeSweepingInfo').style.display = 'block';
-                            document.getElementById('sweepingStreetName').innerHTML = activeSweeping.street;
-                        }
-                    } catch(e) {}
-                }
-            }, 500);
+            window.VoiceAssistant?.speak("بدأت مهمة كنس شارع " + streetName);
         }
     };
-
-    // ===================== الإبلاغ عن حاجة للكنس =====================
-    window.CitizenSweepingReport = {
-        injectReportButton: function() {
-            setTimeout(function() {
-                var homePage = document.getElementById('home');
-                if (!homePage || document.getElementById('ext-sweeping-report-btn')) return;
-                
-                var firstBtn = homePage.querySelector('.btn-primary.mb');
-                if (firstBtn) {
-                    var btn = document.createElement('button');
-                    btn.id = 'ext-sweeping-report-btn';
-                    btn.className = 'btn btn-warning ripple';
-                    btn.style.marginTop = '10px';
-                    btn.style.background = '#f59e0b';
-                    btn.innerHTML = '<i class="fas fa-broom"></i> 🧹 الإبلاغ عن شارع يحتاج كنساً';
-                    btn.onclick = function() { window.CitizenSweepingReport.showReportDialog(); };
-                    firstBtn.parentNode.insertBefore(btn, firstBtn.nextSibling);
-                }
-            }, 500);
-        },
-        
-        showReportDialog: function() {
-            var street = prompt("📍 أدخل اسم الشارع أو المنطقة التي تحتاج إلى كنس:", "");
-            if (street) {
-                var report = { id: Date.now(), type: 'sweeping_request', location: street, citizen: 'مواطن', date: new Date().toISOString(), status: 'pending' };
-                var requests = JSON.parse(localStorage.getItem('medea_sweeping_requests') || '[]');
-                requests.push(report);
-                localStorage.setItem('medea_sweeping_requests', JSON.stringify(requests));
-                window.VoiceAssistant.speak("تم استلام طلب كنس شارع " + street);
-                window.showToast("📢 تم الإبلاغ عن حاجة شارع " + street + " للكنس", 'success');
-            }
+    
+    // وظيفة الإبلاغ عن كنس للمواطن
+    window.reportSweepingNeed = function() {
+        var street = prompt("📍 أدخل اسم الشارع الذي يحتاج إلى كنس:", "");
+        if (street) {
+            window.showToast("📢 تم الإبلاغ عن حاجة شارع " + street + " للكنس", 'success');
+            window.VoiceAssistant?.speak("تم استلام طلب كنس شارع " + street);
         }
     };
-
-    // ===================== الشهادات =====================
-    window.CertificateSystem = {
-        generateCertificate: function(userName, points) {
-            var canvas = document.createElement('canvas');
-            canvas.width = 800; canvas.height = 600;
-            var ctx = canvas.getContext('2d');
-            ctx.fillStyle = '#ffffff'; ctx.fillRect(0, 0, 800, 600);
-            ctx.strokeStyle = '#006233'; ctx.lineWidth = 12; ctx.strokeRect(20, 20, 760, 560);
-            ctx.textAlign = 'center';
-            ctx.font = 'bold 36px Cairo'; ctx.fillStyle = '#006233'; ctx.fillText('🏆 شهادة تقدير من ولاية المدية', 400, 100);
-            ctx.font = '24px Cairo'; ctx.fillStyle = '#333333'; ctx.fillText('نقدم هذا الشكر للسائق المتميز:', 400, 200);
-            ctx.font = 'bold 40px Cairo'; ctx.fillStyle = '#f59e0b'; ctx.fillText(userName, 400, 300);
-            ctx.font = '20px Cairo'; ctx.fillStyle = '#333333'; ctx.fillText('لمساهمته في تحقيق ' + points + ' نقطة', 400, 420);
-            var link = document.createElement('a');
-            link.download = 'Medea_Certificate_' + userName.replace(/\s/g, '_') + '.png';
-            link.href = canvas.toDataURL();
-            link.click();
-            window.VoiceAssistant.speak("تم إنشاء شهادة التقدير");
-        }
-    };
-
-    // ===================== تكامل دوال تسجيل الدخول =====================
-    var originalLoginAdmin = window.loginAdmin;
-    if (typeof originalLoginAdmin === 'function') {
-        window.loginAdmin = function() {
-            var result = originalLoginAdmin.apply(this, arguments);
-            setTimeout(function() {
-                var adminName = document.getElementById('adminName')?.value;
-                if (adminName === 'مدير' || adminName === 'admin') {
-                    localStorage.setItem('medea_current_admin_sector', 'public');
-                    localStorage.setItem('medea_current_admin_name', 'مدير');
-                    renderCompanyLegend();
-                    window.CompanyManager.injectUI();
-                } else {
-                    var found = MedeaSubAdmins.find(function(a) { return a.name === adminName; });
-                    if (found) {
-                        localStorage.setItem('medea_current_admin_sector', found.companyId);
-                        localStorage.setItem('medea_current_admin_name', adminName);
-                        localStorage.setItem('medea_current_admin_company', getCompanyName(found.companyId));
-                        window.showToast("👋 مرحباً مشرف شركة " + getCompanyName(found.companyId), 'success');
-                    }
-                }
-            }, 200);
-            return result;
-        };
+    
+    // ===================== التهيئة =====================
+    loadAllData();
+    
+    // محاولة إضافة الواجهة بعد تحميل الصفحة
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', function() {
+            setTimeout(injectCompanyManagementUI, 1000);
+        });
+    } else {
+        setTimeout(injectCompanyManagementUI, 1000);
     }
     
-    var originalLoginDriver = window.loginDriver;
-    if (typeof originalLoginDriver === 'function') {
-        window.loginDriver = function() {
-            var driverName = document.getElementById('driverName')?.value;
-            var found = MedeaDrivers.find(function(d) { return d.name === driverName; });
-            if (found) {
-                localStorage.setItem('medea_current_driver_company', found.companyId);
-                localStorage.setItem('medea_current_driver_company_name', getCompanyName(found.companyId));
-            }
-            var result = originalLoginDriver.apply(this, arguments);
-            setTimeout(function() {
-                window.SweepingSystem.injectSweepingUI();
-                var companyName = localStorage.getItem('medea_current_driver_company_name') || 'البلدية';
-                var welcomeEl = document.getElementById('driverWelcomeName');
-                if (welcomeEl) welcomeEl.innerHTML = '🚛 مرحباً ' + driverName + ' - ' + companyName;
-            }, 200);
-            return result;
-        };
-    }
-
-    // ===================== التهيئة العامة =====================
-    function initializeAddon() {
-        loadAllData();
-        window.CompanyManager.injectUI();
-        window.CitizenSweepingReport.injectReportButton();
-        setTimeout(function() {
-            if (localStorage.getItem('medea_current_admin_sector') === 'public') renderCompanyLegend();
-        }, 1500);
-        console.log("✅ Medea Clean 2026 - تم تحميل نظام الشركات والموظفين");
-        console.log("📋 الشركات:", Object.keys(MedeaCompanies).length);
-        console.log("👨‍💼 المشرفون:", MedeaSubAdmins.length);
-        console.log("🚛 السائقون:", MedeaDrivers.length);
-    }
-    
-    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', initializeAddon);
-    else initializeAddon();
+    console.log("✅ Medea Clean - تم تحميل نظام إدارة الشركات");
     
 })();
 </script>
+
 </body></html>
