@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
 <meta charset="UTF-8">
@@ -2255,7 +2255,11 @@ select.input {
         </button>
         <button class="btn btn-success ripple" onclick="showPage('recycling')">
           <i class="fas fa-recycle"></i> <span data-i18n="recyclingCalc">حاسبة التدوير</span>
-        </button>      </div>
+        </button>
+        <button class="btn ripple" style="background:var(--accent); color:white" onclick="MedeaExtension.generateCertificate(prompt('أدخل اسمك للشهادة:'), userPoints)">
+          <i class="fas fa-award"></i> <span>شهادتي الرقمية</span>
+        </button>
+      </div>
     </div>
 
     <div class="card hover-lift">
@@ -5233,20 +5237,27 @@ function completeTask(id) {
     if(!window._driverAfterImages) window._driverAfterImages = {};
     const afterImg = window._driverAfterImages[id] || tempAfterImage;
     
-    if(!afterImg && !confirm('لم يتم التصوير بعد التنفيذ. متابعة بدون صورة؟')) return;
+    if(!afterImg) {
+        if(confirm('نظام "قبل وبعد" يتطلب صورة للنتيجة النهائية. هل تريد التقاط صورة الآن؟')) {
+            driverTakeAfterPhoto(id);
+        }
+        return;
+    }
+    
+    // استخدام الدالة الجديدة المدمجة
+    MedeaExtension.closeTaskWithImage(id, afterImg);
     
     const now = new Date();
     const u = {
       status: 'done',
       doneTime: now.toLocaleTimeString('ar-DZ'),
       doneDate: now.toLocaleDateString('ar-DZ'),
-      doneByDriver: currentDriver
+      doneByDriver: currentDriver,
+      doneImage: afterImg
     };
-    if(afterImg) u.doneImage = afterImg;
     
     updateReport(id, u);
     
-    // تنظيف الصورة المؤقتة
     if(window._driverAfterImages[id]) delete window._driverAfterImages[id];
     tempAfterImage = null;
     
@@ -9765,6 +9776,11 @@ function optimizeDriverRoute(start, points) {
             const home = JSON.parse(localStorage.getItem('medea_home_loc'));
             if (home && truckLoc && calculateDistanceBetweenPoints(home, truckLoc) <= 0.5) {
                 showToast('⚠️ الشاحنة تقترب من منزلك!', 'warning');
+                // استدعاء المساعد الصوتي
+                if (!window._lastVoiceAlert || Date.now() - window._lastVoiceAlert > 60000) {
+                    this.speakAlert("تنبيه: أنت الآن على بعد أقل من مئتي متر من نقطة تجمع نفايات");
+                    window._lastVoiceAlert = Date.now();
+                }
             }
         },
 
@@ -9803,6 +9819,46 @@ function optimizeDriverRoute(start, points) {
                     showToast('تم الحفظ أوفلاين', 'warning'); showPage('home');
                 } else oldSend();
             };
+        },
+
+        // 1. ميزة النطق الصوتي للتنبيهات
+        speakAlert: function(message) {
+            if ('speechSynthesis' in window) {
+                const msg = new SpeechSynthesisUtterance(message);
+                msg.lang = 'ar-SA'; // لغة عربية فصيحة
+                msg.pitch = 1;      // طبقة الصوت
+                msg.rate = 0.9;     // السرعة
+                window.speechSynthesis.speak(msg);
+            }
+        },
+
+        // 2. كود الشهادة الرقمية
+        generateCertificate: function(userName, points) {
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            canvas.width = 800; canvas.height = 600;
+            ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, 800, 600);
+            ctx.strokeStyle = '#006233'; ctx.lineWidth = 20; ctx.strokeRect(10, 10, 780, 580);
+            ctx.fillStyle = '#333'; ctx.font = 'bold 40px Cairo'; ctx.textAlign = 'center';
+            ctx.fillText("شهادة تقدير ومواطنة", 400, 100);
+            ctx.font = '30px Cairo'; ctx.fillText("تمنح ولاية المدية هذه الشهادة للفخر للمواطن(ة):", 400, 200);
+            ctx.fillStyle = '#c09300'; ctx.font = 'bold 45px Cairo'; ctx.fillText(userName || "مواطن مخلص", 400, 300);
+            ctx.fillStyle = '#333'; ctx.font = '25px Cairo';
+            ctx.fillText(`لمساهمته الفعالة في نظافة المدينة بجمع ${points || 0} نقطة`, 400, 400);
+            const link = document.createElement('a');
+            link.download = `شهادة_المدية_${userName || 'مواطن'}.png`;
+            link.href = canvas.toDataURL(); link.click();
+        },
+
+        // 3. نظام "قبل وبعد"
+        closeTaskWithImage: async function(taskId, imageFile) {
+            const updates = {};
+            updates[`reports/${taskId}/status`] = 'completed';
+            updates[`reports/${taskId}/afterImage`] = imageFile || "رابط_الصورة_هنا";
+            updates[`reports/${taskId}/completionTime`] = new Date().toISOString();
+            if (typeof db !== 'undefined') await db.ref().update(updates);
+            alert("تم إنهاء المهمة بنجاح، شكراً لجهودك في تنظيف المدية!");
+            renderDriverTasks();
         }
     };
 
@@ -9826,6 +9882,9 @@ function optimizeDriverRoute(start, points) {
                         </button>
                         <button class="btn ripple" style="background:var(--primary); color:white" onclick="MedeaExtension.saveHomeLoc()">
                             <i class="fas fa-home"></i> تنبيهات الوصول
+                        </button>
+                        <button class="btn ripple" style="background:var(--accent); color:white" onclick="MedeaExtension.generateCertificate(prompt('أدخل اسمك للشهادة:'), userPoints)">
+                            <i class="fas fa-award"></i> شهادتي الرقمية
                         </button>
                         <button class="btn ripple" style="background:#4b6cb7; color:white" onclick="showPage('report')">
                             <i class="fas fa-microphone"></i> إبلاغ ذكي
