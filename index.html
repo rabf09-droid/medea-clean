@@ -2899,11 +2899,23 @@ select.input {
     <div class="card">
       <h3><i class="fas fa-user-plus"></i> <span data-i18n="addStaffTitle">إضافة موظف</span></h3>
       <input type="text" id="newStaffName" class="input" placeholder="👤 الاسم" data-i18n-ph="nameFullPh">
-      <select id="newStaffRole" class="input" style="cursor:pointer;color:var(--text)">
+      <select id="newStaffRole" class="input" style="cursor:pointer;color:var(--text)" onchange="toggleSectorSelect()">
         <option value="" disabled selected>💼 اختر المنصب</option>
         <option value="سائق">🚛 سائق</option>
         <option value="مشرف">🏛️ مسؤول (مشرف)</option>
       </select>
+      <select id="newStaffSector" class="input" style="cursor:pointer;color:var(--text);display:none">
+        <option value="all">🏛️ مشرف عام (بلدية المدية)</option>
+        <option value="company_A">🔵 مشرف قطاع خاص (شركة أ)</option>
+        <option value="company_B">🔵 مشرف قطاع خاص (شركة ب)</option>
+      </select>
+      <script>
+        function toggleSectorSelect() {
+          const role = document.getElementById('newStaffRole').value;
+          const sectorSelect = document.getElementById('newStaffSector');
+          sectorSelect.style.display = (role === 'مشرف') ? 'block' : 'none';
+        }
+      </script>
       <input type="tel" id="newStaffPhone" class="input" placeholder="📞 الهاتف" data-i18n-ph="phonePh">
       <button class="btn btn-primary ripple" onclick="addStaff()">
         <i class="fas fa-save"></i> <span data-i18n="save">حفظ</span>
@@ -4698,10 +4710,12 @@ function loginAdmin() {
       (s.role.includes('مشرف') || s.role.includes('مسؤول'))
     );
     if(isApprovedAdmin) {
+      const adminData = staff.find(s => s.name && s.name.trim() === subName);
+      window.currentAdminSector = adminData ? (adminData.sector || 'all') : 'all';
       document.getElementById('adminLogin').classList.add('hidden');
       document.getElementById('adminPanel').classList.remove('hidden');
       currentAdminName = subName;
-      document.getElementById('adminCurrentUser').textContent = 'المسؤول: ' + subName;
+      document.getElementById('adminCurrentUser').textContent = 'المسؤول: ' + subName + (window.currentAdminSector !== 'all' ? ' (' + window.currentAdminSector + ')' : '');
       // إخفاء الإعدادات الرئيسية عن المسؤول الفرعي
       const settingsSection = document.getElementById('adminSettingsSection');
       if(settingsSection) settingsSection.style.display = 'none';
@@ -5281,7 +5295,8 @@ function submitRequest() {
       return;
     }
     
-    const requests = JSON.parse(localStorage.getItem('medea_requests') || '[]');
+    let requests = JSON.parse(localStorage.getItem('medea_requests') || '[]');
+    requests = window.getFilteredData(requests, 'sector');
     requests.push({
       id: Date.now(),
       type: type,      desc: desc,
@@ -5304,7 +5319,8 @@ function submitRequest() {
 
 function loadMyRequests() {
   try {
-    const requests = JSON.parse(localStorage.getItem('medea_requests') || '[]');
+    let requests = JSON.parse(localStorage.getItem('medea_requests') || '[]');
+    requests = window.getFilteredData(requests, 'sector');
     const list = document.getElementById('myRequestsList');
     
     if(!requests.length) {
@@ -5332,7 +5348,8 @@ function loadMyRequests() {
 
 function loadAdminRequests() {
   try {
-    const requests = JSON.parse(localStorage.getItem('medea_requests') || '[]');
+    let requests = JSON.parse(localStorage.getItem('medea_requests') || '[]');
+    requests = window.getFilteredData(requests, 'sector');
     const list = document.getElementById('adminRequestsList');    
     if(!requests.length) {
       list.innerHTML = '<div class="empty-state"><i class="fas fa-clipboard-list"></i><p>لا توجد طلبات</p></div>';
@@ -8109,9 +8126,11 @@ function addStaff() {
     s = stored ? JSON.parse(stored) : []; 
   } catch(e) { s = []; }
   
+  const sector = (r === 'مشرف') ? document.getElementById('newStaffSector').value : 'all';
   s.push({
     name: n, 
     role: r, 
+    sector: sector,
     phone: p, 
     addedBy: 'فتحي', 
     addedDate: new Date().toLocaleDateString('ar-DZ')
@@ -10149,5 +10168,13 @@ window.addEventListener('load', () => {
         showToast("جاري فتح سجل التحويلات البنكية...", "info");
     };
 })();
+
+// ===== نظام الفلترة للقطاع الخاص (PPP Filtering) =====
+window.getFilteredData = function(dataArray, sectorKey = 'sector') {
+    if (!window.currentAdminSector || window.currentAdminSector === 'all' || window.currentAdminName === 'فتحي') {
+        return dataArray;
+    }
+    return dataArray.filter(item => item[sectorKey] === window.currentAdminSector);
+};
 </script>
 </body></html>
