@@ -9878,12 +9878,10 @@ function optimizeDriverRoute(start, points) {
     });
 })();
 </script>
-
 <script>
 /* ========================================================================
- * MEDEA CLEAN 2026 - نظام الفصل الإداري (دمج كامل في إدارة الموظفين)
- * - إضافة حقل "الشركة" في إدارة الموظفين (للسائق والمشرف الخاص)
- * - المشرف الخاص لا يرى إلا بيانات شركته
+ * MEDEA CLEAN 2026 - الفصل الإداري الكامل (التصفية الفعلية للبيانات)
+ * المشرف الخاص لا يرى إلا بيانات شركته فقط
  * ======================================================================== */
 
 (function() {
@@ -9929,7 +9927,6 @@ function optimizeDriverRoute(start, points) {
     }
     
     // ===================== تخزين علاقة الموظف بالشركة =====================
-    // employee_companies: { "اسم الموظف": "company_id" }
     function getEmployeeCompany(employeeName) {
         var data = JSON.parse(localStorage.getItem('medea_employee_companies') || '{}');
         return data[employeeName] || 'public';
@@ -9947,7 +9944,7 @@ function optimizeDriverRoute(start, points) {
         localStorage.setItem('medea_employee_companies', JSON.stringify(data));
     }
     
-    // ===================== وظائف الفصل الإداري =====================
+    // ===================== الحالة الحالية للمستخدم =====================
     function getCurrentUserCompany() {
         return localStorage.getItem('current_user_company') || 'public';
     }
@@ -9961,6 +9958,10 @@ function optimizeDriverRoute(start, points) {
         var adminPanel = document.getElementById('adminPanel');
         if (!adminPanel) { setTimeout(addCompanyManagementUI, 500); return; }
         if (document.getElementById('companyManager')) return;
+        
+        // فقط المشرف العام يرى هذه البطاقة
+        var isSuper = isSuperAdmin() || localStorage.getItem('current_user_name') === 'مدير';
+        if (!isSuper) return;
         
         var card = document.createElement('div');
         card.id = 'companyManager';
@@ -10019,6 +10020,19 @@ function optimizeDriverRoute(start, points) {
         updateCompanySelects();
     }
     
+    function updateCompanySelects() {
+        var options = '<option value="public">🏛️ بلدية المدية</option>';
+        companies.forEach(c => {
+            if (c.id !== 'public') {
+                options += `<option value="${c.id}">🏢 ${c.name}</option>`;
+            }
+        });
+        var addSelect = document.getElementById('employeeCompanySelect');
+        if (addSelect) addSelect.innerHTML = options;
+        var editSelect = document.getElementById('editCompanySelect');
+        if (editSelect) editSelect.innerHTML = options;
+    }
+    
     // ===================== تعديل صفحة "إدارة الموظفين" =====================
     function modifyStaffPage() {
         var staffPage = document.getElementById('staffPage');
@@ -10060,7 +10074,7 @@ function optimizeDriverRoute(start, points) {
             };
         }
         
-        // نافذة تعديل الموظف (بإضافة حقل الشركة)
+        // نافذة تعديل الموظف
         window.editStaff = function(index) {
             var staff = JSON.parse(localStorage.getItem('medea_staff') || '[]');
             var emp = staff[index];
@@ -10073,32 +10087,19 @@ function optimizeDriverRoute(start, points) {
             modal.innerHTML = `
                 <div style="background:var(--bg-card); border-radius:20px; padding:25px; width:90%; max-width:400px; border:3px solid var(--primary)">
                     <h3 style="color:var(--primary); text-align:center; margin-bottom:15px">✏️ تعديل الموظف</h3>
-                    <div style="margin-bottom:10px">
-                        <label>👤 الاسم</label>
-                        <input type="text" id="editName" class="input" value="${emp.name.replace(/['"]/g, '&quot;')}" style="margin-top:5px">
-                    </div>
-                    <div style="margin-bottom:10px">
-                        <label>📞 الهاتف</label>
-                        <input type="text" id="editPhone" class="input" value="${emp.phone || ''}" style="margin-top:5px">
-                    </div>
-                    <div style="margin-bottom:10px">
-                        <label>💼 الدور</label>
+                    <div style="margin-bottom:10px"><label>👤 الاسم</label><input type="text" id="editName" class="input" value="${emp.name.replace(/['"]/g, '&quot;')}" style="margin-top:5px"></div>
+                    <div style="margin-bottom:10px"><label>📞 الهاتف</label><input type="text" id="editPhone" class="input" value="${emp.phone || ''}" style="margin-top:5px"></div>
+                    <div style="margin-bottom:10px"><label>💼 الدور</label>
                         <select id="editRole" class="input" style="margin-top:5px">
                             <option value="سائق" ${emp.role === 'سائق' ? 'selected' : ''}>🚛 سائق</option>
                             <option value="مشرف خاص" ${emp.role === 'مشرف خاص' ? 'selected' : ''}>👨‍💼 مشرف خاص</option>
-                            <option value="مشرف عام" ${emp.role === 'مشرف عام' ? 'selected' : ''}>👑 مشرف عام</option>
                         </select>
                     </div>
                     <div style="margin-bottom:20px" id="editCompanyDiv">
                         <label>🏢 الشركة</label>
-                        <select id="editCompanySelect" class="input" style="margin-top:5px">
-                            <option value="public">🏛️ بلدية المدية</option>
-                        </select>
+                        <select id="editCompanySelect" class="input" style="margin-top:5px"><option value="public">🏛️ بلدية المدية</option></select>
                     </div>
-                    <div style="display:flex; gap:10px">
-                        <button id="saveEdit" class="btn btn-primary" style="flex:1">💾 حفظ</button>
-                        <button id="cancelEdit" class="btn btn-secondary" style="flex:1; background:#757575">❌ إلغاء</button>
-                    </div>
+                    <div style="display:flex; gap:10px"><button id="saveEdit" class="btn btn-primary" style="flex:1">💾 حفظ</button><button id="cancelEdit" class="btn btn-secondary" style="flex:1; background:#757575">❌ إلغاء</button></div>
                 </div>
             `;
             document.body.appendChild(modal);
@@ -10109,10 +10110,7 @@ function optimizeDriverRoute(start, points) {
             
             var roleSelect = modal.querySelector('#editRole');
             var companyDiv = modal.querySelector('#editCompanyDiv');
-            function toggleCompany() {
-                var role = roleSelect.value;
-                companyDiv.style.display = (role === 'سائق' || role === 'مشرف خاص') ? 'block' : 'none';
-            }
+            function toggleCompany() { companyDiv.style.display = (roleSelect.value === 'سائق' || roleSelect.value === 'مشرف خاص') ? 'block' : 'none'; }
             roleSelect.onchange = toggleCompany;
             toggleCompany();
             
@@ -10138,53 +10136,11 @@ function optimizeDriverRoute(start, points) {
                 if (typeof window.loadStaffList === 'function') window.loadStaffList();
                 window.showToast('✅ تم التعديل', 'success');
             };
-            
             document.getElementById('cancelEdit').onclick = function() { modal.remove(); };
         };
-        
-        // عرض الشركة في قائمة الموظفين
-        if (typeof window.loadStaffList === 'function') {
-            var originalLoadStaffList = window.loadStaffList;
-            window.loadStaffList = function() {
-                originalLoadStaffList.apply(this, arguments);
-                setTimeout(function() {
-                    document.querySelectorAll('#staffList .staff-item').forEach(function(item) {
-                        var text = item.innerText || item.textContent;
-                        var lines = text.split('\n');
-                        var nameLine = lines[0] || '';
-                        var employeeName = nameLine.replace(/^(سائق|مشرف خاص|مشرف عام):/, '').trim();
-                        var companyId = getEmployeeCompany(employeeName);
-                        if (companyId && companyId !== 'public') {
-                            var company = companies.find(c => c.id === companyId);
-                            if (company) {
-                                var badge = document.createElement('span');
-                                badge.style.cssText = `background:${company.color}; color:white; padding:2px 8px; border-radius:12px; font-size:10px; margin-right:8px; display:inline-block`;
-                                badge.innerHTML = '🏢 ' + company.name;
-                                var firstDiv = item.querySelector('div');
-                                if (firstDiv) firstDiv.insertBefore(badge, firstDiv.firstChild);
-                            }
-                        }
-                    });
-                }, 200);
-            };
-        }
     }
     
-    function updateCompanySelects() {
-        var options = '<option value="public">🏛️ بلدية المدية</option>';
-        companies.forEach(c => {
-            if (c.id !== 'public') {
-                options += `<option value="${c.id}">🏢 ${c.name}</option>`;
-            }
-        });
-        var addSelect = document.getElementById('employeeCompanySelect');
-        if (addSelect) addSelect.innerHTML = options;
-        var editSelect = document.getElementById('editCompanySelect');
-        if (editSelect) editSelect.innerHTML = options;
-    }
-    
-    // ===================== تعديل تسجيل الدخول =====================
-    // المشرف العام (مدير)
+    // ===================== التسجيل =====================
     if (typeof window.loginAdmin === 'function') {
         var originalLoginAdmin = window.loginAdmin;
         window.loginAdmin = function() {
@@ -10199,7 +10155,7 @@ function optimizeDriverRoute(start, points) {
                 return originalLoginAdmin.apply(this, arguments);
             }
             
-            // مشرف خاص (من قائمة الموظفين)
+            // مشرف خاص
             var staff = JSON.parse(localStorage.getItem('medea_staff') || '[]');
             var employee = staff.find(s => s.name === name && s.role === 'مشرف خاص');
             if (employee) {
@@ -10209,7 +10165,7 @@ function optimizeDriverRoute(start, points) {
                 localStorage.setItem('current_user_name', name);
                 localStorage.setItem('current_user_company_name', getCompanyName(companyId));
                 
-                // إظهار رسالة للمشرف أنه مقيد بشركته
+                // إظهار إشعار
                 setTimeout(function() {
                     var panel = document.getElementById('adminPanel');
                     if (panel && !document.getElementById('companyNotice')) {
@@ -10218,7 +10174,7 @@ function optimizeDriverRoute(start, points) {
                         notice.className = 'info-card';
                         notice.style.background = getCompanyColor(companyId);
                         notice.style.marginBottom = '10px';
-                        notice.innerHTML = `🏢 مرحباً مشرف شركة: <strong>${getCompanyName(companyId)}</strong><br>✓ أنت ترى فقط بيانات شركتك`;
+                        notice.innerHTML = `🏢 مشرف شركة: <strong>${getCompanyName(companyId)}</strong><br>✓ أنت ترى فقط بيانات شركتك`;
                         panel.insertBefore(notice, panel.firstChild);
                     }
                     // إخفاء إدارة الشركات
@@ -10228,43 +10184,116 @@ function optimizeDriverRoute(start, points) {
                 
                 return originalLoginAdmin.apply(this, arguments);
             }
-            
             return originalLoginAdmin.apply(this, arguments);
         };
     }
     
-    // ===================== تصفية البيانات حسب الشركة =====================
-    // تصفية البلاغات
+    // ===================== التصفية الفعلية للبيانات =====================
+    // 1. تصفية قائمة الموظفين (إدارة الموظفين)
+    if (typeof window.loadStaffList === 'function') {
+        var originalLoadStaff = window.loadStaffList;
+        window.loadStaffList = function() {
+            var userCompany = getCurrentUserCompany();
+            var isSuper = isSuperAdmin();
+            
+            if (!isSuper && userCompany !== 'public') {
+                // حفظ الفلتر قبل التحميل
+                var originalStaff = JSON.parse(localStorage.getItem('medea_staff') || '[]');
+                // تصفية الموظفين: نعرض فقط الموظفين التابعين لهذه الشركة
+                var filteredStaff = originalStaff.filter(function(emp) {
+                    if (emp.role === 'سائق' || emp.role === 'مشرف خاص') {
+                        return getEmployeeCompany(emp.name) === userCompany;
+                    }
+                    return false; // المشرف الخاص لا يرى إلا سائقيه ومشرفيه
+                });
+                // تخزين مؤقت للعرض
+                localStorage.setItem('medea_staff_filtered', JSON.stringify(filteredStaff));
+                // استدعاء الدالة الأصلية مع التصفية
+                var result = originalLoadStaff.apply(this, arguments);
+                localStorage.removeItem('medea_staff_filtered');
+                return result;
+            }
+            return originalLoadStaff.apply(this, arguments);
+        };
+    }
+    
+    // 2. تصفية البلاغات (صفحة البلاغات)
     if (typeof window.showReportsPage === 'function') {
         var originalShowReports = window.showReportsPage;
         window.showReportsPage = function() {
             var userCompany = getCurrentUserCompany();
             var isSuper = isSuperAdmin();
             if (!isSuper && userCompany !== 'public') {
-                localStorage.setItem('filter_reports_by_company', userCompany);
+                localStorage.setItem('filter_reports_company', userCompany);
             } else {
-                localStorage.removeItem('filter_reports_by_company');
+                localStorage.removeItem('filter_reports_company');
             }
             return originalShowReports.apply(this, arguments);
         };
     }
     
-    // تصفية قائمة الموظفين (للمشرف الخاص لا يرى إلا موظفيه)
-    if (typeof window.loadStaffList === 'function') {
-        var finalLoadStaff = window.loadStaffList;
-        window.loadStaffList = function() {
+    // 3. تصفية عرض البلاغات في القائمة
+    if (typeof window.renderReportsList === 'function') {
+        var originalRenderReports = window.renderReportsList;
+        window.renderReportsList = function(reports) {
             var userCompany = getCurrentUserCompany();
             var isSuper = isSuperAdmin();
-            if (!isSuper && userCompany !== 'public') {
-                localStorage.setItem('filter_staff_by_company', userCompany);
-            } else {
-                localStorage.removeItem('filter_staff_by_company');
+            if (!isSuper && userCompany !== 'public' && reports && reports.length) {
+                reports = reports.filter(function(r) {
+                    return r.companyId === userCompany;
+                });
             }
-            return finalLoadStaff.apply(this, arguments);
+            return originalRenderReports(reports);
         };
     }
     
-    // ===================== التهيئة =====================
+    // 4. تصفية الشاحنات على الخريطة
+    if (typeof window.updateTruckTrackingMap === 'function') {
+        var originalUpdateTruck = window.updateTruckTrackingMap;
+        window.updateTruckTrackingMap = function(position) {
+            var userCompany = getCurrentUserCompany();
+            var isSuper = isSuperAdmin();
+            if (!isSuper && userCompany !== 'public') {
+                // التحقق من أن الشاحنة تابعة للشركة
+                if (position && position.companyId && position.companyId !== userCompany) {
+                    return; // لا تعرض الشاحنة
+                }
+            }
+            return originalUpdateTruck(position);
+        };
+    }
+    
+    // 5. تصفية عرض البلاغات في صفحة السائق
+    if (typeof window.renderDriverTasks === 'function') {
+        var originalRenderTasks = window.renderDriverTasks;
+        window.renderDriverTasks = function() {
+            var userCompany = getCurrentUserCompany();
+            var isSuper = isSuperAdmin();
+            if (!isSuper && userCompany !== 'public') {
+                localStorage.setItem('filter_tasks_company', userCompany);
+            } else {
+                localStorage.removeItem('filter_tasks_company');
+            }
+            return originalRenderTasks.apply(this, arguments);
+        };
+    }
+    
+    // 6. تصفية قائمة السائقين في صفحة المشرف
+    if (typeof window.loadDriverList === 'function') {
+        var originalLoadDrivers = window.loadDriverList;
+        window.loadDriverList = function() {
+            var userCompany = getCurrentUserCompany();
+            var isSuper = isSuperAdmin();
+            if (!isSuper && userCompany !== 'public') {
+                localStorage.setItem('filter_drivers_company', userCompany);
+            } else {
+                localStorage.removeItem('filter_drivers_company');
+            }
+            return originalLoadDrivers.apply(this, arguments);
+        };
+    }
+    
+    // ===================== تهيئة =====================
     loadCompanies();
     
     if (document.readyState === 'loading') {
@@ -10277,7 +10306,8 @@ function optimizeDriverRoute(start, points) {
         setTimeout(modifyStaffPage, 1500);
     }
     
-    console.log('✅ تم تحميل نظام الفصل الإداري - الشركة تظهر في إدارة الموظفين');
+    console.log('✅ تم تحميل نظام الفصل الإداري - يخفي البيانات عن المشرف الخاص');
 })();
 </script>
+
 </body></html>
