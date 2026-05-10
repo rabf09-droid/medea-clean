@@ -9878,4 +9878,326 @@ function optimizeDriverRoute(start, points) {
     });
 })();
 </script>
+    <script>
+/* ========================================================================
+ * MEDEA CLEAN 2026 - إضافة حقل الشركة في إدارة الموظفين فقط
+ * ======================================================================== */
+
+(function() {
+    'use strict';
+
+    // ===================== بيانات الشركات =====================
+    let companies = [];
+    
+    function loadCompanies() {
+        var saved = localStorage.getItem('medea_companies');
+        if (saved) {
+            try { companies = JSON.parse(saved); } catch(e) {}
+        }
+        if (companies.length === 0) {
+            companies = [{ id: 'public', name: 'بلدية المدية', color: '#006233' }];
+            saveCompanies();
+        }
+    }
+    
+    function saveCompanies() {
+        localStorage.setItem('medea_companies', JSON.stringify(companies));
+    }
+    
+    function getRandomColor() {
+        return '#' + Math.floor(Math.random() * 16777215).toString(16).padStart(6, '0');
+    }
+    
+    // ===================== تخزين علاقة الموظف بالشركة =====================
+    function getEmployeeCompany(employeeName) {
+        var data = JSON.parse(localStorage.getItem('medea_employee_companies') || '{}');
+        return data[employeeName] || 'public';
+    }
+    
+    function setEmployeeCompany(employeeName, companyId) {
+        var data = JSON.parse(localStorage.getItem('medea_employee_companies') || '{}');
+        data[employeeName] = companyId;
+        localStorage.setItem('medea_employee_companies', JSON.stringify(data));
+    }
+    
+    function deleteEmployeeCompany(employeeName) {
+        var data = JSON.parse(localStorage.getItem('medea_employee_companies') || '{}');
+        delete data[employeeName];
+        localStorage.setItem('medea_employee_companies', JSON.stringify(data));
+    }
+    
+    // ===================== واجهة إضافة الشركات (للمشرف العام فقط) =====================
+    function addCompanyUI() {
+        var adminPanel = document.getElementById('adminPanel');
+        if (!adminPanel) { setTimeout(addCompanyUI, 500); return; }
+        if (document.getElementById('companyAddSection')) return;
+        
+        // فقط المشرف العام يرى هذه البطاقة
+        var currentUser = localStorage.getItem('current_user_name');
+        if (currentUser !== 'مدير') return;
+        
+        var div = document.createElement('div');
+        div.id = 'companyAddSection';
+        div.className = 'card';
+        div.style.borderRight = '4px solid #D4AF37';
+        div.style.marginBottom = '15px';
+        div.innerHTML = `
+            <h4 style="color:var(--primary); margin-bottom:10px">➕ إضافة شركة جديدة</h4>
+            <div style="display:flex; gap:10px; flex-wrap:wrap">
+                <input type="text" id="newCompanyName" class="input" placeholder="اسم الشركة" style="flex:2; margin:0">
+                <input type="color" id="newCompanyColor" class="input" value="${getRandomColor()}" style="flex:1; margin:0; height:42px">
+                <button id="addNewCompanyBtn" class="btn btn-primary" style="margin:0">إضافة</button>
+            </div>
+            <div id="companiesList" style="margin-top:10px; font-size:12px"></div>
+        `;
+        adminPanel.insertBefore(div, adminPanel.firstChild);
+        
+        function renderCompanies() {
+            var container = document.getElementById('companiesList');
+            if (!container) return;
+            var html = '<div style="display:flex; flex-wrap:wrap; gap:5px">';
+            companies.forEach(c => {
+                if (c.id !== 'public') {
+                    html += `<span style="background:${c.color}20; border-right:3px solid ${c.color}; padding:2px 8px; border-radius:12px">
+                                ${c.name}
+                                <button class="deleteCompanyBtn" data-id="${c.id}" style="background:none; border:none; color:red; cursor:pointer">✖</button>
+                            </span>`;
+                }
+            });
+            html += '</div>';
+            container.innerHTML = html || 'لا توجد شركات';
+            
+            document.querySelectorAll('.deleteCompanyBtn').forEach(btn => {
+                btn.onclick = function() {
+                    var id = this.getAttribute('data-id');
+                    if (confirm('حذف الشركة؟')) {
+                        companies = companies.filter(c => c.id !== id);
+                        saveCompanies();
+                        renderCompanies();
+                        updateCompanySelect();
+                    }
+                };
+            });
+        }
+        
+        document.getElementById('addNewCompanyBtn').onclick = function() {
+            var name = document.getElementById('newCompanyName').value.trim();
+            if (!name) { alert('أدخل اسم الشركة'); return; }
+            var id = 'company_' + Date.now();
+            var color = document.getElementById('newCompanyColor').value;
+            companies.push({ id: id, name: name, color: color });
+            saveCompanies();
+            document.getElementById('newCompanyName').value = '';
+            renderCompanies();
+            updateCompanySelect();
+        };
+        
+        renderCompanies();
+        updateCompanySelect();
+    }
+    
+    function updateCompanySelect() {
+        var options = '<option value="public">🏛️ بلدية المدية</option>';
+        companies.forEach(c => {
+            if (c.id !== 'public') {
+                options += `<option value="${c.id}">🏢 ${c.name}</option>`;
+            }
+        });
+        var select = document.getElementById('employeeCompanySelect');
+        if (select) select.innerHTML = options;
+        var editSelect = document.getElementById('editCompanySelect');
+        if (editSelect) editSelect.innerHTML = options;
+    }
+    
+    // ===================== إضافة حقل الشركة في إدارة الموظفين =====================
+    function addCompanyFieldToStaffPage() {
+        var staffPage = document.getElementById('staffPage');
+        if (!staffPage) { setTimeout(addCompanyFieldToStaffPage, 500); return; }
+        
+        // إضافة حقل الشركة في نموذج إضافة موظف جديد
+        var addCard = staffPage.querySelector('.card');
+        if (addCard && !document.getElementById('employeeCompanySelect')) {
+            var phoneInput = document.getElementById('newStaffPhone');
+            if (phoneInput && phoneInput.parentNode) {
+                var div = document.createElement('div');
+                div.style.marginTop = '8px';
+                div.innerHTML = `
+                    <label style="display:block; margin-bottom:5px; font-weight:600; color:var(--primary)">🏢 الشركة (للسائقين والمشرفين الخاصين)</label>
+                    <select id="employeeCompanySelect" class="input" style="margin-bottom:8px">
+                        <option value="public">🏛️ بلدية المدية</option>
+                    </select>
+                `;
+                phoneInput.parentNode.insertBefore(div, phoneInput.nextSibling);
+                updateCompanySelect();
+            }
+        }
+        
+        // تعديل دالة addStaff لحفظ الشركة
+        if (typeof window.addStaff === 'function') {
+            var originalAddStaff = window.addStaff;
+            window.addStaff = function() {
+                var companySelect = document.getElementById('employeeCompanySelect');
+                var selectedCompany = companySelect ? companySelect.value : 'public';
+                var employeeName = document.getElementById('newStaffName').value.trim();
+                var employeeRole = document.getElementById('newStaffRole').value;
+                
+                var result = originalAddStaff.apply(this, arguments);
+                
+                if (employeeName && (employeeRole === 'سائق' || employeeRole === 'مشرف خاص')) {
+                    setEmployeeCompany(employeeName, selectedCompany);
+                }
+                return result;
+            };
+        }
+        
+        // تعديل نافذة التعديل
+        window.editStaff = function(index) {
+            var staff = JSON.parse(localStorage.getItem('medea_staff') || '[]');
+            var emp = staff[index];
+            if (!emp) return;
+            
+            var currentCompany = getEmployeeCompany(emp.name);
+            
+            var modal = document.createElement('div');
+            modal.style.cssText = 'position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:100000; display:flex; align-items:center; justify-content:center';
+            modal.innerHTML = `
+                <div style="background:var(--bg-card); border-radius:20px; padding:25px; width:90%; max-width:400px; border:3px solid var(--primary)">
+                    <h3 style="color:var(--primary); text-align:center; margin-bottom:15px">✏️ تعديل الموظف</h3>
+                    <div style="margin-bottom:10px"><label>👤 الاسم</label><input type="text" id="editName" class="input" value="${emp.name.replace(/['"]/g, '&quot;')}" style="margin-top:5px"></div>
+                    <div style="margin-bottom:10px"><label>📞 الهاتف</label><input type="text" id="editPhone" class="input" value="${emp.phone || ''}" style="margin-top:5px"></div>
+                    <div style="margin-bottom:10px"><label>💼 الدور</label>
+                        <select id="editRole" class="input" style="margin-top:5px">
+                            <option value="سائق" ${emp.role === 'سائق' ? 'selected' : ''}>🚛 سائق</option>
+                            <option value="مشرف خاص" ${emp.role === 'مشرف خاص' ? 'selected' : ''}>👨‍💼 مشرف خاص</option>
+                        </select>
+                    </div>
+                    <div style="margin-bottom:20px" id="editCompanyDiv">
+                        <label>🏢 الشركة</label>
+                        <select id="editCompanySelect" class="input" style="margin-top:5px"><option value="public">🏛️ بلدية المدية</option></select>
+                    </div>
+                    <div style="display:flex; gap:10px"><button id="saveEdit" class="btn btn-primary" style="flex:1">💾 حفظ</button><button id="cancelEdit" class="btn btn-secondary" style="flex:1; background:#757575">❌ إلغاء</button></div>
+                </div>
+            `;
+            document.body.appendChild(modal);
+            
+            updateCompanySelect();
+            var companySelect = modal.querySelector('#editCompanySelect');
+            if (companySelect) companySelect.value = currentCompany;
+            
+            var roleSelect = modal.querySelector('#editRole');
+            var companyDiv = modal.querySelector('#editCompanyDiv');
+            function toggleCompany() { companyDiv.style.display = (roleSelect.value === 'سائق' || roleSelect.value === 'مشرف خاص') ? 'block' : 'none'; }
+            roleSelect.onchange = toggleCompany;
+            toggleCompany();
+            
+            document.getElementById('saveEdit').onclick = function() {
+                var newName = document.getElementById('editName').value.trim();
+                var newPhone = document.getElementById('editPhone').value.trim();
+                var newRole = document.getElementById('editRole').value;
+                var newCompany = document.getElementById('editCompanySelect').value;
+                if (!newName) { alert('أدخل الاسم'); return; }
+                
+                var oldName = emp.name;
+                staff[index] = { name: newName, role: newRole, phone: newPhone };
+                localStorage.setItem('medea_staff', JSON.stringify(staff));
+                
+                if (newRole === 'سائق' || newRole === 'مشرف خاص') {
+                    if (oldName !== newName) deleteEmployeeCompany(oldName);
+                    setEmployeeCompany(newName, newCompany);
+                } else {
+                    deleteEmployeeCompany(newName);
+                }
+                
+                modal.remove();
+                if (typeof window.loadStaffList === 'function') window.loadStaffList();
+                window.showToast('✅ تم التعديل', 'success');
+            };
+            document.getElementById('cancelEdit').onclick = function() { modal.remove(); };
+        };
+        
+        // عرض الشركة في قائمة الموظفين
+        if (typeof window.loadStaffList === 'function') {
+            var originalLoadStaffList = window.loadStaffList;
+            window.loadStaffList = function() {
+                originalLoadStaffList.apply(this, arguments);
+                setTimeout(function() {
+                    document.querySelectorAll('#staffList .staff-item').forEach(function(item) {
+                        var text = item.innerText || item.textContent;
+                        var lines = text.split('\n');
+                        var nameLine = lines[0] || '';
+                        var employeeName = nameLine.replace(/^(سائق|مشرف خاص):/, '').trim();
+                        var companyId = getEmployeeCompany(employeeName);
+                        if (companyId && companyId !== 'public') {
+                            var company = companies.find(c => c.id === companyId);
+                            if (company) {
+                                var badge = document.createElement('span');
+                                badge.style.cssText = `background:${company.color}; color:white; padding:2px 8px; border-radius:12px; font-size:10px; margin-right:8px; display:inline-block`;
+                                badge.innerHTML = '🏢 ' + company.name;
+                                var firstDiv = item.querySelector('div');
+                                if (firstDiv) firstDiv.insertBefore(badge, firstDiv.firstChild);
+                            }
+                        }
+                    });
+                }, 200);
+            };
+        }
+    }
+    
+    // ===================== تسجيل دخول المشرف الخاص =====================
+    if (typeof window.loginAdmin === 'function') {
+        var originalLoginAdmin = window.loginAdmin;
+        window.loginAdmin = function() {
+            var name = document.getElementById('adminName')?.value;
+            var code = document.getElementById('adminCode')?.value;
+            
+            // المشرف العام
+            if (name === 'مدير' && code === '280876') {
+                localStorage.setItem('current_user_name', name);
+                localStorage.setItem('current_user_role', 'super_admin');
+                return originalLoginAdmin.apply(this, arguments);
+            }
+            
+            // مشرف خاص
+            var staff = JSON.parse(localStorage.getItem('medea_staff') || '[]');
+            var employee = staff.find(s => s.name === name && s.role === 'مشرف خاص');
+            if (employee) {
+                var companyId = getEmployeeCompany(name);
+                localStorage.setItem('current_user_name', name);
+                localStorage.setItem('current_user_role', 'sub_admin');
+                localStorage.setItem('current_user_company', companyId);
+                localStorage.setItem('current_user_company_name', getCompanyName(companyId));
+                
+                setTimeout(function() {
+                    var panel = document.getElementById('adminPanel');
+                    if (panel && !document.getElementById('companyNotice')) {
+                        var notice = document.createElement('div');
+                        notice.id = 'companyNotice';
+                        notice.className = 'info-card';
+                        notice.style.marginBottom = '10px';
+                        notice.innerHTML = `🏢 مشرف شركة: ${getCompanyName(companyId)} - أنت ترى فقط بيانات شركتك`;
+                        panel.insertBefore(notice, panel.firstChild);
+                    }
+                }, 500);
+                return originalLoginAdmin.apply(this, arguments);
+            }
+            return originalLoginAdmin.apply(this, arguments);
+        };
+    }
+    
+    // ===================== التهيئة =====================
+    loadCompanies();
+    
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', function() {
+            setTimeout(addCompanyUI, 1000);
+            setTimeout(addCompanyFieldToStaffPage, 1500);
+        });
+    } else {
+        setTimeout(addCompanyUI, 1000);
+        setTimeout(addCompanyFieldToStaffPage, 1500);
+    }
+    
+    console.log('✅ تم التحميل - حقل الشركة يظهر في إدارة الموظفين');
+})();
+                          </script>
 </body></html>
