@@ -10140,382 +10140,673 @@ function optimizeDriverRoute(start, points) {
     observer.observe(document.body, { childList: true, subtree: true });
 })();
 </script>
-  // ============================================================
-// === إدارة الشركات الخاصة - Medea Clean 2026 ================
-// === المشرف الرئيسي: فتحي ====================================
+
 // ============================================================
-// أضف هذا الكود في نهاية ملف HTML، قبل </body>
+// === إضافة إدارة الشركات الخاصة - Medea Clean 2026 ==========
+// === المشرف الرئيسي: فـتـحـي =================================
+// === تم التعديل ليناسب الكود الأصلي =========================
 // ============================================================
 
 (function() {
     'use strict';
     
+    // ========== 1. هيكل البيانات الأساسي ==========
     let privateCompanies = [];
     const COMPANIES_KEY = 'medea_private_companies';
     const STAFF_KEY = 'medea_staff';
     
+    // تحميل الشركات من localStorage
     function loadCompanies() {
         try {
             const stored = localStorage.getItem(COMPANIES_KEY);
-            privateCompanies = stored ? JSON.parse(stored) : [];
-        } catch(e) {}
+            if (stored && stored !== 'undefined') {
+                privateCompanies = JSON.parse(stored);
+            } else {
+                privateCompanies = [];
+                saveCompanies();
+            }
+        } catch(e) { 
+            console.error("Load companies error:", e);
+            privateCompanies = [];
+        }
     }
     
+    // حفظ الشركات
     function saveCompanies() {
         try {
             localStorage.setItem(COMPANIES_KEY, JSON.stringify(privateCompanies));
-            if (typeof db !== 'undefined' && db) {
-                try { db.ref(COMPANIES_KEY).set(privateCompanies).catch(()=>{}); } catch(e) {}
+            // مزامنة مع Firebase إذا كان متاحاً
+            if (typeof db !== 'undefined' && db && db.ref) {
+                try { db.ref(COMPANIES_KEY).set(privateCompanies).catch(function(){}); } catch(e) {}
             }
         } catch(e) {}
     }
     
-    function addCompany(name, color) {
+    // ========== 2. دوال إدارة الشركات ==========
+    // إضافة شركة جديدة (للمشرف الرئيسي فقط)
+    window.addPrivateCompany = function(name, color) {
         if (!name || !color) return false;
-        privateCompanies.push({
-            id: 'comp_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6),
+        const newCompany = {
+            id: 'comp_' + Date.now() + '_' + Math.floor(Math.random() * 10000),
             name: name.trim(),
             color: color,
             createdAt: new Date().toISOString(),
-            createdBy: currentAdminName || 'فتحي'
-        });
+            createdBy: currentAdminName || 'فـتـحـي'
+        };
+        privateCompanies.push(newCompany);
         saveCompanies();
-        return true;
-    }
+        return newCompany;
+    };
     
-    function updateCompany(id, name, color) {
-        const idx = privateCompanies.findIndex(c => c.id === id);
-        if (idx !== -1) {
-            privateCompanies[idx].name = name.trim();
-            privateCompanies[idx].color = color;
-            privateCompanies[idx].updatedAt = new Date().toISOString();
+    // تعديل شركة
+    window.updatePrivateCompany = function(id, name, color) {
+        const index = privateCompanies.findIndex(function(c) { return c.id === id; });
+        if (index !== -1) {
+            privateCompanies[index].name = name.trim();
+            privateCompanies[index].color = color;
+            privateCompanies[index].updatedAt = new Date().toISOString();
             saveCompanies();
             return true;
         }
         return false;
-    }
+    };
     
-    function deleteCompany(id) {
-        privateCompanies = privateCompanies.filter(c => c.id !== id);
+    // حذف شركة
+    window.deletePrivateCompany = function(id) {
+        privateCompanies = privateCompanies.filter(function(c) { return c.id !== id; });
         saveCompanies();
-        // إلغاء ربط الموظفين
+        // إلغاء ربط الموظفين بهذه الشركة
         try {
             let staff = JSON.parse(localStorage.getItem(STAFF_KEY) || '[]');
-            staff = staff.map(s => {
+            var changed = false;
+            staff = staff.map(function(s) {
                 if (s.companyId === id) {
-                    const { companyId, companyName, companyColor, ...rest } = s;
-                    return rest;
+                    changed = true;
+                    var newS = {};
+                    for (var key in s) {
+                        if (key !== 'companyId' && key !== 'companyName' && key !== 'companyColor') {
+                            newS[key] = s[key];
+                        }
+                    }
+                    return newS;
                 }
                 return s;
             });
-            localStorage.setItem(STAFF_KEY, JSON.stringify(staff));
-            if (typeof db !== 'undefined' && db) {
-                try { db.ref(STAFF_KEY).set(staff).catch(()=>{}); } catch(e) {}
+            if (changed) {
+                localStorage.setItem(STAFF_KEY, JSON.stringify(staff));
+                if (typeof db !== 'undefined' && db && db.ref) {
+                    try { db.ref(STAFF_KEY).set(staff).catch(function(){}); } catch(e) {}
+                }
             }
         } catch(e) {}
         return true;
-    }
+    };
     
-    function assignStaffToCompany(staffIndex, companyId) {
+    // الحصول على شركة الموظف
+    window.getEmployeeCompany = function(staffMember) {
+        if (!staffMember || !staffMember.companyId) return null;
+        for (var i = 0; i < privateCompanies.length; i++) {
+            if (privateCompanies[i].id === staffMember.companyId) return privateCompanies[i];
+        }
+        return null;
+    };
+    
+    // تعيين موظف لشركة
+    window.assignStaffToCompany = function(staffName, staffRole, companyId) {
         try {
             let staff = JSON.parse(localStorage.getItem(STAFF_KEY) || '[]');
-            if (!staff[staffIndex]) return false;
+            var staffIndex = -1;
+            for (var i = 0; i < staff.length; i++) {
+                if (staff[i].name === staffName && staff[i].role === staffRole) {
+                    staffIndex = i;
+                    break;
+                }
+            }
+            if (staffIndex === -1) return false;
+            
             if (!companyId) {
-                const { companyId, companyName, companyColor, ...rest } = staff[staffIndex];
-                staff[staffIndex] = rest;
+                // إزالة التعيين
+                var newStaff = {};
+                for (var key in staff[staffIndex]) {
+                    if (key !== 'companyId' && key !== 'companyName' && key !== 'companyColor') {
+                        newStaff[key] = staff[staffIndex][key];
+                    }
+                }
+                staff[staffIndex] = newStaff;
             } else {
-                const company = privateCompanies.find(c => c.id === companyId);
+                var company = null;
+                for (var j = 0; j < privateCompanies.length; j++) {
+                    if (privateCompanies[j].id === companyId) {
+                        company = privateCompanies[j];
+                        break;
+                    }
+                }
                 if (!company) return false;
                 staff[staffIndex].companyId = company.id;
                 staff[staffIndex].companyName = company.name;
                 staff[staffIndex].companyColor = company.color;
             }
             localStorage.setItem(STAFF_KEY, JSON.stringify(staff));
-            if (typeof db !== 'undefined' && db) {
-                try { db.ref(STAFF_KEY).set(staff).catch(()=>{}); } catch(e) {}
+            if (typeof db !== 'undefined' && db && db.ref) {
+                try { db.ref(STAFF_KEY).set(staff).catch(function(){}); } catch(e) {}
             }
             return true;
         } catch(e) { return false; }
-    }
+    };
     
-    function getEmployeeCompany(staffMember) {
-        if (!staffMember.companyId) return null;
-        return privateCompanies.find(c => c.id === staffMember.companyId);
-    }
+    // ========== 3. دوال التحقق من الصلاحيات ==========
+    // التحقق من أن المستخدم الحالي هو المشرف الرئيسي "فـتـحـي"
+    window.isSuperAdmin = function() {
+        return currentAdminName === 'فـتـحـي';
+    };
     
-    function isSuperAdmin() {
-        return currentAdminName === 'فتحي';
-    }
-    
-    function isPrivateAdmin() {
-        if (!currentAdminName || currentAdminName === 'فتحي') return false;
+    // التحقق من أن المستخدم الحالي هو مشرف خاص
+    window.isPrivateAdmin = function() {
+        if (!currentAdminName || currentAdminName === 'فـتـحـي') return false;
         try {
-            const staff = JSON.parse(localStorage.getItem(STAFF_KEY) || '[]');
-            return staff.some(s => s.name === currentAdminName && s.companyId && 
-                (s.role === 'مشرف خاص' || s.role === 'مدير شركة'));
+            var staff = JSON.parse(localStorage.getItem(STAFF_KEY) || '[]');
+            for (var i = 0; i < staff.length; i++) {
+                if (staff[i].name === currentAdminName && staff[i].companyId && 
+                    (staff[i].role === 'مشرف خاص' || staff[i].role === 'مدير شركة')) {
+                    return true;
+                }
+            }
+            return false;
         } catch(e) { return false; }
-    }
+    };
     
-    function getCurrentPrivateAdminCompany() {
-        if (!currentAdminName || currentAdminName === 'فتحي') return null;
+    // الحصول على شركة المشرف الخاص الحالي
+    window.getCurrentPrivateAdminCompany = function() {
+        if (!currentAdminName || currentAdminName === 'فـتـحـي') return null;
         try {
-            const staff = JSON.parse(localStorage.getItem(STAFF_KEY) || '[]');
-            const admin = staff.find(s => s.name === currentAdminName && s.companyId);
+            var staff = JSON.parse(localStorage.getItem(STAFF_KEY) || '[]');
+            var admin = null;
+            for (var i = 0; i < staff.length; i++) {
+                if (staff[i].name === currentAdminName && staff[i].companyId) {
+                    admin = staff[i];
+                    break;
+                }
+            }
             if (!admin) return null;
-            return privateCompanies.find(c => c.id === admin.companyId);
+            for (var j = 0; j < privateCompanies.length; j++) {
+                if (privateCompanies[j].id === admin.companyId) return privateCompanies[j];
+            }
+            return null;
         } catch(e) { return null; }
-    }
+    };
     
-    function escapeHtml(str) {
-        if (!str) return '';
-        return str.replace(/[&<>]/g, m => m === '&' ? '&amp;' : m === '<' ? '&lt;' : '&gt;');
-    }
-    
-    // نافذة إدارة الشركات
-    window.showCompaniesManagement = function() {
-        if (!isSuperAdmin()) {
-            showToast('هذه الخاصية متاحة فقط للمشرف الرئيسي فتحي', 'error');
+    // ========== 4. نافذة إدارة الشركات (للمشرف الرئيسي فقط) ==========
+    window.showCompaniesManagementModal = function() {
+        if (!window.isSuperAdmin()) {
+            if (typeof showToast === 'function') {
+                showToast('هذه الخاصية متاحة فقط للمشرف الرئيسي فـتـحـي', 'error');
+            } else {
+                alert('هذه الخاصية متاحة فقط للمشرف الرئيسي فـتـحـي');
+            }
             return;
         }
         
-        let modal = document.getElementById('companiesModal');
+        // إنشاء النافذة إذا لم تكن موجودة
+        var modal = document.getElementById('companiesManagementModal');
         if (!modal) {
             modal = document.createElement('div');
-            modal.id = 'companiesModal';
-            modal.style.cssText = `position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.85);z-index:10050;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(5px);`;
-            modal.onclick = (e) => { if (e.target === modal) modal.style.display = 'none'; };
+            modal.id = 'companiesManagementModal';
+            modal.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.85);z-index:10060;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(5px);';
+            modal.onclick = function(e) { if (e.target === modal) modal.style.display = 'none'; };
             document.body.appendChild(modal);
         }
         
-        const companiesList = privateCompanies.map(comp => `
-            <div style="background:var(--bg-card);border-radius:12px;padding:12px 15px;margin-bottom:10px;border-right:5px solid ${comp.color};">
-                <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;">
-                    <div>
-                        <div style="display:flex;align-items:center;gap:8px;">
-                            <span style="display:inline-block;width:20px;height:20px;background:${comp.color};border-radius:50%;border:2px solid #fff;"></span>
-                            <strong style="color:var(--text);">${escapeHtml(comp.name)}</strong>
+        // بناء قائمة الشركات
+        var companiesHtml = '';
+        for (var i = 0; i < privateCompanies.length; i++) {
+            var comp = privateCompanies[i];
+            companiesHtml += `
+                <div style="background:var(--bg-card);border-radius:12px;padding:12px 15px;margin-bottom:10px;border-right:5px solid ${comp.color};">
+                    <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;">
+                        <div>
+                            <div style="display:flex;align-items:center;gap:8px;">
+                                <span style="display:inline-block;width:20px;height:20px;background:${comp.color};border-radius:50%;border:2px solid #fff;"></span>
+                                <strong style="color:var(--text);">${escapeHtml(comp.name)}</strong>
+                            </div>
+                            <small style="color:var(--text-light);">تاريخ الإضافة: ${new Date(comp.createdAt).toLocaleDateString('ar-DZ')}</small>
                         </div>
-                        <small style="color:var(--text-light);">${new Date(comp.createdAt).toLocaleDateString('ar-DZ')}</small>
-                    </div>
-                    <div style="display:flex;gap:8px;">
-                        <button class="btn ripple" style="background:${comp.color};color:#fff;margin:0;padding:6px 12px;font-size:0.8rem;" onclick="window.editCompany('${comp.id}')"><i class="fas fa-edit"></i> تعديل</button>
-                        <button class="btn ripple" style="background:#f44336;color:#fff;margin:0;padding:6px 12px;font-size:0.8rem;" onclick="window.deleteCompanyConfirm('${comp.id}','${escapeHtml(comp.name)}')"><i class="fas fa-trash"></i> حذف</button>
+                        <div style="display:flex;gap:8px;">
+                            <button class="btn ripple" style="background:${comp.color};color:#fff;margin:0;padding:6px 12px;font-size:0.8rem;" onclick="window.openEditCompanyModal('${comp.id}')">
+                                <i class="fas fa-edit"></i> تعديل
+                            </button>
+                            <button class="btn ripple" style="background:#f44336;color:#fff;margin:0;padding:6px 12px;font-size:0.8rem;" onclick="window.deleteCompanyWithConfirm('${comp.id}', '${escapeHtml(comp.name)}')">
+                                <i class="fas fa-trash"></i> حذف
+                            </button>
+                        </div>
                     </div>
                 </div>
-            </div>
-        `).join('');
+            `;
+        }
         
         modal.innerHTML = `
             <div style="background:var(--bg-card);border-radius:20px;max-width:550px;width:90%;max-height:85vh;overflow-y:auto;padding:20px;border:3px solid var(--primary);">
                 <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;border-bottom:2px solid var(--primary);padding-bottom:10px;">
                     <h2 style="color:var(--primary);margin:0;"><i class="fas fa-building"></i> إدارة الشركات الخاصة</h2>
-                    <button class="btn ripple" style="background:#757575;margin:0;width:auto;padding:5px 12px;" onclick="document.getElementById('companiesModal').style.display='none'"><i class="fas fa-times"></i></button>
+                    <button class="btn ripple" style="background:#757575;margin:0;width:auto;padding:5px 12px;" onclick="document.getElementById('companiesManagementModal').style.display='none'">
+                        <i class="fas fa-times"></i>
+                    </button>
                 </div>
+                
+                <!-- نموذج إضافة شركة جديدة -->
                 <div style="background:var(--bg);border-radius:12px;padding:15px;margin-bottom:20px;border:2px dashed var(--primary);">
-                    <h3 style="color:var(--primary);margin-bottom:12px;"><i class="fas fa-plus-circle"></i> إضافة شركة جديدة</h3>
-                    <input type="text" id="newCompanyName" class="input" placeholder="اسم الشركة" style="margin-bottom:10px;">
+                    <h3 style="color:var(--primary);margin-bottom:12px;font-size:1rem;"><i class="fas fa-plus-circle"></i> إضافة شركة جديدة</h3>
+                    <input type="text" id="newCompanyNameInput" class="input" placeholder="اسم الشركة (مثال: شركة الفجر للنظافة)" style="margin-bottom:10px;">
                     <div style="display:flex;gap:10px;align-items:center;margin-bottom:12px;">
-                        <span>لون الشركة:</span>
-                        <input type="color" id="newCompanyColor" value="#006233" style="width:60px;height:45px;border-radius:8px;">
-                        <span id="colorPreview" style="width:30px;height:30px;border-radius:50%;background:#006233;border:2px solid #fff;"></span>
+                        <span style="flex-shrink:0;">لون الشركة:</span>
+                        <input type="color" id="newCompanyColorInput" value="#006233" style="width:60px;height:45px;border-radius:8px;border:2px solid var(--border);cursor:pointer;">
+                        <span id="companyColorPreview" style="display:inline-block;width:30px;height:30px;border-radius:50%;background:#006233;border:2px solid #fff;"></span>
                     </div>
-                    <button class="btn btn-primary ripple" onclick="window.addNewCompany()" style="width:100%;"><i class="fas fa-save"></i> إضافة الشركة</button>
+                    <button class="btn btn-primary ripple" onclick="window.addNewCompanyFromModal()" style="width:100%;">
+                        <i class="fas fa-save"></i> إضافة الشركة
+                    </button>
                 </div>
-                <h3>الشركات المسجلة</h3>
-                <div id="companiesListContainer">${companiesList || '<div style="text-align:center;padding:20px;">لا توجد شركات</div>'}</div>
+                
+                <!-- قائمة الشركات -->
+                <h3 style="color:var(--primary);margin-bottom:12px;"><i class="fas fa-list"></i> الشركات المسجلة</h3>
+                <div id="companiesListContainer">
+                    ${companiesHtml || '<div style="text-align:center;padding:20px;color:var(--text-light);">لا توجد شركات مسجلة. أضف شركة جديدة.</div>'}
+                </div>
             </div>
         `;
+        
         modal.style.display = 'flex';
         
-        const colorInput = document.getElementById('newCompanyColor');
-        const preview = document.getElementById('colorPreview');
-        if (colorInput && preview) colorInput.oninput = () => { preview.style.background = colorInput.value; };
+        // معاينة اللون
+        var colorInput = document.getElementById('newCompanyColorInput');
+        var preview = document.getElementById('companyColorPreview');
+        if (colorInput && preview) {
+            colorInput.oninput = function() { preview.style.background = colorInput.value; };
+        }
     };
     
-    window.addNewCompany = function() {
-        const name = document.getElementById('newCompanyName')?.value.trim();
-        const color = document.getElementById('newCompanyColor')?.value;
-        if (!name) { showToast('الرجاء إدخال اسم الشركة', 'error'); return; }
-        if (!color) { showToast('الرجاء اختيار لون', 'error'); return; }
-        addCompany(name, color);
-        showToast(`تمت إضافة "${name}"`, 'success');
-        document.getElementById('newCompanyName').value = '';
-        window.showCompaniesManagement();
-        if (typeof loadStaffList === 'function') loadStaffList();
+    // إضافة شركة من النافذة
+    window.addNewCompanyFromModal = function() {
+        var nameInput = document.getElementById('newCompanyNameInput');
+        var colorInput = document.getElementById('newCompanyColorInput');
+        var name = nameInput ? nameInput.value.trim() : '';
+        var color = colorInput ? colorInput.value : '';
+        
+        if (!name) {
+            if (typeof showToast === 'function') showToast('الرجاء إدخال اسم الشركة', 'error');
+            else alert('الرجاء إدخال اسم الشركة');
+            return;
+        }
+        if (!color) {
+            if (typeof showToast === 'function') showToast('الرجاء اختيار لون للشركة', 'error');
+            else alert('الرجاء اختيار لون للشركة');
+            return;
+        }
+        
+        window.addPrivateCompany(name, color);
+        if (typeof showToast === 'function') {
+            showToast('تمت إضافة شركة "' + name + '" بنجاح', 'success');
+        }
+        if (nameInput) nameInput.value = '';
+        window.showCompaniesManagementModal();
+        // تحديث قائمة الموظفين
+        if (typeof window.loadStaffList === 'function') window.loadStaffList();
+        else if (typeof loadStaffList === 'function') loadStaffList();
     };
     
-    window.editCompany = function(id) {
-        const comp = privateCompanies.find(c => c.id === id);
-        if (!comp) return;
-        const newName = prompt('اسم الشركة:', comp.name);
+    // تعديل شركة
+    window.openEditCompanyModal = function(companyId) {
+        var company = null;
+        for (var i = 0; i < privateCompanies.length; i++) {
+            if (privateCompanies[i].id === companyId) {
+                company = privateCompanies[i];
+                break;
+            }
+        }
+        if (!company) return;
+        
+        var newName = prompt('تعديل اسم الشركة:', company.name);
         if (newName && newName.trim()) {
-            const newColor = prompt('لون الشركة (مثل #006233):', comp.color);
+            var newColor = prompt('تعديل لون الشركة (أدخل رمز اللون مثل #006233):', company.color);
             if (newColor && /^#[0-9A-Fa-f]{6}$/.test(newColor)) {
-                updateCompany(id, newName.trim(), newColor);
-                showToast('تم التعديل', 'success');
-                window.showCompaniesManagement();
-                if (typeof loadStaffList === 'function') loadStaffList();
-            } else if (newColor) { showToast('لون غير صالح', 'error'); }
+                window.updatePrivateCompany(companyId, newName.trim(), newColor);
+                if (typeof showToast === 'function') showToast('تم تعديل الشركة بنجاح', 'success');
+                window.showCompaniesManagementModal();
+                if (typeof window.loadStaffList === 'function') window.loadStaffList();
+                else if (typeof loadStaffList === 'function') loadStaffList();
+            } else if (newColor) {
+                if (typeof showToast === 'function') showToast('الرجاء إدخال رمز لون صحيح مثل #006233', 'error');
+            }
         }
     };
     
-    window.deleteCompanyConfirm = function(id, name) {
-        if (confirm(`حذف شركة "${name}"؟`)) {
-            deleteCompany(id);
-            showToast('تم الحذف', 'success');
-            window.showCompaniesManagement();
-            if (typeof loadStaffList === 'function') loadStaffList();
+    // حذف شركة مع تأكيد
+    window.deleteCompanyWithConfirm = function(companyId, companyName) {
+        if (confirm('هل أنت متأكد من حذف شركة "' + companyName + '"؟\nسيتم إلغاء ربط جميع الموظفين التابعين لها.')) {
+            window.deletePrivateCompany(companyId);
+            if (typeof showToast === 'function') showToast('تم حذف شركة "' + companyName + '"', 'success');
+            window.showCompaniesManagementModal();
+            if (typeof window.loadStaffList === 'function') window.loadStaffList();
+            else if (typeof loadStaffList === 'function') loadStaffList();
         }
     };
     
-    window.assignStaffToCompanyFromList = function(idx, companyId) {
-        assignStaffToCompany(idx, companyId);
-        showToast(companyId ? 'تم التعيين' : 'تم إلغاء التعيين', 'success');
-        if (typeof loadStaffList === 'function') loadStaffList();
-    };
+    // دالة مساعدة لتنظيف النص
+    function escapeHtml(str) {
+        if (!str) return '';
+        return str.replace(/[&<>]/g, function(m) {
+            if (m === '&') return '&amp;';
+            if (m === '<') return '&lt;';
+            if (m === '>') return '&gt;';
+            return m;
+        });
+    }
     
-    // تطوير دالة عرض الموظفين
-    const originalLoadStaffList = window.loadStaffList;
+    // ========== 5. تطوير دالة عرض الموظفين ==========
+    // حفظ الدالة الأصلية
+    var originalLoadStaffList = null;
+    if (typeof loadStaffList === 'function') {
+        originalLoadStaffList = loadStaffList;
+    } else if (typeof window.loadStaffList === 'function') {
+        originalLoadStaffList = window.loadStaffList;
+    }
+    
+    // الدالة المطورة
     window.loadStaffList = function() {
         try {
-            let staff = JSON.parse(localStorage.getItem(STAFF_KEY) || '[]');
-            const container = document.getElementById('staffList');
+            var staff = [];
+            try { 
+                var stored = localStorage.getItem(STAFF_KEY);
+                if (stored && stored !== 'undefined') staff = JSON.parse(stored);
+            } catch(e) { staff = []; }
+            
+            var container = document.getElementById('staffList');
             if (!container) return;
+            
             if (!staff.length) {
-                container.innerHTML = '<div class="empty-state"><p>لا يوجد موظفين</p></div>';
+                container.innerHTML = '<div class="empty-state"><i class="fas fa-users-slash"></i><p>لا يوجد موظفين مسجلين</p></div>';
                 return;
             }
             
-            let filteredStaff = staff;
-            let adminCompany = null;
-            if (isPrivateAdmin()) {
-                adminCompany = getCurrentPrivateAdminCompany();
-                if (adminCompany) filteredStaff = staff.filter(s => s.companyId === adminCompany.id);
+            // للمشرف الخاص: عرض موظفي شركته فقط
+            var filteredStaff = staff.slice();
+            var adminCompany = null;
+            if (window.isPrivateAdmin && window.isPrivateAdmin()) {
+                adminCompany = window.getCurrentPrivateAdminCompany ? window.getCurrentPrivateAdminCompany() : null;
+                if (adminCompany) {
+                    filteredStaff = staff.filter(function(s) { return s.companyId === adminCompany.id; });
+                }
             }
             
-            const getOrigIndex = (m) => staff.findIndex(s => s.name === m.name && s.role === m.role);
+            var isSuper = window.isSuperAdmin ? window.isSuperAdmin() : false;
             
-            container.innerHTML = filteredStaff.map(m => {
-                const comp = getEmployeeCompany(m);
-                const borderColor = comp ? comp.color : 'var(--primary)';
-                const origIdx = getOrigIndex(m);
-                return `
-                    <div class="staff-item" style="border-right:4px solid ${borderColor};margin-bottom:12px;background:var(--bg-card);border-radius:12px;">
-                        <div style="flex:1;">
-                            <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:5px;">
-                                <b style="color:${borderColor};">${escapeHtml(m.role)}:</b> <span style="font-weight:600;">${escapeHtml(m.name)}</span>
-                                ${comp ? `<span style="background:${comp.color}20;color:${comp.color};padding:2px 8px;border-radius:15px;font-size:0.7rem;">${escapeHtml(comp.name)}</span>` : ''}
+            var html = '';
+            for (var i = 0; i < filteredStaff.length; i++) {
+                var m = filteredStaff[i];
+                var company = window.getEmployeeCompany ? window.getEmployeeCompany(m) : null;
+                var borderColor = company ? company.color : 'var(--primary)';
+                
+                // إيجاد الفهرس الأصلي
+                var originalIndex = -1;
+                for (var j = 0; j < staff.length; j++) {
+                    if (staff[j].name === m.name && staff[j].role === m.role) {
+                        originalIndex = j;
+                        break;
+                    }
+                }
+                
+                html += `
+                    <div class="staff-item" style="border-right:4px solid ${borderColor};margin-bottom:12px;background:var(--bg-card);border-radius:12px;padding:12px;">
+                        <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:10px;">
+                            <div style="flex:1;">
+                                <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:5px;">
+                                    <b style="color:${borderColor};">${escapeHtml(m.role)}:</b> 
+                                    <span style="font-weight:600;">${escapeHtml(m.name)}</span>
+                                    ${company ? `<span style="background:${company.color}20;color:${company.color};padding:2px 8px;border-radius:15px;font-size:0.7rem;border:1px solid ${company.color};">${escapeHtml(company.name)}</span>` : ''}
+                                </div>
+                                ${m.phone ? `<div style="font-size:0.8rem;color:var(--text-light);"><i class="fas fa-phone"></i> <a href="tel:${m.phone}" style="color:var(--primary);text-decoration:none;">${m.phone}</a></div>` : ''}
+                                <div style="font-size:0.7rem;color:var(--text-muted);margin-top:4px;">تاريخ الإضافة: ${m.addedDate || '-'}</div>
                             </div>
-                            ${m.phone ? `<div><i class="fas fa-phone"></i> <a href="tel:${m.phone}" style="color:var(--primary);">${m.phone}</a></div>` : ''}
-                        </div>
-                        <div style="display:flex;gap:8px;">
-                            ${isSuperAdmin() ? `
-                                <select id="compSel_${origIdx}" style="padding:5px;border-radius:8px;font-size:0.7rem;">
-                                    <option value="">-- شركة --</option>
-                                    ${privateCompanies.map(c => `<option value="${c.id}" ${m.companyId === c.id ? 'selected' : ''} style="color:${c.color};">${escapeHtml(c.name)}</option>`).join('')}
-                                </select>
-                                <button class="edit-btn" onclick="window.assignStaffToCompanyFromList(${origIdx}, document.getElementById('compSel_${origIdx}').value)" style="width:auto;padding:5px 10px;"><i class="fas fa-link"></i></button>
-                            ` : ''}
-                            ${(!isPrivateAdmin() || (adminCompany && m.companyId === adminCompany.id)) ? `
-                                <button class="edit-btn" onclick="editStaff(${origIdx})"><i class="fas fa-edit"></i></button>
-                                <button class="delete-btn" onclick="deleteStaff(${origIdx})"><i class="fas fa-trash"></i></button>
-                            ` : ''}
+                            <div style="display:flex;gap:8px;flex-wrap:wrap;">
+                                ${isSuper && privateCompanies.length > 0 ? `
+                                    <select id="companySelect_${originalIndex}" style="padding:5px 8px;border-radius:8px;border:1px solid var(--border);background:var(--bg);color:var(--text);font-size:0.75rem;">
+                                        <option value="">-- بدون شركة --</option>
+                                        ${privateCompanies.map(function(c) {
+                                            return '<option value="' + c.id + '" ' + (m.companyId === c.id ? 'selected' : '') + ' style="color:' + c.color + ';">' + escapeHtml(c.name) + '</option>';
+                                        }).join('')}
+                                    </select>
+                                    <button class="edit-btn" onclick="window.assignStaffToCompanyFromList(${originalIndex}, document.getElementById('companySelect_${originalIndex}').value)" style="background:var(--primary);width:auto;padding:5px 10px;border-radius:8px;">
+                                        <i class="fas fa-link"></i>
+                                    </button>
+                                ` : ''}
+                                ${(!window.isPrivateAdmin || !window.isPrivateAdmin() || (adminCompany && m.companyId === adminCompany.id)) ? `
+                                    <button class="edit-btn" onclick="editStaff(${originalIndex})"><i class="fas fa-edit"></i></button>
+                                    <button class="delete-btn" onclick="deleteStaff(${originalIndex})"><i class="fas fa-trash"></i></button>
+                                ` : ''}
+                            </div>
                         </div>
                     </div>
                 `;
-            }).join('');
+            }
+            
+            container.innerHTML = html;
+            
+        } catch(e) { 
+            console.error('loadStaffList error:', e);
+            if (originalLoadStaffList) originalLoadStaffList();
+        }
+    };
+    
+    // دالة تعيين الشركة من القائمة
+    window.assignStaffToCompanyFromList = function(staffIndex, companyId) {
+        try {
+            var staff = JSON.parse(localStorage.getItem(STAFF_KEY) || '[]');
+            if (!staff[staffIndex]) return;
+            
+            if (!companyId) {
+                // إزالة التعيين
+                var newStaff = {};
+                for (var key in staff[staffIndex]) {
+                    if (key !== 'companyId' && key !== 'companyName' && key !== 'companyColor') {
+                        newStaff[key] = staff[staffIndex][key];
+                    }
+                }
+                staff[staffIndex] = newStaff;
+            } else {
+                var company = null;
+                for (var i = 0; i < privateCompanies.length; i++) {
+                    if (privateCompanies[i].id === companyId) {
+                        company = privateCompanies[i];
+                        break;
+                    }
+                }
+                if (!company) return;
+                staff[staffIndex].companyId = company.id;
+                staff[staffIndex].companyName = company.name;
+                staff[staffIndex].companyColor = company.color;
+            }
+            
+            localStorage.setItem(STAFF_KEY, JSON.stringify(staff));
+            if (typeof db !== 'undefined' && db && db.ref) {
+                try { db.ref(STAFF_KEY).set(staff).catch(function(){}); } catch(e) {}
+            }
+            
+            if (typeof showToast === 'function') {
+                showToast(companyId ? 'تم تعيين الموظف للشركة' : 'تم إلغاء تعيين الموظف من الشركة', 'success');
+            }
+            
+            window.loadStaffList();
         } catch(e) {}
     };
     
-    // تطوير إضافة موظف
-    const originalAddStaff = window.addStaff;
+    // ========== 6. تطوير دالة إضافة موظف ==========
+    var originalAddStaff = null;
+    if (typeof addStaff === 'function') {
+        originalAddStaff = addStaff;
+    } else if (typeof window.addStaff === 'function') {
+        originalAddStaff = window.addStaff;
+    }
+    
     window.addStaff = function() {
-        const name = document.getElementById('newStaffName')?.value.trim();
-        const role = document.getElementById('newStaffRole')?.value;
-        const phone = document.getElementById('newStaffPhone')?.value.trim();
-        if (!name || !role) { showToast('أكمل البيانات', 'error'); return; }
+        var name = document.getElementById('newStaffName') ? document.getElementById('newStaffName').value.trim() : '';
+        var role = document.getElementById('newStaffRole') ? document.getElementById('newStaffRole').value : '';
+        var phone = document.getElementById('newStaffPhone') ? document.getElementById('newStaffPhone').value.trim() : '';
         
-        let staff = JSON.parse(localStorage.getItem(STAFF_KEY) || '[]');
-        const newStaff = { id: Date.now(), name, role, phone: phone || '', addedDate: new Date().toLocaleDateString('ar-DZ') };
+        if (!name || !role) {
+            if (typeof showToast === 'function') showToast('الرجاء إدخال الاسم والصلاحية', 'error');
+            return;
+        }
         
-        const privateAdminComp = getCurrentPrivateAdminCompany();
-        if (privateAdminComp && !isSuperAdmin()) {
-            newStaff.companyId = privateAdminComp.id;
-            newStaff.companyName = privateAdminComp.name;
-            newStaff.companyColor = privateAdminComp.color;
+        var staff = [];
+        try { 
+            var stored = localStorage.getItem(STAFF_KEY);
+            if (stored && stored !== 'undefined') staff = JSON.parse(stored);
+        } catch(e) { staff = []; }
+        
+        var newStaff = {
+            id: Date.now(),
+            name: name,
+            role: role,
+            phone: phone || '',
+            addedBy: currentAdminName || 'system',
+            addedDate: new Date().toLocaleDateString('ar-DZ')
+        };
+        
+        // إذا كان المشرف الخاص، يضاف الموظف تلقائياً لشركته
+        if (window.isPrivateAdmin && window.isPrivateAdmin()) {
+            var adminCompany = window.getCurrentPrivateAdminCompany ? window.getCurrentPrivateAdminCompany() : null;
+            if (adminCompany) {
+                newStaff.companyId = adminCompany.id;
+                newStaff.companyName = adminCompany.name;
+                newStaff.companyColor = adminCompany.color;
+            }
         }
         
         staff.push(newStaff);
-        localStorage.setItem(STAFF_KEY, JSON.stringify(staff));
-        if (typeof db !== 'undefined' && db) try { db.ref(STAFF_KEY).set(staff).catch(()=>{}); } catch(e) {}
         
-        document.getElementById('newStaffName').value = '';
-        document.getElementById('newStaffRole').value = '';
-        document.getElementById('newStaffPhone').value = '';
-        if (typeof loadStaffList === 'function') loadStaffList();
-        showToast(`تمت إضافة ${name}`, 'success');
+        try {
+            localStorage.setItem(STAFF_KEY, JSON.stringify(staff));
+            if (typeof db !== 'undefined' && db && db.ref) {
+                try { db.ref(STAFF_KEY).set(staff).catch(function(){}); } catch(e) {}
+            }
+            if (document.getElementById('newStaffName')) document.getElementById('newStaffName').value = '';
+            if (document.getElementById('newStaffRole')) document.getElementById('newStaffRole').value = '';
+            if (document.getElementById('newStaffPhone')) document.getElementById('newStaffPhone').value = '';
+            
+            window.loadStaffList();
+            if (typeof showToast === 'function') showToast('تمت إضافة ' + name + ' بنجاح', 'success');
+        } catch(e) { 
+            if (typeof showToast === 'function') showToast('خطأ في حفظ البيانات', 'error');
+        }
     };
     
-    // إضافة خيار "مشرف خاص"
-    function addPrivateAdminRole() {
-        const sel = document.getElementById('newStaffRole');
-        if (sel && !Array.from(sel.options).some(o => o.value === 'مشرف خاص')) {
-            const opt = document.createElement('option');
-            opt.value = 'مشرف خاص';
-            opt.textContent = 'مشرف خاص (مدير شركة)';
-            sel.appendChild(opt);
-        }
-    }
-    
-    // إضافة زر إدارة الشركات في لوحة المشرف
-    function addCompaniesButton() {
-        const panel = document.getElementById('adminPanel');
-        if (!panel) return;
-        if (document.getElementById('companiesSectionBtn')) return;
-        
-        const section = document.createElement('div');
-        section.id = 'companiesSectionBtn';
-        section.style.cssText = 'background:var(--bg);border-radius:var(--radius-sm);padding:12px;margin-bottom:10px;border:2px solid #e8eaf6;';
-        section.innerHTML = `
-            <div style="font-weight:800;color:#283593;margin-bottom:10px;"><i class="fas fa-building"></i> إدارة الشركات الخاصة</div>
-            <button class="btn ripple" style="background:linear-gradient(135deg,#006233,#004d29);width:100%" onclick="window.showCompaniesManagement()">
-                <i class="fas fa-plus-circle"></i> إدارة الشركات (إضافة/تعديل/حذف)
-            </button>
-        `;
-        
-        const settings = document.getElementById('adminSettingsSection');
-        if (settings && settings.parentNode) {
-            settings.parentNode.insertBefore(section, settings.nextSibling);
-        } else {
-            panel.appendChild(section);
-        }
-    }
-    
-    // إخفاء إدارة الشركات عن المشرف الخاص
-    function hideCompaniesFromPrivateAdmin() {
-        if (isPrivateAdmin()) {
-            const btn = document.getElementById('companiesSectionBtn');
-            if (btn) btn.style.display = 'none';
-            const comp = getCurrentPrivateAdminCompany();
-            if (comp) {
-                const welcome = document.querySelector('#adminPanel .success-card');
-                if (welcome) welcome.style.background = `linear-gradient(135deg, ${comp.color}, ${comp.color}cc)`;
+    // ========== 7. إضافة خيار "مشرف خاص" في قائمة الصلاحيات ==========
+    function addPrivateAdminRoleOption() {
+        var roleSelect = document.getElementById('newStaffRole');
+        if (roleSelect) {
+            var options = roleSelect.options;
+            var exists = false;
+            for (var i = 0; i < options.length; i++) {
+                if (options[i].value === 'مشرف خاص') {
+                    exists = true;
+                    break;
+                }
+            }
+            if (!exists) {
+                var option = document.createElement('option');
+                option.value = 'مشرف خاص';
+                option.textContent = 'مشرف خاص (مدير شركة)';
+                roleSelect.appendChild(option);
             }
         }
     }
     
-    // تهيئة
-    function init() {
-        loadCompanies();
-        addPrivateAdminRole();
-        setTimeout(addCompaniesButton, 1000);
-        setTimeout(hideCompaniesFromPrivateAdmin, 1100);
+    // ========== 8. إضافة زر إدارة الشركات في لوحة المشرف ==========
+    function addCompaniesButtonToAdminPanel() {
+        // ننتظر حتى يتم تحميل لوحة المشرف
+        var checkInterval = setInterval(function() {
+            var adminPanel = document.getElementById('adminPanel');
+            if (adminPanel && !document.getElementById('companiesManagementButton')) {
+                clearInterval(checkInterval);
+                
+                // البحث عن مكان مناسب لإضافة الزر
+                var targetSection = adminPanel.querySelector('div[style*="background:var(--bg)"]');
+                if (!targetSection) {
+                    targetSection = adminPanel;
+                }
+                
+                var buttonContainer = document.createElement('div');
+                buttonContainer.id = 'companiesManagementButton';
+                buttonContainer.style.cssText = 'background:var(--bg);border-radius:var(--radius-sm);padding:12px;margin-bottom:10px;border:2px solid #e8eaf6;';
+                buttonContainer.innerHTML = `
+                    <div style="font-weight:800;color:#283593;margin-bottom:10px;font-size:0.9rem">
+                        <i class="fas fa-building"></i> إدارة الشركات الخاصة
+                    </div>
+                    <button class="btn ripple" style="background:linear-gradient(135deg,#006233,#004d29);width:100%" onclick="window.showCompaniesManagementModal()">
+                        <i class="fas fa-plus-circle"></i> إدارة الشركات (إضافة/تعديل/حذف)
+                    </button>
+                `;
+                
+                // إضافة الزر
+                if (targetSection.parentNode) {
+                    targetSection.parentNode.insertBefore(buttonContainer, targetSection.nextSibling);
+                } else {
+                    adminPanel.appendChild(buttonContainer);
+                }
+            }
+        }, 500);
     }
     
+    // ========== 9. تخصيص واجهة المشرف الخاص ==========
+    function customizePrivateAdminUI() {
+        if (window.isPrivateAdmin && window.isPrivateAdmin()) {
+            // إخفاء زر إدارة الشركات
+            var companiesBtn = document.getElementById('companiesManagementButton');
+            if (companiesBtn) companiesBtn.style.display = 'none';
+            
+            // تغيير لون شريط الترحيب
+            var company = window.getCurrentPrivateAdminCompany ? window.getCurrentPrivateAdminCompany() : null;
+            if (company) {
+                var welcomeCard = document.querySelector('#adminPanel .success-card');
+                if (welcomeCard) {
+                    welcomeCard.style.background = 'linear-gradient(135deg, ' + company.color + ', ' + company.color + 'cc)';
+                }
+            }
+        }
+    }
+    
+    // ========== 10. تهيئة كل شيء ==========
+    function initCompaniesExtension() {
+        loadCompanies();
+        addPrivateAdminRoleOption();
+        addCompaniesButtonToAdminPanel();
+        
+        // تحديث واجهة المشرف الخاص بعد تسجيل الدخول
+        setTimeout(customizePrivateAdminUI, 1000);
+        
+        // مراقبة تغير الصفحة لتطبيق التخصيص
+        var originalShowPage = window.showPage;
+        if (originalShowPage) {
+            window.showPage = function(id) {
+                originalShowPage(id);
+                if (id === 'admin') {
+                    setTimeout(customizePrivateAdminUI, 200);
+                }
+            };
+        }
+        
+        // تحديث قائمة الموظفين بشكل دوري
+        setInterval(function() {
+            if (document.getElementById('staffList') && document.getElementById('staffList').children.length > 0) {
+                window.loadStaffList();
+            }
+        }, 3000);
+    }
+    
+    // تشغيل التهيئة
     if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', init);
+        document.addEventListener('DOMContentLoaded', initCompaniesExtension);
     } else {
-        init();
+        initCompaniesExtension();
     }
     
 })();
