@@ -10140,4 +10140,122 @@ function optimizeDriverRoute(start, points) {
     observer.observe(document.body, { childList: true, subtree: true });
 })();
 </script>
+  <!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#006233">
+<meta name="description" content="تطبيق المدية نظيفة - إدارة النفايات والتدوير">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>المدية نظيفة 2026 - نظام متكامل متزامن</title>
+
+<style>
+/* ===== المتغيرات الأساسية ===== */
+:root {
+  --primary: #006233;
+  --font-base: 18px;
+  --font-lg: 20px;
+  --font-xl: 22px;
+  --primary-light: #008040;
+  --primary-dark: #004d29;
+  --secondary: #C41E3A;
+  --secondary-light: #e63950;
+  --accent: #D4AF37;
+  --accent-light: #e6c855;
+  --bg: #f5f7fa;
+  --bg-card: #ffffff;
+  --text: #1a1a2e;
+  --text-light: #6c757d;
+  --text-muted: #adb5bd;
+  --border: #e0e0e0;
+  --shadow: rgba(0,0,0,0.08);
+  --shadow-lg: rgba(0,0,0,0.15);
+  --success: #4CAF50;
+  --warning: #FF9800;
+  --danger: #f44336;
+  --info: #2196F3;
+  --radius: 16px;
+  --radius-sm: 10px;
+  --radius-lg: 24px;
+  --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+</style>
+</head>
+<body>
+<!-- قسم الشركات في الإدارة -->
+<div id="companyManagement" style="margin: 20px;">
+    <h3 style="color: var(--primary);">🏢 إدارة الشركات</h3>
+    <div style="margin-bottom: 10px;">
+        <input type="text" id="newCompanyName" placeholder="اسم الشركة" class="input" style="margin-bottom: 5px;" />
+        <input type="color" id="newCompanyColor" placeholder="اختر اللون" class="input" style="width: 100%;" />
+        <button class="btn btn-primary ripple" onclick="addCompany()">إضافة شركة</button>
+    </div>
+    <div id="companyList"></div>
+</div>
+
+<script>
+let companies = [];
+
+function addCompany() {
+    const name = document.getElementById('newCompanyName').value.trim();
+    const color = document.getElementById('newCompanyColor').value;
+    if (name) {
+        companies.push({ name, color });
+        document.getElementById('newCompanyName').value = '';
+        renderCompanies();
+    } else {
+        alert('يرجى إدخال اسم الشركة!');
+    }
+}
+
+function renderCompanies() {
+    const list = document.getElementById('companyList');
+    list.innerHTML = '';
+    companies.forEach((company, index) => {
+        const div = document.createElement('div');
+        div.style.border = `2px solid ${company.color}`;
+        div.style.borderRadius = '8px';
+        div.style.padding = '10px';
+        div.style.marginBottom = '5px';
+        div.innerHTML = `<b style='color:${company.color}'>${company.name}</b> <button onclick='editCompany(${index})'>تعديل</button> <button onclick='deleteCompany(${index})'>حذف</button>`;
+        list.appendChild(div);
+    });
+}
+
+function editCompany(index) {
+    const name = prompt('أدخل اسم الشركة الجديد:', companies[index].name);
+    const color = prompt('أدخل لون الشركة الجديد:', companies[index].color);
+    if (name) companies[index].name = name;
+    if (color) companies[index].color = color;
+    renderCompanies();
+}
+
+function deleteCompany(index) {
+    if (confirm('هل أنت متأكد من حذف هذه الشركة؟')) {
+        companies.splice(index, 1);
+        renderCompanies();
+    }
+}
+
+// ===== إضافة حقل للشركة في إدارة الموظفين =====
+function addCompanyField() {
+    const phoneField = document.getElementById('newStaffPhone');
+    if (phoneField && !document.getElementById('dynamicCompanyField')) {
+        const div = document.createElement('div');
+        div.id = 'dynamicCompanyField';
+        div.innerHTML = `
+            <label style='display:block; margin:10px 0 5px 0; font-weight:bold'>🏢 الشركة</label>
+            <select id='companyForStaff' class='input'>
+                <option value='public'>بلدية المدية</option>
+                ${companies.map(c => `<option value='${c.name}'>${c.name}</option>`).join('')}
+            </select>
+        `;
+        phoneField.parentNode.insertBefore(div, phoneField.nextSibling);
+    }
+}
+</script>
+</body>
+</html>
 </body></html>
