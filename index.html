@@ -2015,7 +2015,17 @@ select.input {
 #emergencyBtn{position:fixed;bottom:70px;left:16px;width:52px;height:52px;background:linear-gradient(135deg,#f44336,#b71c1c);color:#fff;border:none;border-radius:50%;font-size:1.3rem;cursor:pointer;box-shadow:0 4px 18px rgba(244,67,54,0.5);z-index:9998;display:none;align-items:center;justify-content:center;animation:emergencyPulse 2s infinite;transition:var(--transition)}
 #emergencyBtn.visible{display:flex}
 @keyframes emergencyPulse{0%,100%{box-shadow:0 4px 18px rgba(244,67,54,0.5)}50%{box-shadow:0 4px 28px rgba(244,67,54,0.9),0 0 0 8px rgba(244,67,54,0.15)}}
-#emergencyBtn:hover{transform:scale(1.1)}</style>
+#emergencyBtn:hover{transform:scale(1.1)}
+
+/* ===== تحسينات 10/05/2026 ===== */
+.map-legend-box { position:fixed; bottom:80px; right:20px; z-index:1100; background:white; padding:15px; border-radius:12px; box-shadow:0 4px 15px rgba(0,0,0,0.15); width:200px; }
+.legend-item { display:flex; align-items:center; margin:8px 0; font-size:0.85rem; font-weight:bold; }
+.dot { width:12px; height:12px; border-radius:50%; margin-left:10px; }
+.ext-input { width: 100%; padding: 10px; margin: 5px 0; border: 1px solid #ddd; border-radius: 8px; font-family: 'Cairo'; }
+.ext-btn { background: #006233; color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; width: 100%; font-weight: bold; transition: 0.3s; }
+.ext-btn:hover { opacity:0.9; transform:translateY(-2px); }
+.contact-box { border-top:1px solid #eee; margin-top:10px; padding-top:10px; }
+</style>
 </head>
 <body>
 
@@ -4383,237 +4393,7 @@ async function analyzeWasteImage(imageBase64) {
     const data = await res.json();
     return data.output[0].content[0].text;
     */
-    // ===================== إضافة حقل الشركة في إدارة الموظفين بشكل مباشر =====================
-(function() {
-    console.log('جارٍ إضافة حقل الشركة إلى إدارة الموظفين...');
     
-    // 1. إنشاء قائمة الشركات في localStorage
-    if (!localStorage.getItem('medea_companies')) {
-        localStorage.setItem('medea_companies', JSON.stringify([
-            { id: 'public', name: 'بلدية المدية', color: '#006233' }
-        ]));
-    }
-    
-    // 2. إضافة دالة لإدارة الشركات في لوحة المشرف
-    function addCompanyManager() {
-        var adminPanel = document.getElementById('adminPanel');
-        if (!adminPanel) { setTimeout(addCompanyManager, 500); return; }
-        if (document.getElementById('extCompanyManager')) return;
-        
-        var div = document.createElement('div');
-        div.id = 'extCompanyManager';
-        div.className = 'card';
-        div.style.borderRight = '4px solid #D4AF37';
-        div.style.marginBottom = '15px';
-        div.innerHTML = `
-            <h4 style="color:var(--primary); margin:0 0 10px 0">🏢 إضافة شركة جديدة</h4>
-            <div style="display:flex; gap:10px; flex-wrap:wrap">
-                <input type="text" id="extNewCompanyName" placeholder="اسم الشركة" style="flex:2; padding:10px; border:1px solid #ddd; border-radius:8px">
-                <input type="color" id="extNewCompanyColor" value="#006233" style="flex:1; height:42px; border:1px solid #ddd; border-radius:8px">
-                <button id="extSaveCompanyBtn" style="background:#006233; color:white; border:none; padding:10px 20px; border-radius:8px; cursor:pointer">➕ إضافة</button>
-            </div>
-            <div id="extCompaniesList" style="margin-top:10px; font-size:12px"></div>
-        `;
-        adminPanel.insertBefore(div, adminPanel.firstChild);
-        
-        function loadCompaniesList() {
-            var companies = JSON.parse(localStorage.getItem('medea_companies') || '[]');
-            var container = document.getElementById('extCompaniesList');
-            if (!container) return;
-            var html = '<div style="display:flex; flex-wrap:wrap; gap:5px">';
-            companies.forEach(function(c) {
-                if (c.id !== 'public') {
-                    html += `<span style="background:${c.color}20; border-right:3px solid ${c.color}; padding:3px 10px; border-radius:15px; font-size:12px">${c.name}</span>`;
-                }
-            });
-            html += '</div>';
-            container.innerHTML = html || 'لا توجد شركات';
-        }
-        
-        document.getElementById('extSaveCompanyBtn').onclick = function() {
-            var name = document.getElementById('extNewCompanyName').value.trim();
-            if (!name) { alert('أدخل اسم الشركة'); return; }
-            var companies = JSON.parse(localStorage.getItem('medea_companies') || '[]');
-            companies.push({ id: 'c_' + Date.now(), name: name, color: document.getElementById('extNewCompanyColor').value });
-            localStorage.setItem('medea_companies', JSON.stringify(companies));
-            document.getElementById('extNewCompanyName').value = '';
-            loadCompaniesList();
-            updateCompanySelect();
-            alert('تم إضافة الشركة: ' + name);
-        };
-        
-        loadCompaniesList();
-    }
-    
-    // 3. تحديث القائمة المنسدلة للشركات
-    function updateCompanySelect() {
-        var companies = JSON.parse(localStorage.getItem('medea_companies') || '[]');
-        var options = '<option value="public">🏛️ بلدية المدية</option>';
-        companies.forEach(function(c) {
-            if (c.id !== 'public') {
-                options += '<option value="' + c.id + '">🏢 ' + c.name + '</option>';
-            }
-        });
-        var select = document.getElementById('extEmployeeCompany');
-        if (select) select.innerHTML = options;
-        var editSelect = document.getElementById('extEditCompanySelect');
-        if (editSelect) editSelect.innerHTML = options;
-    }
-    
-    // 4. إضافة حقل الشركة إلى صفحة إدارة الموظفين
-    function addCompanyFieldToStaff() {
-        var staffPage = document.getElementById('staffPage');
-        if (!staffPage) { setTimeout(addCompanyFieldToStaff, 500); return; }
-        
-        // البحث عن حقل إضافة الموظف
-        var addCard = staffPage.querySelector('.card');
-        if (addCard && !document.getElementById('extEmployeeCompany')) {
-            var phoneInput = document.getElementById('newStaffPhone');
-            if (phoneInput && phoneInput.parentNode) {
-                var div = document.createElement('div');
-                div.style.marginTop = '10px';
-                div.style.marginBottom = '10px';
-                div.innerHTML = `
-                    <label style="display:block; margin-bottom:5px; font-weight:bold; color:var(--primary)">🏢 الشركة (للسائقين والمشرفين الخاصين)</label>
-                    <select id="extEmployeeCompany" class="input" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:8px">
-                        <option value="public">🏛️ بلدية المدية</option>
-                    </select>
-                `;
-                phoneInput.parentNode.insertBefore(div, phoneInput.nextSibling);
-                updateCompanySelect();
-            }
-        }
-        
-        // حفظ العلاقة بين الموظف والشركة
-        if (typeof window.addStaff === 'function') {
-            var oldAddStaff = window.addStaff;
-            window.addStaff = function() {
-                var companySelect = document.getElementById('extEmployeeCompany');
-                var companyId = companySelect ? companySelect.value : 'public';
-                var empName = document.getElementById('newStaffName').value.trim();
-                var empRole = document.getElementById('newStaffRole').value;
-                
-                var result = oldAddStaff.apply(this, arguments);
-                
-                if (empName && (empRole === 'سائق' || empRole === 'مشرف خاص')) {
-                    var empCompanies = JSON.parse(localStorage.getItem('medea_emp_companies') || '{}');
-                    empCompanies[empName] = companyId;
-                    localStorage.setItem('medea_emp_companies', JSON.stringify(empCompanies));
-                }
-                return result;
-            };
-        }
-        
-        // تعديل نافذة التعديل
-        window.editStaff = function(index) {
-            var staff = JSON.parse(localStorage.getItem('medea_staff') || '[]');
-            var emp = staff[index];
-            if (!emp) return;
-            
-            var empCompanies = JSON.parse(localStorage.getItem('medea_emp_companies') || '{}');
-            var currentCompany = empCompanies[emp.name] || 'public';
-            var companies = JSON.parse(localStorage.getItem('medea_companies') || '[]');
-            
-            var options = '<option value="public">🏛️ بلدية المدية</option>';
-            companies.forEach(function(c) {
-                if (c.id !== 'public') {
-                    options += '<option value="' + c.id + '" ' + (currentCompany === c.id ? 'selected' : '') + '>🏢 ' + c.name + '</option>';
-                }
-            });
-            
-            var modal = document.createElement('div');
-            modal.style.cssText = 'position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:100000; display:flex; align-items:center; justify-content:center';
-            modal.innerHTML = `
-                <div style="background:white; border-radius:20px; padding:25px; width:90%; max-width:400px">
-                    <h3 style="color:#006233; text-align:center; margin-bottom:15px">✏️ تعديل الموظف</h3>
-                    <div style="margin-bottom:10px"><label>👤 الاسم</label><input type="text" id="extEditName" style="width:100%; padding:10px; margin-top:5px; border:1px solid #ddd; border-radius:8px" value="${emp.name.replace(/['"]/g, '&quot;')}"></div>
-                    <div style="margin-bottom:10px"><label>📞 الهاتف</label><input type="text" id="extEditPhone" style="width:100%; padding:10px; margin-top:5px; border:1px solid #ddd; border-radius:8px" value="${emp.phone || ''}"></div>
-                    <div style="margin-bottom:10px"><label>💼 الدور</label>
-                        <select id="extEditRole" style="width:100%; padding:10px; margin-top:5px; border:1px solid #ddd; border-radius:8px">
-                            <option value="سائق" ${emp.role === 'سائق' ? 'selected' : ''}>🚛 سائق</option>
-                            <option value="مشرف خاص" ${emp.role === 'مشرف خاص' ? 'selected' : ''}>👨‍💼 مشرف خاص</option>
-                        </select>
-                    </div>
-                    <div style="margin-bottom:20px" id="extEditCompanyDiv">
-                        <label>🏢 الشركة</label>
-                        <select id="extEditCompanySelect" style="width:100%; padding:10px; margin-top:5px; border:1px solid #ddd; border-radius:8px">${options}</select>
-                    </div>
-                    <div style="display:flex; gap:10px"><button id="extSaveEdit" style="flex:1; background:#006233; color:white; border:none; padding:10px; border-radius:8px; cursor:pointer">💾 حفظ</button><button id="extCancelEdit" style="flex:1; background:#757575; color:white; border:none; padding:10px; border-radius:8px; cursor:pointer">❌ إلغاء</button></div>
-                </div>
-            `;
-            document.body.appendChild(modal);
-            
-            var roleSelect = modal.querySelector('#extEditRole');
-            var companyDiv = modal.querySelector('#extEditCompanyDiv');
-            roleSelect.onchange = function() {
-                companyDiv.style.display = (roleSelect.value === 'سائق' || roleSelect.value === 'مشرف خاص') ? 'block' : 'none';
-            };
-            companyDiv.style.display = (emp.role === 'سائق' || emp.role === 'مشرف خاص') ? 'block' : 'none';
-            
-            modal.querySelector('#extSaveEdit').onclick = function() {
-                var newName = modal.querySelector('#extEditName').value.trim();
-                var newPhone = modal.querySelector('#extEditPhone').value.trim();
-                var newRole = modal.querySelector('#extEditRole').value;
-                var newCompany = modal.querySelector('#extEditCompanySelect').value;
-                if (!newName) { alert('أدخل الاسم'); return; }
-                
-                var oldName = emp.name;
-                staff[index] = { name: newName, role: newRole, phone: newPhone };
-                localStorage.setItem('medea_staff', JSON.stringify(staff));
-                
-                var empCompanies = JSON.parse(localStorage.getItem('medea_emp_companies') || '{}');
-                if (oldName !== newName) delete empCompanies[oldName];
-                if (newRole === 'سائق' || newRole === 'مشرف خاص') {
-                    empCompanies[newName] = newCompany;
-                }
-                localStorage.setItem('medea_emp_companies', JSON.stringify(empCompanies));
-                
-                modal.remove();
-                if (typeof window.loadStaffList === 'function') window.loadStaffList();
-                alert('✅ تم التعديل');
-            };
-            modal.querySelector('#extCancelEdit').onclick = function() { modal.remove(); };
-        };
-        
-        // عرض الشركة في قائمة الموظفين
-        if (typeof window.loadStaffList === 'function') {
-            var oldLoadStaff = window.loadStaffList;
-            window.loadStaffList = function() {
-                oldLoadStaff.apply(this, arguments);
-                setTimeout(function() {
-                    var empCompanies = JSON.parse(localStorage.getItem('medea_emp_companies') || '{}');
-                    var companies = JSON.parse(localStorage.getItem('medea_companies') || '[]');
-                    document.querySelectorAll('#staffList .staff-item').forEach(function(item) {
-                        var text = item.innerText || item.textContent;
-                        var nameMatch = text.match(/(سائق|مشرف خاص):\s*([^\n]+)/);
-                        if (nameMatch) {
-                            var empName = nameMatch[2].trim();
-                            var companyId = empCompanies[empName];
-                            if (companyId && companyId !== 'public') {
-                                var company = companies.find(function(c) { return c.id === companyId; });
-                                if (company) {
-                                    var badge = document.createElement('span');
-                                    badge.style.cssText = `background:${company.color}; color:white; padding:2px 8px; border-radius:12px; font-size:10px; margin-right:8px; display:inline-block`;
-                                    badge.innerHTML = '🏢 ' + company.name;
-                                    var firstDiv = item.querySelector('div');
-                                    if (firstDiv) firstDiv.insertBefore(badge, firstDiv.firstChild);
-                                }
-                            }
-                        }
-                    });
-                }, 200);
-            };
-        }
-    }
-    
-    // 5. تشغيل كل شيء
-    addCompanyManager();
-    addCompanyFieldToStaff();
-    
-    console.log('✅ تمت إضافة حقل الشركة إلى إدارة الموظفين');
-    alert('تم التحديث! قم بتحديث الصفحة (F5) ثم سجل الدخول كمشرف عام');
-})();
-
     // للغرض التجريبي، سنقوم بإرجاع تحليل بسيط بناءً على سياق التطبيق
     return "تم تحليل الصورة: نفايات عامة تحتاج إلى جمع فوري.";
   } catch (e) {
@@ -9788,356 +9568,119 @@ function optimizeDriverRoute(start, points) {
   }
   return route;
 }
-</script>
-<script>
 
-/* 
-================================================================================
-تطبيق "المدية نظيفة" - ملحق التحسينات الذكية (V3 - Marketplace Edition)
-تاريخ التحديث: مايو 2026
-إضافة "سوق التدوير الحر" لتمكين المواطنين من بيع وشراء النفايات المفروزة.
-================================================================================
-*/
 
+// ===== تحسينات 10/05/2026 - مدمجة بدون تعديل الكود الأصلي =====
+// 1. قاعدة بيانات الشركات والألوان والقطاعات
+const MedeaConfig = {
+    companies: {
+        "public": { name: "بلدية المدية", color: "#006233", phone: "025123456", icon: "fa-university" },
+        "company_A": { name: "شركة الأمل للنظافة", color: "#1d4ed8", phone: "0555112233", icon: "fa-truck-moving" },
+        "company_B": { name: "مؤسسة النقاء", color: "#b45309", phone: "0666445566", icon: "fa-recycle" },
+        "company_C": { name: "شركة تدوير تيتري", color: "#be185d", phone: "0777889900", icon: "fa-leaf" },
+        "sweeping_A": { name: "فرقة الكنس الحضري", color: "#f59e0b", phone: "0555998877", icon: "fa-broom" }
+    },
+    serviceTypes: {
+        COLLECTION: 'جمع النفايات',
+        SWEEPING: 'كنس الشوارع'
+    },
+    adminSector: 'all'
+};// 2. كائن التطبيق المطور (MedeaCleanPro)
+const MedeaCleanPro = {
+    // --- نظام الإدارة والفلترة الذكية ---
+    initDashboard: function(adminData) {
+        MedeaConfig.adminSector = adminData.sector || 'all';
+        this.renderLegend();
+        this.initOfflineHandler();
+        this.announce("تم تفعيل نظام الإدارة الذكي لولاية المدية");
+    },    renderLegend: function() {
+        if (document.getElementById('medea-legend')) return;
+        const legend = document.createElement('div');
+        legend.id = "medea-legend";
+        legend.className = "card map-legend-box";
+        let items = Object.values(MedeaConfig.companies).map(c => `
+            <div class="legend-item">
+                <span class="dot" style="background:${c.color}"></span>
+                <span>${c.name}</span>
+            </div>`).join('');
+        legend.innerHTML = `<h4><i class="fas fa-layer-group"></i> قطاعات المدية</h4>${items}`;
+        document.body.appendChild(legend);
+    },    // --- المساعد الصوتي ---
+    announce: function(text) {
+        if ('speechSynthesis' in window) {
+            window.speechSynthesis.cancel();
+            const msg = new SpeechSynthesisUtterance(text);
+            msg.lang = 'ar-SA';
+            msg.rate = 0.9;
+            window.speechSynthesis.speak(msg);
+        }
+    },    // --- نظام الشهادات الرقمية ---
+    generateCertificate: function(userName, score) {
+        const canvas = document.createElement('canvas');
+        canvas.width = 800; canvas.height = 600;
+        const ctx = canvas.getContext('2d');
+        ctx.fillStyle = "#fff"; ctx.fillRect(0,0,800,600);
+        ctx.strokeStyle = "#006233"; ctx.lineWidth = 15; ctx.strokeRect(20,20,760,560);
+        ctx.textAlign = "center"; ctx.font = "bold 45px Cairo";
+        ctx.fillStyle = "#006233"; ctx.fillText("شهادة فخر من ولاية المدية", 400, 100);
+        ctx.fillStyle = "#333"; ctx.font = "30px Cairo";
+        ctx.fillText("نشكر المواطن المتميز:", 400, 220);
+        ctx.fillStyle = "#c09300"; ctx.font = "bold 50px Cairo"; ctx.fillText(userName, 400, 320);
+        ctx.fillStyle = "#333"; ctx.font = "25px Cairo";
+        ctx.fillText(`لمساهمته الفعالة في نظافة البيئة بـ ${score} نقطة`, 400, 420);
+        const link = document.createElement('a');
+        link.download = `MedeaCertificate_${userName}.png`;
+        link.href = canvas.toDataURL();
+        link.click();
+        this.announce("تهانينا، تم إصدار شهادتك بنجاح");
+    },    // --- نظام "قبل وبعد" ---
+    completeTask: async function(taskId, afterImage) {
+        this.announce("جاري توثيق إتمام المهمة، شكراً لجهودك");
+        const update = { status: 'done', completedAt: new Date().toISOString(), afterImage: afterImage };
+        // db.ref(`reports/${taskId}`).update(update);
+        alert("تم توثيق نظافة المكان بنجاح");
+    },    // --- معالجة الأوفلاين ---
+    initOfflineHandler: function() {
+        window.addEventListener('online', () => {
+            const queue = JSON.parse(localStorage.getItem('medea_offline_queue') || '[]');
+            if(queue.length > 0) {
+                this.announce("تم استعادة الاتصال، جاري مزامنة البيانات");
+                localStorage.removeItem('medea_offline_queue');
+            }
+        });
+    }
+};// 3. دمج المنطق مع الدوال الأصلية (بدون لمس الأساس)
 (function() {
-    console.log("Medea Clean Extension V3: Loading Marketplace...");
-
-    // 1. تحميل المكتبات
-    const libs = [
-        "https://cdn.jsdelivr.net/npm/@tensorflow/tfjs",
-        "https://cdn.jsdelivr.net/npm/@tensorflow-models/mobilenet",
-        "https://cdn.jsdelivr.net/npm/leaflet.heat@0.2.0/dist/leaflet-heat.js"
-    ];
-    libs.forEach(src => {
-        const s = document.createElement('script'); s.src = src; document.head.appendChild(s);
-    });
-
-    window.MedeaExtension = {
-        // --- سوق التدوير الحر ---
-        showMarketplace: function() {
-            let marketDiv = document.getElementById('recyclingMarketPage');
-            if (!marketDiv) {
-                marketDiv = document.createElement('div');
-                marketDiv.id = 'recyclingMarketPage';
-                marketDiv.className = 'page';
-                marketDiv.innerHTML = `
-                    <div style="padding:20px">
-                        <h2 style="text-align:center; color:var(--primary); margin-bottom:20px">
-                            <i class="fas fa-store"></i> سوق التدوير الحر (المنطقة الحرة)
-                        </h2>
-                        
-                        <div style="display:flex; gap:10px; margin-bottom:20px">
-                            <button class="btn ripple" style="flex:1; background:var(--primary); color:white" onclick="MedeaExtension.showAddProduct()">
-                                <i class="fas fa-plus-circle"></i> عرض منتج للبيع
-                            </button>
-                            <button class="btn ripple" style="flex:1; background:var(--accent); color:white" onclick="MedeaExtension.renderMarketItems()">
-                                <i class="fas fa-sync"></i> تحديث السوق
-                            </button>
-                        </div>
-
-                        <div id="addProductForm" class="card" style="display:none; margin-bottom:20px; border:2px dashed var(--primary)">
-                            <h3><i class="fas fa-tag"></i> إضافة منتج جديد</h3>
-                            <input type="text" id="mProdName" class="input" placeholder="اسم المنتج (مثال: 50 كغ بلاستيك)">
-                            <select id="mProdType" class="input">
-                                <option value="plastic">بلاستيك</option>
-                                <option value="metal">معادن</option>
-                                <option value="paper">ورق/كرتون</option>
-                                <option value="other">أخرى</option>
-                            </select>
-                            <input type="number" id="mProdPrice" class="input" placeholder="السعر المطلوب (دج)">
-                            <div style="font-size:0.8rem; color:var(--secondary); margin-bottom:10px">
-                                * رسوم العرض الرمزية: <span id="mFee">0</span> دج (تخصم عند البيع)
-                            </div>
-                            <button class="btn ripple" style="background:var(--primary); color:white; width:100%" onclick="MedeaExtension.submitProduct()">
-                                تأكيد العرض
-                            </button>
-                        </div>
-
-                        <div id="marketItemsGrid" style="display:grid; gap:15px">
-                            <!-- المنتجات المعروضة -->
-                        </div>
-
-                        <button class="btn ripple" style="background:#757575; margin-top:25px; width:100%" onclick="showPage('home')">
-                            <i class="fas fa-arrow-right"></i> العودة للرئيسية
-                        </button>
-                    </div>
-                `;
-                document.body.appendChild(marketDiv);
-                
-                // حساب الرسوم تلقائياً
-                document.getElementById('mProdPrice').oninput = function() {
-                    const price = parseFloat(this.value) || 0;
-                    document.getElementById('mFee').innerText = (price * 0.05).toFixed(2); // 5% رسوم
-                };
+    const originalStartApp = window._startApp;
+    window._startApp = function(mode) {
+        if (originalStartApp) originalStartApp(mode);
+        // تفعيل الميزات الجديدة عند بدء التطبيق
+        MedeaCleanPro.initOfflineHandler();
+    };    const originalLoginAdmin = window.loginAdmin;
+    window.loginAdmin = function() {
+        if (originalLoginAdmin) originalLoginAdmin();
+        // إذا نجح الدخول، قم بتهيئة لوحة التحكم الجديدة
+        if (currentAdminName) {
+            MedeaCleanPro.initDashboard({ sector: 'all' }); // يمكن تعديله لجلب القطاع من بيانات المشرف
+        }
+    };    // إضافة زر الشهادة في صفحة المواطن
+    const originalUpdateStats = window.updateStats;
+    window.updateStats = function() {
+        if (originalUpdateStats) originalUpdateStats();
+        const points = parseInt(document.getElementById('userPoints')?.textContent || 0);
+        if (points >= 100 && !document.getElementById('certBtn')) {
+            const homePage = document.getElementById('home');
+            if (homePage) {
+                const btn = document.createElement('button');
+                btn.id = 'certBtn';
+                btn.className = 'btn btn-gold ripple';
+                btn.innerHTML = '<i class="fas fa-certificate"></i> تحميل شهادة التميز';
+                btn.onclick = () => MedeaCleanPro.generateCertificate('مواطن متميز', points);
+                homePage.appendChild(btn);
             }
-            this.renderMarketItems();
-            showPage('recyclingMarketPage');
-        },
-
-        showAddProduct: function() {
-            const form = document.getElementById('addProductForm');
-            form.style.display = form.style.display === 'none' ? 'block' : 'none';
-        },
-
-        submitProduct: function() {
-            const name = document.getElementById('mProdName').value;
-            const price = document.getElementById('mProdPrice').value;
-            const type = document.getElementById('mProdType').value;
-            if (!name || !price) return showToast('يرجى ملء كافة البيانات', 'danger');
-
-            const products = JSON.parse(localStorage.getItem('medea_market_items') || '[]');
-            products.unshift({
-                id: Date.now(),
-                seller: "مواطن من المدية",
-                name, price, type,
-                date: new Date().toLocaleDateString(),
-                fee: (price * 0.05).toFixed(2)
-            });
-            localStorage.setItem('medea_market_items', JSON.stringify(products));
-            showToast('تم إدراج منتجك في السوق بنجاح!', 'success');
-            document.getElementById('addProductForm').style.display = 'none';
-            this.renderMarketItems();
-        },
-
-        renderMarketItems: function() {
-            const items = JSON.parse(localStorage.getItem('medea_market_items') || '[]');
-            const grid = document.getElementById('marketItemsGrid');
-            if (items.length === 0) {
-                grid.innerHTML = '<div style="text-align:center; padding:40px; color:#999">السوق فارغ حالياً. كن أول من يعرض منتجاته!</div>';
-                return;
-            }
-            grid.innerHTML = items.map(item => `
-                <div class="card hover-lift" style="border-right:6px solid var(--primary)">
-                    <div style="display:flex; justify-content:space-between; align-items:start">
-                        <div>
-                            <h4 style="margin:0; color:var(--primary)">${item.name}</h4>
-                            <small style="color:#666"><i class="fas fa-user"></i> البائع: ${item.seller}</small>
-                            <div style="margin-top:5px; font-size:0.85rem">النوع: <b>${item.type}</b></div>
-                        </div>
-                        <div style="text-align:right">
-                            <div style="font-size:1.2rem; font-weight:900; color:var(--secondary)">${item.price} دج</div>
-                            <small style="color:#999">${item.date}</small>
-                        </div>
-                    </div>
-                    <div style="margin-top:15px; display:flex; gap:10px">
-                        <button class="btn ripple" style="flex:2; margin:0; background:var(--primary); color:white" onclick="MedeaExtension.buyProduct(${item.id}, ${item.price})">
-                            <i class="fas fa-shopping-cart"></i> شراء الآن
-                        </button>
-                        <button class="btn ripple" style="flex:1; margin:0; background:var(--bg); color:var(--text)" onclick="showToast('سيتم التواصل مع البائع قريباً', 'info')">
-                            <i class="fas fa-comment"></i> تواصل
-                        </button>
-                    </div>
-                </div>
-            `).join('');
-        },
-
-        buyProduct: function(id, price) {
-            const fee = (price * 0.02).toFixed(2); // 2% رسوم على المشتري
-            if (confirm(`هل تريد شراء هذا المنتج؟\nالسعر: ${price} دج\nرسوم الخدمة: ${fee} دج\nالإجمالي: ${parseFloat(price) + parseFloat(fee)} دج`)) {
-                let items = JSON.parse(localStorage.getItem('medea_market_items') || '[]');
-                items = items.filter(i => i.id !== id);
-                localStorage.setItem('medea_market_items', JSON.stringify(items));
-                showToast('تمت عملية الشراء بنجاح! سيتم التنسيق للاستلام.', 'success');
-                this.renderMarketItems();
-            }
-        },
-
-        // --- الميزات السابقة (متجر النقاط، التنبيهات، AI، أوفلاين) ---
-        showPointsStore: function() {
-            let storeDiv = document.getElementById('pointsStorePage');
-            if (!storeDiv) {
-                storeDiv = document.createElement('div');
-                storeDiv.id = 'pointsStorePage';
-                storeDiv.className = 'page';
-                storeDiv.innerHTML = `
-                    <div style="padding:20px">
-                        <h2 style="text-align:center; color:var(--primary); margin-bottom:20px"><i class="fas fa-star"></i> متجر النقاط الرقمي</h2>
-                        <div class="card" style="background:linear-gradient(135deg, var(--primary), var(--primary-light)); color:white; text-align:center; padding:20px">
-                            <div style="font-size:1rem; opacity:0.9">رصيدك الحالي</div>
-                            <div style="font-size:2.5rem; font-weight:900" id="extPointsVal">0</div>
-                            <div style="font-size:1rem">نقطة خضراء 🌿</div>
-                        </div>
-                        <div id="storeItemsGrid" style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:20px"></div>
-                        <button class="btn ripple" style="background:#757575; margin-top:25px; width:100%" onclick="showPage('home')">العودة للرئيسية</button>
-                    </div>
-                `;
-                document.body.appendChild(storeDiv);
-            }
-            const pts = parseInt(localStorage.getItem('medea_points') || '0');
-            document.getElementById('extPointsVal').innerText = pts;
-            const items = [{id:1, name:"قسيمة 500 دج", cost:100}, {id:2, name:"تخفيض 10%", cost:250}];
-            document.getElementById('storeItemsGrid').innerHTML = items.map(item => `
-                <div class="card" style="text-align:center; padding:10px; border:2px solid ${pts >= item.cost ? 'var(--primary)' : '#ddd'}">
-                    <div style="font-weight:700">${item.name}</div>
-                    <div style="color:var(--primary); font-weight:bold">${item.cost} نقطة</div>
-                    <button class="btn ripple" style="font-size:0.8rem; background:${pts >= item.cost ? 'var(--primary)' : '#ccc'}" onclick="MedeaExtension.redeem(${item.cost}, '${item.name}')">استبدال</button>
-                </div>
-            `).join('');
-            showPage('pointsStorePage');
-        },
-
-        redeem: function(cost, name) {
-            let pts = parseInt(localStorage.getItem('medea_points') || '0');
-            if (pts >= cost) {
-                pts -= cost; localStorage.setItem('medea_points', pts);
-                showToast('تم الاستبدال بنجاح!', 'success'); this.showPointsStore();
-            }
-        },
-
-        saveHomeLoc: function() {
-            navigator.geolocation.getCurrentPosition(pos => {
-                localStorage.setItem('medea_home_loc', JSON.stringify({lat: pos.coords.latitude, lng: pos.coords.longitude}));
-                showToast('تم حفظ موقع منزلك!', 'success');
-            });
-        },
-
-        checkProximity: function(truckLoc) {
-            const home = JSON.parse(localStorage.getItem('medea_home_loc'));
-            if (home && truckLoc && calculateDistanceBetweenPoints(home, truckLoc) <= 0.5) {
-                showToast('⚠️ الشاحنة تقترب من منزلك!', 'warning');
-            }
-        },
-
-        toggleVoice: function() {
-            if (!('webkitSpeechRecognition' in window)) return showToast('غير مدعوم', 'danger');
-            if (this.rec) { this.rec.stop(); this.rec = null; return; }
-            this.rec = new webkitSpeechRecognition(); this.rec.lang = 'ar-DZ';
-            this.rec.onresult = (e) => { document.getElementById('addrInput').value = e.results[0][0].transcript; };
-            this.rec.start(); showToast('تحدث الآن...', 'info');
-        },
-
-        startAiSort: async function() {
-            const video = document.getElementById('extAiVideo'); video.style.display = 'block';
-            if (!this.model) this.model = await mobilenet.load();
-            const stream = await navigator.mediaDevices.getUserMedia({video: true}); video.srcObject = stream;
-            const frame = async () => {
-                if (video.style.display === 'none') return;
-                const pred = await this.model.classify(video);
-                document.getElementById('extAiRes').innerHTML = `النتيجة: <b>${pred[0].className}</b>`;
-                setTimeout(frame, 2000);
-            };
-            frame();
-        },
-
-        initOffline: function() {
-            window.addEventListener('online', () => {
-                const q = JSON.parse(localStorage.getItem('medea_offline_q') || '[]');
-                if (q.length > 0) { q.forEach(r => db.ref('reports').push(r)); localStorage.removeItem('medea_offline_q'); showToast('تمت المزامنة', 'success'); }
-            });
-            const oldSend = window.sendReport;
-            window.sendReport = function() {
-                if (!navigator.onLine) {
-                    const q = JSON.parse(localStorage.getItem('medea_offline_q') || '[]');
-                    q.push({id:Date.now(), type:document.getElementById('wasteTypeSelect').value});
-                    localStorage.setItem('medea_offline_q', JSON.stringify(q));
-                    showToast('تم الحفظ أوفلاين', 'warning'); showPage('home');
-                } else oldSend();
-            };
         }
     };
-
-    // 3. حقن الواجهة
-    function injectUI() {
-        const homePage = document.getElementById('home');
-        if (homePage) {
-            const servicesHeader = homePage.querySelector('h3[data-i18n="servicesTitle"]')?.parentElement;
-            if (servicesHeader) {
-                const smartSection = document.createElement('div');
-                smartSection.className = 'card hover-lift';
-                smartSection.style.borderColor = 'var(--accent)';
-                smartSection.innerHTML = `
-                    <h3 style="color:var(--accent)"><i class="fas fa-magic"></i> المنطقة الحرة والخدمات الذكية</h3>
-                    <div class="grid-2">
-                        <button class="btn ripple" style="background:var(--secondary); color:white" onclick="MedeaExtension.showMarketplace()">
-                            <i class="fas fa-store"></i> سوق التدوير الحر
-                        </button>
-                        <button class="btn ripple" style="background:var(--accent); color:white" onclick="MedeaExtension.showPointsStore()">
-                            <i class="fas fa-shopping-basket"></i> متجر النقاط
-                        </button>
-                        <button class="btn ripple" style="background:var(--primary); color:white" onclick="MedeaExtension.saveHomeLoc()">
-                            <i class="fas fa-home"></i> تنبيهات الوصول
-                        </button>
-                        <button class="btn ripple" style="background:#4b6cb7; color:white" onclick="showPage('report')">
-                            <i class="fas fa-microphone"></i> إبلاغ ذكي
-                        </button>
-                    </div>
-                `;
-                homePage.insertBefore(smartSection, servicesHeader);
-            }
-        }
-
-        // حقن أزرار AI في صفحة البلاغات
-        const reportPage = document.getElementById('report');
-        if (reportPage) {
-            const addrInput = document.getElementById('addrInput');
-            if (addrInput && !document.getElementById('extAiVideo')) {
-                const aiControls = document.createElement('div');
-                aiControls.style.margin = "10px 0";
-                aiControls.innerHTML = `
-                    <div style="display:flex; gap:8px; margin-bottom:8px">
-                        <button class="btn ripple" style="flex:1; background:#4b6cb7; margin:0" onclick="MedeaExtension.toggleVoice()">
-                            <i class="fas fa-microphone"></i> إملاء صوتي
-                        </button>
-                        <button class="btn ripple" style="flex:1; background:#00b09b; margin:0" onclick="MedeaExtension.startAiSort()">
-                            <i class="fas fa-robot"></i> فرز AI
-                        </button>
-                    </div>
-                    <video id="extAiVideo" autoplay playsinline muted style="width:100%; border-radius:10px; display:none; border:2px solid var(--primary)"></video>
-                    <div id="extAiRes" style="font-size:0.85rem; color:var(--primary); text-align:center; margin-top:5px"></div>
-                `;
-                addrInput.parentElement.insertBefore(aiControls, addrInput);
-            }
-        }
-    }
-
-    window.addEventListener('load', () => {
-        setTimeout(() => {
-            injectUI();
-            MedeaExtension.initOffline();
-            const oldUpdate = window.updateTruckTrackingMap;
-            window.updateTruckTrackingMap = function(pos) { if (oldUpdate) oldUpdate(pos); MedeaExtension.checkProximity(pos); };
-            
-            // بيانات تجريبية للسوق إذا كان فارغاً
-            if (!localStorage.getItem('medea_market_items')) {
-                localStorage.setItem('medea_market_items', JSON.stringify([
-                    {id:101, seller:"أحمد م.", name:"20 كغ ورق مقوى", price:400, type:"paper", date:"2026/05/08", fee:20},
-                    {id:102, seller:"ليلى س.", name:"15 كغ قارورات بلاستيك", price:600, type:"plastic", date:"2026/05/09", fee:30}
-                ]));
-            }
-        }, 1000);
-    });
 })();
 </script>
-<script>
-// كود إضافة حقل الشركة - نسخة بسيطة ومباشرة
-(function() {
-    // إضافة حقل الشركة في صفحة إدارة الموظفين
-    function addCompanyField() {
-        var phoneField = document.getElementById('newStaffPhone');
-        if (phoneField && !document.getElementById('dynamicCompanyField')) {
-            var div = document.createElement('div');
-            div.id = 'dynamicCompanyField';
-            div.innerHTML = `
-                <label style="display:block; margin:10px 0 5px 0; font-weight:bold">🏢 الشركة</label>
-                <select id="companyForStaff" class="input">
-                    <option value="public">بلدية المدية</option>
-                    <option value="company1">شركة خاصة 1</option>
-                    <option value="company2">شركة خاصة 2</option>
-                </select>
-            `;
-            phoneField.parentNode.insertBefore(div, phoneField.nextSibling);
-            console.log('تم إضافة حقل الشركة');
-        }
-    }
-    
-    // مراقبة التغيرات في الصفحة
-    var observer = new MutationObserver(function() {
-        if (document.getElementById('newStaffPhone')) {
-            addCompanyField();
-            observer.disconnect();
-        }
-    });
-    observer.observe(document.body, { childList: true, subtree: true });
-})();
-</script>
-</body></html>
+</body>
+</html>
