@@ -2015,7 +2015,16 @@ select.input {
 #emergencyBtn{position:fixed;bottom:70px;left:16px;width:52px;height:52px;background:linear-gradient(135deg,#f44336,#b71c1c);color:#fff;border:none;border-radius:50%;font-size:1.3rem;cursor:pointer;box-shadow:0 4px 18px rgba(244,67,54,0.5);z-index:9998;display:none;align-items:center;justify-content:center;animation:emergencyPulse 2s infinite;transition:var(--transition)}
 #emergencyBtn.visible{display:flex}
 @keyframes emergencyPulse{0%,100%{box-shadow:0 4px 18px rgba(244,67,54,0.5)}50%{box-shadow:0 4px 28px rgba(244,67,54,0.9),0 0 0 8px rgba(244,67,54,0.15)}}
-#emergencyBtn:hover{transform:scale(1.1)}</style>
+#emergencyBtn:hover{transform:scale(1.1)}
+/* ===== تحديثات الشركات الخاصة ===== */
+.company-badge { padding: 2px 8px; border-radius: 10px; color: #fff; font-size: 0.7rem; font-weight: bold; margin-left: 5px; display: inline-block; }
+.cosec-section { background: var(--bg); border-radius: var(--radius-sm); padding: 12px; margin-bottom: 10px; border: 2px solid var(--accent); }
+.company-preview-circle { width: 24px; height: 24px; border-radius: 50%; display: inline-block; vertical-align: middle; border: 2px solid #fff; box-shadow: 0 0 5px rgba(0,0,0,0.2); }
+.staff-item.with-company { border-right: 5px solid var(--comp-color) !important; }
+.sub-admin-header { display: flex; align-items: center; gap: 10px; padding: 10px; border-radius: var(--radius-sm); margin-bottom: 15px; color: #fff; }
+.sub-admin-logo { width: 40px; height: 40px; background: #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: var(--comp-color); font-size: 1.2rem; }
+
+</style>
 </head>
 <body>
 
@@ -2814,6 +2823,34 @@ select.input {
       </div>
 
       <!-- ===== القسم 6: الإعدادات (المشرف الرئيسي فقط) ===== -->
+      
+      <!-- ===== قسم الشركات الخاصة (coSec) - للمشرف الرئيسي فقط ===== -->
+      <div id="coSecSection" style="display:none; background:var(--bg); border-radius:var(--radius-sm); padding:12px; margin-bottom:10px; border:2px solid var(--accent);">
+        <div style="font-weight:800; color:var(--accent); margin-bottom:10px; font-size:0.9rem">
+          <i class="fas fa-building"></i> إدارة الشركات الخاصة (coSec)
+        </div>
+        <div class="card" style="padding:10px; margin-bottom:10px;">
+          <input type="text" id="compName" class="input" placeholder="اسم الشركة">
+          <div style="display:flex; align-items:center; gap:10px; margin-bottom:8px;">
+            <input type="color" id="compColor" value="#006233" oninput="updateCompPreview()" style="width:50px; height:40px; border:none; cursor:pointer;">
+            <div id="compPreview" class="company-preview-circle" style="background:#006233"></div>
+            <span style="font-size:0.8rem;">معاينة اللون</span>
+          </div>
+          <select id="compService" class="input">
+            <option value="رفع نفايات منزلية">🚛 رفع نفايات منزلية</option>
+            <option value="كنس">🧹 كنس</option>
+            <option value="ردم">🏗️ ردم</option>
+            <option value="رفع وكنس">🚛🧹 رفع وكنس</option>
+            <option value="رفع وردم">🚛🏗️ رفع وردم</option>
+            <option value="خدمات متعددة">🔧 خدمات متعددة</option>
+          </select>
+          <button class="btn btn-primary ripple" onclick="addCompany()">
+            <i class="fas fa-plus"></i> إضافة شركة
+          </button>
+        </div>
+        <div id="companiesList" style="max-height:200px; overflow-y:auto;"></div>
+      </div>
+
       <div id="adminSettingsSection" style="display:none;background:var(--bg);border-radius:var(--radius-sm);padding:12px;margin-bottom:10px;border:2px solid #e0e0e0">
         <div style="font-weight:800;color:#424242;margin-bottom:10px;font-size:0.9rem">
           <i class="fas fa-shield-alt"></i> إعدادات المشرف الرئيسي
@@ -2895,12 +2932,18 @@ select.input {
     <div class="card">
       <h3><i class="fas fa-user-plus"></i> <span data-i18n="addStaffTitle">إضافة موظف</span></h3>
       <input type="text" id="newStaffName" class="input" placeholder="👤 الاسم" data-i18n-ph="nameFullPh">
-      <select id="newStaffRole" class="input" style="cursor:pointer;color:var(--text)">
+      <select id="newStaffRole" class="input" onchange="checkRoleForCompany()" style="cursor:pointer;color:var(--text)">
         <option value="" disabled selected>💼 اختر المنصب</option>
         <option value="سائق">🚛 سائق</option>
         <option value="مشرف">🏛️ مسؤول (مشرف)</option>
       </select>
       <input type="tel" id="newStaffPhone" class="input" placeholder="📞 الهاتف" data-i18n-ph="phonePh">
+      <div id="staffCompanyContainer" style="display:none; margin-top:8px;">
+        <select id="newStaffCompany" class="input">
+          <option value="">-- اختر الشركة --</option>
+        </select>
+      </div>
+
       <button class="btn btn-primary ripple" onclick="addStaff()">
         <i class="fas fa-save"></i> <span data-i18n="save">حفظ</span>
       </button>
@@ -3424,7 +3467,176 @@ select.input {
 </div>
 
 <!-- مكتبات خارجية -->
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js">
+/* ===== تحديثات الشركات الخاصة (JS) ===== */
+function updateCompPreview() {
+    const color = document.getElementById('compColor').value;
+    const preview = document.getElementById('compPreview');
+    if(preview) preview.style.background = color;
+}
+
+function addCompany() {
+    const name = document.getElementById('compName').value.trim();
+    const color = document.getElementById('compColor').value;
+    const service = document.getElementById('compService').value;
+    if(!name) return;
+    let comps = JSON.parse(localStorage.getItem('medea_companies') || '[]');
+    comps.push({ id: Date.now(), name: name, color: color, service: service });
+    localStorage.setItem('medea_companies', JSON.stringify(comps));
+    document.getElementById('compName').value = '';
+    loadCompanies();
+    updateStaffCompanySelect();
+}
+
+function loadCompanies() {
+    const comps = JSON.parse(localStorage.getItem('medea_companies') || '[]');
+    const list = document.getElementById('companiesList');
+    if(!list) return;
+    list.innerHTML = comps.map((c, i) => `
+        <div style="display:flex; align-items:center; justify-content:space-between; background:var(--bg-card); padding:8px; border-radius:8px; margin-bottom:5px; border-right:4px solid ${c.color}">
+            <div style="font-size:0.85rem;"><b>${c.name}</b></div>
+            <button onclick="deleteCompany(${i})" style="background:none; border:none; color:var(--danger);"><i class="fas fa-trash"></i></button>
+        </div>
+    `).join('');
+}
+
+function deleteCompany(i) {
+    let comps = JSON.parse(localStorage.getItem('medea_companies') || '[]');
+    comps.splice(i, 1);
+    localStorage.setItem('medea_companies', JSON.stringify(comps));
+    loadCompanies();
+    updateStaffCompanySelect();
+}
+
+function updateStaffCompanySelect() {
+    const comps = JSON.parse(localStorage.getItem('medea_companies') || '[]');
+    const sel = document.getElementById('newStaffCompany');
+    if(!sel) return;
+    sel.innerHTML = '<option value="">-- اختر الشركة --</option>' + comps.map(c => `<option value="${c.name}">${c.name}</option>`).join('');
+}
+
+function checkRoleForCompany() {
+    const container = document.getElementById('staffCompanyContainer');
+    if(container) { container.style.display = 'block'; updateStaffCompanySelect(); }
+}
+
+// Global hook to initialize on admin panel show
+function applyMedeaUpdates() {
+    const adminName = window.currentAdminName;
+    const cosec = document.getElementById('coSecSection');
+    const isMainAdmin = (adminName === 'فتحي' || adminName === 'فتحى');
+    
+    if (isMainAdmin) {
+        if(cosec) cosec.style.display = 'block';
+        loadCompanies();
+        toggleRestrictedItems(true);
+    } else {
+        if(cosec) cosec.style.display = 'none';
+        const staff = JSON.parse(localStorage.getItem('medea_staff') || '[]');
+        const me = staff.find(s => s.name === adminName);
+        if(me && me.company) {
+            const comps = JSON.parse(localStorage.getItem('medea_companies') || '[]');
+            const myComp = comps.find(c => c.name === me.company);
+            if(myComp) {
+                applySubAdminTheme(myComp);
+                toggleRestrictedItems(false);
+            }
+        }
+    }
+    loadStaffList();
+    updateDriversLivePanel();
+}
+
+function applySubAdminTheme(comp) {
+    const userSpan = document.getElementById('adminCurrentUser');
+    if(userSpan && userSpan.parentElement) {
+        userSpan.parentElement.innerHTML = `
+            <div class="sub-admin-header" style="background:${comp.color}; width:100%; margin:0;">
+                <div class="sub-admin-logo" style="color:${comp.color}"><i class="fas fa-building"></i></div>
+                <div style="text-align:right">
+                    <div style="font-weight:900; font-size:1.1rem;">${comp.name}</div>
+                    <div style="font-size:0.8rem; opacity:0.9;">المشرف: ${window.currentAdminName}</div>
+                </div>
+            </div>`;
+    }
+}
+
+function toggleRestrictedItems(isFull) {
+    const panel = document.getElementById('adminPanel');
+    if(!panel) return;
+    const divs = panel.querySelectorAll('div[style*="background:var(--bg)"]');
+    divs.forEach(d => {
+        const t = d.innerText;
+        if(!isFull && (t.includes('سجلات') || t.includes('تقارير') || t.includes('أدوات') || t.includes('أرشيف') || t.includes('QR'))) {
+            d.style.display = 'none';
+        } else {
+            d.style.display = 'block';
+        }
+    });
+    const cb = document.getElementById('clearDataBtn');
+    if(cb) cb.style.display = isFull ? 'block' : 'none';
+}
+
+// Global hooks
+const originalUpdateStats = window.updateStats;
+window.updateStats = function() {
+    if(typeof originalUpdateStats === 'function') originalUpdateStats();
+    applyMedeaUpdates();
+};
+
+// Override Staff List
+window.loadStaffList = function() {
+    let s = JSON.parse(localStorage.getItem('medea_staff') || '[]');
+    const comps = JSON.parse(localStorage.getItem('medea_companies') || '[]');
+    const admin = window.currentAdminName;
+    if(admin !== 'فتحي' && admin !== 'فتحى') {
+        const me = s.find(x => x.name === admin);
+        if(me && me.company) s = s.filter(x => x.company === me.company);
+    }
+    const list = document.getElementById('staffList');
+    if(!list) return;
+    list.innerHTML = s.map((x, i) => {
+        const comp = comps.find(c => c.name === x.company);
+        const color = comp ? comp.color : 'transparent';
+        const badge = comp ? `<span class="company-badge" style="background:${color}">${comp.name}</span>` : '';
+        return `<div class="staff-item with-company" style="--comp-color:${color}; border-right:5px solid ${color}; background:white; padding:10px; margin-bottom:5px; display:flex; justify-content:space-between; align-items:center; border-radius:8px;">
+            <div><b>${x.role}:</b> ${x.name} ${badge}</div>
+            <button onclick="deleteStaff(${i})" style="color:red; border:none; background:none;"><i class="fas fa-trash"></i></button>
+        </div>`;
+    }).join('');
+};
+
+window.addStaff = function() {
+    if(window.currentAdminName !== 'فتحي' && window.currentAdminName !== 'فتحى') return;
+    const n = document.getElementById('newStaffName').value.trim();
+    const r = document.getElementById('newStaffRole').value.trim();
+    const c = document.getElementById('newStaffCompany').value;
+    if(!n || !r) return;
+    let s = JSON.parse(localStorage.getItem('medea_staff') || '[]');
+    s.push({name:n, role:r, company:c, phone:document.getElementById('newStaffPhone').value.trim()});
+    localStorage.setItem('medea_staff', JSON.stringify(s));
+    if(window.db) window.db.ref('staff').set(s);
+    ['newStaffName','newStaffRole','newStaffPhone','newStaffCompany'].forEach(id => { const el = document.getElementById(id); if(el) el.value = ''; });
+    window.loadStaffList();
+};
+
+window.updateDriversLivePanel = function() {
+    const panel = document.getElementById('driversLivePanel');
+    const list = document.getElementById('driversLiveList');
+    if(!panel || !list) return;
+    let s = JSON.parse(localStorage.getItem('medea_staff') || '[]');
+    const admin = window.currentAdminName;
+    if(admin !== 'فتحي' && admin !== 'فتحى') {
+        const me = s.find(x => x.name === admin);
+        if(me && me.company) s = s.filter(x => x.company === me.company);
+    }
+    const drivers = s.filter(x => x.role && x.role.includes('سائق'));
+    if(!drivers.length) { panel.style.display = 'none'; return; }
+    panel.style.display = 'block';
+    list.innerHTML = drivers.map(d => `<div style="padding:8px; border:1px solid #eee; margin-bottom:4px; border-radius:8px;">🚚 ${d.name}</div>`).join('');
+};
+
+</script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
@@ -6089,241 +6301,7 @@ function generateStatsTable() {
 function printNow() {
   const content = document.getElementById('printContent').innerHTML;
   const win = window.open('', '_blank', 'width=900,height=700');
-  win.document.write(`<html dir="rtl"><head><meta charset="UTF-8"><title>طباعة</title><style>body{font-family:'Cairo',sans-serif;padding:20px}table{width:100%;border-collapse:collapse}th{background:#1B5E20;color:#fff;padding:8px}td{padding:8px;border:1px solid #ddd}@media print{.no-print{display:none}}</style></head><body>${content}<script>window.print()<\/script>
-<!-- MODULE: PRIVATE COMPANIES FOR ADMIN FATHI -->
-<style>
-.comp-badge { padding: 2px 8px; border-radius: 12px; color: #fff; font-size: 0.7rem; font-weight: bold; margin-right: 5px; display: inline-block; }
-.sub-admin-header-new { display: flex; align-items: center; gap: 12px; padding: 12px; border-radius: 12px; margin-bottom: 15px; color: #fff; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
-.cosec-container { background: var(--bg); border: 2px solid var(--accent); border-radius: 12px; padding: 15px; margin-bottom: 15px; }
-</style>
-
-<div id="cosec_force_html" style="display:none">
-    <div id="cosec_main_panel" class="cosec-container">
-        <div style="font-weight:900; color:var(--accent); margin-bottom:12px; font-size:1rem;">
-            <i class="fas fa-building"></i> إدارة الشركات الخاصة (coSec)
-        </div>
-        <div style="background:white; padding:12px; border-radius:8px; margin-bottom:10px; box-shadow:0 2px 5px rgba(0,0,0,0.05);">
-            <input type="text" id="fcName" class="input" placeholder="اسم الشركة" style="margin-bottom:8px;">
-            <div style="display:flex; align-items:center; gap:10px; margin-bottom:10px;">
-                <input type="color" id="fcColor" value="#006233" style="width:50px; height:40px; border:none; cursor:pointer;">
-                <span style="font-size:0.8rem;">اختر لون الشركة</span>
-            </div>
-            <select id="fcService" class="input" style="margin-bottom:10px;">
-                <option value="رفع نفايات منزلية">🚛 رفع نفايات منزلية</option>
-                <option value="كنس">🧹 كنس</option>
-                <option value="ردم">🏗️ ردم</option>
-                <option value="رفع وكنس">🚛🧹 رفع وكنس</option>
-                <option value="رفع وردم">🚛🏗️ رفع وردم</option>
-                <option value="خدمات متعددة">🔧 خدمات متعددة</option>
-            </select>
-            <button class="btn btn-primary ripple" onclick="addNewCompanyForce()">إضافة الشركة</button>
-        </div>
-        <div id="fcList" style="max-height:200px; overflow-y:auto;"></div>
-    </div>
-    <div id="fcStaffCompSelect" style="margin-top:10px;">
-        <select id="fStaffComp" class="input">
-            <option value="">-- اختر الشركة --</option>
-        </select>
-    </div>
-</div>
-
-<script>
-(function() {
-    function forceInit() {
-        const adminPanel = document.getElementById('adminPanel');
-        if (!adminPanel) { setTimeout(forceInit, 500); return; }
-
-        // Inject UI
-        const cosecPanel = document.getElementById('cosec_main_panel');
-        const settings = document.getElementById('adminSettingsSection');
-        if (settings) adminPanel.insertBefore(cosecPanel, settings);
-        else adminPanel.appendChild(cosecPanel);
-
-        const roleSelect = document.getElementById('newStaffRole');
-        const staffCompSelect = document.getElementById('fcStaffCompSelect');
-        if (roleSelect) {
-            roleSelect.parentElement.insertBefore(staffCompSelect, roleSelect.nextSibling);
-            roleSelect.addEventListener('change', () => {
-                staffCompSelect.style.display = roleSelect.value ? 'block' : 'none';
-                refreshCompSelect();
-            });
-        }
-
-        // Hook into admin name check
-        const observer = new MutationObserver(() => {
-            if (!adminPanel.classList.contains('hidden')) {
-                applyForceLogic();
-            }
-        });
-        observer.observe(adminPanel, { attributes: true });
-
-        // Override loadStaffList
-        const oldLoadStaff = window.loadStaffList;
-        window.loadStaffList = function() {
-            renderForceStaff();
-        };
-
-        // Override addStaff
-        const oldAddStaff = window.addStaff;
-        window.addStaff = function() {
-            if (window.currentAdminName !== 'فتحي' && window.currentAdminName !== 'فتحى') return;
-            const n = document.getElementById('newStaffName').value.trim();
-            const r = document.getElementById('newStaffRole').value.trim();
-            const c = document.getElementById('fStaffComp').value;
-            if(!n || !r) return;
-            let s = JSON.parse(localStorage.getItem('medea_staff') || '[]');
-            s.push({name:n, role:r, company:c, phone:document.getElementById('newStaffPhone').value.trim()});
-            localStorage.setItem('medea_staff', JSON.stringify(s));
-            if(window.db) window.db.ref('staff').set(s);
-            ['newStaffName','newStaffRole','newStaffPhone','fStaffComp'].forEach(id => { const el = document.getElementById(id); if(el) el.value = ''; });
-            window.loadStaffList();
-        };
-        
-        // Override Drivers
-        const oldDrivers = window.updateDriversLivePanel;
-        window.updateDriversLivePanel = function() {
-            renderForceDrivers();
-        };
-    }
-
-    function applyForceLogic() {
-        const name = window.currentAdminName;
-        const isMain = (name === 'فتحي' || name === 'فتحى');
-        const panel = document.getElementById('cosec_main_panel');
-        
-        if (isMain) {
-            if(panel) panel.style.display = 'block';
-            refreshCompList();
-            toggleRestrict(true);
-        } else {
-            if(panel) panel.style.display = 'none';
-            const staff = JSON.parse(localStorage.getItem('medea_staff') || '[]');
-            const me = staff.find(s => s.name === name);
-            if (me && me.company) {
-                const comps = JSON.parse(localStorage.getItem('medea_companies') || '[]');
-                const myComp = comps.find(c => c.name === me.company);
-                if (myComp) {
-                    applyForceTheme(myComp);
-                    toggleRestrict(false);
-                }
-            }
-        }
-        renderForceStaff();
-        renderForceDrivers();
-    }
-
-    function toggleRestrict(isFull) {
-        const panel = document.getElementById('adminPanel');
-        const divs = panel.querySelectorAll('div[style*="background:var(--bg)"]');
-        divs.forEach(d => {
-            const t = d.innerText;
-            if(!isFull && (t.includes('سجلات') || t.includes('تقارير') || t.includes('أدوات') || t.includes('أرشيف') || t.includes('QR'))) {
-                d.style.display = 'none';
-            } else {
-                d.style.display = 'block';
-            }
-        });
-        const cb = document.getElementById('clearDataBtn');
-        if(cb) cb.style.display = isFull ? 'block' : 'none';
-    }
-
-    function applyForceTheme(comp) {
-        const user = document.getElementById('adminCurrentUser');
-        if(user && user.parentElement) {
-            user.parentElement.innerHTML = `
-                <div class="sub-admin-header-new" style="background:${comp.color}">
-                    <div style="width:40px; height:40px; background:#fff; border-radius:50%; display:flex; align-items:center; justify-content:center; color:${comp.color}; font-size:1.2rem;">
-                        <i class="fas fa-building"></i>
-                    </div>
-                    <div style="text-align:right">
-                        <div style="font-weight:900; font-size:1.1rem;">${comp.name}</div>
-                        <div style="font-size:0.8rem; opacity:0.9;">المشرف: ${window.currentAdminName}</div>
-                    </div>
-                </div>`;
-        }
-    }
-
-    function renderForceStaff() {
-        let s = JSON.parse(localStorage.getItem('medea_staff') || '[]');
-        const comps = JSON.parse(localStorage.getItem('medea_companies') || '[]');
-        const admin = window.currentAdminName;
-        if(admin !== 'فتحي' && admin !== 'فتحى') {
-            const me = s.find(x => x.name === admin);
-            if(me && me.company) s = s.filter(x => x.company === me.company);
-        }
-        const list = document.getElementById('staffList');
-        if(!list) return;
-        list.innerHTML = s.map((x, i) => {
-            const comp = comps.find(c => c.name === x.company);
-            const color = comp ? comp.color : 'transparent';
-            const badge = comp ? `<span class="comp-badge" style="background:${color}">${comp.name}</span>` : '';
-            return `<div style="border-right:6px solid ${color}; background:white; padding:12px; margin-bottom:8px; display:flex; justify-content:space-between; align-items:center; border-radius:8px; box-shadow:0 2px 5px rgba(0,0,0,0.05);">
-                <div><b>${x.role}:</b> ${x.name} ${badge}</div>
-                <button onclick="deleteStaff(${i})" style="color:red; border:none; background:none; cursor:pointer;"><i class="fas fa-trash"></i></button>
-            </div>`;
-        }).join('');
-    }
-
-    function renderForceDrivers() {
-        const panel = document.getElementById('driversLivePanel');
-        const list = document.getElementById('driversLiveList');
-        if(!panel || !list) return;
-        let s = JSON.parse(localStorage.getItem('medea_staff') || '[]');
-        const admin = window.currentAdminName;
-        if(admin !== 'فتحي' && admin !== 'فتحى') {
-            const me = s.find(x => x.name === admin);
-            if(me && me.company) s = s.filter(x => x.company === me.company);
-        }
-        const drivers = s.filter(x => x.role && x.role.includes('سائق'));
-        if(!drivers.length) { panel.style.display = 'none'; return; }
-        panel.style.display = 'block';
-        list.innerHTML = drivers.map(d => `<div style="padding:10px; border:1px solid #eee; margin-bottom:5px; border-radius:8px; background:white;">🚚 ${d.name}</div>`).join('');
-    }
-
-    window.addNewCompanyForce = function() {
-        const n = document.getElementById('fcName').value.trim();
-        const c = document.getElementById('fcColor').value;
-        const s = document.getElementById('fcService').value;
-        if(!n) return;
-        let comps = JSON.parse(localStorage.getItem('medea_companies') || '[]');
-        comps.push({name: n, color: c, service: s});
-        localStorage.setItem('medea_companies', JSON.stringify(comps));
-        document.getElementById('fcName').value = '';
-        refreshCompList();
-        refreshCompSelect();
-    };
-
-    function refreshCompList() {
-        const comps = JSON.parse(localStorage.getItem('medea_companies') || '[]');
-        const list = document.getElementById('fcList');
-        if(!list) return;
-        list.innerHTML = comps.map((c, i) => `
-            <div style="padding:10px; border-right:4px solid ${c.color}; background:white; margin-bottom:5px; border-radius:5px; display:flex; justify-content:space-between;">
-                <span>${c.name}</span>
-                <button onclick="removeCompForce(${i})" style="color:red; border:none; background:none; cursor:pointer;"><i class="fas fa-times"></i></button>
-            </div>`).join('');
-    }
-
-    window.removeCompForce = function(i) {
-        let comps = JSON.parse(localStorage.getItem('medea_companies') || '[]');
-        comps.splice(i, 1);
-        localStorage.setItem('medea_companies', JSON.stringify(comps));
-        refreshCompList();
-        refreshCompSelect();
-    };
-
-    function refreshCompSelect() {
-        const comps = JSON.parse(localStorage.getItem('medea_companies') || '[]');
-        const sel = document.getElementById('fStaffComp');
-        if(!sel) return;
-        sel.innerHTML = '<option value="">-- اختر الشركة --</option>' + comps.map(c => `<option value="${c.name}">${c.name}</option>`).join('');
-    }
-
-    forceInit();
-})();
-</script>
-
-</body></html>`);
+  win.document.write(`<html dir="rtl"><head><meta charset="UTF-8"><title>طباعة</title><style>body{font-family:'Cairo',sans-serif;padding:20px}table{width:100%;border-collapse:collapse}th{background:#1B5E20;color:#fff;padding:8px}td{padding:8px;border:1px solid #ddd}@media print{.no-print{display:none}}</style></head><body>${content}<script>window.print()<\/script></body></html>`);
   win.document.close();
 }
 
@@ -8023,240 +8001,6 @@ async function downloadPreviewPDF() {
     setTimeout(function() { window.print(); }, 800);
   };
 <\/script>
-
-<!-- MODULE: PRIVATE COMPANIES FOR ADMIN FATHI -->
-<style>
-.comp-badge { padding: 2px 8px; border-radius: 12px; color: #fff; font-size: 0.7rem; font-weight: bold; margin-right: 5px; display: inline-block; }
-.sub-admin-header-new { display: flex; align-items: center; gap: 12px; padding: 12px; border-radius: 12px; margin-bottom: 15px; color: #fff; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
-.cosec-container { background: var(--bg); border: 2px solid var(--accent); border-radius: 12px; padding: 15px; margin-bottom: 15px; }
-</style>
-
-<div id="cosec_force_html" style="display:none">
-    <div id="cosec_main_panel" class="cosec-container">
-        <div style="font-weight:900; color:var(--accent); margin-bottom:12px; font-size:1rem;">
-            <i class="fas fa-building"></i> إدارة الشركات الخاصة (coSec)
-        </div>
-        <div style="background:white; padding:12px; border-radius:8px; margin-bottom:10px; box-shadow:0 2px 5px rgba(0,0,0,0.05);">
-            <input type="text" id="fcName" class="input" placeholder="اسم الشركة" style="margin-bottom:8px;">
-            <div style="display:flex; align-items:center; gap:10px; margin-bottom:10px;">
-                <input type="color" id="fcColor" value="#006233" style="width:50px; height:40px; border:none; cursor:pointer;">
-                <span style="font-size:0.8rem;">اختر لون الشركة</span>
-            </div>
-            <select id="fcService" class="input" style="margin-bottom:10px;">
-                <option value="رفع نفايات منزلية">🚛 رفع نفايات منزلية</option>
-                <option value="كنس">🧹 كنس</option>
-                <option value="ردم">🏗️ ردم</option>
-                <option value="رفع وكنس">🚛🧹 رفع وكنس</option>
-                <option value="رفع وردم">🚛🏗️ رفع وردم</option>
-                <option value="خدمات متعددة">🔧 خدمات متعددة</option>
-            </select>
-            <button class="btn btn-primary ripple" onclick="addNewCompanyForce()">إضافة الشركة</button>
-        </div>
-        <div id="fcList" style="max-height:200px; overflow-y:auto;"></div>
-    </div>
-    <div id="fcStaffCompSelect" style="margin-top:10px;">
-        <select id="fStaffComp" class="input">
-            <option value="">-- اختر الشركة --</option>
-        </select>
-    </div>
-</div>
-
-<script>
-(function() {
-    function forceInit() {
-        const adminPanel = document.getElementById('adminPanel');
-        if (!adminPanel) { setTimeout(forceInit, 500); return; }
-
-        // Inject UI
-        const cosecPanel = document.getElementById('cosec_main_panel');
-        const settings = document.getElementById('adminSettingsSection');
-        if (settings) adminPanel.insertBefore(cosecPanel, settings);
-        else adminPanel.appendChild(cosecPanel);
-
-        const roleSelect = document.getElementById('newStaffRole');
-        const staffCompSelect = document.getElementById('fcStaffCompSelect');
-        if (roleSelect) {
-            roleSelect.parentElement.insertBefore(staffCompSelect, roleSelect.nextSibling);
-            roleSelect.addEventListener('change', () => {
-                staffCompSelect.style.display = roleSelect.value ? 'block' : 'none';
-                refreshCompSelect();
-            });
-        }
-
-        // Hook into admin name check
-        const observer = new MutationObserver(() => {
-            if (!adminPanel.classList.contains('hidden')) {
-                applyForceLogic();
-            }
-        });
-        observer.observe(adminPanel, { attributes: true });
-
-        // Override loadStaffList
-        const oldLoadStaff = window.loadStaffList;
-        window.loadStaffList = function() {
-            renderForceStaff();
-        };
-
-        // Override addStaff
-        const oldAddStaff = window.addStaff;
-        window.addStaff = function() {
-            if (window.currentAdminName !== 'فتحي' && window.currentAdminName !== 'فتحى') return;
-            const n = document.getElementById('newStaffName').value.trim();
-            const r = document.getElementById('newStaffRole').value.trim();
-            const c = document.getElementById('fStaffComp').value;
-            if(!n || !r) return;
-            let s = JSON.parse(localStorage.getItem('medea_staff') || '[]');
-            s.push({name:n, role:r, company:c, phone:document.getElementById('newStaffPhone').value.trim()});
-            localStorage.setItem('medea_staff', JSON.stringify(s));
-            if(window.db) window.db.ref('staff').set(s);
-            ['newStaffName','newStaffRole','newStaffPhone','fStaffComp'].forEach(id => { const el = document.getElementById(id); if(el) el.value = ''; });
-            window.loadStaffList();
-        };
-        
-        // Override Drivers
-        const oldDrivers = window.updateDriversLivePanel;
-        window.updateDriversLivePanel = function() {
-            renderForceDrivers();
-        };
-    }
-
-    function applyForceLogic() {
-        const name = window.currentAdminName;
-        const isMain = (name === 'فتحي' || name === 'فتحى');
-        const panel = document.getElementById('cosec_main_panel');
-        
-        if (isMain) {
-            if(panel) panel.style.display = 'block';
-            refreshCompList();
-            toggleRestrict(true);
-        } else {
-            if(panel) panel.style.display = 'none';
-            const staff = JSON.parse(localStorage.getItem('medea_staff') || '[]');
-            const me = staff.find(s => s.name === name);
-            if (me && me.company) {
-                const comps = JSON.parse(localStorage.getItem('medea_companies') || '[]');
-                const myComp = comps.find(c => c.name === me.company);
-                if (myComp) {
-                    applyForceTheme(myComp);
-                    toggleRestrict(false);
-                }
-            }
-        }
-        renderForceStaff();
-        renderForceDrivers();
-    }
-
-    function toggleRestrict(isFull) {
-        const panel = document.getElementById('adminPanel');
-        const divs = panel.querySelectorAll('div[style*="background:var(--bg)"]');
-        divs.forEach(d => {
-            const t = d.innerText;
-            if(!isFull && (t.includes('سجلات') || t.includes('تقارير') || t.includes('أدوات') || t.includes('أرشيف') || t.includes('QR'))) {
-                d.style.display = 'none';
-            } else {
-                d.style.display = 'block';
-            }
-        });
-        const cb = document.getElementById('clearDataBtn');
-        if(cb) cb.style.display = isFull ? 'block' : 'none';
-    }
-
-    function applyForceTheme(comp) {
-        const user = document.getElementById('adminCurrentUser');
-        if(user && user.parentElement) {
-            user.parentElement.innerHTML = `
-                <div class="sub-admin-header-new" style="background:${comp.color}">
-                    <div style="width:40px; height:40px; background:#fff; border-radius:50%; display:flex; align-items:center; justify-content:center; color:${comp.color}; font-size:1.2rem;">
-                        <i class="fas fa-building"></i>
-                    </div>
-                    <div style="text-align:right">
-                        <div style="font-weight:900; font-size:1.1rem;">${comp.name}</div>
-                        <div style="font-size:0.8rem; opacity:0.9;">المشرف: ${window.currentAdminName}</div>
-                    </div>
-                </div>`;
-        }
-    }
-
-    function renderForceStaff() {
-        let s = JSON.parse(localStorage.getItem('medea_staff') || '[]');
-        const comps = JSON.parse(localStorage.getItem('medea_companies') || '[]');
-        const admin = window.currentAdminName;
-        if(admin !== 'فتحي' && admin !== 'فتحى') {
-            const me = s.find(x => x.name === admin);
-            if(me && me.company) s = s.filter(x => x.company === me.company);
-        }
-        const list = document.getElementById('staffList');
-        if(!list) return;
-        list.innerHTML = s.map((x, i) => {
-            const comp = comps.find(c => c.name === x.company);
-            const color = comp ? comp.color : 'transparent';
-            const badge = comp ? `<span class="comp-badge" style="background:${color}">${comp.name}</span>` : '';
-            return `<div style="border-right:6px solid ${color}; background:white; padding:12px; margin-bottom:8px; display:flex; justify-content:space-between; align-items:center; border-radius:8px; box-shadow:0 2px 5px rgba(0,0,0,0.05);">
-                <div><b>${x.role}:</b> ${x.name} ${badge}</div>
-                <button onclick="deleteStaff(${i})" style="color:red; border:none; background:none; cursor:pointer;"><i class="fas fa-trash"></i></button>
-            </div>`;
-        }).join('');
-    }
-
-    function renderForceDrivers() {
-        const panel = document.getElementById('driversLivePanel');
-        const list = document.getElementById('driversLiveList');
-        if(!panel || !list) return;
-        let s = JSON.parse(localStorage.getItem('medea_staff') || '[]');
-        const admin = window.currentAdminName;
-        if(admin !== 'فتحي' && admin !== 'فتحى') {
-            const me = s.find(x => x.name === admin);
-            if(me && me.company) s = s.filter(x => x.company === me.company);
-        }
-        const drivers = s.filter(x => x.role && x.role.includes('سائق'));
-        if(!drivers.length) { panel.style.display = 'none'; return; }
-        panel.style.display = 'block';
-        list.innerHTML = drivers.map(d => `<div style="padding:10px; border:1px solid #eee; margin-bottom:5px; border-radius:8px; background:white;">🚚 ${d.name}</div>`).join('');
-    }
-
-    window.addNewCompanyForce = function() {
-        const n = document.getElementById('fcName').value.trim();
-        const c = document.getElementById('fcColor').value;
-        const s = document.getElementById('fcService').value;
-        if(!n) return;
-        let comps = JSON.parse(localStorage.getItem('medea_companies') || '[]');
-        comps.push({name: n, color: c, service: s});
-        localStorage.setItem('medea_companies', JSON.stringify(comps));
-        document.getElementById('fcName').value = '';
-        refreshCompList();
-        refreshCompSelect();
-    };
-
-    function refreshCompList() {
-        const comps = JSON.parse(localStorage.getItem('medea_companies') || '[]');
-        const list = document.getElementById('fcList');
-        if(!list) return;
-        list.innerHTML = comps.map((c, i) => `
-            <div style="padding:10px; border-right:4px solid ${c.color}; background:white; margin-bottom:5px; border-radius:5px; display:flex; justify-content:space-between;">
-                <span>${c.name}</span>
-                <button onclick="removeCompForce(${i})" style="color:red; border:none; background:none; cursor:pointer;"><i class="fas fa-times"></i></button>
-            </div>`).join('');
-    }
-
-    window.removeCompForce = function(i) {
-        let comps = JSON.parse(localStorage.getItem('medea_companies') || '[]');
-        comps.splice(i, 1);
-        localStorage.setItem('medea_companies', JSON.stringify(comps));
-        refreshCompList();
-        refreshCompSelect();
-    };
-
-    function refreshCompSelect() {
-        const comps = JSON.parse(localStorage.getItem('medea_companies') || '[]');
-        const sel = document.getElementById('fStaffComp');
-        if(!sel) return;
-        sel.innerHTML = '<option value="">-- اختر الشركة --</option>' + comps.map(c => `<option value="${c.name}">${c.name}</option>`).join('');
-    }
-
-    forceInit();
-})();
-</script>
-
 </body></html>`);
   win.document.close();
 }
@@ -8384,241 +8128,7 @@ function printSingleReport(id) {
         <div><div class="img-lbl after-lbl">✅ صورة بعد التنفيذ</div>${afterImg}</div>
       </div>
       <div class="footer">مصلحة النظافة والوقاية الصحية — بلدية المدية | إعداد د. رابحي فتحي 2026</div>
-    <script>window.print();setTimeout(()=>window.close(),2000);<\/script>
-<!-- MODULE: PRIVATE COMPANIES FOR ADMIN FATHI -->
-<style>
-.comp-badge { padding: 2px 8px; border-radius: 12px; color: #fff; font-size: 0.7rem; font-weight: bold; margin-right: 5px; display: inline-block; }
-.sub-admin-header-new { display: flex; align-items: center; gap: 12px; padding: 12px; border-radius: 12px; margin-bottom: 15px; color: #fff; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
-.cosec-container { background: var(--bg); border: 2px solid var(--accent); border-radius: 12px; padding: 15px; margin-bottom: 15px; }
-</style>
-
-<div id="cosec_force_html" style="display:none">
-    <div id="cosec_main_panel" class="cosec-container">
-        <div style="font-weight:900; color:var(--accent); margin-bottom:12px; font-size:1rem;">
-            <i class="fas fa-building"></i> إدارة الشركات الخاصة (coSec)
-        </div>
-        <div style="background:white; padding:12px; border-radius:8px; margin-bottom:10px; box-shadow:0 2px 5px rgba(0,0,0,0.05);">
-            <input type="text" id="fcName" class="input" placeholder="اسم الشركة" style="margin-bottom:8px;">
-            <div style="display:flex; align-items:center; gap:10px; margin-bottom:10px;">
-                <input type="color" id="fcColor" value="#006233" style="width:50px; height:40px; border:none; cursor:pointer;">
-                <span style="font-size:0.8rem;">اختر لون الشركة</span>
-            </div>
-            <select id="fcService" class="input" style="margin-bottom:10px;">
-                <option value="رفع نفايات منزلية">🚛 رفع نفايات منزلية</option>
-                <option value="كنس">🧹 كنس</option>
-                <option value="ردم">🏗️ ردم</option>
-                <option value="رفع وكنس">🚛🧹 رفع وكنس</option>
-                <option value="رفع وردم">🚛🏗️ رفع وردم</option>
-                <option value="خدمات متعددة">🔧 خدمات متعددة</option>
-            </select>
-            <button class="btn btn-primary ripple" onclick="addNewCompanyForce()">إضافة الشركة</button>
-        </div>
-        <div id="fcList" style="max-height:200px; overflow-y:auto;"></div>
-    </div>
-    <div id="fcStaffCompSelect" style="margin-top:10px;">
-        <select id="fStaffComp" class="input">
-            <option value="">-- اختر الشركة --</option>
-        </select>
-    </div>
-</div>
-
-<script>
-(function() {
-    function forceInit() {
-        const adminPanel = document.getElementById('adminPanel');
-        if (!adminPanel) { setTimeout(forceInit, 500); return; }
-
-        // Inject UI
-        const cosecPanel = document.getElementById('cosec_main_panel');
-        const settings = document.getElementById('adminSettingsSection');
-        if (settings) adminPanel.insertBefore(cosecPanel, settings);
-        else adminPanel.appendChild(cosecPanel);
-
-        const roleSelect = document.getElementById('newStaffRole');
-        const staffCompSelect = document.getElementById('fcStaffCompSelect');
-        if (roleSelect) {
-            roleSelect.parentElement.insertBefore(staffCompSelect, roleSelect.nextSibling);
-            roleSelect.addEventListener('change', () => {
-                staffCompSelect.style.display = roleSelect.value ? 'block' : 'none';
-                refreshCompSelect();
-            });
-        }
-
-        // Hook into admin name check
-        const observer = new MutationObserver(() => {
-            if (!adminPanel.classList.contains('hidden')) {
-                applyForceLogic();
-            }
-        });
-        observer.observe(adminPanel, { attributes: true });
-
-        // Override loadStaffList
-        const oldLoadStaff = window.loadStaffList;
-        window.loadStaffList = function() {
-            renderForceStaff();
-        };
-
-        // Override addStaff
-        const oldAddStaff = window.addStaff;
-        window.addStaff = function() {
-            if (window.currentAdminName !== 'فتحي' && window.currentAdminName !== 'فتحى') return;
-            const n = document.getElementById('newStaffName').value.trim();
-            const r = document.getElementById('newStaffRole').value.trim();
-            const c = document.getElementById('fStaffComp').value;
-            if(!n || !r) return;
-            let s = JSON.parse(localStorage.getItem('medea_staff') || '[]');
-            s.push({name:n, role:r, company:c, phone:document.getElementById('newStaffPhone').value.trim()});
-            localStorage.setItem('medea_staff', JSON.stringify(s));
-            if(window.db) window.db.ref('staff').set(s);
-            ['newStaffName','newStaffRole','newStaffPhone','fStaffComp'].forEach(id => { const el = document.getElementById(id); if(el) el.value = ''; });
-            window.loadStaffList();
-        };
-        
-        // Override Drivers
-        const oldDrivers = window.updateDriversLivePanel;
-        window.updateDriversLivePanel = function() {
-            renderForceDrivers();
-        };
-    }
-
-    function applyForceLogic() {
-        const name = window.currentAdminName;
-        const isMain = (name === 'فتحي' || name === 'فتحى');
-        const panel = document.getElementById('cosec_main_panel');
-        
-        if (isMain) {
-            if(panel) panel.style.display = 'block';
-            refreshCompList();
-            toggleRestrict(true);
-        } else {
-            if(panel) panel.style.display = 'none';
-            const staff = JSON.parse(localStorage.getItem('medea_staff') || '[]');
-            const me = staff.find(s => s.name === name);
-            if (me && me.company) {
-                const comps = JSON.parse(localStorage.getItem('medea_companies') || '[]');
-                const myComp = comps.find(c => c.name === me.company);
-                if (myComp) {
-                    applyForceTheme(myComp);
-                    toggleRestrict(false);
-                }
-            }
-        }
-        renderForceStaff();
-        renderForceDrivers();
-    }
-
-    function toggleRestrict(isFull) {
-        const panel = document.getElementById('adminPanel');
-        const divs = panel.querySelectorAll('div[style*="background:var(--bg)"]');
-        divs.forEach(d => {
-            const t = d.innerText;
-            if(!isFull && (t.includes('سجلات') || t.includes('تقارير') || t.includes('أدوات') || t.includes('أرشيف') || t.includes('QR'))) {
-                d.style.display = 'none';
-            } else {
-                d.style.display = 'block';
-            }
-        });
-        const cb = document.getElementById('clearDataBtn');
-        if(cb) cb.style.display = isFull ? 'block' : 'none';
-    }
-
-    function applyForceTheme(comp) {
-        const user = document.getElementById('adminCurrentUser');
-        if(user && user.parentElement) {
-            user.parentElement.innerHTML = `
-                <div class="sub-admin-header-new" style="background:${comp.color}">
-                    <div style="width:40px; height:40px; background:#fff; border-radius:50%; display:flex; align-items:center; justify-content:center; color:${comp.color}; font-size:1.2rem;">
-                        <i class="fas fa-building"></i>
-                    </div>
-                    <div style="text-align:right">
-                        <div style="font-weight:900; font-size:1.1rem;">${comp.name}</div>
-                        <div style="font-size:0.8rem; opacity:0.9;">المشرف: ${window.currentAdminName}</div>
-                    </div>
-                </div>`;
-        }
-    }
-
-    function renderForceStaff() {
-        let s = JSON.parse(localStorage.getItem('medea_staff') || '[]');
-        const comps = JSON.parse(localStorage.getItem('medea_companies') || '[]');
-        const admin = window.currentAdminName;
-        if(admin !== 'فتحي' && admin !== 'فتحى') {
-            const me = s.find(x => x.name === admin);
-            if(me && me.company) s = s.filter(x => x.company === me.company);
-        }
-        const list = document.getElementById('staffList');
-        if(!list) return;
-        list.innerHTML = s.map((x, i) => {
-            const comp = comps.find(c => c.name === x.company);
-            const color = comp ? comp.color : 'transparent';
-            const badge = comp ? `<span class="comp-badge" style="background:${color}">${comp.name}</span>` : '';
-            return `<div style="border-right:6px solid ${color}; background:white; padding:12px; margin-bottom:8px; display:flex; justify-content:space-between; align-items:center; border-radius:8px; box-shadow:0 2px 5px rgba(0,0,0,0.05);">
-                <div><b>${x.role}:</b> ${x.name} ${badge}</div>
-                <button onclick="deleteStaff(${i})" style="color:red; border:none; background:none; cursor:pointer;"><i class="fas fa-trash"></i></button>
-            </div>`;
-        }).join('');
-    }
-
-    function renderForceDrivers() {
-        const panel = document.getElementById('driversLivePanel');
-        const list = document.getElementById('driversLiveList');
-        if(!panel || !list) return;
-        let s = JSON.parse(localStorage.getItem('medea_staff') || '[]');
-        const admin = window.currentAdminName;
-        if(admin !== 'فتحي' && admin !== 'فتحى') {
-            const me = s.find(x => x.name === admin);
-            if(me && me.company) s = s.filter(x => x.company === me.company);
-        }
-        const drivers = s.filter(x => x.role && x.role.includes('سائق'));
-        if(!drivers.length) { panel.style.display = 'none'; return; }
-        panel.style.display = 'block';
-        list.innerHTML = drivers.map(d => `<div style="padding:10px; border:1px solid #eee; margin-bottom:5px; border-radius:8px; background:white;">🚚 ${d.name}</div>`).join('');
-    }
-
-    window.addNewCompanyForce = function() {
-        const n = document.getElementById('fcName').value.trim();
-        const c = document.getElementById('fcColor').value;
-        const s = document.getElementById('fcService').value;
-        if(!n) return;
-        let comps = JSON.parse(localStorage.getItem('medea_companies') || '[]');
-        comps.push({name: n, color: c, service: s});
-        localStorage.setItem('medea_companies', JSON.stringify(comps));
-        document.getElementById('fcName').value = '';
-        refreshCompList();
-        refreshCompSelect();
-    };
-
-    function refreshCompList() {
-        const comps = JSON.parse(localStorage.getItem('medea_companies') || '[]');
-        const list = document.getElementById('fcList');
-        if(!list) return;
-        list.innerHTML = comps.map((c, i) => `
-            <div style="padding:10px; border-right:4px solid ${c.color}; background:white; margin-bottom:5px; border-radius:5px; display:flex; justify-content:space-between;">
-                <span>${c.name}</span>
-                <button onclick="removeCompForce(${i})" style="color:red; border:none; background:none; cursor:pointer;"><i class="fas fa-times"></i></button>
-            </div>`).join('');
-    }
-
-    window.removeCompForce = function(i) {
-        let comps = JSON.parse(localStorage.getItem('medea_companies') || '[]');
-        comps.splice(i, 1);
-        localStorage.setItem('medea_companies', JSON.stringify(comps));
-        refreshCompList();
-        refreshCompSelect();
-    };
-
-    function refreshCompSelect() {
-        const comps = JSON.parse(localStorage.getItem('medea_companies') || '[]');
-        const sel = document.getElementById('fStaffComp');
-        if(!sel) return;
-        sel.innerHTML = '<option value="">-- اختر الشركة --</option>' + comps.map(c => `<option value="${c.name}">${c.name}</option>`).join('');
-    }
-
-    forceInit();
-})();
-</script>
-
-</body></html>`);
+    <script>window.print();setTimeout(()=>window.close(),2000);<\/script></body></html>`);
     win.document.close();
   } catch(e) { showToast('⚠️ خطأ في الطباعة','error'); }
 }
@@ -9480,241 +8990,7 @@ function printMonthlyCertificate() {
       </div>
       <div class="mvp"><b>🥇 السائق المتميز:</b> ${mvp}</div>
       <div class="footer">مصلحة النظافة والوقاية الصحية — بلدية المدية</div>
-    </div><script>window.print();setTimeout(()=>window.close(),1500);<\/script>
-<!-- MODULE: PRIVATE COMPANIES FOR ADMIN FATHI -->
-<style>
-.comp-badge { padding: 2px 8px; border-radius: 12px; color: #fff; font-size: 0.7rem; font-weight: bold; margin-right: 5px; display: inline-block; }
-.sub-admin-header-new { display: flex; align-items: center; gap: 12px; padding: 12px; border-radius: 12px; margin-bottom: 15px; color: #fff; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
-.cosec-container { background: var(--bg); border: 2px solid var(--accent); border-radius: 12px; padding: 15px; margin-bottom: 15px; }
-</style>
-
-<div id="cosec_force_html" style="display:none">
-    <div id="cosec_main_panel" class="cosec-container">
-        <div style="font-weight:900; color:var(--accent); margin-bottom:12px; font-size:1rem;">
-            <i class="fas fa-building"></i> إدارة الشركات الخاصة (coSec)
-        </div>
-        <div style="background:white; padding:12px; border-radius:8px; margin-bottom:10px; box-shadow:0 2px 5px rgba(0,0,0,0.05);">
-            <input type="text" id="fcName" class="input" placeholder="اسم الشركة" style="margin-bottom:8px;">
-            <div style="display:flex; align-items:center; gap:10px; margin-bottom:10px;">
-                <input type="color" id="fcColor" value="#006233" style="width:50px; height:40px; border:none; cursor:pointer;">
-                <span style="font-size:0.8rem;">اختر لون الشركة</span>
-            </div>
-            <select id="fcService" class="input" style="margin-bottom:10px;">
-                <option value="رفع نفايات منزلية">🚛 رفع نفايات منزلية</option>
-                <option value="كنس">🧹 كنس</option>
-                <option value="ردم">🏗️ ردم</option>
-                <option value="رفع وكنس">🚛🧹 رفع وكنس</option>
-                <option value="رفع وردم">🚛🏗️ رفع وردم</option>
-                <option value="خدمات متعددة">🔧 خدمات متعددة</option>
-            </select>
-            <button class="btn btn-primary ripple" onclick="addNewCompanyForce()">إضافة الشركة</button>
-        </div>
-        <div id="fcList" style="max-height:200px; overflow-y:auto;"></div>
-    </div>
-    <div id="fcStaffCompSelect" style="margin-top:10px;">
-        <select id="fStaffComp" class="input">
-            <option value="">-- اختر الشركة --</option>
-        </select>
-    </div>
-</div>
-
-<script>
-(function() {
-    function forceInit() {
-        const adminPanel = document.getElementById('adminPanel');
-        if (!adminPanel) { setTimeout(forceInit, 500); return; }
-
-        // Inject UI
-        const cosecPanel = document.getElementById('cosec_main_panel');
-        const settings = document.getElementById('adminSettingsSection');
-        if (settings) adminPanel.insertBefore(cosecPanel, settings);
-        else adminPanel.appendChild(cosecPanel);
-
-        const roleSelect = document.getElementById('newStaffRole');
-        const staffCompSelect = document.getElementById('fcStaffCompSelect');
-        if (roleSelect) {
-            roleSelect.parentElement.insertBefore(staffCompSelect, roleSelect.nextSibling);
-            roleSelect.addEventListener('change', () => {
-                staffCompSelect.style.display = roleSelect.value ? 'block' : 'none';
-                refreshCompSelect();
-            });
-        }
-
-        // Hook into admin name check
-        const observer = new MutationObserver(() => {
-            if (!adminPanel.classList.contains('hidden')) {
-                applyForceLogic();
-            }
-        });
-        observer.observe(adminPanel, { attributes: true });
-
-        // Override loadStaffList
-        const oldLoadStaff = window.loadStaffList;
-        window.loadStaffList = function() {
-            renderForceStaff();
-        };
-
-        // Override addStaff
-        const oldAddStaff = window.addStaff;
-        window.addStaff = function() {
-            if (window.currentAdminName !== 'فتحي' && window.currentAdminName !== 'فتحى') return;
-            const n = document.getElementById('newStaffName').value.trim();
-            const r = document.getElementById('newStaffRole').value.trim();
-            const c = document.getElementById('fStaffComp').value;
-            if(!n || !r) return;
-            let s = JSON.parse(localStorage.getItem('medea_staff') || '[]');
-            s.push({name:n, role:r, company:c, phone:document.getElementById('newStaffPhone').value.trim()});
-            localStorage.setItem('medea_staff', JSON.stringify(s));
-            if(window.db) window.db.ref('staff').set(s);
-            ['newStaffName','newStaffRole','newStaffPhone','fStaffComp'].forEach(id => { const el = document.getElementById(id); if(el) el.value = ''; });
-            window.loadStaffList();
-        };
-        
-        // Override Drivers
-        const oldDrivers = window.updateDriversLivePanel;
-        window.updateDriversLivePanel = function() {
-            renderForceDrivers();
-        };
-    }
-
-    function applyForceLogic() {
-        const name = window.currentAdminName;
-        const isMain = (name === 'فتحي' || name === 'فتحى');
-        const panel = document.getElementById('cosec_main_panel');
-        
-        if (isMain) {
-            if(panel) panel.style.display = 'block';
-            refreshCompList();
-            toggleRestrict(true);
-        } else {
-            if(panel) panel.style.display = 'none';
-            const staff = JSON.parse(localStorage.getItem('medea_staff') || '[]');
-            const me = staff.find(s => s.name === name);
-            if (me && me.company) {
-                const comps = JSON.parse(localStorage.getItem('medea_companies') || '[]');
-                const myComp = comps.find(c => c.name === me.company);
-                if (myComp) {
-                    applyForceTheme(myComp);
-                    toggleRestrict(false);
-                }
-            }
-        }
-        renderForceStaff();
-        renderForceDrivers();
-    }
-
-    function toggleRestrict(isFull) {
-        const panel = document.getElementById('adminPanel');
-        const divs = panel.querySelectorAll('div[style*="background:var(--bg)"]');
-        divs.forEach(d => {
-            const t = d.innerText;
-            if(!isFull && (t.includes('سجلات') || t.includes('تقارير') || t.includes('أدوات') || t.includes('أرشيف') || t.includes('QR'))) {
-                d.style.display = 'none';
-            } else {
-                d.style.display = 'block';
-            }
-        });
-        const cb = document.getElementById('clearDataBtn');
-        if(cb) cb.style.display = isFull ? 'block' : 'none';
-    }
-
-    function applyForceTheme(comp) {
-        const user = document.getElementById('adminCurrentUser');
-        if(user && user.parentElement) {
-            user.parentElement.innerHTML = `
-                <div class="sub-admin-header-new" style="background:${comp.color}">
-                    <div style="width:40px; height:40px; background:#fff; border-radius:50%; display:flex; align-items:center; justify-content:center; color:${comp.color}; font-size:1.2rem;">
-                        <i class="fas fa-building"></i>
-                    </div>
-                    <div style="text-align:right">
-                        <div style="font-weight:900; font-size:1.1rem;">${comp.name}</div>
-                        <div style="font-size:0.8rem; opacity:0.9;">المشرف: ${window.currentAdminName}</div>
-                    </div>
-                </div>`;
-        }
-    }
-
-    function renderForceStaff() {
-        let s = JSON.parse(localStorage.getItem('medea_staff') || '[]');
-        const comps = JSON.parse(localStorage.getItem('medea_companies') || '[]');
-        const admin = window.currentAdminName;
-        if(admin !== 'فتحي' && admin !== 'فتحى') {
-            const me = s.find(x => x.name === admin);
-            if(me && me.company) s = s.filter(x => x.company === me.company);
-        }
-        const list = document.getElementById('staffList');
-        if(!list) return;
-        list.innerHTML = s.map((x, i) => {
-            const comp = comps.find(c => c.name === x.company);
-            const color = comp ? comp.color : 'transparent';
-            const badge = comp ? `<span class="comp-badge" style="background:${color}">${comp.name}</span>` : '';
-            return `<div style="border-right:6px solid ${color}; background:white; padding:12px; margin-bottom:8px; display:flex; justify-content:space-between; align-items:center; border-radius:8px; box-shadow:0 2px 5px rgba(0,0,0,0.05);">
-                <div><b>${x.role}:</b> ${x.name} ${badge}</div>
-                <button onclick="deleteStaff(${i})" style="color:red; border:none; background:none; cursor:pointer;"><i class="fas fa-trash"></i></button>
-            </div>`;
-        }).join('');
-    }
-
-    function renderForceDrivers() {
-        const panel = document.getElementById('driversLivePanel');
-        const list = document.getElementById('driversLiveList');
-        if(!panel || !list) return;
-        let s = JSON.parse(localStorage.getItem('medea_staff') || '[]');
-        const admin = window.currentAdminName;
-        if(admin !== 'فتحي' && admin !== 'فتحى') {
-            const me = s.find(x => x.name === admin);
-            if(me && me.company) s = s.filter(x => x.company === me.company);
-        }
-        const drivers = s.filter(x => x.role && x.role.includes('سائق'));
-        if(!drivers.length) { panel.style.display = 'none'; return; }
-        panel.style.display = 'block';
-        list.innerHTML = drivers.map(d => `<div style="padding:10px; border:1px solid #eee; margin-bottom:5px; border-radius:8px; background:white;">🚚 ${d.name}</div>`).join('');
-    }
-
-    window.addNewCompanyForce = function() {
-        const n = document.getElementById('fcName').value.trim();
-        const c = document.getElementById('fcColor').value;
-        const s = document.getElementById('fcService').value;
-        if(!n) return;
-        let comps = JSON.parse(localStorage.getItem('medea_companies') || '[]');
-        comps.push({name: n, color: c, service: s});
-        localStorage.setItem('medea_companies', JSON.stringify(comps));
-        document.getElementById('fcName').value = '';
-        refreshCompList();
-        refreshCompSelect();
-    };
-
-    function refreshCompList() {
-        const comps = JSON.parse(localStorage.getItem('medea_companies') || '[]');
-        const list = document.getElementById('fcList');
-        if(!list) return;
-        list.innerHTML = comps.map((c, i) => `
-            <div style="padding:10px; border-right:4px solid ${c.color}; background:white; margin-bottom:5px; border-radius:5px; display:flex; justify-content:space-between;">
-                <span>${c.name}</span>
-                <button onclick="removeCompForce(${i})" style="color:red; border:none; background:none; cursor:pointer;"><i class="fas fa-times"></i></button>
-            </div>`).join('');
-    }
-
-    window.removeCompForce = function(i) {
-        let comps = JSON.parse(localStorage.getItem('medea_companies') || '[]');
-        comps.splice(i, 1);
-        localStorage.setItem('medea_companies', JSON.stringify(comps));
-        refreshCompList();
-        refreshCompSelect();
-    };
-
-    function refreshCompSelect() {
-        const comps = JSON.parse(localStorage.getItem('medea_companies') || '[]');
-        const sel = document.getElementById('fStaffComp');
-        if(!sel) return;
-        sel.innerHTML = '<option value="">-- اختر الشركة --</option>' + comps.map(c => `<option value="${c.name}">${c.name}</option>`).join('');
-    }
-
-    forceInit();
-})();
-</script>
-
-</body></html>`);
+    </div><script>window.print();setTimeout(()=>window.close(),1500);<\/script></body></html>`);
     win.document.close();
   } catch(e) { showToast('⚠️ خطأ في الطباعة','error'); }
 }
@@ -10814,238 +10090,4 @@ function optimizeDriverRoute(start, points) {
     });
 })();
 </script>
-
-<!-- MODULE: PRIVATE COMPANIES FOR ADMIN FATHI -->
-<style>
-.comp-badge { padding: 2px 8px; border-radius: 12px; color: #fff; font-size: 0.7rem; font-weight: bold; margin-right: 5px; display: inline-block; }
-.sub-admin-header-new { display: flex; align-items: center; gap: 12px; padding: 12px; border-radius: 12px; margin-bottom: 15px; color: #fff; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
-.cosec-container { background: var(--bg); border: 2px solid var(--accent); border-radius: 12px; padding: 15px; margin-bottom: 15px; }
-</style>
-
-<div id="cosec_force_html" style="display:none">
-    <div id="cosec_main_panel" class="cosec-container">
-        <div style="font-weight:900; color:var(--accent); margin-bottom:12px; font-size:1rem;">
-            <i class="fas fa-building"></i> إدارة الشركات الخاصة (coSec)
-        </div>
-        <div style="background:white; padding:12px; border-radius:8px; margin-bottom:10px; box-shadow:0 2px 5px rgba(0,0,0,0.05);">
-            <input type="text" id="fcName" class="input" placeholder="اسم الشركة" style="margin-bottom:8px;">
-            <div style="display:flex; align-items:center; gap:10px; margin-bottom:10px;">
-                <input type="color" id="fcColor" value="#006233" style="width:50px; height:40px; border:none; cursor:pointer;">
-                <span style="font-size:0.8rem;">اختر لون الشركة</span>
-            </div>
-            <select id="fcService" class="input" style="margin-bottom:10px;">
-                <option value="رفع نفايات منزلية">🚛 رفع نفايات منزلية</option>
-                <option value="كنس">🧹 كنس</option>
-                <option value="ردم">🏗️ ردم</option>
-                <option value="رفع وكنس">🚛🧹 رفع وكنس</option>
-                <option value="رفع وردم">🚛🏗️ رفع وردم</option>
-                <option value="خدمات متعددة">🔧 خدمات متعددة</option>
-            </select>
-            <button class="btn btn-primary ripple" onclick="addNewCompanyForce()">إضافة الشركة</button>
-        </div>
-        <div id="fcList" style="max-height:200px; overflow-y:auto;"></div>
-    </div>
-    <div id="fcStaffCompSelect" style="margin-top:10px;">
-        <select id="fStaffComp" class="input">
-            <option value="">-- اختر الشركة --</option>
-        </select>
-    </div>
-</div>
-
-<script>
-(function() {
-    function forceInit() {
-        const adminPanel = document.getElementById('adminPanel');
-        if (!adminPanel) { setTimeout(forceInit, 500); return; }
-
-        // Inject UI
-        const cosecPanel = document.getElementById('cosec_main_panel');
-        const settings = document.getElementById('adminSettingsSection');
-        if (settings) adminPanel.insertBefore(cosecPanel, settings);
-        else adminPanel.appendChild(cosecPanel);
-
-        const roleSelect = document.getElementById('newStaffRole');
-        const staffCompSelect = document.getElementById('fcStaffCompSelect');
-        if (roleSelect) {
-            roleSelect.parentElement.insertBefore(staffCompSelect, roleSelect.nextSibling);
-            roleSelect.addEventListener('change', () => {
-                staffCompSelect.style.display = roleSelect.value ? 'block' : 'none';
-                refreshCompSelect();
-            });
-        }
-
-        // Hook into admin name check
-        const observer = new MutationObserver(() => {
-            if (!adminPanel.classList.contains('hidden')) {
-                applyForceLogic();
-            }
-        });
-        observer.observe(adminPanel, { attributes: true });
-
-        // Override loadStaffList
-        const oldLoadStaff = window.loadStaffList;
-        window.loadStaffList = function() {
-            renderForceStaff();
-        };
-
-        // Override addStaff
-        const oldAddStaff = window.addStaff;
-        window.addStaff = function() {
-            if (window.currentAdminName !== 'فتحي' && window.currentAdminName !== 'فتحى') return;
-            const n = document.getElementById('newStaffName').value.trim();
-            const r = document.getElementById('newStaffRole').value.trim();
-            const c = document.getElementById('fStaffComp').value;
-            if(!n || !r) return;
-            let s = JSON.parse(localStorage.getItem('medea_staff') || '[]');
-            s.push({name:n, role:r, company:c, phone:document.getElementById('newStaffPhone').value.trim()});
-            localStorage.setItem('medea_staff', JSON.stringify(s));
-            if(window.db) window.db.ref('staff').set(s);
-            ['newStaffName','newStaffRole','newStaffPhone','fStaffComp'].forEach(id => { const el = document.getElementById(id); if(el) el.value = ''; });
-            window.loadStaffList();
-        };
-        
-        // Override Drivers
-        const oldDrivers = window.updateDriversLivePanel;
-        window.updateDriversLivePanel = function() {
-            renderForceDrivers();
-        };
-    }
-
-    function applyForceLogic() {
-        const name = window.currentAdminName;
-        const isMain = (name === 'فتحي' || name === 'فتحى');
-        const panel = document.getElementById('cosec_main_panel');
-        
-        if (isMain) {
-            if(panel) panel.style.display = 'block';
-            refreshCompList();
-            toggleRestrict(true);
-        } else {
-            if(panel) panel.style.display = 'none';
-            const staff = JSON.parse(localStorage.getItem('medea_staff') || '[]');
-            const me = staff.find(s => s.name === name);
-            if (me && me.company) {
-                const comps = JSON.parse(localStorage.getItem('medea_companies') || '[]');
-                const myComp = comps.find(c => c.name === me.company);
-                if (myComp) {
-                    applyForceTheme(myComp);
-                    toggleRestrict(false);
-                }
-            }
-        }
-        renderForceStaff();
-        renderForceDrivers();
-    }
-
-    function toggleRestrict(isFull) {
-        const panel = document.getElementById('adminPanel');
-        const divs = panel.querySelectorAll('div[style*="background:var(--bg)"]');
-        divs.forEach(d => {
-            const t = d.innerText;
-            if(!isFull && (t.includes('سجلات') || t.includes('تقارير') || t.includes('أدوات') || t.includes('أرشيف') || t.includes('QR'))) {
-                d.style.display = 'none';
-            } else {
-                d.style.display = 'block';
-            }
-        });
-        const cb = document.getElementById('clearDataBtn');
-        if(cb) cb.style.display = isFull ? 'block' : 'none';
-    }
-
-    function applyForceTheme(comp) {
-        const user = document.getElementById('adminCurrentUser');
-        if(user && user.parentElement) {
-            user.parentElement.innerHTML = `
-                <div class="sub-admin-header-new" style="background:${comp.color}">
-                    <div style="width:40px; height:40px; background:#fff; border-radius:50%; display:flex; align-items:center; justify-content:center; color:${comp.color}; font-size:1.2rem;">
-                        <i class="fas fa-building"></i>
-                    </div>
-                    <div style="text-align:right">
-                        <div style="font-weight:900; font-size:1.1rem;">${comp.name}</div>
-                        <div style="font-size:0.8rem; opacity:0.9;">المشرف: ${window.currentAdminName}</div>
-                    </div>
-                </div>`;
-        }
-    }
-
-    function renderForceStaff() {
-        let s = JSON.parse(localStorage.getItem('medea_staff') || '[]');
-        const comps = JSON.parse(localStorage.getItem('medea_companies') || '[]');
-        const admin = window.currentAdminName;
-        if(admin !== 'فتحي' && admin !== 'فتحى') {
-            const me = s.find(x => x.name === admin);
-            if(me && me.company) s = s.filter(x => x.company === me.company);
-        }
-        const list = document.getElementById('staffList');
-        if(!list) return;
-        list.innerHTML = s.map((x, i) => {
-            const comp = comps.find(c => c.name === x.company);
-            const color = comp ? comp.color : 'transparent';
-            const badge = comp ? `<span class="comp-badge" style="background:${color}">${comp.name}</span>` : '';
-            return `<div style="border-right:6px solid ${color}; background:white; padding:12px; margin-bottom:8px; display:flex; justify-content:space-between; align-items:center; border-radius:8px; box-shadow:0 2px 5px rgba(0,0,0,0.05);">
-                <div><b>${x.role}:</b> ${x.name} ${badge}</div>
-                <button onclick="deleteStaff(${i})" style="color:red; border:none; background:none; cursor:pointer;"><i class="fas fa-trash"></i></button>
-            </div>`;
-        }).join('');
-    }
-
-    function renderForceDrivers() {
-        const panel = document.getElementById('driversLivePanel');
-        const list = document.getElementById('driversLiveList');
-        if(!panel || !list) return;
-        let s = JSON.parse(localStorage.getItem('medea_staff') || '[]');
-        const admin = window.currentAdminName;
-        if(admin !== 'فتحي' && admin !== 'فتحى') {
-            const me = s.find(x => x.name === admin);
-            if(me && me.company) s = s.filter(x => x.company === me.company);
-        }
-        const drivers = s.filter(x => x.role && x.role.includes('سائق'));
-        if(!drivers.length) { panel.style.display = 'none'; return; }
-        panel.style.display = 'block';
-        list.innerHTML = drivers.map(d => `<div style="padding:10px; border:1px solid #eee; margin-bottom:5px; border-radius:8px; background:white;">🚚 ${d.name}</div>`).join('');
-    }
-
-    window.addNewCompanyForce = function() {
-        const n = document.getElementById('fcName').value.trim();
-        const c = document.getElementById('fcColor').value;
-        const s = document.getElementById('fcService').value;
-        if(!n) return;
-        let comps = JSON.parse(localStorage.getItem('medea_companies') || '[]');
-        comps.push({name: n, color: c, service: s});
-        localStorage.setItem('medea_companies', JSON.stringify(comps));
-        document.getElementById('fcName').value = '';
-        refreshCompList();
-        refreshCompSelect();
-    };
-
-    function refreshCompList() {
-        const comps = JSON.parse(localStorage.getItem('medea_companies') || '[]');
-        const list = document.getElementById('fcList');
-        if(!list) return;
-        list.innerHTML = comps.map((c, i) => `
-            <div style="padding:10px; border-right:4px solid ${c.color}; background:white; margin-bottom:5px; border-radius:5px; display:flex; justify-content:space-between;">
-                <span>${c.name}</span>
-                <button onclick="removeCompForce(${i})" style="color:red; border:none; background:none; cursor:pointer;"><i class="fas fa-times"></i></button>
-            </div>`).join('');
-    }
-
-    window.removeCompForce = function(i) {
-        let comps = JSON.parse(localStorage.getItem('medea_companies') || '[]');
-        comps.splice(i, 1);
-        localStorage.setItem('medea_companies', JSON.stringify(comps));
-        refreshCompList();
-        refreshCompSelect();
-    };
-
-    function refreshCompSelect() {
-        const comps = JSON.parse(localStorage.getItem('medea_companies') || '[]');
-        const sel = document.getElementById('fStaffComp');
-        if(!sel) return;
-        sel.innerHTML = '<option value="">-- اختر الشركة --</option>' + comps.map(c => `<option value="${c.name}">${c.name}</option>`).join('');
-    }
-
-    forceInit();
-})();
-</script>
-
 </body></html>
