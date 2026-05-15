@@ -2814,7 +2814,32 @@ select.input {
       </div>
 
       <!-- ===== القسم 6: الإعدادات (المشرف الرئيسي فقط) ===== -->
-      <div id="adminSettingsSection" style="display:none;background:var(--bg);border-radius:var(--radius-sm);padding:12px;margin-bottom:10px;border:2px solid #e0e0e0">
+      
+      <!-- ===== ركن إدارة الشركات الخاصة (للمشرف الرئيسي فقط) ===== -->
+      <div id="companiesManagerSection" style="display:none;background:var(--bg);border-radius:var(--radius-sm);padding:12px;margin-bottom:10px;border:2px solid #c8e6c9">
+        <div style="font-weight:800;color:var(--primary);margin-bottom:10px;font-size:0.9rem">
+          <i class="fas fa-building"></i> إدارة الشركات الخاصة
+        </div>
+        <div id="companiesManager" style="background:var(--bg-card);border-radius:var(--radius-sm);padding:12px;border:1px solid var(--border)">
+          <h4 style="margin-bottom:10px;color:var(--primary);font-size:0.88rem"><i class="fas fa-plus-circle"></i> إضافة شركة جديدة</h4>
+          <input type="text" id="companyNameInput" class="input" placeholder="اسم الشركة الخاصة" style="margin-bottom:8px">
+          <select id="companyTypeSelect" class="input" style="margin-bottom:8px">
+            <option value="" disabled selected>نوع النشاط</option>
+            <option value="رفع النفايات المنزلية">رفع النفايات المنزلية</option>
+            <option value="الكنس">الكنس</option>
+            <option value="الردم">الردم</option>
+          </select>
+          <input type="color" id="companyColorInput" class="input" value="#006233" style="margin-bottom:8px;height:40px;cursor:pointer">
+          <button class="btn btn-primary ripple" onclick="addCompany()" style="font-size:0.88rem;width:100%">
+            <i class="fas fa-save"></i> حفظ الشركة
+          </button>
+        </div>
+        <div style="margin-top:12px;border-top:1px solid var(--border);padding-top:12px">
+          <h4 style="margin-bottom:10px;color:var(--primary);font-size:0.88rem"><i class="fas fa-list"></i> قائمة الشركات المسجلة</h4>
+          <div id="companiesList" style="max-height:250px;overflow-y:auto"></div>
+        </div>
+      </div>
+    <div id="adminSettingsSection" style="display:none;background:var(--bg);border-radius:var(--radius-sm);padding:12px;margin-bottom:10px;border:2px solid #e0e0e0">
         <div style="font-weight:800;color:#424242;margin-bottom:10px;font-size:0.9rem">
           <i class="fas fa-shield-alt"></i> إعدادات المشرف الرئيسي
         </div>
@@ -2895,7 +2920,14 @@ select.input {
     <div class="card">
       <h3><i class="fas fa-user-plus"></i> <span data-i18n="addStaffTitle">إضافة موظف</span></h3>
       <input type="text" id="newStaffName" class="input" placeholder="👤 الاسم" data-i18n-ph="nameFullPh">
-      <select id="newStaffRole" class="input" style="cursor:pointer;color:var(--text)">
+      
+        <div style="margin-bottom:10px">
+          <label style="display:block;margin-bottom:5px;font-size:0.85rem;font-weight:700">الشركة التابع لها:</label>
+          <select id="newStaffCompany" class="input">
+            <option value="">شركة عامة (البلدية)</option>
+          </select>
+        </div>
+    <select id="newStaffRole" class="input" style="cursor:pointer;color:var(--text)">
         <option value="" disabled selected>💼 اختر المنصب</option>
         <option value="سائق">🚛 سائق</option>
         <option value="مشرف">🏛️ مسؤول (مشرف)</option>
@@ -3424,12 +3456,666 @@ select.input {
 </div>
 
 <!-- مكتبات خارجية -->
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
-<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js">
+// ===== وظائف إدارة الشركات الخاصة والتلوين =====
+function loadCompanies() {
+  try {
+    let companies = JSON.parse(localStorage.getItem('medea_companies') || '[]');
+    const container = document.getElementById('companiesList');
+    if(!container) return;
+    if(!companies.length) {
+      container.innerHTML = '<div style="text-align:center;padding:20px;color:#999">لا توجد شركات مسجلة</div>';
+      return;
+    }
+    container.innerHTML = companies.map((c, i) => `
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:10px;border-bottom:1px solid #eee;border-right:5px solid ${c.color};background:#fff;margin-bottom:5px;border-radius:5px">
+        <div><b style="color:${c.color}">${c.name}</b><br><small style="color:#666">${c.type}</small></div>
+        <button class="btn btn-danger" style="padding:5px 10px;font-size:0.8rem" onclick="deleteCompany(${i})"><i class="fas fa-trash"></i></button>
+      </div>
+    `).join('');
+  } catch(e) { console.error(e); }
+}
+
+function addCompany() {
+  const name = document.getElementById('companyNameInput').value.trim();
+  const type = document.getElementById('companyTypeSelect').value;
+  const color = document.getElementById('companyColorInput').value;
+  if(!name || !type) { alert('الرجاء ملء كافة الحقول'); return; }
+  let companies = JSON.parse(localStorage.getItem('medea_companies') || '[]');
+  companies.push({ id: Date.now(), name, type, color });
+  localStorage.setItem('medea_companies', JSON.stringify(companies));
+  document.getElementById('companyNameInput').value = '';
+  loadCompanies();
+  updateCompanyOptions();
+  if(typeof showToast === 'function') showToast('تمت إضافة الشركة بنجاح');
+}
+
+function deleteCompany(i) {
+  if(!confirm('هل تريد حذف هذه الشركة؟')) return;
+  let companies = JSON.parse(localStorage.getItem('medea_companies') || '[]');
+  companies.splice(i, 1);
+  localStorage.setItem('medea_companies', JSON.stringify(companies));
+  loadCompanies();
+  updateCompanyOptions();
+}
+
+function updateCompanyOptions() {
+  const select = document.getElementById('newStaffCompany');
+  if(!select) return;
+  let companies = JSON.parse(localStorage.getItem('medea_companies') || '[]');
+  select.innerHTML = '<option value="">شركة عامة (البلدية)</option>';
+  companies.forEach(c => {
+    select.innerHTML += `<option value="${c.name}">${c.name}</option>`;
+  });
+}
+
+// تعديل دالة الدخول لتصفية البيانات للمشرف الخاص
+const originalLoginAdmin = window.loginAdmin;
+function loginAdminFixed() {
+  const pass = document.getElementById('adminPassInput').value;
+  // البحث عن مشرف في قائمة الموظفين
+  const staff = JSON.parse(localStorage.getItem('medea_staff') || '[]');
+  const subAdmin = staff.find(s => s.role === 'admin' && s.pass === pass);
+  const mainPass = localStorage.getItem('medea_admin_pass') || '1234';
+
+  if (pass === mainPass) {
+    window.currentAdminRole = 'super';
+    window.currentAdminCompany = null;
+    document.getElementById('adminCurrentUser').textContent = 'وضع المشرف الرئيسي مفعل';
+    document.getElementById('companiesManagerSection').style.display = 'block';
+    document.getElementById('adminSettingsSection').style.display = 'block';
+    // إظهار كل الأيقونات
+    const sections = document.querySelectorAll('#adminPanel > div');
+    sections.forEach(s => s.style.display = 'block');
+    
+    document.getElementById('adminLogin').classList.add('hidden');
+    document.getElementById('adminPanel').classList.remove('hidden');
+    loadCompanies();
+    updateCompanyOptions();
+    showToast('مرحباً بك أيها المشرف الرئيسي');
+  } else if (subAdmin) {
+    window.currentAdminRole = 'sub';
+    window.currentAdminCompany = subAdmin.companyName;
+    document.getElementById('adminCurrentUser').textContent = 'مشرف شركة: ' + subAdmin.companyName;
+    document.getElementById('companiesManagerSection').style.display = 'none';
+    document.getElementById('adminSettingsSection').style.display = 'none';
+    
+    // إخفاء الأيقونات غير المتعلقة بشركته
+    const sections = document.querySelectorAll('#adminPanel > div');
+    sections.forEach((s, idx) => {
+      // إبقاء المتابعة الميدانية فقط (القسم الأول)
+      if (idx > 1 && s.id !== 'adminPanel') s.style.display = 'none';
+    });
+    
+    document.getElementById('adminLogin').classList.add('hidden');
+    document.getElementById('adminPanel').classList.remove('hidden');
+    showToast('مرحباً بك مشرف ' + subAdmin.companyName);
+  } else {
+    alert('رمز الدخول غير صحيح');
+  }
+}
+// استبدال الدالة الأصلية
+window.loginAdmin = loginAdminFixed;
+
+// تلوين الموظفين حسب الشركة
+function getCompanyColor(companyName) {
+  if(!companyName) return '#ccc';
+  let companies = JSON.parse(localStorage.getItem('medea_companies') || '[]');
+  let c = companies.find(x => x.name === companyName);
+  return c ? c.color : '#ccc';
+}
+
+</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js">
+// ===== وظائف إدارة الشركات الخاصة والتلوين =====
+function loadCompanies() {
+  try {
+    let companies = JSON.parse(localStorage.getItem('medea_companies') || '[]');
+    const container = document.getElementById('companiesList');
+    if(!container) return;
+    if(!companies.length) {
+      container.innerHTML = '<div style="text-align:center;padding:20px;color:#999">لا توجد شركات مسجلة</div>';
+      return;
+    }
+    container.innerHTML = companies.map((c, i) => `
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:10px;border-bottom:1px solid #eee;border-right:5px solid ${c.color};background:#fff;margin-bottom:5px;border-radius:5px">
+        <div><b style="color:${c.color}">${c.name}</b><br><small style="color:#666">${c.type}</small></div>
+        <button class="btn btn-danger" style="padding:5px 10px;font-size:0.8rem" onclick="deleteCompany(${i})"><i class="fas fa-trash"></i></button>
+      </div>
+    `).join('');
+  } catch(e) { console.error(e); }
+}
+
+function addCompany() {
+  const name = document.getElementById('companyNameInput').value.trim();
+  const type = document.getElementById('companyTypeSelect').value;
+  const color = document.getElementById('companyColorInput').value;
+  if(!name || !type) { alert('الرجاء ملء كافة الحقول'); return; }
+  let companies = JSON.parse(localStorage.getItem('medea_companies') || '[]');
+  companies.push({ id: Date.now(), name, type, color });
+  localStorage.setItem('medea_companies', JSON.stringify(companies));
+  document.getElementById('companyNameInput').value = '';
+  loadCompanies();
+  updateCompanyOptions();
+  if(typeof showToast === 'function') showToast('تمت إضافة الشركة بنجاح');
+}
+
+function deleteCompany(i) {
+  if(!confirm('هل تريد حذف هذه الشركة؟')) return;
+  let companies = JSON.parse(localStorage.getItem('medea_companies') || '[]');
+  companies.splice(i, 1);
+  localStorage.setItem('medea_companies', JSON.stringify(companies));
+  loadCompanies();
+  updateCompanyOptions();
+}
+
+function updateCompanyOptions() {
+  const select = document.getElementById('newStaffCompany');
+  if(!select) return;
+  let companies = JSON.parse(localStorage.getItem('medea_companies') || '[]');
+  select.innerHTML = '<option value="">شركة عامة (البلدية)</option>';
+  companies.forEach(c => {
+    select.innerHTML += `<option value="${c.name}">${c.name}</option>`;
+  });
+}
+
+// تعديل دالة الدخول لتصفية البيانات للمشرف الخاص
+const originalLoginAdmin = window.loginAdmin;
+function loginAdminFixed() {
+  const pass = document.getElementById('adminPassInput').value;
+  // البحث عن مشرف في قائمة الموظفين
+  const staff = JSON.parse(localStorage.getItem('medea_staff') || '[]');
+  const subAdmin = staff.find(s => s.role === 'admin' && s.pass === pass);
+  const mainPass = localStorage.getItem('medea_admin_pass') || '1234';
+
+  if (pass === mainPass) {
+    window.currentAdminRole = 'super';
+    window.currentAdminCompany = null;
+    document.getElementById('adminCurrentUser').textContent = 'وضع المشرف الرئيسي مفعل';
+    document.getElementById('companiesManagerSection').style.display = 'block';
+    document.getElementById('adminSettingsSection').style.display = 'block';
+    // إظهار كل الأيقونات
+    const sections = document.querySelectorAll('#adminPanel > div');
+    sections.forEach(s => s.style.display = 'block');
+    
+    document.getElementById('adminLogin').classList.add('hidden');
+    document.getElementById('adminPanel').classList.remove('hidden');
+    loadCompanies();
+    updateCompanyOptions();
+    showToast('مرحباً بك أيها المشرف الرئيسي');
+  } else if (subAdmin) {
+    window.currentAdminRole = 'sub';
+    window.currentAdminCompany = subAdmin.companyName;
+    document.getElementById('adminCurrentUser').textContent = 'مشرف شركة: ' + subAdmin.companyName;
+    document.getElementById('companiesManagerSection').style.display = 'none';
+    document.getElementById('adminSettingsSection').style.display = 'none';
+    
+    // إخفاء الأيقونات غير المتعلقة بشركته
+    const sections = document.querySelectorAll('#adminPanel > div');
+    sections.forEach((s, idx) => {
+      // إبقاء المتابعة الميدانية فقط (القسم الأول)
+      if (idx > 1 && s.id !== 'adminPanel') s.style.display = 'none';
+    });
+    
+    document.getElementById('adminLogin').classList.add('hidden');
+    document.getElementById('adminPanel').classList.remove('hidden');
+    showToast('مرحباً بك مشرف ' + subAdmin.companyName);
+  } else {
+    alert('رمز الدخول غير صحيح');
+  }
+}
+// استبدال الدالة الأصلية
+window.loginAdmin = loginAdminFixed;
+
+// تلوين الموظفين حسب الشركة
+function getCompanyColor(companyName) {
+  if(!companyName) return '#ccc';
+  let companies = JSON.parse(localStorage.getItem('medea_companies') || '[]');
+  let c = companies.find(x => x.name === companyName);
+  return c ? c.color : '#ccc';
+}
+
+</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js">
+// ===== وظائف إدارة الشركات الخاصة والتلوين =====
+function loadCompanies() {
+  try {
+    let companies = JSON.parse(localStorage.getItem('medea_companies') || '[]');
+    const container = document.getElementById('companiesList');
+    if(!container) return;
+    if(!companies.length) {
+      container.innerHTML = '<div style="text-align:center;padding:20px;color:#999">لا توجد شركات مسجلة</div>';
+      return;
+    }
+    container.innerHTML = companies.map((c, i) => `
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:10px;border-bottom:1px solid #eee;border-right:5px solid ${c.color};background:#fff;margin-bottom:5px;border-radius:5px">
+        <div><b style="color:${c.color}">${c.name}</b><br><small style="color:#666">${c.type}</small></div>
+        <button class="btn btn-danger" style="padding:5px 10px;font-size:0.8rem" onclick="deleteCompany(${i})"><i class="fas fa-trash"></i></button>
+      </div>
+    `).join('');
+  } catch(e) { console.error(e); }
+}
+
+function addCompany() {
+  const name = document.getElementById('companyNameInput').value.trim();
+  const type = document.getElementById('companyTypeSelect').value;
+  const color = document.getElementById('companyColorInput').value;
+  if(!name || !type) { alert('الرجاء ملء كافة الحقول'); return; }
+  let companies = JSON.parse(localStorage.getItem('medea_companies') || '[]');
+  companies.push({ id: Date.now(), name, type, color });
+  localStorage.setItem('medea_companies', JSON.stringify(companies));
+  document.getElementById('companyNameInput').value = '';
+  loadCompanies();
+  updateCompanyOptions();
+  if(typeof showToast === 'function') showToast('تمت إضافة الشركة بنجاح');
+}
+
+function deleteCompany(i) {
+  if(!confirm('هل تريد حذف هذه الشركة؟')) return;
+  let companies = JSON.parse(localStorage.getItem('medea_companies') || '[]');
+  companies.splice(i, 1);
+  localStorage.setItem('medea_companies', JSON.stringify(companies));
+  loadCompanies();
+  updateCompanyOptions();
+}
+
+function updateCompanyOptions() {
+  const select = document.getElementById('newStaffCompany');
+  if(!select) return;
+  let companies = JSON.parse(localStorage.getItem('medea_companies') || '[]');
+  select.innerHTML = '<option value="">شركة عامة (البلدية)</option>';
+  companies.forEach(c => {
+    select.innerHTML += `<option value="${c.name}">${c.name}</option>`;
+  });
+}
+
+// تعديل دالة الدخول لتصفية البيانات للمشرف الخاص
+const originalLoginAdmin = window.loginAdmin;
+function loginAdminFixed() {
+  const pass = document.getElementById('adminPassInput').value;
+  // البحث عن مشرف في قائمة الموظفين
+  const staff = JSON.parse(localStorage.getItem('medea_staff') || '[]');
+  const subAdmin = staff.find(s => s.role === 'admin' && s.pass === pass);
+  const mainPass = localStorage.getItem('medea_admin_pass') || '1234';
+
+  if (pass === mainPass) {
+    window.currentAdminRole = 'super';
+    window.currentAdminCompany = null;
+    document.getElementById('adminCurrentUser').textContent = 'وضع المشرف الرئيسي مفعل';
+    document.getElementById('companiesManagerSection').style.display = 'block';
+    document.getElementById('adminSettingsSection').style.display = 'block';
+    // إظهار كل الأيقونات
+    const sections = document.querySelectorAll('#adminPanel > div');
+    sections.forEach(s => s.style.display = 'block');
+    
+    document.getElementById('adminLogin').classList.add('hidden');
+    document.getElementById('adminPanel').classList.remove('hidden');
+    loadCompanies();
+    updateCompanyOptions();
+    showToast('مرحباً بك أيها المشرف الرئيسي');
+  } else if (subAdmin) {
+    window.currentAdminRole = 'sub';
+    window.currentAdminCompany = subAdmin.companyName;
+    document.getElementById('adminCurrentUser').textContent = 'مشرف شركة: ' + subAdmin.companyName;
+    document.getElementById('companiesManagerSection').style.display = 'none';
+    document.getElementById('adminSettingsSection').style.display = 'none';
+    
+    // إخفاء الأيقونات غير المتعلقة بشركته
+    const sections = document.querySelectorAll('#adminPanel > div');
+    sections.forEach((s, idx) => {
+      // إبقاء المتابعة الميدانية فقط (القسم الأول)
+      if (idx > 1 && s.id !== 'adminPanel') s.style.display = 'none';
+    });
+    
+    document.getElementById('adminLogin').classList.add('hidden');
+    document.getElementById('adminPanel').classList.remove('hidden');
+    showToast('مرحباً بك مشرف ' + subAdmin.companyName);
+  } else {
+    alert('رمز الدخول غير صحيح');
+  }
+}
+// استبدال الدالة الأصلية
+window.loginAdmin = loginAdminFixed;
+
+// تلوين الموظفين حسب الشركة
+function getCompanyColor(companyName) {
+  if(!companyName) return '#ccc';
+  let companies = JSON.parse(localStorage.getItem('medea_companies') || '[]');
+  let c = companies.find(x => x.name === companyName);
+  return c ? c.color : '#ccc';
+}
+
+</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js">
+// ===== وظائف إدارة الشركات الخاصة والتلوين =====
+function loadCompanies() {
+  try {
+    let companies = JSON.parse(localStorage.getItem('medea_companies') || '[]');
+    const container = document.getElementById('companiesList');
+    if(!container) return;
+    if(!companies.length) {
+      container.innerHTML = '<div style="text-align:center;padding:20px;color:#999">لا توجد شركات مسجلة</div>';
+      return;
+    }
+    container.innerHTML = companies.map((c, i) => `
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:10px;border-bottom:1px solid #eee;border-right:5px solid ${c.color};background:#fff;margin-bottom:5px;border-radius:5px">
+        <div><b style="color:${c.color}">${c.name}</b><br><small style="color:#666">${c.type}</small></div>
+        <button class="btn btn-danger" style="padding:5px 10px;font-size:0.8rem" onclick="deleteCompany(${i})"><i class="fas fa-trash"></i></button>
+      </div>
+    `).join('');
+  } catch(e) { console.error(e); }
+}
+
+function addCompany() {
+  const name = document.getElementById('companyNameInput').value.trim();
+  const type = document.getElementById('companyTypeSelect').value;
+  const color = document.getElementById('companyColorInput').value;
+  if(!name || !type) { alert('الرجاء ملء كافة الحقول'); return; }
+  let companies = JSON.parse(localStorage.getItem('medea_companies') || '[]');
+  companies.push({ id: Date.now(), name, type, color });
+  localStorage.setItem('medea_companies', JSON.stringify(companies));
+  document.getElementById('companyNameInput').value = '';
+  loadCompanies();
+  updateCompanyOptions();
+  if(typeof showToast === 'function') showToast('تمت إضافة الشركة بنجاح');
+}
+
+function deleteCompany(i) {
+  if(!confirm('هل تريد حذف هذه الشركة؟')) return;
+  let companies = JSON.parse(localStorage.getItem('medea_companies') || '[]');
+  companies.splice(i, 1);
+  localStorage.setItem('medea_companies', JSON.stringify(companies));
+  loadCompanies();
+  updateCompanyOptions();
+}
+
+function updateCompanyOptions() {
+  const select = document.getElementById('newStaffCompany');
+  if(!select) return;
+  let companies = JSON.parse(localStorage.getItem('medea_companies') || '[]');
+  select.innerHTML = '<option value="">شركة عامة (البلدية)</option>';
+  companies.forEach(c => {
+    select.innerHTML += `<option value="${c.name}">${c.name}</option>`;
+  });
+}
+
+// تعديل دالة الدخول لتصفية البيانات للمشرف الخاص
+const originalLoginAdmin = window.loginAdmin;
+function loginAdminFixed() {
+  const pass = document.getElementById('adminPassInput').value;
+  // البحث عن مشرف في قائمة الموظفين
+  const staff = JSON.parse(localStorage.getItem('medea_staff') || '[]');
+  const subAdmin = staff.find(s => s.role === 'admin' && s.pass === pass);
+  const mainPass = localStorage.getItem('medea_admin_pass') || '1234';
+
+  if (pass === mainPass) {
+    window.currentAdminRole = 'super';
+    window.currentAdminCompany = null;
+    document.getElementById('adminCurrentUser').textContent = 'وضع المشرف الرئيسي مفعل';
+    document.getElementById('companiesManagerSection').style.display = 'block';
+    document.getElementById('adminSettingsSection').style.display = 'block';
+    // إظهار كل الأيقونات
+    const sections = document.querySelectorAll('#adminPanel > div');
+    sections.forEach(s => s.style.display = 'block');
+    
+    document.getElementById('adminLogin').classList.add('hidden');
+    document.getElementById('adminPanel').classList.remove('hidden');
+    loadCompanies();
+    updateCompanyOptions();
+    showToast('مرحباً بك أيها المشرف الرئيسي');
+  } else if (subAdmin) {
+    window.currentAdminRole = 'sub';
+    window.currentAdminCompany = subAdmin.companyName;
+    document.getElementById('adminCurrentUser').textContent = 'مشرف شركة: ' + subAdmin.companyName;
+    document.getElementById('companiesManagerSection').style.display = 'none';
+    document.getElementById('adminSettingsSection').style.display = 'none';
+    
+    // إخفاء الأيقونات غير المتعلقة بشركته
+    const sections = document.querySelectorAll('#adminPanel > div');
+    sections.forEach((s, idx) => {
+      // إبقاء المتابعة الميدانية فقط (القسم الأول)
+      if (idx > 1 && s.id !== 'adminPanel') s.style.display = 'none';
+    });
+    
+    document.getElementById('adminLogin').classList.add('hidden');
+    document.getElementById('adminPanel').classList.remove('hidden');
+    showToast('مرحباً بك مشرف ' + subAdmin.companyName);
+  } else {
+    alert('رمز الدخول غير صحيح');
+  }
+}
+// استبدال الدالة الأصلية
+window.loginAdmin = loginAdminFixed;
+
+// تلوين الموظفين حسب الشركة
+function getCompanyColor(companyName) {
+  if(!companyName) return '#ccc';
+  let companies = JSON.parse(localStorage.getItem('medea_companies') || '[]');
+  let c = companies.find(x => x.name === companyName);
+  return c ? c.color : '#ccc';
+}
+
+</script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js">
+// ===== وظائف إدارة الشركات الخاصة والتلوين =====
+function loadCompanies() {
+  try {
+    let companies = JSON.parse(localStorage.getItem('medea_companies') || '[]');
+    const container = document.getElementById('companiesList');
+    if(!container) return;
+    if(!companies.length) {
+      container.innerHTML = '<div style="text-align:center;padding:20px;color:#999">لا توجد شركات مسجلة</div>';
+      return;
+    }
+    container.innerHTML = companies.map((c, i) => `
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:10px;border-bottom:1px solid #eee;border-right:5px solid ${c.color};background:#fff;margin-bottom:5px;border-radius:5px">
+        <div><b style="color:${c.color}">${c.name}</b><br><small style="color:#666">${c.type}</small></div>
+        <button class="btn btn-danger" style="padding:5px 10px;font-size:0.8rem" onclick="deleteCompany(${i})"><i class="fas fa-trash"></i></button>
+      </div>
+    `).join('');
+  } catch(e) { console.error(e); }
+}
+
+function addCompany() {
+  const name = document.getElementById('companyNameInput').value.trim();
+  const type = document.getElementById('companyTypeSelect').value;
+  const color = document.getElementById('companyColorInput').value;
+  if(!name || !type) { alert('الرجاء ملء كافة الحقول'); return; }
+  let companies = JSON.parse(localStorage.getItem('medea_companies') || '[]');
+  companies.push({ id: Date.now(), name, type, color });
+  localStorage.setItem('medea_companies', JSON.stringify(companies));
+  document.getElementById('companyNameInput').value = '';
+  loadCompanies();
+  updateCompanyOptions();
+  if(typeof showToast === 'function') showToast('تمت إضافة الشركة بنجاح');
+}
+
+function deleteCompany(i) {
+  if(!confirm('هل تريد حذف هذه الشركة؟')) return;
+  let companies = JSON.parse(localStorage.getItem('medea_companies') || '[]');
+  companies.splice(i, 1);
+  localStorage.setItem('medea_companies', JSON.stringify(companies));
+  loadCompanies();
+  updateCompanyOptions();
+}
+
+function updateCompanyOptions() {
+  const select = document.getElementById('newStaffCompany');
+  if(!select) return;
+  let companies = JSON.parse(localStorage.getItem('medea_companies') || '[]');
+  select.innerHTML = '<option value="">شركة عامة (البلدية)</option>';
+  companies.forEach(c => {
+    select.innerHTML += `<option value="${c.name}">${c.name}</option>`;
+  });
+}
+
+// تعديل دالة الدخول لتصفية البيانات للمشرف الخاص
+const originalLoginAdmin = window.loginAdmin;
+function loginAdminFixed() {
+  const pass = document.getElementById('adminPassInput').value;
+  // البحث عن مشرف في قائمة الموظفين
+  const staff = JSON.parse(localStorage.getItem('medea_staff') || '[]');
+  const subAdmin = staff.find(s => s.role === 'admin' && s.pass === pass);
+  const mainPass = localStorage.getItem('medea_admin_pass') || '1234';
+
+  if (pass === mainPass) {
+    window.currentAdminRole = 'super';
+    window.currentAdminCompany = null;
+    document.getElementById('adminCurrentUser').textContent = 'وضع المشرف الرئيسي مفعل';
+    document.getElementById('companiesManagerSection').style.display = 'block';
+    document.getElementById('adminSettingsSection').style.display = 'block';
+    // إظهار كل الأيقونات
+    const sections = document.querySelectorAll('#adminPanel > div');
+    sections.forEach(s => s.style.display = 'block');
+    
+    document.getElementById('adminLogin').classList.add('hidden');
+    document.getElementById('adminPanel').classList.remove('hidden');
+    loadCompanies();
+    updateCompanyOptions();
+    showToast('مرحباً بك أيها المشرف الرئيسي');
+  } else if (subAdmin) {
+    window.currentAdminRole = 'sub';
+    window.currentAdminCompany = subAdmin.companyName;
+    document.getElementById('adminCurrentUser').textContent = 'مشرف شركة: ' + subAdmin.companyName;
+    document.getElementById('companiesManagerSection').style.display = 'none';
+    document.getElementById('adminSettingsSection').style.display = 'none';
+    
+    // إخفاء الأيقونات غير المتعلقة بشركته
+    const sections = document.querySelectorAll('#adminPanel > div');
+    sections.forEach((s, idx) => {
+      // إبقاء المتابعة الميدانية فقط (القسم الأول)
+      if (idx > 1 && s.id !== 'adminPanel') s.style.display = 'none';
+    });
+    
+    document.getElementById('adminLogin').classList.add('hidden');
+    document.getElementById('adminPanel').classList.remove('hidden');
+    showToast('مرحباً بك مشرف ' + subAdmin.companyName);
+  } else {
+    alert('رمز الدخول غير صحيح');
+  }
+}
+// استبدال الدالة الأصلية
+window.loginAdmin = loginAdminFixed;
+
+// تلوين الموظفين حسب الشركة
+function getCompanyColor(companyName) {
+  if(!companyName) return '#ccc';
+  let companies = JSON.parse(localStorage.getItem('medea_companies') || '[]');
+  let c = companies.find(x => x.name === companyName);
+  return c ? c.color : '#ccc';
+}
+
+</script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js">
+// ===== وظائف إدارة الشركات الخاصة والتلوين =====
+function loadCompanies() {
+  try {
+    let companies = JSON.parse(localStorage.getItem('medea_companies') || '[]');
+    const container = document.getElementById('companiesList');
+    if(!container) return;
+    if(!companies.length) {
+      container.innerHTML = '<div style="text-align:center;padding:20px;color:#999">لا توجد شركات مسجلة</div>';
+      return;
+    }
+    container.innerHTML = companies.map((c, i) => `
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:10px;border-bottom:1px solid #eee;border-right:5px solid ${c.color};background:#fff;margin-bottom:5px;border-radius:5px">
+        <div><b style="color:${c.color}">${c.name}</b><br><small style="color:#666">${c.type}</small></div>
+        <button class="btn btn-danger" style="padding:5px 10px;font-size:0.8rem" onclick="deleteCompany(${i})"><i class="fas fa-trash"></i></button>
+      </div>
+    `).join('');
+  } catch(e) { console.error(e); }
+}
+
+function addCompany() {
+  const name = document.getElementById('companyNameInput').value.trim();
+  const type = document.getElementById('companyTypeSelect').value;
+  const color = document.getElementById('companyColorInput').value;
+  if(!name || !type) { alert('الرجاء ملء كافة الحقول'); return; }
+  let companies = JSON.parse(localStorage.getItem('medea_companies') || '[]');
+  companies.push({ id: Date.now(), name, type, color });
+  localStorage.setItem('medea_companies', JSON.stringify(companies));
+  document.getElementById('companyNameInput').value = '';
+  loadCompanies();
+  updateCompanyOptions();
+  if(typeof showToast === 'function') showToast('تمت إضافة الشركة بنجاح');
+}
+
+function deleteCompany(i) {
+  if(!confirm('هل تريد حذف هذه الشركة؟')) return;
+  let companies = JSON.parse(localStorage.getItem('medea_companies') || '[]');
+  companies.splice(i, 1);
+  localStorage.setItem('medea_companies', JSON.stringify(companies));
+  loadCompanies();
+  updateCompanyOptions();
+}
+
+function updateCompanyOptions() {
+  const select = document.getElementById('newStaffCompany');
+  if(!select) return;
+  let companies = JSON.parse(localStorage.getItem('medea_companies') || '[]');
+  select.innerHTML = '<option value="">شركة عامة (البلدية)</option>';
+  companies.forEach(c => {
+    select.innerHTML += `<option value="${c.name}">${c.name}</option>`;
+  });
+}
+
+// تعديل دالة الدخول لتصفية البيانات للمشرف الخاص
+const originalLoginAdmin = window.loginAdmin;
+function loginAdminFixed() {
+  const pass = document.getElementById('adminPassInput').value;
+  // البحث عن مشرف في قائمة الموظفين
+  const staff = JSON.parse(localStorage.getItem('medea_staff') || '[]');
+  const subAdmin = staff.find(s => s.role === 'admin' && s.pass === pass);
+  const mainPass = localStorage.getItem('medea_admin_pass') || '1234';
+
+  if (pass === mainPass) {
+    window.currentAdminRole = 'super';
+    window.currentAdminCompany = null;
+    document.getElementById('adminCurrentUser').textContent = 'وضع المشرف الرئيسي مفعل';
+    document.getElementById('companiesManagerSection').style.display = 'block';
+    document.getElementById('adminSettingsSection').style.display = 'block';
+    // إظهار كل الأيقونات
+    const sections = document.querySelectorAll('#adminPanel > div');
+    sections.forEach(s => s.style.display = 'block');
+    
+    document.getElementById('adminLogin').classList.add('hidden');
+    document.getElementById('adminPanel').classList.remove('hidden');
+    loadCompanies();
+    updateCompanyOptions();
+    showToast('مرحباً بك أيها المشرف الرئيسي');
+  } else if (subAdmin) {
+    window.currentAdminRole = 'sub';
+    window.currentAdminCompany = subAdmin.companyName;
+    document.getElementById('adminCurrentUser').textContent = 'مشرف شركة: ' + subAdmin.companyName;
+    document.getElementById('companiesManagerSection').style.display = 'none';
+    document.getElementById('adminSettingsSection').style.display = 'none';
+    
+    // إخفاء الأيقونات غير المتعلقة بشركته
+    const sections = document.querySelectorAll('#adminPanel > div');
+    sections.forEach((s, idx) => {
+      // إبقاء المتابعة الميدانية فقط (القسم الأول)
+      if (idx > 1 && s.id !== 'adminPanel') s.style.display = 'none';
+    });
+    
+    document.getElementById('adminLogin').classList.add('hidden');
+    document.getElementById('adminPanel').classList.remove('hidden');
+    showToast('مرحباً بك مشرف ' + subAdmin.companyName);
+  } else {
+    alert('رمز الدخول غير صحيح');
+  }
+}
+// استبدال الدالة الأصلية
+window.loginAdmin = loginAdminFixed;
+
+// تلوين الموظفين حسب الشركة
+function getCompanyColor(companyName) {
+  if(!companyName) return '#ccc';
+  let companies = JSON.parse(localStorage.getItem('medea_companies') || '[]');
+  let c = companies.find(x => x.name === companyName);
+  return c ? c.color : '#ccc';
+}
+
+</script>
 
 <script>
 // ===== Firebase Configuration =====
@@ -9558,6 +10244,115 @@ function optimizeDriverRoute(start, points) {
   }
   return route;
 }
+
+// ===== وظائف إدارة الشركات الخاصة والتلوين =====
+function loadCompanies() {
+  try {
+    let companies = JSON.parse(localStorage.getItem('medea_companies') || '[]');
+    const container = document.getElementById('companiesList');
+    if(!container) return;
+    if(!companies.length) {
+      container.innerHTML = '<div style="text-align:center;padding:20px;color:#999">لا توجد شركات مسجلة</div>';
+      return;
+    }
+    container.innerHTML = companies.map((c, i) => `
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:10px;border-bottom:1px solid #eee;border-right:5px solid ${c.color};background:#fff;margin-bottom:5px;border-radius:5px">
+        <div><b style="color:${c.color}">${c.name}</b><br><small style="color:#666">${c.type}</small></div>
+        <button class="btn btn-danger" style="padding:5px 10px;font-size:0.8rem" onclick="deleteCompany(${i})"><i class="fas fa-trash"></i></button>
+      </div>
+    `).join('');
+  } catch(e) { console.error(e); }
+}
+
+function addCompany() {
+  const name = document.getElementById('companyNameInput').value.trim();
+  const type = document.getElementById('companyTypeSelect').value;
+  const color = document.getElementById('companyColorInput').value;
+  if(!name || !type) { alert('الرجاء ملء كافة الحقول'); return; }
+  let companies = JSON.parse(localStorage.getItem('medea_companies') || '[]');
+  companies.push({ id: Date.now(), name, type, color });
+  localStorage.setItem('medea_companies', JSON.stringify(companies));
+  document.getElementById('companyNameInput').value = '';
+  loadCompanies();
+  updateCompanyOptions();
+  if(typeof showToast === 'function') showToast('تمت إضافة الشركة بنجاح');
+}
+
+function deleteCompany(i) {
+  if(!confirm('هل تريد حذف هذه الشركة؟')) return;
+  let companies = JSON.parse(localStorage.getItem('medea_companies') || '[]');
+  companies.splice(i, 1);
+  localStorage.setItem('medea_companies', JSON.stringify(companies));
+  loadCompanies();
+  updateCompanyOptions();
+}
+
+function updateCompanyOptions() {
+  const select = document.getElementById('newStaffCompany');
+  if(!select) return;
+  let companies = JSON.parse(localStorage.getItem('medea_companies') || '[]');
+  select.innerHTML = '<option value="">شركة عامة (البلدية)</option>';
+  companies.forEach(c => {
+    select.innerHTML += `<option value="${c.name}">${c.name}</option>`;
+  });
+}
+
+// تعديل دالة الدخول لتصفية البيانات للمشرف الخاص
+const originalLoginAdmin = window.loginAdmin;
+function loginAdminFixed() {
+  const pass = document.getElementById('adminPassInput').value;
+  // البحث عن مشرف في قائمة الموظفين
+  const staff = JSON.parse(localStorage.getItem('medea_staff') || '[]');
+  const subAdmin = staff.find(s => s.role === 'admin' && s.pass === pass);
+  const mainPass = localStorage.getItem('medea_admin_pass') || '1234';
+
+  if (pass === mainPass) {
+    window.currentAdminRole = 'super';
+    window.currentAdminCompany = null;
+    document.getElementById('adminCurrentUser').textContent = 'وضع المشرف الرئيسي مفعل';
+    document.getElementById('companiesManagerSection').style.display = 'block';
+    document.getElementById('adminSettingsSection').style.display = 'block';
+    // إظهار كل الأيقونات
+    const sections = document.querySelectorAll('#adminPanel > div');
+    sections.forEach(s => s.style.display = 'block');
+    
+    document.getElementById('adminLogin').classList.add('hidden');
+    document.getElementById('adminPanel').classList.remove('hidden');
+    loadCompanies();
+    updateCompanyOptions();
+    showToast('مرحباً بك أيها المشرف الرئيسي');
+  } else if (subAdmin) {
+    window.currentAdminRole = 'sub';
+    window.currentAdminCompany = subAdmin.companyName;
+    document.getElementById('adminCurrentUser').textContent = 'مشرف شركة: ' + subAdmin.companyName;
+    document.getElementById('companiesManagerSection').style.display = 'none';
+    document.getElementById('adminSettingsSection').style.display = 'none';
+    
+    // إخفاء الأيقونات غير المتعلقة بشركته
+    const sections = document.querySelectorAll('#adminPanel > div');
+    sections.forEach((s, idx) => {
+      // إبقاء المتابعة الميدانية فقط (القسم الأول)
+      if (idx > 1 && s.id !== 'adminPanel') s.style.display = 'none';
+    });
+    
+    document.getElementById('adminLogin').classList.add('hidden');
+    document.getElementById('adminPanel').classList.remove('hidden');
+    showToast('مرحباً بك مشرف ' + subAdmin.companyName);
+  } else {
+    alert('رمز الدخول غير صحيح');
+  }
+}
+// استبدال الدالة الأصلية
+window.loginAdmin = loginAdminFixed;
+
+// تلوين الموظفين حسب الشركة
+function getCompanyColor(companyName) {
+  if(!companyName) return '#ccc';
+  let companies = JSON.parse(localStorage.getItem('medea_companies') || '[]');
+  let c = companies.find(x => x.name === companyName);
+  return c ? c.color : '#ccc';
+}
+
 </script>
 <script>
 
@@ -9877,5 +10672,114 @@ function optimizeDriverRoute(start, points) {
         }, 1000);
     });
 })();
+
+// ===== وظائف إدارة الشركات الخاصة والتلوين =====
+function loadCompanies() {
+  try {
+    let companies = JSON.parse(localStorage.getItem('medea_companies') || '[]');
+    const container = document.getElementById('companiesList');
+    if(!container) return;
+    if(!companies.length) {
+      container.innerHTML = '<div style="text-align:center;padding:20px;color:#999">لا توجد شركات مسجلة</div>';
+      return;
+    }
+    container.innerHTML = companies.map((c, i) => `
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:10px;border-bottom:1px solid #eee;border-right:5px solid ${c.color};background:#fff;margin-bottom:5px;border-radius:5px">
+        <div><b style="color:${c.color}">${c.name}</b><br><small style="color:#666">${c.type}</small></div>
+        <button class="btn btn-danger" style="padding:5px 10px;font-size:0.8rem" onclick="deleteCompany(${i})"><i class="fas fa-trash"></i></button>
+      </div>
+    `).join('');
+  } catch(e) { console.error(e); }
+}
+
+function addCompany() {
+  const name = document.getElementById('companyNameInput').value.trim();
+  const type = document.getElementById('companyTypeSelect').value;
+  const color = document.getElementById('companyColorInput').value;
+  if(!name || !type) { alert('الرجاء ملء كافة الحقول'); return; }
+  let companies = JSON.parse(localStorage.getItem('medea_companies') || '[]');
+  companies.push({ id: Date.now(), name, type, color });
+  localStorage.setItem('medea_companies', JSON.stringify(companies));
+  document.getElementById('companyNameInput').value = '';
+  loadCompanies();
+  updateCompanyOptions();
+  if(typeof showToast === 'function') showToast('تمت إضافة الشركة بنجاح');
+}
+
+function deleteCompany(i) {
+  if(!confirm('هل تريد حذف هذه الشركة؟')) return;
+  let companies = JSON.parse(localStorage.getItem('medea_companies') || '[]');
+  companies.splice(i, 1);
+  localStorage.setItem('medea_companies', JSON.stringify(companies));
+  loadCompanies();
+  updateCompanyOptions();
+}
+
+function updateCompanyOptions() {
+  const select = document.getElementById('newStaffCompany');
+  if(!select) return;
+  let companies = JSON.parse(localStorage.getItem('medea_companies') || '[]');
+  select.innerHTML = '<option value="">شركة عامة (البلدية)</option>';
+  companies.forEach(c => {
+    select.innerHTML += `<option value="${c.name}">${c.name}</option>`;
+  });
+}
+
+// تعديل دالة الدخول لتصفية البيانات للمشرف الخاص
+const originalLoginAdmin = window.loginAdmin;
+function loginAdminFixed() {
+  const pass = document.getElementById('adminPassInput').value;
+  // البحث عن مشرف في قائمة الموظفين
+  const staff = JSON.parse(localStorage.getItem('medea_staff') || '[]');
+  const subAdmin = staff.find(s => s.role === 'admin' && s.pass === pass);
+  const mainPass = localStorage.getItem('medea_admin_pass') || '1234';
+
+  if (pass === mainPass) {
+    window.currentAdminRole = 'super';
+    window.currentAdminCompany = null;
+    document.getElementById('adminCurrentUser').textContent = 'وضع المشرف الرئيسي مفعل';
+    document.getElementById('companiesManagerSection').style.display = 'block';
+    document.getElementById('adminSettingsSection').style.display = 'block';
+    // إظهار كل الأيقونات
+    const sections = document.querySelectorAll('#adminPanel > div');
+    sections.forEach(s => s.style.display = 'block');
+    
+    document.getElementById('adminLogin').classList.add('hidden');
+    document.getElementById('adminPanel').classList.remove('hidden');
+    loadCompanies();
+    updateCompanyOptions();
+    showToast('مرحباً بك أيها المشرف الرئيسي');
+  } else if (subAdmin) {
+    window.currentAdminRole = 'sub';
+    window.currentAdminCompany = subAdmin.companyName;
+    document.getElementById('adminCurrentUser').textContent = 'مشرف شركة: ' + subAdmin.companyName;
+    document.getElementById('companiesManagerSection').style.display = 'none';
+    document.getElementById('adminSettingsSection').style.display = 'none';
+    
+    // إخفاء الأيقونات غير المتعلقة بشركته
+    const sections = document.querySelectorAll('#adminPanel > div');
+    sections.forEach((s, idx) => {
+      // إبقاء المتابعة الميدانية فقط (القسم الأول)
+      if (idx > 1 && s.id !== 'adminPanel') s.style.display = 'none';
+    });
+    
+    document.getElementById('adminLogin').classList.add('hidden');
+    document.getElementById('adminPanel').classList.remove('hidden');
+    showToast('مرحباً بك مشرف ' + subAdmin.companyName);
+  } else {
+    alert('رمز الدخول غير صحيح');
+  }
+}
+// استبدال الدالة الأصلية
+window.loginAdmin = loginAdminFixed;
+
+// تلوين الموظفين حسب الشركة
+function getCompanyColor(companyName) {
+  if(!companyName) return '#ccc';
+  let companies = JSON.parse(localStorage.getItem('medea_companies') || '[]');
+  let c = companies.find(x => x.name === companyName);
+  return c ? c.color : '#ccc';
+}
+
 </script>
 </body></html>
