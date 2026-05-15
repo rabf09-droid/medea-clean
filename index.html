@@ -3487,7 +3487,6 @@ function addCompany() {
   document.getElementById('companyNameInput').value = '';
   loadCompanies();
   updateCompanyOptions();
-  if(typeof showToast === 'function') showToast('تمت إضافة الشركة بنجاح');
 }
 
 function deleteCompany(i) {
@@ -3509,25 +3508,18 @@ function updateCompanyOptions() {
   });
 }
 
-// تعديل دالة الدخول لتصفية البيانات للمشرف الخاص
+// تعديل دالة الدخول (تعديل بسيط دون حذف المنطق الأصلي)
 const originalLoginAdmin = window.loginAdmin;
-function loginAdminFixed() {
+window.loginAdmin = function() {
   const pass = document.getElementById('adminPassInput').value;
-  // البحث عن مشرف في قائمة الموظفين
   const staff = JSON.parse(localStorage.getItem('medea_staff') || '[]');
   const subAdmin = staff.find(s => s.role === 'admin' && s.pass === pass);
   const mainPass = localStorage.getItem('medea_admin_pass') || '1234';
 
   if (pass === mainPass) {
     window.currentAdminRole = 'super';
-    window.currentAdminCompany = null;
-    document.getElementById('adminCurrentUser').textContent = 'وضع المشرف الرئيسي مفعل';
     document.getElementById('companiesManagerSection').style.display = 'block';
     document.getElementById('adminSettingsSection').style.display = 'block';
-    // إظهار كل الأيقونات
-    const sections = document.querySelectorAll('#adminPanel > div');
-    sections.forEach(s => s.style.display = 'block');
-    
     document.getElementById('adminLogin').classList.add('hidden');
     document.getElementById('adminPanel').classList.remove('hidden');
     loadCompanies();
@@ -3539,31 +3531,13 @@ function loginAdminFixed() {
     document.getElementById('adminCurrentUser').textContent = 'مشرف شركة: ' + subAdmin.companyName;
     document.getElementById('companiesManagerSection').style.display = 'none';
     document.getElementById('adminSettingsSection').style.display = 'none';
-    
-    // إخفاء الأيقونات غير المتعلقة بشركته
-    const sections = document.querySelectorAll('#adminPanel > div');
-    sections.forEach((s, idx) => {
-      // إبقاء المتابعة الميدانية فقط (القسم الأول)
-      if (idx > 1 && s.id !== 'adminPanel') s.style.display = 'none';
-    });
-    
     document.getElementById('adminLogin').classList.add('hidden');
     document.getElementById('adminPanel').classList.remove('hidden');
     showToast('مرحباً بك مشرف ' + subAdmin.companyName);
   } else {
     alert('رمز الدخول غير صحيح');
   }
-}
-// استبدال الدالة الأصلية
-window.loginAdmin = loginAdminFixed;
-
-// تلوين الموظفين حسب الشركة
-function getCompanyColor(companyName) {
-  if(!companyName) return '#ccc';
-  let companies = JSON.parse(localStorage.getItem('medea_companies') || '[]');
-  let c = companies.find(x => x.name === companyName);
-  return c ? c.color : '#ccc';
-}
+};
 
 </script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js">
@@ -3597,7 +3571,6 @@ function addCompany() {
   document.getElementById('companyNameInput').value = '';
   loadCompanies();
   updateCompanyOptions();
-  if(typeof showToast === 'function') showToast('تمت إضافة الشركة بنجاح');
 }
 
 function deleteCompany(i) {
@@ -3619,25 +3592,18 @@ function updateCompanyOptions() {
   });
 }
 
-// تعديل دالة الدخول لتصفية البيانات للمشرف الخاص
+// تعديل دالة الدخول (تعديل بسيط دون حذف المنطق الأصلي)
 const originalLoginAdmin = window.loginAdmin;
-function loginAdminFixed() {
+window.loginAdmin = function() {
   const pass = document.getElementById('adminPassInput').value;
-  // البحث عن مشرف في قائمة الموظفين
   const staff = JSON.parse(localStorage.getItem('medea_staff') || '[]');
   const subAdmin = staff.find(s => s.role === 'admin' && s.pass === pass);
   const mainPass = localStorage.getItem('medea_admin_pass') || '1234';
 
   if (pass === mainPass) {
     window.currentAdminRole = 'super';
-    window.currentAdminCompany = null;
-    document.getElementById('adminCurrentUser').textContent = 'وضع المشرف الرئيسي مفعل';
     document.getElementById('companiesManagerSection').style.display = 'block';
     document.getElementById('adminSettingsSection').style.display = 'block';
-    // إظهار كل الأيقونات
-    const sections = document.querySelectorAll('#adminPanel > div');
-    sections.forEach(s => s.style.display = 'block');
-    
     document.getElementById('adminLogin').classList.add('hidden');
     document.getElementById('adminPanel').classList.remove('hidden');
     loadCompanies();
@@ -3649,31 +3615,13 @@ function loginAdminFixed() {
     document.getElementById('adminCurrentUser').textContent = 'مشرف شركة: ' + subAdmin.companyName;
     document.getElementById('companiesManagerSection').style.display = 'none';
     document.getElementById('adminSettingsSection').style.display = 'none';
-    
-    // إخفاء الأيقونات غير المتعلقة بشركته
-    const sections = document.querySelectorAll('#adminPanel > div');
-    sections.forEach((s, idx) => {
-      // إبقاء المتابعة الميدانية فقط (القسم الأول)
-      if (idx > 1 && s.id !== 'adminPanel') s.style.display = 'none';
-    });
-    
     document.getElementById('adminLogin').classList.add('hidden');
     document.getElementById('adminPanel').classList.remove('hidden');
     showToast('مرحباً بك مشرف ' + subAdmin.companyName);
   } else {
     alert('رمز الدخول غير صحيح');
   }
-}
-// استبدال الدالة الأصلية
-window.loginAdmin = loginAdminFixed;
-
-// تلوين الموظفين حسب الشركة
-function getCompanyColor(companyName) {
-  if(!companyName) return '#ccc';
-  let companies = JSON.parse(localStorage.getItem('medea_companies') || '[]');
-  let c = companies.find(x => x.name === companyName);
-  return c ? c.color : '#ccc';
-}
+};
 
 </script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js">
@@ -3707,7 +3655,6 @@ function addCompany() {
   document.getElementById('companyNameInput').value = '';
   loadCompanies();
   updateCompanyOptions();
-  if(typeof showToast === 'function') showToast('تمت إضافة الشركة بنجاح');
 }
 
 function deleteCompany(i) {
@@ -3729,25 +3676,18 @@ function updateCompanyOptions() {
   });
 }
 
-// تعديل دالة الدخول لتصفية البيانات للمشرف الخاص
+// تعديل دالة الدخول (تعديل بسيط دون حذف المنطق الأصلي)
 const originalLoginAdmin = window.loginAdmin;
-function loginAdminFixed() {
+window.loginAdmin = function() {
   const pass = document.getElementById('adminPassInput').value;
-  // البحث عن مشرف في قائمة الموظفين
   const staff = JSON.parse(localStorage.getItem('medea_staff') || '[]');
   const subAdmin = staff.find(s => s.role === 'admin' && s.pass === pass);
   const mainPass = localStorage.getItem('medea_admin_pass') || '1234';
 
   if (pass === mainPass) {
     window.currentAdminRole = 'super';
-    window.currentAdminCompany = null;
-    document.getElementById('adminCurrentUser').textContent = 'وضع المشرف الرئيسي مفعل';
     document.getElementById('companiesManagerSection').style.display = 'block';
     document.getElementById('adminSettingsSection').style.display = 'block';
-    // إظهار كل الأيقونات
-    const sections = document.querySelectorAll('#adminPanel > div');
-    sections.forEach(s => s.style.display = 'block');
-    
     document.getElementById('adminLogin').classList.add('hidden');
     document.getElementById('adminPanel').classList.remove('hidden');
     loadCompanies();
@@ -3759,31 +3699,13 @@ function loginAdminFixed() {
     document.getElementById('adminCurrentUser').textContent = 'مشرف شركة: ' + subAdmin.companyName;
     document.getElementById('companiesManagerSection').style.display = 'none';
     document.getElementById('adminSettingsSection').style.display = 'none';
-    
-    // إخفاء الأيقونات غير المتعلقة بشركته
-    const sections = document.querySelectorAll('#adminPanel > div');
-    sections.forEach((s, idx) => {
-      // إبقاء المتابعة الميدانية فقط (القسم الأول)
-      if (idx > 1 && s.id !== 'adminPanel') s.style.display = 'none';
-    });
-    
     document.getElementById('adminLogin').classList.add('hidden');
     document.getElementById('adminPanel').classList.remove('hidden');
     showToast('مرحباً بك مشرف ' + subAdmin.companyName);
   } else {
     alert('رمز الدخول غير صحيح');
   }
-}
-// استبدال الدالة الأصلية
-window.loginAdmin = loginAdminFixed;
-
-// تلوين الموظفين حسب الشركة
-function getCompanyColor(companyName) {
-  if(!companyName) return '#ccc';
-  let companies = JSON.parse(localStorage.getItem('medea_companies') || '[]');
-  let c = companies.find(x => x.name === companyName);
-  return c ? c.color : '#ccc';
-}
+};
 
 </script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js">
@@ -3817,7 +3739,6 @@ function addCompany() {
   document.getElementById('companyNameInput').value = '';
   loadCompanies();
   updateCompanyOptions();
-  if(typeof showToast === 'function') showToast('تمت إضافة الشركة بنجاح');
 }
 
 function deleteCompany(i) {
@@ -3839,25 +3760,18 @@ function updateCompanyOptions() {
   });
 }
 
-// تعديل دالة الدخول لتصفية البيانات للمشرف الخاص
+// تعديل دالة الدخول (تعديل بسيط دون حذف المنطق الأصلي)
 const originalLoginAdmin = window.loginAdmin;
-function loginAdminFixed() {
+window.loginAdmin = function() {
   const pass = document.getElementById('adminPassInput').value;
-  // البحث عن مشرف في قائمة الموظفين
   const staff = JSON.parse(localStorage.getItem('medea_staff') || '[]');
   const subAdmin = staff.find(s => s.role === 'admin' && s.pass === pass);
   const mainPass = localStorage.getItem('medea_admin_pass') || '1234';
 
   if (pass === mainPass) {
     window.currentAdminRole = 'super';
-    window.currentAdminCompany = null;
-    document.getElementById('adminCurrentUser').textContent = 'وضع المشرف الرئيسي مفعل';
     document.getElementById('companiesManagerSection').style.display = 'block';
     document.getElementById('adminSettingsSection').style.display = 'block';
-    // إظهار كل الأيقونات
-    const sections = document.querySelectorAll('#adminPanel > div');
-    sections.forEach(s => s.style.display = 'block');
-    
     document.getElementById('adminLogin').classList.add('hidden');
     document.getElementById('adminPanel').classList.remove('hidden');
     loadCompanies();
@@ -3869,31 +3783,13 @@ function loginAdminFixed() {
     document.getElementById('adminCurrentUser').textContent = 'مشرف شركة: ' + subAdmin.companyName;
     document.getElementById('companiesManagerSection').style.display = 'none';
     document.getElementById('adminSettingsSection').style.display = 'none';
-    
-    // إخفاء الأيقونات غير المتعلقة بشركته
-    const sections = document.querySelectorAll('#adminPanel > div');
-    sections.forEach((s, idx) => {
-      // إبقاء المتابعة الميدانية فقط (القسم الأول)
-      if (idx > 1 && s.id !== 'adminPanel') s.style.display = 'none';
-    });
-    
     document.getElementById('adminLogin').classList.add('hidden');
     document.getElementById('adminPanel').classList.remove('hidden');
     showToast('مرحباً بك مشرف ' + subAdmin.companyName);
   } else {
     alert('رمز الدخول غير صحيح');
   }
-}
-// استبدال الدالة الأصلية
-window.loginAdmin = loginAdminFixed;
-
-// تلوين الموظفين حسب الشركة
-function getCompanyColor(companyName) {
-  if(!companyName) return '#ccc';
-  let companies = JSON.parse(localStorage.getItem('medea_companies') || '[]');
-  let c = companies.find(x => x.name === companyName);
-  return c ? c.color : '#ccc';
-}
+};
 
 </script>
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js">
@@ -3927,7 +3823,6 @@ function addCompany() {
   document.getElementById('companyNameInput').value = '';
   loadCompanies();
   updateCompanyOptions();
-  if(typeof showToast === 'function') showToast('تمت إضافة الشركة بنجاح');
 }
 
 function deleteCompany(i) {
@@ -3949,25 +3844,18 @@ function updateCompanyOptions() {
   });
 }
 
-// تعديل دالة الدخول لتصفية البيانات للمشرف الخاص
+// تعديل دالة الدخول (تعديل بسيط دون حذف المنطق الأصلي)
 const originalLoginAdmin = window.loginAdmin;
-function loginAdminFixed() {
+window.loginAdmin = function() {
   const pass = document.getElementById('adminPassInput').value;
-  // البحث عن مشرف في قائمة الموظفين
   const staff = JSON.parse(localStorage.getItem('medea_staff') || '[]');
   const subAdmin = staff.find(s => s.role === 'admin' && s.pass === pass);
   const mainPass = localStorage.getItem('medea_admin_pass') || '1234';
 
   if (pass === mainPass) {
     window.currentAdminRole = 'super';
-    window.currentAdminCompany = null;
-    document.getElementById('adminCurrentUser').textContent = 'وضع المشرف الرئيسي مفعل';
     document.getElementById('companiesManagerSection').style.display = 'block';
     document.getElementById('adminSettingsSection').style.display = 'block';
-    // إظهار كل الأيقونات
-    const sections = document.querySelectorAll('#adminPanel > div');
-    sections.forEach(s => s.style.display = 'block');
-    
     document.getElementById('adminLogin').classList.add('hidden');
     document.getElementById('adminPanel').classList.remove('hidden');
     loadCompanies();
@@ -3979,31 +3867,13 @@ function loginAdminFixed() {
     document.getElementById('adminCurrentUser').textContent = 'مشرف شركة: ' + subAdmin.companyName;
     document.getElementById('companiesManagerSection').style.display = 'none';
     document.getElementById('adminSettingsSection').style.display = 'none';
-    
-    // إخفاء الأيقونات غير المتعلقة بشركته
-    const sections = document.querySelectorAll('#adminPanel > div');
-    sections.forEach((s, idx) => {
-      // إبقاء المتابعة الميدانية فقط (القسم الأول)
-      if (idx > 1 && s.id !== 'adminPanel') s.style.display = 'none';
-    });
-    
     document.getElementById('adminLogin').classList.add('hidden');
     document.getElementById('adminPanel').classList.remove('hidden');
     showToast('مرحباً بك مشرف ' + subAdmin.companyName);
   } else {
     alert('رمز الدخول غير صحيح');
   }
-}
-// استبدال الدالة الأصلية
-window.loginAdmin = loginAdminFixed;
-
-// تلوين الموظفين حسب الشركة
-function getCompanyColor(companyName) {
-  if(!companyName) return '#ccc';
-  let companies = JSON.parse(localStorage.getItem('medea_companies') || '[]');
-  let c = companies.find(x => x.name === companyName);
-  return c ? c.color : '#ccc';
-}
+};
 
 </script>
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js">
@@ -4037,7 +3907,6 @@ function addCompany() {
   document.getElementById('companyNameInput').value = '';
   loadCompanies();
   updateCompanyOptions();
-  if(typeof showToast === 'function') showToast('تمت إضافة الشركة بنجاح');
 }
 
 function deleteCompany(i) {
@@ -4059,25 +3928,18 @@ function updateCompanyOptions() {
   });
 }
 
-// تعديل دالة الدخول لتصفية البيانات للمشرف الخاص
+// تعديل دالة الدخول (تعديل بسيط دون حذف المنطق الأصلي)
 const originalLoginAdmin = window.loginAdmin;
-function loginAdminFixed() {
+window.loginAdmin = function() {
   const pass = document.getElementById('adminPassInput').value;
-  // البحث عن مشرف في قائمة الموظفين
   const staff = JSON.parse(localStorage.getItem('medea_staff') || '[]');
   const subAdmin = staff.find(s => s.role === 'admin' && s.pass === pass);
   const mainPass = localStorage.getItem('medea_admin_pass') || '1234';
 
   if (pass === mainPass) {
     window.currentAdminRole = 'super';
-    window.currentAdminCompany = null;
-    document.getElementById('adminCurrentUser').textContent = 'وضع المشرف الرئيسي مفعل';
     document.getElementById('companiesManagerSection').style.display = 'block';
     document.getElementById('adminSettingsSection').style.display = 'block';
-    // إظهار كل الأيقونات
-    const sections = document.querySelectorAll('#adminPanel > div');
-    sections.forEach(s => s.style.display = 'block');
-    
     document.getElementById('adminLogin').classList.add('hidden');
     document.getElementById('adminPanel').classList.remove('hidden');
     loadCompanies();
@@ -4089,31 +3951,13 @@ function loginAdminFixed() {
     document.getElementById('adminCurrentUser').textContent = 'مشرف شركة: ' + subAdmin.companyName;
     document.getElementById('companiesManagerSection').style.display = 'none';
     document.getElementById('adminSettingsSection').style.display = 'none';
-    
-    // إخفاء الأيقونات غير المتعلقة بشركته
-    const sections = document.querySelectorAll('#adminPanel > div');
-    sections.forEach((s, idx) => {
-      // إبقاء المتابعة الميدانية فقط (القسم الأول)
-      if (idx > 1 && s.id !== 'adminPanel') s.style.display = 'none';
-    });
-    
     document.getElementById('adminLogin').classList.add('hidden');
     document.getElementById('adminPanel').classList.remove('hidden');
     showToast('مرحباً بك مشرف ' + subAdmin.companyName);
   } else {
     alert('رمز الدخول غير صحيح');
   }
-}
-// استبدال الدالة الأصلية
-window.loginAdmin = loginAdminFixed;
-
-// تلوين الموظفين حسب الشركة
-function getCompanyColor(companyName) {
-  if(!companyName) return '#ccc';
-  let companies = JSON.parse(localStorage.getItem('medea_companies') || '[]');
-  let c = companies.find(x => x.name === companyName);
-  return c ? c.color : '#ccc';
-}
+};
 
 </script>
 
@@ -10275,7 +10119,6 @@ function addCompany() {
   document.getElementById('companyNameInput').value = '';
   loadCompanies();
   updateCompanyOptions();
-  if(typeof showToast === 'function') showToast('تمت إضافة الشركة بنجاح');
 }
 
 function deleteCompany(i) {
@@ -10297,25 +10140,18 @@ function updateCompanyOptions() {
   });
 }
 
-// تعديل دالة الدخول لتصفية البيانات للمشرف الخاص
+// تعديل دالة الدخول (تعديل بسيط دون حذف المنطق الأصلي)
 const originalLoginAdmin = window.loginAdmin;
-function loginAdminFixed() {
+window.loginAdmin = function() {
   const pass = document.getElementById('adminPassInput').value;
-  // البحث عن مشرف في قائمة الموظفين
   const staff = JSON.parse(localStorage.getItem('medea_staff') || '[]');
   const subAdmin = staff.find(s => s.role === 'admin' && s.pass === pass);
   const mainPass = localStorage.getItem('medea_admin_pass') || '1234';
 
   if (pass === mainPass) {
     window.currentAdminRole = 'super';
-    window.currentAdminCompany = null;
-    document.getElementById('adminCurrentUser').textContent = 'وضع المشرف الرئيسي مفعل';
     document.getElementById('companiesManagerSection').style.display = 'block';
     document.getElementById('adminSettingsSection').style.display = 'block';
-    // إظهار كل الأيقونات
-    const sections = document.querySelectorAll('#adminPanel > div');
-    sections.forEach(s => s.style.display = 'block');
-    
     document.getElementById('adminLogin').classList.add('hidden');
     document.getElementById('adminPanel').classList.remove('hidden');
     loadCompanies();
@@ -10327,31 +10163,13 @@ function loginAdminFixed() {
     document.getElementById('adminCurrentUser').textContent = 'مشرف شركة: ' + subAdmin.companyName;
     document.getElementById('companiesManagerSection').style.display = 'none';
     document.getElementById('adminSettingsSection').style.display = 'none';
-    
-    // إخفاء الأيقونات غير المتعلقة بشركته
-    const sections = document.querySelectorAll('#adminPanel > div');
-    sections.forEach((s, idx) => {
-      // إبقاء المتابعة الميدانية فقط (القسم الأول)
-      if (idx > 1 && s.id !== 'adminPanel') s.style.display = 'none';
-    });
-    
     document.getElementById('adminLogin').classList.add('hidden');
     document.getElementById('adminPanel').classList.remove('hidden');
     showToast('مرحباً بك مشرف ' + subAdmin.companyName);
   } else {
     alert('رمز الدخول غير صحيح');
   }
-}
-// استبدال الدالة الأصلية
-window.loginAdmin = loginAdminFixed;
-
-// تلوين الموظفين حسب الشركة
-function getCompanyColor(companyName) {
-  if(!companyName) return '#ccc';
-  let companies = JSON.parse(localStorage.getItem('medea_companies') || '[]');
-  let c = companies.find(x => x.name === companyName);
-  return c ? c.color : '#ccc';
-}
+};
 
 </script>
 <script>
@@ -10703,7 +10521,6 @@ function addCompany() {
   document.getElementById('companyNameInput').value = '';
   loadCompanies();
   updateCompanyOptions();
-  if(typeof showToast === 'function') showToast('تمت إضافة الشركة بنجاح');
 }
 
 function deleteCompany(i) {
@@ -10725,25 +10542,18 @@ function updateCompanyOptions() {
   });
 }
 
-// تعديل دالة الدخول لتصفية البيانات للمشرف الخاص
+// تعديل دالة الدخول (تعديل بسيط دون حذف المنطق الأصلي)
 const originalLoginAdmin = window.loginAdmin;
-function loginAdminFixed() {
+window.loginAdmin = function() {
   const pass = document.getElementById('adminPassInput').value;
-  // البحث عن مشرف في قائمة الموظفين
   const staff = JSON.parse(localStorage.getItem('medea_staff') || '[]');
   const subAdmin = staff.find(s => s.role === 'admin' && s.pass === pass);
   const mainPass = localStorage.getItem('medea_admin_pass') || '1234';
 
   if (pass === mainPass) {
     window.currentAdminRole = 'super';
-    window.currentAdminCompany = null;
-    document.getElementById('adminCurrentUser').textContent = 'وضع المشرف الرئيسي مفعل';
     document.getElementById('companiesManagerSection').style.display = 'block';
     document.getElementById('adminSettingsSection').style.display = 'block';
-    // إظهار كل الأيقونات
-    const sections = document.querySelectorAll('#adminPanel > div');
-    sections.forEach(s => s.style.display = 'block');
-    
     document.getElementById('adminLogin').classList.add('hidden');
     document.getElementById('adminPanel').classList.remove('hidden');
     loadCompanies();
@@ -10755,31 +10565,13 @@ function loginAdminFixed() {
     document.getElementById('adminCurrentUser').textContent = 'مشرف شركة: ' + subAdmin.companyName;
     document.getElementById('companiesManagerSection').style.display = 'none';
     document.getElementById('adminSettingsSection').style.display = 'none';
-    
-    // إخفاء الأيقونات غير المتعلقة بشركته
-    const sections = document.querySelectorAll('#adminPanel > div');
-    sections.forEach((s, idx) => {
-      // إبقاء المتابعة الميدانية فقط (القسم الأول)
-      if (idx > 1 && s.id !== 'adminPanel') s.style.display = 'none';
-    });
-    
     document.getElementById('adminLogin').classList.add('hidden');
     document.getElementById('adminPanel').classList.remove('hidden');
     showToast('مرحباً بك مشرف ' + subAdmin.companyName);
   } else {
     alert('رمز الدخول غير صحيح');
   }
-}
-// استبدال الدالة الأصلية
-window.loginAdmin = loginAdminFixed;
-
-// تلوين الموظفين حسب الشركة
-function getCompanyColor(companyName) {
-  if(!companyName) return '#ccc';
-  let companies = JSON.parse(localStorage.getItem('medea_companies') || '[]');
-  let c = companies.find(x => x.name === companyName);
-  return c ? c.color : '#ccc';
-}
+};
 
 </script>
 </body></html>
