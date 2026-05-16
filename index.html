@@ -3508,19 +3508,22 @@ function updateCompanyOptions() {
   });
 }
 
-// تعديل دالة الدخول الأصلية لتعمل مع ركن الشركات
+function getCompanyColor(companyName) {
+  if(!companyName) return 'var(--primary)';
+  let companies = JSON.parse(localStorage.getItem('medea_companies') || '[]');
+  let c = companies.find(x => x.name === companyName);
+  return c ? c.color : 'var(--primary)';
+}
+
+// تعديل دالة الدخول الأصلية
 const originalLoginAdmin = window.loginAdmin;
-const enhancedLoginAdmin = function() {
-  // استدعاء الدالة الأصلية أولاً (التي تتعامل مع فتحي والمسؤولين)
+window.loginAdmin = function() {
   originalLoginAdmin();
-  
-  // بعد نجاح الدخول، نقوم بتعديل الواجهة بناءً على نوع المستخدم
   const adminPanel = document.getElementById('adminPanel');
   if (!adminPanel.classList.contains('hidden')) {
     const currentUserName = document.getElementById('adminCurrentUser').textContent;
     const companiesSec = document.getElementById('companiesManagerSection');
     const settingsSec = document.getElementById('adminSettingsSection');
-    
     if (currentUserName.includes('فتحي')) {
       window.currentAdminRole = 'super';
       if(companiesSec) companiesSec.style.display = 'block';
@@ -3529,27 +3532,15 @@ const enhancedLoginAdmin = function() {
       updateCompanyOptions();
     } else {
       window.currentAdminRole = 'sub';
-      // البحث عن شركة هذا المسؤول في قائمة الموظفين
       const staff = JSON.parse(localStorage.getItem('medea_staff') || '[]');
       const subName = currentUserName.replace('المسؤول: ', '').trim();
       const subInfo = staff.find(s => s.name === subName);
       window.currentAdminCompany = subInfo ? subInfo.companyName : '';
-      
       if(companiesSec) companiesSec.style.display = 'none';
       if(settingsSec) settingsSec.style.display = 'none';
-      
-      // إخفاء الأيقونات غير المتعلقة بشركته
-      const sections = document.querySelectorAll('#adminPanel > div');
-      sections.forEach((s, idx) => {
-        if (idx > 1 && s.id !== 'adminPanel' && s.id !== 'companiesManagerSection' && s.id !== 'adminSettingsSection') {
-           // هنا يمكنك إضافة منطق إخفاء أيقونات معينة
-        }
-      });
     }
   }
 };
-// استبدال الدالة في النافذة
-window.loginAdmin = enhancedLoginAdmin;
 
 </script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js">
@@ -3604,19 +3595,22 @@ function updateCompanyOptions() {
   });
 }
 
-// تعديل دالة الدخول الأصلية لتعمل مع ركن الشركات
+function getCompanyColor(companyName) {
+  if(!companyName) return 'var(--primary)';
+  let companies = JSON.parse(localStorage.getItem('medea_companies') || '[]');
+  let c = companies.find(x => x.name === companyName);
+  return c ? c.color : 'var(--primary)';
+}
+
+// تعديل دالة الدخول الأصلية
 const originalLoginAdmin = window.loginAdmin;
-const enhancedLoginAdmin = function() {
-  // استدعاء الدالة الأصلية أولاً (التي تتعامل مع فتحي والمسؤولين)
+window.loginAdmin = function() {
   originalLoginAdmin();
-  
-  // بعد نجاح الدخول، نقوم بتعديل الواجهة بناءً على نوع المستخدم
   const adminPanel = document.getElementById('adminPanel');
   if (!adminPanel.classList.contains('hidden')) {
     const currentUserName = document.getElementById('adminCurrentUser').textContent;
     const companiesSec = document.getElementById('companiesManagerSection');
     const settingsSec = document.getElementById('adminSettingsSection');
-    
     if (currentUserName.includes('فتحي')) {
       window.currentAdminRole = 'super';
       if(companiesSec) companiesSec.style.display = 'block';
@@ -3625,27 +3619,15 @@ const enhancedLoginAdmin = function() {
       updateCompanyOptions();
     } else {
       window.currentAdminRole = 'sub';
-      // البحث عن شركة هذا المسؤول في قائمة الموظفين
       const staff = JSON.parse(localStorage.getItem('medea_staff') || '[]');
       const subName = currentUserName.replace('المسؤول: ', '').trim();
       const subInfo = staff.find(s => s.name === subName);
       window.currentAdminCompany = subInfo ? subInfo.companyName : '';
-      
       if(companiesSec) companiesSec.style.display = 'none';
       if(settingsSec) settingsSec.style.display = 'none';
-      
-      // إخفاء الأيقونات غير المتعلقة بشركته
-      const sections = document.querySelectorAll('#adminPanel > div');
-      sections.forEach((s, idx) => {
-        if (idx > 1 && s.id !== 'adminPanel' && s.id !== 'companiesManagerSection' && s.id !== 'adminSettingsSection') {
-           // هنا يمكنك إضافة منطق إخفاء أيقونات معينة
-        }
-      });
     }
   }
 };
-// استبدال الدالة في النافذة
-window.loginAdmin = enhancedLoginAdmin;
 
 </script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js">
@@ -3700,19 +3682,22 @@ function updateCompanyOptions() {
   });
 }
 
-// تعديل دالة الدخول الأصلية لتعمل مع ركن الشركات
+function getCompanyColor(companyName) {
+  if(!companyName) return 'var(--primary)';
+  let companies = JSON.parse(localStorage.getItem('medea_companies') || '[]');
+  let c = companies.find(x => x.name === companyName);
+  return c ? c.color : 'var(--primary)';
+}
+
+// تعديل دالة الدخول الأصلية
 const originalLoginAdmin = window.loginAdmin;
-const enhancedLoginAdmin = function() {
-  // استدعاء الدالة الأصلية أولاً (التي تتعامل مع فتحي والمسؤولين)
+window.loginAdmin = function() {
   originalLoginAdmin();
-  
-  // بعد نجاح الدخول، نقوم بتعديل الواجهة بناءً على نوع المستخدم
   const adminPanel = document.getElementById('adminPanel');
   if (!adminPanel.classList.contains('hidden')) {
     const currentUserName = document.getElementById('adminCurrentUser').textContent;
     const companiesSec = document.getElementById('companiesManagerSection');
     const settingsSec = document.getElementById('adminSettingsSection');
-    
     if (currentUserName.includes('فتحي')) {
       window.currentAdminRole = 'super';
       if(companiesSec) companiesSec.style.display = 'block';
@@ -3721,27 +3706,15 @@ const enhancedLoginAdmin = function() {
       updateCompanyOptions();
     } else {
       window.currentAdminRole = 'sub';
-      // البحث عن شركة هذا المسؤول في قائمة الموظفين
       const staff = JSON.parse(localStorage.getItem('medea_staff') || '[]');
       const subName = currentUserName.replace('المسؤول: ', '').trim();
       const subInfo = staff.find(s => s.name === subName);
       window.currentAdminCompany = subInfo ? subInfo.companyName : '';
-      
       if(companiesSec) companiesSec.style.display = 'none';
       if(settingsSec) settingsSec.style.display = 'none';
-      
-      // إخفاء الأيقونات غير المتعلقة بشركته
-      const sections = document.querySelectorAll('#adminPanel > div');
-      sections.forEach((s, idx) => {
-        if (idx > 1 && s.id !== 'adminPanel' && s.id !== 'companiesManagerSection' && s.id !== 'adminSettingsSection') {
-           // هنا يمكنك إضافة منطق إخفاء أيقونات معينة
-        }
-      });
     }
   }
 };
-// استبدال الدالة في النافذة
-window.loginAdmin = enhancedLoginAdmin;
 
 </script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js">
@@ -3796,19 +3769,22 @@ function updateCompanyOptions() {
   });
 }
 
-// تعديل دالة الدخول الأصلية لتعمل مع ركن الشركات
+function getCompanyColor(companyName) {
+  if(!companyName) return 'var(--primary)';
+  let companies = JSON.parse(localStorage.getItem('medea_companies') || '[]');
+  let c = companies.find(x => x.name === companyName);
+  return c ? c.color : 'var(--primary)';
+}
+
+// تعديل دالة الدخول الأصلية
 const originalLoginAdmin = window.loginAdmin;
-const enhancedLoginAdmin = function() {
-  // استدعاء الدالة الأصلية أولاً (التي تتعامل مع فتحي والمسؤولين)
+window.loginAdmin = function() {
   originalLoginAdmin();
-  
-  // بعد نجاح الدخول، نقوم بتعديل الواجهة بناءً على نوع المستخدم
   const adminPanel = document.getElementById('adminPanel');
   if (!adminPanel.classList.contains('hidden')) {
     const currentUserName = document.getElementById('adminCurrentUser').textContent;
     const companiesSec = document.getElementById('companiesManagerSection');
     const settingsSec = document.getElementById('adminSettingsSection');
-    
     if (currentUserName.includes('فتحي')) {
       window.currentAdminRole = 'super';
       if(companiesSec) companiesSec.style.display = 'block';
@@ -3817,27 +3793,15 @@ const enhancedLoginAdmin = function() {
       updateCompanyOptions();
     } else {
       window.currentAdminRole = 'sub';
-      // البحث عن شركة هذا المسؤول في قائمة الموظفين
       const staff = JSON.parse(localStorage.getItem('medea_staff') || '[]');
       const subName = currentUserName.replace('المسؤول: ', '').trim();
       const subInfo = staff.find(s => s.name === subName);
       window.currentAdminCompany = subInfo ? subInfo.companyName : '';
-      
       if(companiesSec) companiesSec.style.display = 'none';
       if(settingsSec) settingsSec.style.display = 'none';
-      
-      // إخفاء الأيقونات غير المتعلقة بشركته
-      const sections = document.querySelectorAll('#adminPanel > div');
-      sections.forEach((s, idx) => {
-        if (idx > 1 && s.id !== 'adminPanel' && s.id !== 'companiesManagerSection' && s.id !== 'adminSettingsSection') {
-           // هنا يمكنك إضافة منطق إخفاء أيقونات معينة
-        }
-      });
     }
   }
 };
-// استبدال الدالة في النافذة
-window.loginAdmin = enhancedLoginAdmin;
 
 </script>
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js">
@@ -3892,19 +3856,22 @@ function updateCompanyOptions() {
   });
 }
 
-// تعديل دالة الدخول الأصلية لتعمل مع ركن الشركات
+function getCompanyColor(companyName) {
+  if(!companyName) return 'var(--primary)';
+  let companies = JSON.parse(localStorage.getItem('medea_companies') || '[]');
+  let c = companies.find(x => x.name === companyName);
+  return c ? c.color : 'var(--primary)';
+}
+
+// تعديل دالة الدخول الأصلية
 const originalLoginAdmin = window.loginAdmin;
-const enhancedLoginAdmin = function() {
-  // استدعاء الدالة الأصلية أولاً (التي تتعامل مع فتحي والمسؤولين)
+window.loginAdmin = function() {
   originalLoginAdmin();
-  
-  // بعد نجاح الدخول، نقوم بتعديل الواجهة بناءً على نوع المستخدم
   const adminPanel = document.getElementById('adminPanel');
   if (!adminPanel.classList.contains('hidden')) {
     const currentUserName = document.getElementById('adminCurrentUser').textContent;
     const companiesSec = document.getElementById('companiesManagerSection');
     const settingsSec = document.getElementById('adminSettingsSection');
-    
     if (currentUserName.includes('فتحي')) {
       window.currentAdminRole = 'super';
       if(companiesSec) companiesSec.style.display = 'block';
@@ -3913,27 +3880,15 @@ const enhancedLoginAdmin = function() {
       updateCompanyOptions();
     } else {
       window.currentAdminRole = 'sub';
-      // البحث عن شركة هذا المسؤول في قائمة الموظفين
       const staff = JSON.parse(localStorage.getItem('medea_staff') || '[]');
       const subName = currentUserName.replace('المسؤول: ', '').trim();
       const subInfo = staff.find(s => s.name === subName);
       window.currentAdminCompany = subInfo ? subInfo.companyName : '';
-      
       if(companiesSec) companiesSec.style.display = 'none';
       if(settingsSec) settingsSec.style.display = 'none';
-      
-      // إخفاء الأيقونات غير المتعلقة بشركته
-      const sections = document.querySelectorAll('#adminPanel > div');
-      sections.forEach((s, idx) => {
-        if (idx > 1 && s.id !== 'adminPanel' && s.id !== 'companiesManagerSection' && s.id !== 'adminSettingsSection') {
-           // هنا يمكنك إضافة منطق إخفاء أيقونات معينة
-        }
-      });
     }
   }
 };
-// استبدال الدالة في النافذة
-window.loginAdmin = enhancedLoginAdmin;
 
 </script>
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js">
@@ -3988,19 +3943,22 @@ function updateCompanyOptions() {
   });
 }
 
-// تعديل دالة الدخول الأصلية لتعمل مع ركن الشركات
+function getCompanyColor(companyName) {
+  if(!companyName) return 'var(--primary)';
+  let companies = JSON.parse(localStorage.getItem('medea_companies') || '[]');
+  let c = companies.find(x => x.name === companyName);
+  return c ? c.color : 'var(--primary)';
+}
+
+// تعديل دالة الدخول الأصلية
 const originalLoginAdmin = window.loginAdmin;
-const enhancedLoginAdmin = function() {
-  // استدعاء الدالة الأصلية أولاً (التي تتعامل مع فتحي والمسؤولين)
+window.loginAdmin = function() {
   originalLoginAdmin();
-  
-  // بعد نجاح الدخول، نقوم بتعديل الواجهة بناءً على نوع المستخدم
   const adminPanel = document.getElementById('adminPanel');
   if (!adminPanel.classList.contains('hidden')) {
     const currentUserName = document.getElementById('adminCurrentUser').textContent;
     const companiesSec = document.getElementById('companiesManagerSection');
     const settingsSec = document.getElementById('adminSettingsSection');
-    
     if (currentUserName.includes('فتحي')) {
       window.currentAdminRole = 'super';
       if(companiesSec) companiesSec.style.display = 'block';
@@ -4009,27 +3967,15 @@ const enhancedLoginAdmin = function() {
       updateCompanyOptions();
     } else {
       window.currentAdminRole = 'sub';
-      // البحث عن شركة هذا المسؤول في قائمة الموظفين
       const staff = JSON.parse(localStorage.getItem('medea_staff') || '[]');
       const subName = currentUserName.replace('المسؤول: ', '').trim();
       const subInfo = staff.find(s => s.name === subName);
       window.currentAdminCompany = subInfo ? subInfo.companyName : '';
-      
       if(companiesSec) companiesSec.style.display = 'none';
       if(settingsSec) settingsSec.style.display = 'none';
-      
-      // إخفاء الأيقونات غير المتعلقة بشركته
-      const sections = document.querySelectorAll('#adminPanel > div');
-      sections.forEach((s, idx) => {
-        if (idx > 1 && s.id !== 'adminPanel' && s.id !== 'companiesManagerSection' && s.id !== 'adminSettingsSection') {
-           // هنا يمكنك إضافة منطق إخفاء أيقونات معينة
-        }
-      });
     }
   }
 };
-// استبدال الدالة في النافذة
-window.loginAdmin = enhancedLoginAdmin;
 
 </script>
 
@@ -8666,7 +8612,7 @@ function loadStaffList() {
     c.innerHTML = s.map((x, i) => `
       <div class="staff-item">
         <div>
-          <b style="color:var(--primary)">${x.role}:</b> ${x.name}
+          <b style="color:${getCompanyColor(x.companyName)}">${x.role}:</b> ${x.name}${x.companyName ? `<br><small style="color:#666;font-weight:bold">الشركة: ${x.companyName}</small>` : ""}
           ${x.phone ? `<br><a href="tel:${x.phone}" class="phone-link"><i class="fas fa-phone"></i> ${x.phone}</a>` : ''}
         </div>
         <div class="action-btns">
@@ -8704,6 +8650,7 @@ function addStaff() {
     name: n, 
     role: r, 
     phone: p, 
+    companyName: document.getElementById("newStaffCompany").value, 
     addedBy: 'فتحي', 
     addedDate: new Date().toLocaleDateString('ar-DZ')
   });
@@ -8737,13 +8684,15 @@ function editStaff(i) {
   const st = s[i];
   const nn = prompt('الاسم الجديد:', st.name);
   if(!nn) return;
-  
   const nr = prompt('المنصب الجديد:', st.role);
   if(!nr) return;
-  
   const np = prompt('الهاتف الجديد:', st.phone || '');
   
-  s[i] = {name: nn, role: nr, phone: np, addedBy: st.addedBy || 'فتحي', addedDate: st.addedDate || new Date().toLocaleDateString('ar-DZ')};
+  let companies = JSON.parse(localStorage.getItem('medea_companies') || '[]');
+  let compList = "أدخل اسم الشركة الجديدة من القائمة التالية:\n- اترك فارغاً لشركة البلدية\n" + companies.map(c => "- " + c.name).join("\n");
+  const nc = prompt(compList, st.companyName || "");
+  
+  s[i] = {name: nn, role: nr, phone: np, companyName: nc, addedBy: st.addedBy || 'فتحي', addedDate: st.addedDate || new Date().toLocaleDateString('ar-DZ')};
   try {
     localStorage.setItem('medea_staff', JSON.stringify(s));
     try { db.ref('staff').set(s).catch(()=>{}); } catch(e) {}
@@ -10212,19 +10161,22 @@ function updateCompanyOptions() {
   });
 }
 
-// تعديل دالة الدخول الأصلية لتعمل مع ركن الشركات
+function getCompanyColor(companyName) {
+  if(!companyName) return 'var(--primary)';
+  let companies = JSON.parse(localStorage.getItem('medea_companies') || '[]');
+  let c = companies.find(x => x.name === companyName);
+  return c ? c.color : 'var(--primary)';
+}
+
+// تعديل دالة الدخول الأصلية
 const originalLoginAdmin = window.loginAdmin;
-const enhancedLoginAdmin = function() {
-  // استدعاء الدالة الأصلية أولاً (التي تتعامل مع فتحي والمسؤولين)
+window.loginAdmin = function() {
   originalLoginAdmin();
-  
-  // بعد نجاح الدخول، نقوم بتعديل الواجهة بناءً على نوع المستخدم
   const adminPanel = document.getElementById('adminPanel');
   if (!adminPanel.classList.contains('hidden')) {
     const currentUserName = document.getElementById('adminCurrentUser').textContent;
     const companiesSec = document.getElementById('companiesManagerSection');
     const settingsSec = document.getElementById('adminSettingsSection');
-    
     if (currentUserName.includes('فتحي')) {
       window.currentAdminRole = 'super';
       if(companiesSec) companiesSec.style.display = 'block';
@@ -10233,27 +10185,15 @@ const enhancedLoginAdmin = function() {
       updateCompanyOptions();
     } else {
       window.currentAdminRole = 'sub';
-      // البحث عن شركة هذا المسؤول في قائمة الموظفين
       const staff = JSON.parse(localStorage.getItem('medea_staff') || '[]');
       const subName = currentUserName.replace('المسؤول: ', '').trim();
       const subInfo = staff.find(s => s.name === subName);
       window.currentAdminCompany = subInfo ? subInfo.companyName : '';
-      
       if(companiesSec) companiesSec.style.display = 'none';
       if(settingsSec) settingsSec.style.display = 'none';
-      
-      // إخفاء الأيقونات غير المتعلقة بشركته
-      const sections = document.querySelectorAll('#adminPanel > div');
-      sections.forEach((s, idx) => {
-        if (idx > 1 && s.id !== 'adminPanel' && s.id !== 'companiesManagerSection' && s.id !== 'adminSettingsSection') {
-           // هنا يمكنك إضافة منطق إخفاء أيقونات معينة
-        }
-      });
     }
   }
 };
-// استبدال الدالة في النافذة
-window.loginAdmin = enhancedLoginAdmin;
 
 </script>
 <script>
@@ -10626,19 +10566,22 @@ function updateCompanyOptions() {
   });
 }
 
-// تعديل دالة الدخول الأصلية لتعمل مع ركن الشركات
+function getCompanyColor(companyName) {
+  if(!companyName) return 'var(--primary)';
+  let companies = JSON.parse(localStorage.getItem('medea_companies') || '[]');
+  let c = companies.find(x => x.name === companyName);
+  return c ? c.color : 'var(--primary)';
+}
+
+// تعديل دالة الدخول الأصلية
 const originalLoginAdmin = window.loginAdmin;
-const enhancedLoginAdmin = function() {
-  // استدعاء الدالة الأصلية أولاً (التي تتعامل مع فتحي والمسؤولين)
+window.loginAdmin = function() {
   originalLoginAdmin();
-  
-  // بعد نجاح الدخول، نقوم بتعديل الواجهة بناءً على نوع المستخدم
   const adminPanel = document.getElementById('adminPanel');
   if (!adminPanel.classList.contains('hidden')) {
     const currentUserName = document.getElementById('adminCurrentUser').textContent;
     const companiesSec = document.getElementById('companiesManagerSection');
     const settingsSec = document.getElementById('adminSettingsSection');
-    
     if (currentUserName.includes('فتحي')) {
       window.currentAdminRole = 'super';
       if(companiesSec) companiesSec.style.display = 'block';
@@ -10647,27 +10590,15 @@ const enhancedLoginAdmin = function() {
       updateCompanyOptions();
     } else {
       window.currentAdminRole = 'sub';
-      // البحث عن شركة هذا المسؤول في قائمة الموظفين
       const staff = JSON.parse(localStorage.getItem('medea_staff') || '[]');
       const subName = currentUserName.replace('المسؤول: ', '').trim();
       const subInfo = staff.find(s => s.name === subName);
       window.currentAdminCompany = subInfo ? subInfo.companyName : '';
-      
       if(companiesSec) companiesSec.style.display = 'none';
       if(settingsSec) settingsSec.style.display = 'none';
-      
-      // إخفاء الأيقونات غير المتعلقة بشركته
-      const sections = document.querySelectorAll('#adminPanel > div');
-      sections.forEach((s, idx) => {
-        if (idx > 1 && s.id !== 'adminPanel' && s.id !== 'companiesManagerSection' && s.id !== 'adminSettingsSection') {
-           // هنا يمكنك إضافة منطق إخفاء أيقونات معينة
-        }
-      });
     }
   }
 };
-// استبدال الدالة في النافذة
-window.loginAdmin = enhancedLoginAdmin;
 
 </script>
 </body></html>
