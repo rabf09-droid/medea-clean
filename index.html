@@ -3508,39 +3508,52 @@ function updateCompanyOptions() {
   });
 }
 
-function getCompanyColor(companyName) {
-  if(!companyName) return 'var(--primary)';
-  let companies = JSON.parse(localStorage.getItem('medea_companies') || '[]');
-  let c = companies.find(x => x.name === companyName);
-  return c ? c.color : 'var(--primary)';
-}
-
-// تعديل دالة الدخول الأصلية
+// تعديل دالة الدخول الأصلية لتعمل مع ركن الشركات
 const originalLoginAdmin = window.loginAdmin;
-window.loginAdmin = function() {
+const enhancedLoginAdmin = function() {
+  // استدعاء الدالة الأصلية أولاً (التي تتعامل مع فتحي والمسؤولين)
   originalLoginAdmin();
+  
+  // بعد نجاح الدخول، نقوم بتعديل الواجهة بناءً على نوع المستخدم
   const adminPanel = document.getElementById('adminPanel');
   if (!adminPanel.classList.contains('hidden')) {
     const currentUserName = document.getElementById('adminCurrentUser').textContent;
     const companiesSec = document.getElementById('companiesManagerSection');
     const settingsSec = document.getElementById('adminSettingsSection');
+    
     if (currentUserName.includes('فتحي')) {
       window.currentAdminRole = 'super';
       if(companiesSec) companiesSec.style.display = 'block';
       if(settingsSec) settingsSec.style.display = 'block';
       loadCompanies();
       updateCompanyOptions();
+      
+      // إظهار كافة الأقسام للمشرف الرئيسي
+      document.querySelectorAll('.admin-tool-btn').forEach(btn => btn.style.display = 'flex');
     } else {
       window.currentAdminRole = 'sub';
       const staff = JSON.parse(localStorage.getItem('medea_staff') || '[]');
       const subName = currentUserName.replace('المسؤول: ', '').trim();
       const subInfo = staff.find(s => s.name === subName);
       window.currentAdminCompany = subInfo ? subInfo.companyName : '';
+      
       if(companiesSec) companiesSec.style.display = 'none';
       if(settingsSec) settingsSec.style.display = 'none';
+      
+      // فلترة الأقسام للمشرف الفرعي (إخفاء إدارة الموظفين والشركات)
+      document.querySelectorAll('.admin-tool-btn').forEach(btn => {
+        const action = btn.getAttribute('onclick');
+        if (action && (action.includes('manageStaffPage') || action.includes('companiesManagerSection'))) {
+          btn.style.display = 'none';
+        } else {
+          btn.style.display = 'flex';
+        }
+      });
     }
   }
 };
+// استبدال الدالة في النافذة
+window.loginAdmin = enhancedLoginAdmin;
 
 </script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js">
@@ -3595,39 +3608,52 @@ function updateCompanyOptions() {
   });
 }
 
-function getCompanyColor(companyName) {
-  if(!companyName) return 'var(--primary)';
-  let companies = JSON.parse(localStorage.getItem('medea_companies') || '[]');
-  let c = companies.find(x => x.name === companyName);
-  return c ? c.color : 'var(--primary)';
-}
-
-// تعديل دالة الدخول الأصلية
+// تعديل دالة الدخول الأصلية لتعمل مع ركن الشركات
 const originalLoginAdmin = window.loginAdmin;
-window.loginAdmin = function() {
+const enhancedLoginAdmin = function() {
+  // استدعاء الدالة الأصلية أولاً (التي تتعامل مع فتحي والمسؤولين)
   originalLoginAdmin();
+  
+  // بعد نجاح الدخول، نقوم بتعديل الواجهة بناءً على نوع المستخدم
   const adminPanel = document.getElementById('adminPanel');
   if (!adminPanel.classList.contains('hidden')) {
     const currentUserName = document.getElementById('adminCurrentUser').textContent;
     const companiesSec = document.getElementById('companiesManagerSection');
     const settingsSec = document.getElementById('adminSettingsSection');
+    
     if (currentUserName.includes('فتحي')) {
       window.currentAdminRole = 'super';
       if(companiesSec) companiesSec.style.display = 'block';
       if(settingsSec) settingsSec.style.display = 'block';
       loadCompanies();
       updateCompanyOptions();
+      
+      // إظهار كافة الأقسام للمشرف الرئيسي
+      document.querySelectorAll('.admin-tool-btn').forEach(btn => btn.style.display = 'flex');
     } else {
       window.currentAdminRole = 'sub';
       const staff = JSON.parse(localStorage.getItem('medea_staff') || '[]');
       const subName = currentUserName.replace('المسؤول: ', '').trim();
       const subInfo = staff.find(s => s.name === subName);
       window.currentAdminCompany = subInfo ? subInfo.companyName : '';
+      
       if(companiesSec) companiesSec.style.display = 'none';
       if(settingsSec) settingsSec.style.display = 'none';
+      
+      // فلترة الأقسام للمشرف الفرعي (إخفاء إدارة الموظفين والشركات)
+      document.querySelectorAll('.admin-tool-btn').forEach(btn => {
+        const action = btn.getAttribute('onclick');
+        if (action && (action.includes('manageStaffPage') || action.includes('companiesManagerSection'))) {
+          btn.style.display = 'none';
+        } else {
+          btn.style.display = 'flex';
+        }
+      });
     }
   }
 };
+// استبدال الدالة في النافذة
+window.loginAdmin = enhancedLoginAdmin;
 
 </script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js">
@@ -3682,39 +3708,52 @@ function updateCompanyOptions() {
   });
 }
 
-function getCompanyColor(companyName) {
-  if(!companyName) return 'var(--primary)';
-  let companies = JSON.parse(localStorage.getItem('medea_companies') || '[]');
-  let c = companies.find(x => x.name === companyName);
-  return c ? c.color : 'var(--primary)';
-}
-
-// تعديل دالة الدخول الأصلية
+// تعديل دالة الدخول الأصلية لتعمل مع ركن الشركات
 const originalLoginAdmin = window.loginAdmin;
-window.loginAdmin = function() {
+const enhancedLoginAdmin = function() {
+  // استدعاء الدالة الأصلية أولاً (التي تتعامل مع فتحي والمسؤولين)
   originalLoginAdmin();
+  
+  // بعد نجاح الدخول، نقوم بتعديل الواجهة بناءً على نوع المستخدم
   const adminPanel = document.getElementById('adminPanel');
   if (!adminPanel.classList.contains('hidden')) {
     const currentUserName = document.getElementById('adminCurrentUser').textContent;
     const companiesSec = document.getElementById('companiesManagerSection');
     const settingsSec = document.getElementById('adminSettingsSection');
+    
     if (currentUserName.includes('فتحي')) {
       window.currentAdminRole = 'super';
       if(companiesSec) companiesSec.style.display = 'block';
       if(settingsSec) settingsSec.style.display = 'block';
       loadCompanies();
       updateCompanyOptions();
+      
+      // إظهار كافة الأقسام للمشرف الرئيسي
+      document.querySelectorAll('.admin-tool-btn').forEach(btn => btn.style.display = 'flex');
     } else {
       window.currentAdminRole = 'sub';
       const staff = JSON.parse(localStorage.getItem('medea_staff') || '[]');
       const subName = currentUserName.replace('المسؤول: ', '').trim();
       const subInfo = staff.find(s => s.name === subName);
       window.currentAdminCompany = subInfo ? subInfo.companyName : '';
+      
       if(companiesSec) companiesSec.style.display = 'none';
       if(settingsSec) settingsSec.style.display = 'none';
+      
+      // فلترة الأقسام للمشرف الفرعي (إخفاء إدارة الموظفين والشركات)
+      document.querySelectorAll('.admin-tool-btn').forEach(btn => {
+        const action = btn.getAttribute('onclick');
+        if (action && (action.includes('manageStaffPage') || action.includes('companiesManagerSection'))) {
+          btn.style.display = 'none';
+        } else {
+          btn.style.display = 'flex';
+        }
+      });
     }
   }
 };
+// استبدال الدالة في النافذة
+window.loginAdmin = enhancedLoginAdmin;
 
 </script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js">
@@ -3769,39 +3808,52 @@ function updateCompanyOptions() {
   });
 }
 
-function getCompanyColor(companyName) {
-  if(!companyName) return 'var(--primary)';
-  let companies = JSON.parse(localStorage.getItem('medea_companies') || '[]');
-  let c = companies.find(x => x.name === companyName);
-  return c ? c.color : 'var(--primary)';
-}
-
-// تعديل دالة الدخول الأصلية
+// تعديل دالة الدخول الأصلية لتعمل مع ركن الشركات
 const originalLoginAdmin = window.loginAdmin;
-window.loginAdmin = function() {
+const enhancedLoginAdmin = function() {
+  // استدعاء الدالة الأصلية أولاً (التي تتعامل مع فتحي والمسؤولين)
   originalLoginAdmin();
+  
+  // بعد نجاح الدخول، نقوم بتعديل الواجهة بناءً على نوع المستخدم
   const adminPanel = document.getElementById('adminPanel');
   if (!adminPanel.classList.contains('hidden')) {
     const currentUserName = document.getElementById('adminCurrentUser').textContent;
     const companiesSec = document.getElementById('companiesManagerSection');
     const settingsSec = document.getElementById('adminSettingsSection');
+    
     if (currentUserName.includes('فتحي')) {
       window.currentAdminRole = 'super';
       if(companiesSec) companiesSec.style.display = 'block';
       if(settingsSec) settingsSec.style.display = 'block';
       loadCompanies();
       updateCompanyOptions();
+      
+      // إظهار كافة الأقسام للمشرف الرئيسي
+      document.querySelectorAll('.admin-tool-btn').forEach(btn => btn.style.display = 'flex');
     } else {
       window.currentAdminRole = 'sub';
       const staff = JSON.parse(localStorage.getItem('medea_staff') || '[]');
       const subName = currentUserName.replace('المسؤول: ', '').trim();
       const subInfo = staff.find(s => s.name === subName);
       window.currentAdminCompany = subInfo ? subInfo.companyName : '';
+      
       if(companiesSec) companiesSec.style.display = 'none';
       if(settingsSec) settingsSec.style.display = 'none';
+      
+      // فلترة الأقسام للمشرف الفرعي (إخفاء إدارة الموظفين والشركات)
+      document.querySelectorAll('.admin-tool-btn').forEach(btn => {
+        const action = btn.getAttribute('onclick');
+        if (action && (action.includes('manageStaffPage') || action.includes('companiesManagerSection'))) {
+          btn.style.display = 'none';
+        } else {
+          btn.style.display = 'flex';
+        }
+      });
     }
   }
 };
+// استبدال الدالة في النافذة
+window.loginAdmin = enhancedLoginAdmin;
 
 </script>
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js">
@@ -3856,39 +3908,52 @@ function updateCompanyOptions() {
   });
 }
 
-function getCompanyColor(companyName) {
-  if(!companyName) return 'var(--primary)';
-  let companies = JSON.parse(localStorage.getItem('medea_companies') || '[]');
-  let c = companies.find(x => x.name === companyName);
-  return c ? c.color : 'var(--primary)';
-}
-
-// تعديل دالة الدخول الأصلية
+// تعديل دالة الدخول الأصلية لتعمل مع ركن الشركات
 const originalLoginAdmin = window.loginAdmin;
-window.loginAdmin = function() {
+const enhancedLoginAdmin = function() {
+  // استدعاء الدالة الأصلية أولاً (التي تتعامل مع فتحي والمسؤولين)
   originalLoginAdmin();
+  
+  // بعد نجاح الدخول، نقوم بتعديل الواجهة بناءً على نوع المستخدم
   const adminPanel = document.getElementById('adminPanel');
   if (!adminPanel.classList.contains('hidden')) {
     const currentUserName = document.getElementById('adminCurrentUser').textContent;
     const companiesSec = document.getElementById('companiesManagerSection');
     const settingsSec = document.getElementById('adminSettingsSection');
+    
     if (currentUserName.includes('فتحي')) {
       window.currentAdminRole = 'super';
       if(companiesSec) companiesSec.style.display = 'block';
       if(settingsSec) settingsSec.style.display = 'block';
       loadCompanies();
       updateCompanyOptions();
+      
+      // إظهار كافة الأقسام للمشرف الرئيسي
+      document.querySelectorAll('.admin-tool-btn').forEach(btn => btn.style.display = 'flex');
     } else {
       window.currentAdminRole = 'sub';
       const staff = JSON.parse(localStorage.getItem('medea_staff') || '[]');
       const subName = currentUserName.replace('المسؤول: ', '').trim();
       const subInfo = staff.find(s => s.name === subName);
       window.currentAdminCompany = subInfo ? subInfo.companyName : '';
+      
       if(companiesSec) companiesSec.style.display = 'none';
       if(settingsSec) settingsSec.style.display = 'none';
+      
+      // فلترة الأقسام للمشرف الفرعي (إخفاء إدارة الموظفين والشركات)
+      document.querySelectorAll('.admin-tool-btn').forEach(btn => {
+        const action = btn.getAttribute('onclick');
+        if (action && (action.includes('manageStaffPage') || action.includes('companiesManagerSection'))) {
+          btn.style.display = 'none';
+        } else {
+          btn.style.display = 'flex';
+        }
+      });
     }
   }
 };
+// استبدال الدالة في النافذة
+window.loginAdmin = enhancedLoginAdmin;
 
 </script>
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js">
@@ -3943,39 +4008,52 @@ function updateCompanyOptions() {
   });
 }
 
-function getCompanyColor(companyName) {
-  if(!companyName) return 'var(--primary)';
-  let companies = JSON.parse(localStorage.getItem('medea_companies') || '[]');
-  let c = companies.find(x => x.name === companyName);
-  return c ? c.color : 'var(--primary)';
-}
-
-// تعديل دالة الدخول الأصلية
+// تعديل دالة الدخول الأصلية لتعمل مع ركن الشركات
 const originalLoginAdmin = window.loginAdmin;
-window.loginAdmin = function() {
+const enhancedLoginAdmin = function() {
+  // استدعاء الدالة الأصلية أولاً (التي تتعامل مع فتحي والمسؤولين)
   originalLoginAdmin();
+  
+  // بعد نجاح الدخول، نقوم بتعديل الواجهة بناءً على نوع المستخدم
   const adminPanel = document.getElementById('adminPanel');
   if (!adminPanel.classList.contains('hidden')) {
     const currentUserName = document.getElementById('adminCurrentUser').textContent;
     const companiesSec = document.getElementById('companiesManagerSection');
     const settingsSec = document.getElementById('adminSettingsSection');
+    
     if (currentUserName.includes('فتحي')) {
       window.currentAdminRole = 'super';
       if(companiesSec) companiesSec.style.display = 'block';
       if(settingsSec) settingsSec.style.display = 'block';
       loadCompanies();
       updateCompanyOptions();
+      
+      // إظهار كافة الأقسام للمشرف الرئيسي
+      document.querySelectorAll('.admin-tool-btn').forEach(btn => btn.style.display = 'flex');
     } else {
       window.currentAdminRole = 'sub';
       const staff = JSON.parse(localStorage.getItem('medea_staff') || '[]');
       const subName = currentUserName.replace('المسؤول: ', '').trim();
       const subInfo = staff.find(s => s.name === subName);
       window.currentAdminCompany = subInfo ? subInfo.companyName : '';
+      
       if(companiesSec) companiesSec.style.display = 'none';
       if(settingsSec) settingsSec.style.display = 'none';
+      
+      // فلترة الأقسام للمشرف الفرعي (إخفاء إدارة الموظفين والشركات)
+      document.querySelectorAll('.admin-tool-btn').forEach(btn => {
+        const action = btn.getAttribute('onclick');
+        if (action && (action.includes('manageStaffPage') || action.includes('companiesManagerSection'))) {
+          btn.style.display = 'none';
+        } else {
+          btn.style.display = 'flex';
+        }
+      });
     }
   }
 };
+// استبدال الدالة في النافذة
+window.loginAdmin = enhancedLoginAdmin;
 
 </script>
 
@@ -6127,6 +6205,10 @@ function addScheduleSector() {
       return;
     }    
     const sectors = JSON.parse(localStorage.getItem('medea_schedule') || '[]');
+    const staff = JSON.parse(localStorage.getItem('medea_staff') || '[]');
+    const driverInfo = staff.find(s => s.name === driver);
+    const companyName = driverInfo ? driverInfo.companyName : '';
+
     sectors.push({
       id: Date.now(),
       num: num,
@@ -6137,7 +6219,8 @@ function addScheduleSector() {
       catchup: catchup,
       driver: driver,
       phone: phone,
-      truckType: truckType
+      truckType: truckType,
+      companyName: companyName
     });
     
     localStorage.setItem('medea_schedule', JSON.stringify(sectors));
@@ -6170,11 +6253,25 @@ function loadScheduleSectors() {
       return;
     }
     
-    list.innerHTML = sectors.map(s => `
-      <div class="tonnage-card" id="sector-card-${s.id}">
+    const companies = JSON.parse(localStorage.getItem('medea_companies') || '[]');
+    
+    // فلترة المشرف الفرعي
+    let filteredSectors = sectors;
+    if (window.currentAdminRole === 'sub' && window.currentAdminCompany) {
+      filteredSectors = sectors.filter(s => s.companyName === window.currentAdminCompany);
+    }
+
+    list.innerHTML = filteredSectors.map(s => {
+      const company = companies.find(comp => comp.name === s.companyName);
+      const companyColor = company ? company.color : 'var(--primary)';
+      const companyLabel = s.companyName ? `<div class="tonnage-info"><b>🏢 الشركة:</b> <span style="color:${companyColor};font-weight:bold">${s.companyName}</span></div>` : '';
+
+      return `
+      <div class="tonnage-card" id="sector-card-${s.id}" style="border-right: 5px solid ${companyColor}">
         <div class="tonnage-info"><b>🏷️ رقم القطاع:</b> ${s.num || '-'}</div>
         <div class="tonnage-info"><b>🏛️ النوع:</b> ${s.type}</div>
         <div class="tonnage-info"><b>📍 الأحياء:</b> ${s.name}</div>
+        ${companyLabel}
         <div class="tonnage-info"><b>📅 الأيام:</b> ${s.days}</div>
         <div class="tonnage-info"><b>🕐 وقت المرور:</b> ${s.time}</div>
         <div class="tonnage-info"><b>⏳ الاستدراك:</b> ${s.catchup || '-'}</div>
@@ -6188,8 +6285,8 @@ function loadScheduleSectors() {
             <i class="fas fa-trash"></i> حذف
           </button>
         </div>
-      </div>
-    `).join('');
+      </div>`;
+    }).join('');
   } catch(e) {}
 }
 
@@ -8359,6 +8456,13 @@ function applyFilters() {
     if(st !== 'all') f = f.filter(r => st === 'pending' ? r.status === 'new' || r.status === 'assigned' : r.status === st);
     if(sr) f = f.filter(r => r.addr.toLowerCase().includes(sr) || (r.driverName && r.driverName.toLowerCase().includes(sr)));
     
+    // فلترة المشرف الفرعي
+    if (window.currentAdminRole === 'sub' && window.currentAdminCompany) {
+      const staff = JSON.parse(localStorage.getItem('medea_staff') || '[]');
+      const companyDrivers = staff.filter(s => s.companyName === window.currentAdminCompany).map(s => s.name);
+      f = f.filter(r => companyDrivers.includes(r.driverName));
+    }
+    
     renderReportsList(f);
   } catch(e) {}
 }
@@ -8609,18 +8713,25 @@ function loadStaffList() {
       return;
     }
     
-    c.innerHTML = s.map((x, i) => `
-      <div class="staff-item">
+    const companies = JSON.parse(localStorage.getItem('medea_companies') || '[]');
+    c.innerHTML = s.map((x, i) => {
+      const company = companies.find(comp => comp.name === x.companyName);
+      const companyColor = company ? company.color : 'var(--primary)';
+      const companyLabel = x.companyName ? `<br><small style="color:${companyColor};font-weight:bold"><i class="fas fa-building"></i> ${x.companyName}</small>` : '';
+      
+      return `
+      <div class="staff-item" style="border-right: 5px solid ${companyColor}">
         <div>
-          <b style="color:${getCompanyColor(x.companyName)}">${x.role}:</b> ${x.name}${x.companyName ? `<br><small style="color:#666;font-weight:bold">الشركة: ${x.companyName}</small>` : ""}
+          <b style="color:${companyColor}">${x.role}:</b> ${x.name}
+          ${companyLabel}
           ${x.phone ? `<br><a href="tel:${x.phone}" class="phone-link"><i class="fas fa-phone"></i> ${x.phone}</a>` : ''}
         </div>
         <div class="action-btns">
           <button class="edit-btn" onclick="editStaff(${i})"><i class="fas fa-edit"></i></button>
           <button class="delete-btn" onclick="deleteStaff(${i})"><i class="fas fa-trash"></i></button>
         </div>
-      </div>
-    `).join('');
+      </div>`;
+    }).join('');
   } catch(e) {}
 }
 
@@ -8646,11 +8757,12 @@ function addStaff() {
     s = stored ? JSON.parse(stored) : []; 
   } catch(e) { s = []; }
   
+  const companyName = document.getElementById('newStaffCompany').value;
   s.push({
     name: n, 
     role: r, 
     phone: p, 
-    companyName: document.getElementById("newStaffCompany").value, 
+    companyName: companyName,
     addedBy: 'فتحي', 
     addedDate: new Date().toLocaleDateString('ar-DZ')
   });
@@ -8684,15 +8796,13 @@ function editStaff(i) {
   const st = s[i];
   const nn = prompt('الاسم الجديد:', st.name);
   if(!nn) return;
+  
   const nr = prompt('المنصب الجديد:', st.role);
   if(!nr) return;
+  
   const np = prompt('الهاتف الجديد:', st.phone || '');
   
-  let companies = JSON.parse(localStorage.getItem('medea_companies') || '[]');
-  let compList = "أدخل اسم الشركة الجديدة من القائمة التالية:\n- اترك فارغاً لشركة البلدية\n" + companies.map(c => "- " + c.name).join("\n");
-  const nc = prompt(compList, st.companyName || "");
-  
-  s[i] = {name: nn, role: nr, phone: np, companyName: nc, addedBy: st.addedBy || 'فتحي', addedDate: st.addedDate || new Date().toLocaleDateString('ar-DZ')};
+  s[i] = {name: nn, role: nr, phone: np, addedBy: st.addedBy || 'فتحي', addedDate: st.addedDate || new Date().toLocaleDateString('ar-DZ')};
   try {
     localStorage.setItem('medea_staff', JSON.stringify(s));
     try { db.ref('staff').set(s).catch(()=>{}); } catch(e) {}
@@ -8868,18 +8978,30 @@ function updateDriversLivePanel() {
     const isActive = truckTrackingData && truckTrackingData.active;
     const activeDriver = truckTrackingData ? truckTrackingData.driver : '';
 
-    list.innerHTML = drivers.map(d => {
+    const companies = JSON.parse(localStorage.getItem('medea_companies') || '[]');
+    
+    // فلترة المشرف الفرعي
+    let filteredDrivers = drivers;
+    if (window.currentAdminRole === 'sub' && window.currentAdminCompany) {
+      filteredDrivers = drivers.filter(d => d.companyName === window.currentAdminCompany);
+    }
+
+    list.innerHTML = filteredDrivers.map(d => {
       const online = isActive && activeDriver === d.name;
       const sector = online ? (truckTrackingData.sector || '-') : '-';
       const bins   = online ? (truckTrackingData.collectedBins ? truckTrackingData.collectedBins.reduce((s,b)=>s+(parseInt(b.count)||1),0) : 0) : 0;
+      const company = companies.find(comp => comp.name === d.companyName);
+      const companyColor = company ? company.color : 'var(--primary)';
+      
       return `
-        <div class="driver-live-card ${online?'':'offline'}">
-          <div class="driver-live-dot ${online?'':'offline'}"></div>
+        <div class="driver-live-card ${online?'':'offline'}" style="border-right: 5px solid ${companyColor}">
+          <div class="driver-live-dot ${online?'':'offline'}" style="background-color: ${online ? companyColor : '#ccc'}"></div>
           <div class="driver-live-info">
-            <div class="driver-live-name">👤 ${d.name}</div>
+            <div class="driver-live-name" style="color:${companyColor}">👤 ${d.name}</div>
             <div class="driver-live-detail">${online ? '🟢 نشط — قطاع: '+sector+' | '+bins+' حاوية' : '⚫ غير نشط'}</div>
+            ${d.companyName ? `<div style="font-size:0.7rem;color:${companyColor};font-weight:bold">${d.companyName}</div>` : ''}
           </div>
-          ${d.phone ? `<a href="tel:${d.phone}" style="color:var(--primary);font-size:1.2rem"><i class="fas fa-phone"></i></a>` : ''}
+          ${d.phone ? `<a href="tel:${d.phone}" style="color:${companyColor};font-size:1.2rem"><i class="fas fa-phone"></i></a>` : ''}
         </div>`;
     }).join('');
   } catch(e) {}
@@ -10161,39 +10283,52 @@ function updateCompanyOptions() {
   });
 }
 
-function getCompanyColor(companyName) {
-  if(!companyName) return 'var(--primary)';
-  let companies = JSON.parse(localStorage.getItem('medea_companies') || '[]');
-  let c = companies.find(x => x.name === companyName);
-  return c ? c.color : 'var(--primary)';
-}
-
-// تعديل دالة الدخول الأصلية
+// تعديل دالة الدخول الأصلية لتعمل مع ركن الشركات
 const originalLoginAdmin = window.loginAdmin;
-window.loginAdmin = function() {
+const enhancedLoginAdmin = function() {
+  // استدعاء الدالة الأصلية أولاً (التي تتعامل مع فتحي والمسؤولين)
   originalLoginAdmin();
+  
+  // بعد نجاح الدخول، نقوم بتعديل الواجهة بناءً على نوع المستخدم
   const adminPanel = document.getElementById('adminPanel');
   if (!adminPanel.classList.contains('hidden')) {
     const currentUserName = document.getElementById('adminCurrentUser').textContent;
     const companiesSec = document.getElementById('companiesManagerSection');
     const settingsSec = document.getElementById('adminSettingsSection');
+    
     if (currentUserName.includes('فتحي')) {
       window.currentAdminRole = 'super';
       if(companiesSec) companiesSec.style.display = 'block';
       if(settingsSec) settingsSec.style.display = 'block';
       loadCompanies();
       updateCompanyOptions();
+      
+      // إظهار كافة الأقسام للمشرف الرئيسي
+      document.querySelectorAll('.admin-tool-btn').forEach(btn => btn.style.display = 'flex');
     } else {
       window.currentAdminRole = 'sub';
       const staff = JSON.parse(localStorage.getItem('medea_staff') || '[]');
       const subName = currentUserName.replace('المسؤول: ', '').trim();
       const subInfo = staff.find(s => s.name === subName);
       window.currentAdminCompany = subInfo ? subInfo.companyName : '';
+      
       if(companiesSec) companiesSec.style.display = 'none';
       if(settingsSec) settingsSec.style.display = 'none';
+      
+      // فلترة الأقسام للمشرف الفرعي (إخفاء إدارة الموظفين والشركات)
+      document.querySelectorAll('.admin-tool-btn').forEach(btn => {
+        const action = btn.getAttribute('onclick');
+        if (action && (action.includes('manageStaffPage') || action.includes('companiesManagerSection'))) {
+          btn.style.display = 'none';
+        } else {
+          btn.style.display = 'flex';
+        }
+      });
     }
   }
 };
+// استبدال الدالة في النافذة
+window.loginAdmin = enhancedLoginAdmin;
 
 </script>
 <script>
@@ -10566,39 +10701,52 @@ function updateCompanyOptions() {
   });
 }
 
-function getCompanyColor(companyName) {
-  if(!companyName) return 'var(--primary)';
-  let companies = JSON.parse(localStorage.getItem('medea_companies') || '[]');
-  let c = companies.find(x => x.name === companyName);
-  return c ? c.color : 'var(--primary)';
-}
-
-// تعديل دالة الدخول الأصلية
+// تعديل دالة الدخول الأصلية لتعمل مع ركن الشركات
 const originalLoginAdmin = window.loginAdmin;
-window.loginAdmin = function() {
+const enhancedLoginAdmin = function() {
+  // استدعاء الدالة الأصلية أولاً (التي تتعامل مع فتحي والمسؤولين)
   originalLoginAdmin();
+  
+  // بعد نجاح الدخول، نقوم بتعديل الواجهة بناءً على نوع المستخدم
   const adminPanel = document.getElementById('adminPanel');
   if (!adminPanel.classList.contains('hidden')) {
     const currentUserName = document.getElementById('adminCurrentUser').textContent;
     const companiesSec = document.getElementById('companiesManagerSection');
     const settingsSec = document.getElementById('adminSettingsSection');
+    
     if (currentUserName.includes('فتحي')) {
       window.currentAdminRole = 'super';
       if(companiesSec) companiesSec.style.display = 'block';
       if(settingsSec) settingsSec.style.display = 'block';
       loadCompanies();
       updateCompanyOptions();
+      
+      // إظهار كافة الأقسام للمشرف الرئيسي
+      document.querySelectorAll('.admin-tool-btn').forEach(btn => btn.style.display = 'flex');
     } else {
       window.currentAdminRole = 'sub';
       const staff = JSON.parse(localStorage.getItem('medea_staff') || '[]');
       const subName = currentUserName.replace('المسؤول: ', '').trim();
       const subInfo = staff.find(s => s.name === subName);
       window.currentAdminCompany = subInfo ? subInfo.companyName : '';
+      
       if(companiesSec) companiesSec.style.display = 'none';
       if(settingsSec) settingsSec.style.display = 'none';
+      
+      // فلترة الأقسام للمشرف الفرعي (إخفاء إدارة الموظفين والشركات)
+      document.querySelectorAll('.admin-tool-btn').forEach(btn => {
+        const action = btn.getAttribute('onclick');
+        if (action && (action.includes('manageStaffPage') || action.includes('companiesManagerSection'))) {
+          btn.style.display = 'none';
+        } else {
+          btn.style.display = 'flex';
+        }
+      });
     }
   }
 };
+// استبدال الدالة في النافذة
+window.loginAdmin = enhancedLoginAdmin;
 
 </script>
 </body></html>
