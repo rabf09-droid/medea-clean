@@ -4914,6 +4914,19 @@ function updateStats() {
 
     // [1] شريط إنجاز اليوم
     updateDailyAchievement();
+    
+    // إضافة زر الشهادة عند الوصول لـ 100 نقطة
+    if(userPoints >= 100 && !document.getElementById('certBtn')) {
+      const homePage = document.getElementById('home');
+      if(homePage) {
+        const btn = document.createElement('button');
+        btn.id = 'certBtn';
+        btn.className = 'btn btn-gold ripple';
+        btn.innerHTML = '<i class="fas fa-certificate"></i> تحميل شهادة التميز';
+        btn.onclick = () => MedeaCleanPro.generateCertificate('مواطن متميز', userPoints);
+        homePage.appendChild(btn);
+      }
+    }
   } catch(e) {}
 }
 
@@ -5230,6 +5243,7 @@ function sendReport() {
     // التعيين التلقائي للسائق (تحسين ذكي)
     try { autoAssign(newReport); } catch(e) { console.error("AutoAssign Error:", e); }
     
+    MedeaCleanPro.announce('شكراً على بلاغك القيم ، لقد ربحت 10 نقاط');
     showToast('✅ تم الإرسال! +10 نقاط 🎉', 'success');
     document.getElementById('thanksOverlay').style.display = 'flex';
     
@@ -5300,10 +5314,14 @@ function loginAdmin() {
       document.getElementById('adminLogin').classList.add('hidden');
       document.getElementById('adminPanel').classList.remove('hidden');
       currentAdminName = 'فتحي';
+      currentAdminRole = 'super';
+      currentAdminCompany = '';
       document.getElementById('adminCurrentUser').textContent = 'المشرف الرئيسي: فتحي';
       const settingsSection = document.getElementById('adminSettingsSection');
       if(settingsSection) settingsSection.style.display = 'block';
       var cb = document.getElementById('clearDataBtn'); if(cb) cb.style.display = 'block';
+      MedeaCleanPro.announce('مرحباً بك يا فتحي ، لوحة التحكم جاهزة');
+      MedeaCleanPro.renderLegend();
       updateStats();
       showToast('✓ دخول ناجح - أنت المشرف الرئيسي', 'success');
     } else {
@@ -5315,18 +5333,27 @@ function loginAdmin() {
     const subName = (document.getElementById('subAdminName')?.value || '').trim();
     if(!subName) { showToast('⚠️ أدخل اسمك أولاً', 'error'); return; }
 
-    const isApprovedAdmin = staff.some(s =>
+    const subAdmin = staff.find(s =>
       s.name && s.name.trim() === subName && s.role &&
       (s.role.includes('مشرف') || s.role.includes('مسؤول'))
     );
-    if(isApprovedAdmin) {
+    
+    if(subAdmin) {
       document.getElementById('adminLogin').classList.add('hidden');
       document.getElementById('adminPanel').classList.remove('hidden');
       currentAdminName = subName;
-      document.getElementById('adminCurrentUser').textContent = 'المسؤول: ' + subName;
+      currentAdminRole = 'sub';
+      currentAdminCompany = subAdmin.companyName || ''; // حفظ اسم الشركة
+      
+      const companyDisplay = currentAdminCompany ? ' - ' + currentAdminCompany : '';
+      document.getElementById('adminCurrentUser').textContent = 'المسؤول: ' + subName + companyDisplay;
+      
       // إخفاء الإعدادات الرئيسية عن المسؤول الفرعي
       const settingsSection = document.getElementById('adminSettingsSection');
       if(settingsSection) settingsSection.style.display = 'none';
+      
+      MedeaCleanPro.announce('مرحباً ' + subName + '، أهلاً بك في لوحة التحكم');
+      MedeaCleanPro.renderLegend();
       updateStats();
       showToast('✓ دخول ناجح - مرحباً ' + subName, 'success');
     } else {
@@ -5364,6 +5391,8 @@ function changeAdminPassword() {
 }
 
 function logoutAdmin() {
+  currentAdminRole = 'super';
+  currentAdminCompany = '';
   document.getElementById('adminPanel').classList.add('hidden');
   document.getElementById('adminLogin').classList.remove('hidden');
   // تصفير الحقول
@@ -8720,7 +8749,7 @@ function loadStaffList() {
       const companyLabel = x.companyName ? `<br><small style="color:${companyColor};font-weight:bold"><i class="fas fa-building"></i> ${x.companyName}</small>` : '';
       
       return `
-      <div class="staff-item" style="border-right: 5px solid ${companyColor}">
+      <div class="staff-item" style="border-right: 5px solid ${getCompanyColor(s[i].companyName)}">
         <div>
           <b style="color:${companyColor}">${x.role}:</b> ${x.name}
           ${companyLabel}
@@ -8757,7 +8786,7 @@ function addStaff() {
     s = stored ? JSON.parse(stored) : []; 
   } catch(e) { s = []; }
   
-  const companyName = document.getElementById('newStaffCompany').value;
+  const companyName = document.getElementById('newStaffCompany').value || '';
   s.push({
     name: n, 
     role: r, 
@@ -8802,7 +8831,7 @@ function editStaff(i) {
   
   const np = prompt('الهاتف الجديد:', st.phone || '');
   
-  s[i] = {name: nn, role: nr, phone: np, addedBy: st.addedBy || 'فتحي', addedDate: st.addedDate || new Date().toLocaleDateString('ar-DZ')};
+  s[i] = {name: nn, role: nr, phone: np, companyName: st.companyName || '', addedBy: st.addedBy || 'فتحي', addedDate: st.addedDate || new Date().toLocaleDateString('ar-DZ')};
   try {
     localStorage.setItem('medea_staff', JSON.stringify(s));
     try { db.ref('staff').set(s).catch(()=>{}); } catch(e) {}
@@ -8841,6 +8870,145 @@ function backToAdmin() {
 
 // ===== متغير عام لتتبع المشرف الحالي =====
 var currentAdminName = '';
+var currentAdminRole = 'super'; // 'super' أو 'sub'
+var currentAdminCompany = ''; // اسم الشركة للمشرف الفرعي
+
+// ===== نظام الشركات المتعدد =====
+const MedeaCompanies = {
+  'public': { name: 'بلدية المدية', color: '#006233', icon: 'fa-university', phone: '025123456' },
+  'company_A': { name: 'شركة الأمل للنظافة', color: '#1d4ed8', icon: 'fa-truck-moving', phone: '0555112233' },
+  'company_B': { name: 'مؤسسة النقاء', color: '#b45309', icon: 'fa-recycle', phone: '0666445566' },
+  'company_C': { name: 'شركة تدوير تيتري', color: '#be185d', icon: 'fa-leaf', phone: '0777889900' },
+  'sweeping_A': { name: 'فرقة الكنس الحضري', color: '#f59e0b', icon: 'fa-broom', phone: '0555998877' }
+};
+
+function getCompanyColor(companyName) {
+  for(let key in MedeaCompanies) {
+    if(MedeaCompanies[key].name === companyName) return MedeaCompanies[key].color;
+  }
+  return '#999';
+}
+
+function getCompanyName(companyId) {
+  return MedeaCompanies[companyId]?.name || 'عام';
+}
+
+// ===== نظام MedeaCleanPro المتقدم =====
+const MedeaCleanPro = {
+  // --- المساعد الصوتي ---
+  announce: function(text) {
+    try {
+      if('speechSynthesis' in window) {
+        window.speechSynthesis.cancel();
+        const msg = new SpeechSynthesisUtterance(text);
+        msg.lang = currentLang === 'ar' ? 'ar-SA' : currentLang === 'fr' ? 'fr-FR' : 'en-US';
+        msg.rate = 0.9;
+        msg.pitch = 1;
+        window.speechSynthesis.speak(msg);
+      }
+    } catch(e) { console.error('Voice Error:', e); }
+  },
+
+  // --- نظام الشهادات الرقمية ---
+  generateCertificate: function(userName, score) {
+    try {
+      const canvas = document.createElement('canvas');
+      canvas.width = 800; canvas.height = 600;
+      const ctx = canvas.getContext('2d');
+      
+      // خلفية بيضاء
+      ctx.fillStyle = '#fff';
+      ctx.fillRect(0, 0, 800, 600);
+      
+      // إطار ذهبي
+      ctx.strokeStyle = '#006233';
+      ctx.lineWidth = 15;
+      ctx.strokeRect(20, 20, 760, 560);
+      
+      // عنوان
+      ctx.textAlign = 'center';
+      ctx.font = 'bold 45px Cairo';
+      ctx.fillStyle = '#006233';
+      ctx.fillText('شهادة فخر من ولاية المدية', 400, 100);
+      
+      // النص
+      ctx.fillStyle = '#333';
+      ctx.font = '30px Cairo';
+      ctx.fillText('نشكر المواطن المتميز:', 400, 220);
+      
+      // الاسم
+      ctx.fillStyle = '#c09300';
+      ctx.font = 'bold 50px Cairo';
+      ctx.fillText(userName, 400, 320);
+      
+      // الرسالة
+      ctx.fillStyle = '#333';
+      ctx.font = '25px Cairo';
+      ctx.fillText(`لمساهمته الفعالة في نظافة البيئة بـ ${score} نقطة`, 400, 420);
+      
+      // تحميل
+      const link = document.createElement('a');
+      link.download = `MedeaCertificate_${userName}_${Date.now()}.png`;
+      link.href = canvas.toDataURL();
+      link.click();
+      
+      this.announce('تهانيناً، تم إصدار شهادتك بنجاح');
+      showToast('✅ تم تحميل الشهادة بنجاح', 'success');
+    } catch(e) {
+      console.error('Certificate Error:', e);
+      showToast('⚠️ خطأ في إصدار الشهادة', 'error');
+    }
+  },
+
+  // --- نظام قبل وبعد ---
+  completeTaskWithPhotos: async function(taskId, beforeImage, afterImage) {
+    try {
+      const update = {
+        status: 'done',
+        completedAt: new Date().toISOString(),
+        beforeImage: beforeImage,
+        afterImage: afterImage
+      };
+      updateReport(taskId, update);
+      this.announce('جاري توثيق إتمام المهمة، شكراً لجهودك');
+      showToast('✅ تم توثيق نظافة المكان بنجاح', 'success');
+    } catch(e) {
+      console.error('Task Completion Error:', e);
+    }
+  },
+
+  // --- معالجة الأوفلاين ---
+  initOfflineHandler: function() {
+    window.addEventListener('online', () => {
+      const queue = JSON.parse(localStorage.getItem('medea_offline_queue') || '[]');
+      if(queue.length > 0) {
+        this.announce('تم استعادة الاتصال، جاري مزامنة البيانات');
+        localStorage.removeItem('medea_offline_queue');
+      }
+    });
+  },
+
+  // --- دليل الخريطة ---
+  renderLegend: function() {
+    if(document.getElementById('medea-legend')) return;
+    const legend = document.createElement('div');
+    legend.id = 'medea-legend';
+    legend.className = 'card';
+    legend.style.cssText = 'position:fixed; bottom:80px; right:20px; z-index:1100; width:220px; max-height:300px; overflow-y:auto;';
+    
+    let items = Object.values(MedeaCompanies).map(c => `
+      <div style="display:flex; align-items:center; margin:8px 0; font-size:0.85rem; font-weight:bold;">
+        <span style="width:12px; height:12px; border-radius:50%; background:${c.color}; margin-left:10px;"></span>
+        <span>${c.name}</span>
+      </div>`).join('');
+    
+    legend.innerHTML = `<h4 style="margin-bottom:10px; color:var(--primary);"><i class="fas fa-layer-group"></i> قطاعات المدية</h4>${items}`;
+    document.body.appendChild(legend);
+  }
+};
+
+// تفعيل معالجة الأوفلاين عند بدء التطبيق
+MedeaCleanPro.initOfflineHandler();
 
 // ===== بيانات تجريبية =====
 function loadDemoData() {
