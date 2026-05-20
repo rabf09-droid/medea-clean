@@ -2923,7 +2923,7 @@ select.input {
       
         <div style="margin-bottom:10px">
           <label style="display:block;margin-bottom:5px;font-size:0.85rem;font-weight:700">الشركة التابع لها:</label>
-          <select id="newStaffCompany" class="input">
+          <select id="newStaffCompany" class="input" onfocus="updateCompanyDropdown()">
             <option value="">شركة عامة (البلدية)</option>
           </select>
         </div>
@@ -4894,8 +4894,15 @@ function deleteFromCloud(path, itemId) {
 // ===== الإحصائيات =====
 function updateStats() {
   try {
-    document.getElementById('statTotal').textContent = allReports.length;
-    document.getElementById('statDone').textContent = allReports.filter(r => r.status === 'done').length;
+    let filteredReports = allReports;
+    if (currentAdminRole === 'sub' && currentAdminCompany) {
+      const staff = JSON.parse(localStorage.getItem('medea_staff') || '[]');
+      const companyDrivers = staff.filter(s => s.companyName === currentAdminCompany).map(s => s.name);
+      filteredReports = allReports.filter(r => companyDrivers.includes(r.driverName));
+    }
+
+    document.getElementById('statTotal').textContent = filteredReports.length;
+    document.getElementById('statDone').textContent = filteredReports.filter(r => r.status === 'done').length;
     
     const recycled = wasteTracking.filter(w => w.status === 'published').reduce((sum, w) => sum + parseFloat(w.qty || 0), 0);
     const sorted = wasteTracking.filter(w => w.status === 'sorted').length;
@@ -5323,6 +5330,7 @@ function loginAdmin() {
       MedeaCleanPro.announce('مرحباً بك يا فتحي ، لوحة التحكم جاهزة');
       MedeaCleanPro.renderLegend();
       updateStats();
+      updateDriversLivePanel();
       showToast('✓ دخول ناجح - أنت المشرف الرئيسي', 'success');
     } else {
       showToast('✗ اسم أو رمز خاطئ', 'error');
@@ -5355,6 +5363,7 @@ function loginAdmin() {
       MedeaCleanPro.announce('مرحباً ' + subName + '، أهلاً بك في لوحة التحكم');
       MedeaCleanPro.renderLegend();
       updateStats();
+      updateDriversLivePanel();
       showToast('✓ دخول ناجح - مرحباً ' + subName, 'success');
     } else {
       showToast('✗ هذا الاسم غير مسجّل كمسؤول — تأكد من الاسم أو اطلب من المشرف الرئيسي إضافتك', 'error');
@@ -8486,9 +8495,9 @@ function applyFilters() {
     if(sr) f = f.filter(r => r.addr.toLowerCase().includes(sr) || (r.driverName && r.driverName.toLowerCase().includes(sr)));
     
     // فلترة المشرف الفرعي
-    if (window.currentAdminRole === 'sub' && window.currentAdminCompany) {
+    if (currentAdminRole === 'sub' && currentAdminCompany) {
       const staff = JSON.parse(localStorage.getItem('medea_staff') || '[]');
-      const companyDrivers = staff.filter(s => s.companyName === window.currentAdminCompany).map(s => s.name);
+      const companyDrivers = staff.filter(s => s.companyName === currentAdminCompany).map(s => s.name);
       f = f.filter(r => companyDrivers.includes(r.driverName));
     }
     
@@ -8806,6 +8815,7 @@ function addStaff() {
     document.getElementById('newStaffPhone').value = '';
     
     loadStaffList();
+    MedeaCleanPro.renderLegend();
     showToast('✅ تم إضافة ' + n + ' بنجاح', 'success');
   } catch(e) {
     showToast('⚠️ فشل حفظ البيانات في المتصفح', 'error');
@@ -8857,6 +8867,7 @@ function deleteStaff(i) {
     try { db.ref('staff').set(s).catch(()=>{}); } catch(e) {}
   } catch(e) {}
   loadStaffList();
+  MedeaCleanPro.renderLegend();
   showToast('✅ تم الحذف بواسطة فتحي', 'success');
 }
 
@@ -8873,25 +8884,66 @@ var currentAdminName = '';
 var currentAdminRole = 'super'; // 'super' أو 'sub'
 var currentAdminCompany = ''; // اسم الشركة للمشرف الفرعي
 
-// ===== نظام الشركات المتعدد =====
-const MedeaCompanies = {
-  'public': { name: 'بلدية المدية', color: '#006233', icon: 'fa-university', phone: '025123456' },
-  'company_A': { name: 'شركة الأمل للنظافة', color: '#1d4ed8', icon: 'fa-truck-moving', phone: '0555112233' },
-  'company_B': { name: 'مؤسسة النقاء', color: '#b45309', icon: 'fa-recycle', phone: '0666445566' },
-  'company_C': { name: 'شركة تدوير تيتري', color: '#be185d', icon: 'fa-leaf', phone: '0777889900' },
-  'sweeping_A': { name: 'فرقة الكنس الحضري', color: '#f59e0b', icon: 'fa-broom', phone: '0555998877' }
-};
+// ===== نظام الشركات الديناميكي =====
+const MedeaColors = ['#006233', '#1d4ed8', '#b45309', '#be185d', '#f59e0b', '#6366f1', '#8b5cf6', '#ec4899', '#10b981'];
 
 function getCompanyColor(companyName) {
-  for(let key in MedeaCompanies) {
-    if(MedeaCompanies[key].name === companyName) return MedeaCompanies[key].color;
-  }
-  return '#999';
+  if (!companyName || companyName === 'بلدية المدية') return '#006233';
+  const staff = JSON.parse(localStorage.getItem('medea_staff') || '[]');
+  const companies = [...new Set(staff.map(s => s.companyName).filter(c => c && c !== ''))];
+  const index = companies.indexOf(companyName);
+  return index !== -1 ? MedeaColors[(index + 1) % MedeaColors.length] : '#999';
 }
 
-function getCompanyName(companyId) {
-  return MedeaCompanies[companyId]?.name || 'عام';
+function getAllCompanies() {
+  const staff = JSON.parse(localStorage.getItem('medea_staff') || '[]');
+  const companyNames = [...new Set(staff.map(s => s.companyName).filter(c => c && c !== ''))];
+  const companies = [{ name: 'بلدية المدية', color: '#006233' }];
+  companyNames.forEach(name => {
+    if (name !== 'بلدية المدية') {
+      companies.push({ name: name, color: getCompanyColor(name) });
+    }
+  });
+  return companies;
 }
+
+function updateCompanyDropdown() {
+  const sel = document.getElementById('newStaffCompany');
+  if (!sel) return;
+  const currentVal = sel.value;
+  const staff = JSON.parse(localStorage.getItem('medea_staff') || '[]');
+  const companies = [...new Set(staff.map(s => s.companyName).filter(c => c && c !== ''))];
+  
+  let html = '<option value="">شركة عامة (البلدية)</option>';
+  companies.forEach(c => {
+    if (c !== 'بلدية المدية') {
+      html += `<option value="${c}">${c}</option>`;
+    }
+  });
+  
+  // إضافة خيار لإضافة شركة جديدة
+  html += '<option value="__new__">+ إضافة شركة جديدة...</option>';
+  
+  sel.innerHTML = html;
+  sel.value = currentVal;
+}
+
+// مراقبة تغيير الاختيار لإضافة شركة جديدة
+document.addEventListener('change', function(e) {
+  if (e.target && e.target.id === 'newStaffCompany' && e.target.value === '__new__') {
+    const newComp = prompt('أدخل اسم الشركة الجديدة:');
+    if (newComp && newComp.trim()) {
+      const sel = e.target;
+      const opt = document.createElement('option');
+      opt.value = newComp.trim();
+      opt.textContent = newComp.trim();
+      sel.insertBefore(opt, sel.lastChild);
+      sel.value = newComp.trim();
+    } else {
+      e.target.value = '';
+    }
+  }
+});
 
 // ===== نظام MedeaCleanPro المتقدم =====
 const MedeaCleanPro = {
@@ -8990,13 +9042,14 @@ const MedeaCleanPro = {
 
   // --- دليل الخريطة ---
   renderLegend: function() {
-    if(document.getElementById('medea-legend')) return;
+    if(document.getElementById('medea-legend')) document.getElementById('medea-legend').remove();
     const legend = document.createElement('div');
     legend.id = 'medea-legend';
     legend.className = 'card';
     legend.style.cssText = 'position:fixed; bottom:80px; right:20px; z-index:1100; width:220px; max-height:300px; overflow-y:auto;';
     
-    let items = Object.values(MedeaCompanies).map(c => `
+    const companies = getAllCompanies();
+    let items = companies.map(c => `
       <div style="display:flex; align-items:center; margin:8px 0; font-size:0.85rem; font-weight:bold;">
         <span style="width:12px; height:12px; border-radius:50%; background:${c.color}; margin-left:10px;"></span>
         <span>${c.name}</span>
@@ -9146,20 +9199,17 @@ function updateDriversLivePanel() {
     const isActive = truckTrackingData && truckTrackingData.active;
     const activeDriver = truckTrackingData ? truckTrackingData.driver : '';
 
-    const companies = JSON.parse(localStorage.getItem('medea_companies') || '[]');
-    
     // فلترة المشرف الفرعي
     let filteredDrivers = drivers;
-    if (window.currentAdminRole === 'sub' && window.currentAdminCompany) {
-      filteredDrivers = drivers.filter(d => d.companyName === window.currentAdminCompany);
+    if (currentAdminRole === 'sub' && currentAdminCompany) {
+      filteredDrivers = drivers.filter(d => d.companyName === currentAdminCompany);
     }
 
     list.innerHTML = filteredDrivers.map(d => {
       const online = isActive && activeDriver === d.name;
       const sector = online ? (truckTrackingData.sector || '-') : '-';
       const bins   = online ? (truckTrackingData.collectedBins ? truckTrackingData.collectedBins.reduce((s,b)=>s+(parseInt(b.count)||1),0) : 0) : 0;
-      const company = companies.find(comp => comp.name === d.companyName);
-      const companyColor = company ? company.color : 'var(--primary)';
+      const companyColor = getCompanyColor(d.companyName);
       
       return `
         <div class="driver-live-card ${online?'':'offline'}" style="border-right: 5px solid ${companyColor}">
