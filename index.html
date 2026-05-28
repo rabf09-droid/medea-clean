@@ -545,7 +545,7 @@ select.input { appearance:none; background-image:url("data:image/svg+xml,%3Csvg 
     <h2>المدية نظيفة</h2>
     <p>اختر دورك للمتابعة</p>
     <div class="device-buttons">
-      <button class="role-btn citizen" onclick="selectRole('citizen')">
+      <button class="role-btn citizen" onclick="selectRole('citizen')" aria-label="الدخول بصفة مواطن">
         <div class="role-btn-icon">👤</div>
         <div class="role-btn-body">
           <span class="role-btn-title">مواطن</span>
@@ -553,7 +553,7 @@ select.input { appearance:none; background-image:url("data:image/svg+xml,%3Csvg 
         </div>
         <div class="role-btn-arrow"><i class="fas fa-chevron-left"></i></div>
       </button>
-      <button class="role-btn driver" onclick="selectRole('driver')">
+      <button class="role-btn driver" onclick="selectRole('driver')" aria-label="الدخول بصفة سائق">
         <div class="role-btn-icon">🚛</div>
         <div class="role-btn-body">
           <span class="role-btn-title">سائق</span>
@@ -561,7 +561,7 @@ select.input { appearance:none; background-image:url("data:image/svg+xml,%3Csvg 
         </div>
         <div class="role-btn-arrow"><i class="fas fa-chevron-left"></i></div>
       </button>
-      <button class="role-btn admin" onclick="selectRole('admin')">
+      <button class="role-btn admin" onclick="selectRole('admin')" aria-label="الدخول بصفة إدارة">
         <div class="role-btn-icon">🏛️</div>
         <div class="role-btn-body">
           <span class="role-btn-title">الإدارة</span>
@@ -571,8 +571,8 @@ select.input { appearance:none; background-image:url("data:image/svg+xml,%3Csvg 
       </button>
       <div class="device-divider">أو اختر نوع الجهاز مباشرة</div>
       <div class="device-sub-row">
-        <button class="device-sub-btn" onclick="selectDevice('desktop')"><i class="fas fa-laptop"></i> الكمبيوتر</button>
-        <button class="device-sub-btn" onclick="selectDevice('mobile')"><i class="fas fa-mobile-alt"></i> الهاتف</button>
+        <button class="device-sub-btn" onclick="selectDevice('desktop')" aria-label="تفعيل وضع جهاز الكمبيوتر"><i class="fas fa-laptop"></i> الكمبيوتر</button>
+        <button class="device-sub-btn" onclick="selectDevice('mobile')" aria-label="تفعيل وضع الهاتف المحمول"><i class="fas fa-mobile-alt"></i> الهاتف</button>
       </div>
     </div>
   </div>
@@ -675,8 +675,8 @@ select.input { appearance:none; background-image:url("data:image/svg+xml,%3Csvg 
         <button class="btn btn-purple ripple" onclick="loadDemoData()" aria-label="تحميل بيانات تجريبية"><i class="fas fa-dice"></i> بيانات تجريبية</button>
         <button class="btn btn-dark ripple" onclick="openPrintDialog()" aria-label="طباعة التقارير بصيغة بي دي إف"><i class="fas fa-print"></i> طباعة PDF</button>
       </div>
-      <button class="btn btn-purple ripple" onclick="showPage('dashboard')" style="margin-top:10px"><i class="fas fa-chart-bar"></i> لوحة الإحصائيات</button>
-      <button class="btn btn-secondary ripple" onclick="exitApp()"><i class="fas fa-sign-out-alt"></i> الخروج</button>
+      <button class="btn btn-purple ripple" onclick="showPage('dashboard')" style="margin-top:10px" aria-label="عرض لوحة الإحصائيات والرسوم البيانية"><i class="fas fa-chart-bar"></i> لوحة الإحصائيات</button>
+      <button class="btn btn-secondary ripple" onclick="exitApp()" aria-label="الخروج من التطبيق"><i class="fas fa-sign-out-alt"></i> الخروج</button>
     </div>
     <div class="card hover-lift">
       <h3>✨ الخدمات</h3>
@@ -714,8 +714,8 @@ select.input { appearance:none; background-image:url("data:image/svg+xml,%3Csvg 
     <div class="card hover-lift role-section" data-roles="admin" style="margin-top:12px">
       <h3>👥 الرواق</h3>
       <div class="grid-2">
-        <button class="btn btn-warning sb2 ripple" onclick="showPage('driver')"><i class="fas fa-truck-loading"></i> السائقين</button>
-        <button class="btn btn-dark sb2 ripple" onclick="showPage('admin')"><i class="fas fa-shield-alt"></i> الإدارة</button>
+        <button class="btn btn-warning sb2 ripple" onclick="showPage('driver')" aria-label="فتح لوحة تحكم السائقين"><i class="fas fa-truck-loading"></i> السائقين</button>
+        <button class="btn btn-dark sb2 ripple" onclick="showPage('admin')" aria-label="فتح لوحة تحكم الإدارة"><i class="fas fa-shield-alt"></i> الإدارة</button>
       </div>
     </div>
   </div>
@@ -1681,9 +1681,10 @@ let _ttsCurrent=null;
 function tts(text){try{if(!('speechSynthesis' in window))return;if(_ttsCurrent){window.speechSynthesis.cancel();_ttsCurrent=null;}const utt=new SpeechSynthesisUtterance(text);utt.lang='ar-DZ';utt.rate=0.9;const voices=window.speechSynthesis.getVoices();const av=voices.find(v=>v.lang&&v.lang.startsWith('ar'));if(av)utt.voice=av;utt.onend=()=>{_ttsCurrent=null;};_ttsCurrent=utt;window.speechSynthesis.speak(utt);}catch(e){}}
 function ttsBtn(text,el){try{if(_ttsCurrent){window.speechSynthesis.cancel();_ttsCurrent=null;document.querySelectorAll('.tts-btn.speaking, .btn.speaking, .role-btn.speaking, .stat-box.speaking').forEach(b=>b.classList.remove('speaking'));if(el)el.classList.remove('speaking');return;}if(el)el.classList.add('speaking');const utt=new SpeechSynthesisUtterance(text);utt.lang='ar-DZ';utt.rate=0.9;const voices=window.speechSynthesis.getVoices();const av=voices.find(v=>v.lang&&v.lang.startsWith('ar'));if(av)utt.voice=av;utt.onend=()=>{_ttsCurrent=null;if(el)el.classList.remove('speaking');};_ttsCurrent=utt;window.speechSynthesis.speak(utt);}catch(e){}}
 function initAutoTTS(){
-  const elements = document.querySelectorAll('button, .role-btn, .stat-box, .device-sub-btn, .lang-btn, .nav-btn, .cam-box, .download-btn');
+  const elements = document.querySelectorAll('button, .role-btn, .stat-box, .device-sub-btn, .lang-btn, .nav-btn, .cam-box, .download-btn, .theme-toggle, .lang-container button');
   elements.forEach(el => {
-    const speak = () => {
+    // Mouse enter for identification
+    el.addEventListener('mouseenter', () => {
       let text = el.getAttribute('aria-label') || el.innerText || el.textContent;
       if (text) {
         text = text.replace(/[\u1F600-\u1F64F]|[\u2700-\u27BF]|[\u1F300-\u1F5FF]|[\u1F680-\u1F6FF]|[\u2600-\u26FF]|[\u1F1E0-\u1F1FF]/g, '').trim();
@@ -1693,9 +1694,66 @@ function initAutoTTS(){
           setTimeout(() => { el._lastSpoken = null; }, 2000);
         }
       }
-    };
-    el.addEventListener('mouseenter', speak);
-    el.addEventListener('click', speak);
+    });
+    // Click for action explanation
+    el.addEventListener('click', () => {
+      let label = el.getAttribute('aria-label') || el.innerText || el.textContent;
+      label = label.replace(/[\u1F600-\u1F64F]|[\u2700-\u27BF]|[\u1F300-\u1F5FF]|[\u1F680-\u1F6FF]|[\u2600-\u26FF]|[\u1F1E0-\u1F1FF]/g, '').trim();
+      let actionText = "جاري " + label;
+      
+      // Custom mapping for more natural action descriptions
+      const customActions = {
+        "إرسال تبليغ": "جاري فتح صفحة إرسال تبليغ جديد",
+        "التقاط الصورة": "جاري فتح الكاميرا لالتقاط صورة",
+        "تحديد الموقع GPS": "جاري تحديد موقعك الحالي عبر القمر الصناعي",
+        "إدخال يدوي": "جاري فتح لوحة المفاتيح لإدخال الموقع يدوياً",
+        "توجيه للسائق": "جاري إرسال هذا البلاغ إلى السائق المكلف",
+        "إنجاز + إشعار": "جاري تأكيد الإنجاز وإرسال رسالة للمواطن",
+        "حذف": "جاري حذف هذا البلاغ نهائياً",
+        "طباعة": "جاري تحضير التقرير للطباعة",
+        "QR": "جاري عرض رمز الاستجابة السريعة",
+        "قبل": "جاري تحميل صورة ما قبل التنظيف",
+        "بعد": "جاري تحميل صورة ما بعد التنظيف",
+        "تقرير": "جاري تحميل التقرير التفصيلي",
+        "مواطن": "تم الدخول بصفة مواطن",
+        "سائق": "تم الدخول بصفة سائق",
+        "الإدارة": "تم الدخول بصفة مدير النظام",
+        "الخروج": "جاري تسجيل الخروج من التطبيق",
+        "جدول الجمع": "جاري فتح جدول مواعيد جمع النفايات",
+        "توعية": "جاري فتح نصائح وإرشادات النظافة",
+        "طلباتي": "جاري عرض قائمة طلباتك السابقة",
+        "حاسبة التدوير": "جاري فتح أداة حساب توفير التدوير",
+        "مركز الفرز": "جاري الدخول إلى نظام مركز الفرز",
+        "سوق التدوير": "جاري فتح متجر المواد القابلة للتدوير",
+        "تتبع مسار الشاحنات": "جاري عرض الخريطة المباشرة لمسار الشاحنات",
+        "نظرة شاملة": "جاري عرض الإحصائيات العامة لكافة القطاعات",
+        "بيانات تجريبية": "جاري ملء التطبيق ببيانات وهمية للتجربة",
+        "تبديل الوضع": "جاري تغيير مظهر التطبيق بين الليلي والنهاري",
+        "العربية": "تم تغيير لغة التطبيق إلى العربية",
+        "Français": "La langue a été changée en français",
+        "English": "Language has been changed to English",
+        "تغيير الدور": "جاري العودة لشاشة اختيار نوع المستخدم",
+        "دخول المسؤول": "جاري التحقق من بيانات دخول الإدارة",
+        "خروج المسؤول": "جاري تسجيل الخروج من لوحة الإدارة",
+        "تغيير الرمز": "جاري تحديث رمز الدخول السري",
+        "إضافة شركة": "جاري تسجيل شركة نظافة جديدة",
+        "إضافة موظف": "جاري تسجيل موظف أو سائق جديد في النظام",
+        "حفظ الجدول": "جاري حفظ تحديثات جدول جمع النفايات",
+        "إرسال الطلب": "جاري إرسال طلبك إلى مصلحة النظافة",
+        "تأكيد": "جاري تأكيد العملية",
+        "إلغاء": "تم إلغاء العملية",
+        "رجوع": "جاري العودة للصفحة السابقة"
+      };
+      
+      for (let key in customActions) {
+        if (label.includes(key)) {
+          actionText = customActions[key];
+          break;
+        }
+      }
+      
+      tts(actionText);
+    });
   });
 }
 window.addEventListener('DOMContentLoaded', initAutoTTS);
@@ -2069,7 +2127,7 @@ window.addEventListener('DOMContentLoaded',()=>{
     fanfare:()=>{[[523,0.10],[523,0.10],[523,0.10],[659,0.30]].forEach(([f,d],i)=>playTone(f,d,'sine',0.20,i*0.11));playTone(784,0.35,'sine',0.20,0.45);},
     download:()=>{playTone(440,0.07,'triangle',0.14,0);playTone(550,0.12,'triangle',0.14,0.09);}
   };
-  const origShowToast=window.showToast;window.showToast=(msg,type='success')=>{try{if(type==='success')SFX.success();else if(type==='error')SFX.error();else SFX.info();}catch(e){}return origShowToast(msg,type);};
+  const origShowToast=window.showToast;window.showToast=(msg,type='success')=>{try{if(type==='success')SFX.success();else if(type==='error')SFX.error();else SFX.info();tts(msg);}catch(e){}return origShowToast(msg,type);};
   const origSelectRole=window.selectRole;window.selectRole=function(){try{SFX.welcome();}catch(e){}return origSelectRole.apply(this,arguments);};
   const origGoBack=window.goBackToSelector;window.goBackToSelector=function(){try{SFX.goodbye();}catch(e){}return origGoBack.apply(this,arguments);};
   const origConfirmBin=window.confirmBinCollection;window.confirmBinCollection=function(){try{SFX.bin();}catch(e){}return origConfirmBin.apply(this,arguments);};
